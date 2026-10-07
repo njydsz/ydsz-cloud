@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
+
 import com.njydsz.message.domain.dto.BatchProgressDTO;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
 import com.njydsz.message.domain.vo.MsgBatchVO;
@@ -14,16 +16,17 @@ import com.njydsz.message.server.service.SseEmitterService;
 import com.njydsz.message.server.service.batch.BatchService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.List;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 /**
  * {@link BatchController} 的 MockMvc 集成测试。
@@ -33,20 +36,26 @@ import java.util.List;
  * @author ydsz-team
  * @since 26.10.01
  */
-@WebMvcTest(BatchController.class)
+@ExtendWith(MockitoExtension.class)
 class BatchControllerTest {
 
-  @Autowired
   private MockMvc mockMvc;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
-  @MockBean
+  @Mock
   private BatchService batchService;
 
-  @MockBean
+  @Mock
   private SseEmitterService sseEmitterService;
+
+  @InjectMocks
+  private BatchController batchController;
+
+  @BeforeEach
+  void setUp() {
+    mockMvc = MockMvcBuilders.standaloneSetup(batchController).build();
+  }
 
   @Nested
   @DisplayName("POST /message/batch/send 提交批次接口测试")

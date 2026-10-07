@@ -3,6 +3,8 @@ package com.njydsz.userinfo.web.controller;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +62,10 @@ public class DepartmentController {
    *
    * @return 全部未删除部门列表
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回全部部门列表"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/list")
   @Operation(summary = "查询全部部门列表")
   public YdszResponse<List<DepartmentVO>> list() {
@@ -77,6 +83,10 @@ public class DepartmentController {
    *
    * @return 部门树形结构列表（每个节点含 children）
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回部门树形结构列表"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/tree")
   @Operation(summary = "查询部门树形结构")
   public YdszResponse<List<DepartmentTreeVO>> tree() {
@@ -89,6 +99,10 @@ public class DepartmentController {
    * @param id 部门 ID
    * @return 部门详情；不存在或已删除时返回 null
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回部门详情"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/{id}")
   @Operation(summary = "根据 ID 查询部门")
   public YdszResponse<DepartmentVO> getById(@PathVariable String id) {
@@ -107,6 +121,12 @@ public class DepartmentController {
    * @param dto 部门创建 DTO（deptCode / deptName / parentId / sort / status）
    * @return 新创建的部门 ID
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回新创建的部门 ID"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无操作权限"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @RateLimit(resource = "userinfo.Department.create", threshold = 50)
   @Audit(
       module = "部门管理",
@@ -132,6 +152,12 @@ public class DepartmentController {
    * @param dto 部门更新 DTO（必须包含 ID）
    * @return 是否成功
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无操作权限"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @RateLimit(resource = "userinfo.Department.update", threshold = 50)
   @Audit(
       module = "部门管理",
@@ -162,6 +188,11 @@ public class DepartmentController {
    * @param id 部门 ID
    * @return 是否成功
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无操作权限"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @RateLimit(resource = "userinfo.Department.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:DepartmentController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")

@@ -59,6 +59,21 @@ public interface FlowInstanceRepository {
   List<FlowInstanceVO> findAllById(Set<String> ids);
 
   /**
+   * 计算流程实例的嵌套深度（递归向上追溯父链）。
+   *
+   * <p>通过单次递归 SQL 查询 {@code parent_instance_id} 链路，直接返回深度值。
+   * 用于替代逐层 {@code findById} 向上遍历的 N+1 查询。
+   *
+   * <p>算法：从 {@code instanceId} 出发，沿 {@code parent_instance_id} 向上追溯直到顶层（parent_instance_id IS NULL）
+   * 或达到 {@code maxDepth} 上限。返回实际遍历的层数（0 = 顶层实例）。
+   *
+   * @param instanceId 当前流程实例 ID
+   * @param maxDepth 最大追溯深度（安全上限，建议不超过 50）
+   * @return 嵌套深度（0 = 顶层, 1 = 一级子流程, ...）
+   */
+  int findNestingDepth(String instanceId, int maxDepth);
+
+  /**
    * 根据租户 ID + 业务类型 + 业务单据 ID 查询流程实例。
    *
    * @param tenantId 租户 ID

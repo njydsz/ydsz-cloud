@@ -1,8 +1,10 @@
 package com.njydsz.workflow.server.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
@@ -572,13 +574,25 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     if (tenantId == null || ownerUserId == null) {
       return ownerUserId;
     }
+    // N+1 治理: 单次批量加载所有可能涉及的有效委托授权，构建 ownerUserId→delegateAuth Map
+    // 然后在内存中向上追溯链路，消除 while 循环内逐层 matchAuthByScope 的 N 次 DB 查询
+    List<FlowDelegateAuthVO> allActive =
+        authRepository.selectActiveByScope(tenantId, flowCode, nodeCode, LocalDateTime.now());
+    // 按 ownerUserId 建立一级索引 Map（SQL 已按 scope 优先级排序，首个命中即为最优）
+    Map<String, FlowDelegateAuthVO> delegateMap = new HashMap<>(allActive.size());
+    for (FlowDelegateAuthVO auth : allActive) {
+      String owner = auth.getOwnerUserId();
+      // 同一 ownerUserId 只保留第一条（SQL 已排序：FLOW_NODE > FLOW > ALL）
+      delegateMap.putIfAbsent(owner, auth);
+    }
+
     Set<String> visited = new HashSet<>(COLLECTION_CAPACITY);
     visited.add(ownerUserId);
     String currentUserId = ownerUserId;
     int depth = 0;
 
     while (depth < MAX_CHAIN_DEPTH) {
-      FlowDelegateAuthVO matched = matchAuth(tenantId, currentUserId, flowCode, nodeCode);
+      FlowDelegateAuthVO matched = delegateMap.get(currentUserId);
       if (matched == null) {
         // 无进一步委派，当前用户即为最终代理人
         break;

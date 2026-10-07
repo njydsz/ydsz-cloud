@@ -247,9 +247,9 @@ public class SentryProperties {
   @Data
   @Validated
   public static class TracingConfig {
-    /** 主追踪系统：skywalking / opentelemetry / default */
+    /** 主追踪系统：opentelemetry 优先，其次 skywalking，最后 default */
     @NotBlank(message = "主追踪系统不能为空")
-    private String primary = "skywalking";
+    private String primary = "opentelemetry";
 
     /** 慢追踪阈值（毫秒） */
     @Min(value = 100, message = "慢追踪阈值不能小于 100ms")

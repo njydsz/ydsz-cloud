@@ -270,6 +270,19 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
       @Param("tenantId") String tenantId,
       @Param("now") LocalDateTime now);
 
+  /**
+   * N+1 治理: 使用 PostgreSQL 递归 CTE 一次性计算流程实例的嵌套深度。
+   *
+   * <p>替代 {@code FlowSubProcessServiceImpl#getNestingDepth} 中 while 循环逐层 findById 的 N+1 查询。
+   *
+   * @param instanceId 起始流程实例 ID
+   * @param maxDepth 最大追溯深度（安全上限）
+   * @return 嵌套深度（0 = 顶层, 1 = 一级子流程, ...）
+   */
+  int selectNestingDepth(
+      @Param("instanceId") String instanceId,
+      @Param("maxDepth") int maxDepth);
+
   // ==================== F-04 变更影响预览 ====================
 
   /**

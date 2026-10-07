@@ -9,14 +9,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Map;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.njydsz.cronjob.domain.service.DashboardQueryService;
 
@@ -28,15 +30,21 @@ import com.njydsz.cronjob.domain.service.DashboardQueryService;
  * @author ydsz-team
  * @since 26.10.01
  */
-@WebMvcTest(DashboardController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class DashboardControllerTest {
 
-  @Autowired
   private MockMvc mockMvc;
 
-  @MockitoBean
+  @Mock
   private DashboardQueryService dashboardQueryService;
+
+  @InjectMocks
+  private DashboardController dashboardController;
+
+  @BeforeEach
+  void setUp() {
+    mockMvc = MockMvcBuilders.standaloneSetup(dashboardController).build();
+  }
 
   @Nested
   @DisplayName("GET /cronjob/dashboard/overview - getOverview")

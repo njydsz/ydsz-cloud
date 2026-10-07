@@ -192,6 +192,11 @@ public class MessageController {
    */
   @Operation(summary = "发送日志分页", description = "分页查询消息发送日志。支持按 bizId、channelCode、status、时间范围等条件过滤。"
             + "返回分页结果含 MsgLogVO（消息 ID、通道、接收人、状态、回执 ID、发送时间）。")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回发送日志分页结果"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 message.log.view 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @JsonView(MsgLogViews.Summary.class)
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/log/page")
@@ -355,6 +360,11 @@ public class MessageController {
    */
   @Operation(summary = "查询批次发送进度", description = "按批次 ID 分页查询发送日志，用于追踪批量发送任务的执行进度。"
             + "返回分页结果含各消息当前状态（PENDING/SENT/FAILED）、通道、接收人、回执 ID。")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回批次发送进度分页结果"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 message.log.view 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @JsonView(MsgLogViews.Summary.class)
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/batch/{batchId}/progress")

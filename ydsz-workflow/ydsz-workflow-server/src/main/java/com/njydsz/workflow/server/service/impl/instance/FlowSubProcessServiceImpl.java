@@ -381,21 +381,14 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
   /**
    * 获取流程实例当前的子流程嵌套深度。
    *
+   * <p>N+1 治理：使用 {@link FlowInstanceRepository#findNestingDepth(String, int)} 单次递归 CTE 查询替代
+   * while 循环内逐层 {@code findById} 的 N+1 查询。一次 SQL 即返回完整深度。
+   *
    * @param instanceId 实例 ID
    * @return 嵌套深度（0 = 顶层）
    */
   private int getNestingDepth(String instanceId) {
-    int depth = 0;
-    String currentId = instanceId;
-    while (currentId != null && depth < MAX_NESTING_DEPTH_GUARD) {
-      FlowInstanceVO instance = instanceRepository.findById(currentId).orElse(null);
-      if (instance == null || instance.getParentInstanceId() == null) {
-        break;
-      }
-      currentId = instance.getParentInstanceId();
-      depth++;
-    }
-    return depth;
+    return instanceRepository.findNestingDepth(instanceId, MAX_NESTING_DEPTH_GUARD);
   }
 
   /**

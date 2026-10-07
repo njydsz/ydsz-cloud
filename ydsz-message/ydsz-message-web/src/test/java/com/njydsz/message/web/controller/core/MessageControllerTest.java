@@ -18,39 +18,51 @@ import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.service.core.MessageService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 /**
  * {@link MessageController} 的 MockMvc 集成测试。
  *
- * <p>使用 {@code @WebMvcTest} 仅加载 MVC 层 Bean，通过 {@code @MockBean} 模拟 Service 依赖，
- * 验证 HTTP 请求路由、请求体反序列化、响应格式与状态码。
+ * <p>使用 {@code MockMvcBuilders.standaloneSetup()} 构建独立的 MockMvc 实例，
+ * 通过 Mockito {@code @Mock} 模拟 Service 依赖，验证 HTTP 请求路由与响应格式。
+ *
+ * <p>注意：Spring Boot 4.x 移除了 {@code @WebMvcTest} 切片注解，
+ * 退化使用独立的 MockMvc standalone 设置以获得等效测试效果。
  *
  * @author ydsz-team
  * @since 26.10.01
  */
-@WebMvcTest(MessageController.class)
+@ExtendWith(MockitoExtension.class)
 class MessageControllerTest {
 
-  @Autowired
   private MockMvc mockMvc;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
-  @MockBean
+  @Mock
   private MessageService messageService;
 
-  @MockBean
+  @Mock
   private ApplicationEventPublisher eventPublisher;
+
+  @InjectMocks
+  private MessageController messageController;
+
+  @BeforeEach
+  void setUp() {
+    mockMvc = MockMvcBuilders.standaloneSetup(messageController).build();
+  }
 
   @Nested
   @DisplayName("/message/send 接口测试")

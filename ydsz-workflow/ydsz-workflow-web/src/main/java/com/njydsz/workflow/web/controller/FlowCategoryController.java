@@ -3,6 +3,8 @@ package com.njydsz.workflow.web.controller.definition;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -79,6 +81,10 @@ public class FlowCategoryController {
    *
    * @return 分类列表
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回全部分类列表"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping
   @Operation(summary = "查询全部分类")
   public YdszResponse<List<FlowCategoryVO>> list() {
@@ -94,6 +100,10 @@ public class FlowCategoryController {
    * @return 分类树形结构根节点列表
    * @since 26.10.01
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回分类树形结构根节点列表"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/tree")
   @Operation(summary = "查询全部分类（树形结构）")
   public YdszResponse<List<FlowCategoryTreeVO>> tree() {
@@ -112,6 +122,11 @@ public class FlowCategoryController {
    * @param dto 分类 DTO（categoryCode / categoryName / parentId / icon / sortNum）
    * @return 新建分类 ID
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回新建分类 ID"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @Idempotent(key = "ydsz:workflow:category:create", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCategory.create", threshold = 50)
   @PostMapping
@@ -137,6 +152,11 @@ public class FlowCategoryController {
    * @param dto 分类 DTO（必须包含 ID）
    * @return 空响应
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @Idempotent(key = "ydsz:workflow:category:update", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCategory.update", threshold = 50)
   @PutMapping
@@ -168,6 +188,10 @@ public class FlowCategoryController {
    * @param id 分类 ID
    * @return 空响应
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @Idempotent(key = "ydsz:workflow:category:delete", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCategory.delete", threshold = 50)
   @DeleteMapping("/{id}")

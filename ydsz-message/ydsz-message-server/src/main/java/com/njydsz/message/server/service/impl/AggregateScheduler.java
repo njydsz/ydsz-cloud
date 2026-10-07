@@ -2,6 +2,7 @@ package com.njydsz.message.server.service.impl.batch;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,12 +68,14 @@ public class AggregateScheduler {
     if (due.isEmpty()) {
       return;
     }
-    for (MsgAggregateVO batch : due) {
-      msgAggregateRepository.updateStatus(
-          batch.getId(),
-          AggregateBatchStatusEnum.PENDING.name(),
-          AggregateBatchStatusEnum.READY.name());
-    }
+    List<String> dueIds = due.stream()
+        .map(MsgAggregateVO::getId)
+        .collect(Collectors.toList());
+    int transitioned = msgAggregateRepository.updateStatusByIds(
+        dueIds,
+        AggregateBatchStatusEnum.PENDING.name(),
+        AggregateBatchStatusEnum.READY.name());
+    log.debug("[AggregateScheduler] 批量流转 {} 个到期批次 PENDING→READY (实际 {} 条)", dueIds.size(), transitioned);
     int sent = aggregateService.flushDue();
     log.debug("[AggregateScheduler] 流转 {} 个到期批次,发送 {} 个", due.size(), sent);
   }

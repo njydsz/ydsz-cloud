@@ -8,14 +8,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.njydsz.cronjob.server.core.logger.LogStreamManager;
@@ -32,22 +34,28 @@ import com.njydsz.cronjob.server.core.logger.LogStreamManager;
  * @author ydsz-team
  * @since 26.10.01
  */
-@WebMvcTest(JobLogStreamController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class JobLogStreamControllerTest {
 
-  @Autowired
   private MockMvc mockMvc;
 
-  @MockitoBean
+  @Mock
   private LogStreamManager logStreamManager;
+
+  @InjectMocks
+  private JobLogStreamController logStreamController;
+
+  @BeforeEach
+  void setUp() {
+    mockMvc = MockMvcBuilders.standaloneSetup(logStreamController).build();
+  }
 
   @Nested
   @DisplayName("GET /cronjob/log/stream/{logId} - stream")
   class Stream {
 
     @Test
-    @DisplayName("有效 logId 时返回 200 + text/event-stream Content-Type")
+    @DisplayName("有效 logId 时返回 200 + async started")
     void shouldEstablishSseConnectionForValidLogId() throws Exception {
       SseEmitter mockEmitter = new SseEmitter();
       when(logStreamManager.subscribe("log-001")).thenReturn(mockEmitter);

@@ -177,8 +177,8 @@
     {
       "name": "ydsz.sentry.tracing.primary",
       "type": "java.lang.String",
-      "description": "主追踪系统：skywalking、opentelemetry 或 default。",
-      "defaultValue": "skywalking"
+      "description": "主追踪系统：opentelemetry（优先）、skywalking（降级）或 default（纯 MDC 降级）。",
+      "defaultValue": "opentelemetry"
     },
     {
       "name": "ydsz.sentry.tracing.slow-trace-threshold-millis",

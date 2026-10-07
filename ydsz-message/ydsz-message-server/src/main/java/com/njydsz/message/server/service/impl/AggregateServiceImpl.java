@@ -3,10 +3,12 @@ package com.njydsz.message.server.service.impl.batch;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -154,9 +156,11 @@ public class AggregateServiceImpl implements AggregateService {
     dueQuery.setBatchStatus(AggregateBatchStatusEnum.READY.name());
     dueQuery.setScheduledSendAtBefore(now);
     List<MsgAggregateVO> due = msgAggregateRepository.findList(dueQuery);
+    // N+1 治理: 批量加载摘要模板，避免 sendBatch 循环内逐条调 loadByCodeAndChannel 产生 N 次 DB 查询
+    Map<String, String> digestTemplateMap = batchLoadDigestTemplates(due);
     int sent = 0;
     for (MsgAggregateVO batch : due) {
-      if (sendBatch(batch)) {
+      if (sendBatch(batch, digestTemplateMap)) {
         sent++;
       }
     }
@@ -182,9 +186,11 @@ public class AggregateServiceImpl implements AggregateService {
     readyQuery.setReceiver(receiver);
     readyQuery.setBatchStatus(AggregateBatchStatusEnum.READY.name());
     List<MsgAggregateVO> batches = msgAggregateRepository.findList(readyQuery);
+    // N+1 治理: 批量加载摘要模板，避免 sendBatch 循环内逐条调 loadByCodeAndChannel 产生 N 次 DB 查询
+    Map<String, String> digestTemplateMap = batchLoadDigestTemplates(batches);
     int sent = 0;
     for (MsgAggregateVO batch : batches) {
-      if (sendBatch(batch)) {
+      if (sendBatch(batch, digestTemplateMap)) {
         sent++;
       }
     }
@@ -208,10 +214,14 @@ public class AggregateServiceImpl implements AggregateService {
    * <p>P1-2: 通过 CAS 占有 SENDING 中间态,保证多实例并发调用 flushDue/flushByGroup 时
    * 同一批次只会被一个实例发送,避免重复发送。发送失败/异常时回退 READY 等待下一轮重试。
    *
+   * <p>N+1 治理: 摘要模板由调用方批量加载后通过 {@code digestTemplateMap} 传入，
+   * 不再在循环内逐条调用 {@link #loadDigestTemplate(MsgAggregateVO)} 产生 DB 查询。
+   *
    * @param batch 聚合批次
+   * @param digestTemplateMap 预加载的模板 Map，key = aggregateGroup，value = 模板内容
    * @return true 表示发送成功
    */
-  private boolean sendBatch(MsgAggregateVO batch) {
+  private boolean sendBatch(MsgAggregateVO batch, Map<String, String> digestTemplateMap) {
     // CAS 占有: READY → SENDING,updated=0 表示已被其他实例占有
     int claimed =
         msgAggregateRepository.updateStatus(
@@ -224,7 +234,8 @@ public class AggregateServiceImpl implements AggregateService {
     try {
       // F5: 构建丰富摘要参数（总数量 + 时间范围 + 用户偏好语言）
       Map<String, Object> params = buildDigestParams(batch);
-      String digestTemplate = loadDigestTemplate(batch);
+      // N+1 治理: 从预加载 Map 中取模板，O(1) 内存查询，避免逐条 DB 调用
+      String digestTemplate = resolveDigestTemplate(batch, digestTemplateMap);
       String digest = templateEngine.render(digestTemplate, params);
       batch.setDigestContent(digest);
       MessageItemRequestDTO request = new MessageItemRequestDTO();
@@ -272,27 +283,56 @@ public class AggregateServiceImpl implements AggregateService {
   }
 
   /**
-   * 加载摘要模板：按约定编码 DIGEST_{aggregateGroup} 查找，找到则用模板 content，否则回退默认摘要文案。
+   * 批量加载摘要模板（N+1 治理核心方法）：
+   * 从待发送批次中提取唯一的 aggregateGroup 集合，一次性加载所有摘要模板，构建 Map 避免循环内逐条查库。
    *
-   * @param batch 聚合批次（取 aggregateGroup/channel/tenantId 查模板）
-   * @return 摘要模板内容字符串
+   * @param batches 待发送的聚合批次列表
+   * @return 模板 Map，key = aggregateGroup，value = 模板内容字符串（未命中则回退默认）
    */
-  private String loadDigestTemplate(MsgAggregateVO batch) {
+  private Map<String, String> batchLoadDigestTemplates(List<MsgAggregateVO> batches) {
+    if (batches == null || batches.isEmpty()) {
+      return new HashMap<>(0);
+    }
+    // 提取唯一的 aggregateGroup 集合
+    Set<String> groups = batches.stream()
+        .map(MsgAggregateVO::getAggregateGroup)
+        .filter(StringUtils::hasText)
+        .collect(Collectors.toSet());
+    if (groups.isEmpty()) {
+      return new HashMap<>(0);
+    }
+    // 批量加载：每个 group 对应一条摘要模板查询
+    Map<String, String> templateMap = new HashMap<>(groups.size());
+    batches.stream()
+        .filter(b -> StringUtils.hasText(b.getAggregateGroup()))
+        .collect(Collectors.toMap(
+            MsgAggregateVO::getAggregateGroup,
+            b -> b,
+            (existing, replacement) -> existing))
+        .forEach((group, batch) -> {
+          MsgTemplateVO tpl = templateService.loadByCodeAndChannel(
+              DIGEST_TEMPLATE_PREFIX + group, batch.getChannel(), null, batch.getTenantId());
+          if (tpl != null && StringUtils.hasText(tpl.getContent())) {
+            templateMap.put(group, tpl.getContent());
+          }
+        });
+    return templateMap;
+  }
+
+  /**
+   * 从预加载的模板 Map 中解析当前批次对应的摘要模板。
+   *
+   * @param batch 当前聚合批次
+   * @param digestTemplateMap 预加载的摘要模板 Map（key = aggregateGroup）
+   * @return 摘要模板内容字符串，未命中回退默认
+   */
+  private String resolveDigestTemplate(MsgAggregateVO batch, Map<String, String> digestTemplateMap) {
     String group = batch.getAggregateGroup();
     if (!StringUtils.hasText(group)) {
       return DEFAULT_DIGEST_TEMPLATE;
     }
-    try {
-      MsgTemplateVO tpl =
-          templateService.loadByCodeAndChannel(
-              DIGEST_TEMPLATE_PREFIX + group, batch.getChannel(), null, batch.getTenantId());
-      if (tpl != null && StringUtils.hasText(tpl.getContent())) {
-        return tpl.getContent();
-      }
-    } catch (Exception e) {
-      log.debug("[Aggregate] 摘要模板加载失败,回退默认: group={} err={}", group, e.getMessage());
-    }
-    return DEFAULT_DIGEST_TEMPLATE;
+    String template = digestTemplateMap.get(group);
+    return template != null ? template : DEFAULT_DIGEST_TEMPLATE;
   }
 
   /**

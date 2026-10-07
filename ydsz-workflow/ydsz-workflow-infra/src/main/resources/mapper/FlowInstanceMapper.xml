@@ -374,4 +374,25 @@
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
         ORDER BY start_at ASC
     </select>
+
+    <!--
+        N+1 治理: 使用 PostgreSQL 递归 CTE 一次性追溯父链计算嵌套深度。
+        替代 FlowSubProcessServiceImpl#getNestingDepth 中 while 循环逐层 findById 的 N+1 查询。
+        当起始实例不存在或数据库不支持递归 CTE 时返回 0。
+    -->
+    <select id="selectNestingDepth" resultType="int">
+        WITH RECURSIVE parent_chain AS (
+            SELECT id, parent_instance_id, 0 AS depth
+            FROM ydsz_flow_instance
+            WHERE id = #{instanceId}
+              AND is_deleted = 0
+            UNION ALL
+            SELECT p.id, i.parent_instance_id, pc.depth + 1
+            FROM parent_chain pc
+            JOIN ydsz_flow_instance i ON i.id = pc.parent_instance_id AND i.is_deleted = 0
+            WHERE pc.parent_instance_id IS NOT NULL
+              AND pc.depth &lt; #{maxDepth}
+        )
+        SELECT COALESCE(MAX(depth), 0) FROM parent_chain
+    </select>
 </mapper>

@@ -16,12 +16,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.query.JobQuery;
@@ -31,29 +32,35 @@ import com.njydsz.cronjob.server.service.job.JobService;
 /**
  * JobController 集成测试。
  *
- * <p>使用 {@code @WebMvcTest} 仅加载 Web 层切片，通过 {@code @MockitoBean} 模拟 Service 依赖，
- * 验证 HTTP 路由、请求参数绑定、响应格式正确性。
+ * <p>使用 {@code MockMvcBuilders.standaloneSetup()} 构建轻量级 Web 层测试，
+ * 通过 Mockito {@code @Mock} 模拟 Service 依赖，验证 HTTP 路由、请求参数绑定、响应格式正确性。
+ *
+ * <p>注：当前 corporate Maven 镜像的 spring-boot-test-autoconfigure 缺失 web/servlet 切片类，
+ * 故使用 standaloneSetup 模式替代 {@code @WebMvcTest}。
  *
  * @author ydsz-team
  * @since 26.10.01
  */
-@WebMvcTest(JobController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class JobControllerTest {
 
-  @Autowired
   private MockMvc mockMvc;
 
-  @MockitoBean
+  @Mock
   private JobService jobService;
 
-  @MockitoBean
+  @Mock
   private ApplicationEventPublisher eventPublisher;
+
+  @InjectMocks
+  private JobController jobController;
 
   private JobVO sampleJob;
 
   @BeforeEach
   void setUp() {
+    mockMvc = MockMvcBuilders.standaloneSetup(jobController).build();
+
     sampleJob = new JobVO();
     sampleJob.setId("job-001");
     sampleJob.setJobName("测试任务");
@@ -108,8 +115,8 @@ class JobControllerTest {
       PageResponse<List<JobVO>> pageResult = new PageResponse<>();
       pageResult.setData(List.of(sampleJob));
       pageResult.setTotal(1L);
-      pageResult.setPageNum(1);
-      pageResult.setPageSize(20);
+      pageResult.setPageNum(1L);
+      pageResult.setPageSize(20L);
 
       when(jobService.page(any(JobQuery.class))).thenReturn(pageResult);
 

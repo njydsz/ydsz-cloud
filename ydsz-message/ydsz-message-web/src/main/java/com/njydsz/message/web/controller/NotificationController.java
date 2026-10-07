@@ -140,6 +140,11 @@ public class NotificationController {
    */
   @Operation(summary = "收件箱分页", description = "分页查询当前登录用户的站内通知列表。支持按已读状态、通知类型、关键词、时间范围过滤。"
             + "返回分页结果含 MsgNotificationVO（通知 ID、标题、内容、类型、已读状态、发送时间）。")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回站内通知分页结果"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 notification.message.list 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
   @GetMapping("/inbox")
   public YdszResponse<PageResponse<List<MsgNotificationVO>>> inbox(NotificationQueryDTO query) {
@@ -154,6 +159,11 @@ public class NotificationController {
    * @return 未读通知数量（≥ 0）
    */
   @Operation(summary = "未读数量", description = "查询当前登录用户未读站内通知总数。用于导航栏徽标角标展示。无需参数，按 tenantId + userId 隔离。返回未读数量。")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回未读通知数量"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 notification.message.list 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
   @GetMapping("/unreadCount")
   public YdszResponse<Long> countUnread() {

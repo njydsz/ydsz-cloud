@@ -13,14 +13,17 @@ import java.util.List;
 import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 /**
  * {@link ReadStatusController} 的 MockMvc 集成测试。
@@ -30,17 +33,23 @@ import org.springframework.test.web.servlet.MockMvc;
  * @author ydsz-team
  * @since 26.10.01
  */
-@WebMvcTest(ReadStatusController.class)
+@ExtendWith(MockitoExtension.class)
 class ReadStatusControllerTest {
 
-  @Autowired
   private MockMvc mockMvc;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
-  @MockBean
+  @Mock
   private ReadStatusSyncService readStatusSyncService;
+
+  @InjectMocks
+  private ReadStatusController readStatusController;
+
+  @BeforeEach
+  void setUp() {
+    mockMvc = MockMvcBuilders.standaloneSetup(readStatusController).build();
+  }
 
   @Nested
   @DisplayName("POST /message/read-status/read/{msgId} 标记已读接口测试")

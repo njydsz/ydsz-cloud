@@ -91,4 +91,31 @@
         WHERE id = #{id}
           AND is_deleted = 0
     </update>
+
+    <!--
+        N+1 治理: 一次性加载指定租户+流程+节点下所有有效委托授权。
+        用于 resolveDelegateChain 批量加载到内存 Map，消除 while 循环内逐层 matchAuth 的 N+1 查询。
+    -->
+    <select id="selectActiveByScope" resultType="com.njydsz.workflow.domain.entity.FlowDelegateAuth">
+        SELECT <include refid="Base_Column"/>
+        FROM ydsz_flow_delegate_auth
+        WHERE tenant_id = #{tenantId}
+          AND is_deleted = 0
+          AND auth_status = 'ENABLED'
+          AND start_time &lt;= #{now}
+          AND end_time &gt;= #{now}
+          AND (
+              (scope_type = 'FLOW_NODE' AND flow_code = #{flowCode} AND node_code = #{nodeCode})
+              OR (scope_type = 'FLOW' AND flow_code = #{flowCode})
+              OR (scope_type = 'ALL')
+          )
+        ORDER BY owner_user_id ASC,
+          CASE scope_type
+              WHEN 'FLOW_NODE' THEN 1
+              WHEN 'FLOW' THEN 2
+              WHEN 'ALL' THEN 3
+              ELSE 9
+          END ASC,
+          created_at DESC
+    </select>
 </mapper>

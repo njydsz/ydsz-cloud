@@ -1,7 +1,6 @@
 package com.njydsz.cronjob.web.controller.job;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -17,11 +16,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.dto.BatchResultDTO;
@@ -36,20 +36,23 @@ import com.njydsz.cronjob.server.service.job.JobService;
  * @author ydsz-team
  * @since 26.10.01
  */
-@WebMvcTest(JobGroupController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class JobGroupControllerTest {
 
-  @Autowired
   private MockMvc mockMvc;
 
-  @MockitoBean
+  @Mock
   private JobService jobService;
+
+  @InjectMocks
+  private JobGroupController jobGroupController;
 
   private JobVO sampleJob;
 
   @BeforeEach
   void setUp() {
+    mockMvc = MockMvcBuilders.standaloneSetup(jobGroupController).build();
+
     sampleJob = new JobVO();
     sampleJob.setId("job-001");
     sampleJob.setJobName("订单同步任务");
@@ -69,8 +72,8 @@ class JobGroupControllerTest {
       PageResponse<List<JobVO>> pageResult = new PageResponse<>();
       pageResult.setData(List.of(sampleJob));
       pageResult.setTotal(1L);
-      pageResult.setPageNum(1);
-      pageResult.setPageSize(20);
+      pageResult.setPageNum(1L);
+      pageResult.setPageSize(20L);
 
       when(jobService.pageByGroup(eq("ORDER-CENTER"), eq(1), eq(20))).thenReturn(pageResult);
 

@@ -147,10 +147,16 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- spring-boot-starter-test: MockMvc + web-test infrastructure -->
+        <!-- spring-boot-starter-test: JUnit Jupiter + AssertJ + Mockito core -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- spring-boot-webmvc-test (Boot 4.x 拆分): @WebMvcTest + MockMvcAutoConfiguration -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency></dependencies>
 

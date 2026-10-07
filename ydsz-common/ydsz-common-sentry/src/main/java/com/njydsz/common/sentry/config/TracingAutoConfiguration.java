@@ -19,8 +19,12 @@ import com.njydsz.common.sentry.tracing.SlowTraceDetector;
  *
  * <p>按 {@code tracing.primary} 选择链路上下文实现，并逐级降级保证始终有可用实现。
  *
- * <p>降级链路：SkyWalking（需探针已挂载）→ OpenTelemetry（需 SDK 可用）→ {@link DefaultTraceContext}（纯 MDC，仅本进程内
- * traceId 透传，无跨服务串联能力）。
+ * <p>默认降级链路（primary=opentelemetry）：OpenTelemetry（需 SDK 可用）→ SkyWalking（需探针已挂载）→ {@link
+ * DefaultTraceContext}（纯 MDC，仅本进程内 traceId 透传，无跨服务串联能力）。
+ *
+ * <p>SkyWalking 模式（primary=skywalking）：SkyWalking → OpenTelemetry → {@link DefaultTraceContext}。
+ *
+ * <p>Default 模式（primary=default）：直接使用纯 MDC 降级方案，不尝试 OTel 或 SkyWalking SDK。
  *
  * @author ydsz-team
  * @since 26.10.01
@@ -34,36 +38,96 @@ public class TracingAutoConfiguration {
   /**
    * 按 {@code tracing.primary} 选择链路上下文实现，并逐级降级。
    *
+   * <p>降级策略：
+   *
+   * <ul>
+   *   <li>opentelemetry 模式：OTel → SkyWalking → DefaultTraceContext
+   *   <li>skywalking 模式：SkyWalking → OTel → DefaultTraceContext
+   *   <li>default 模式：仅 DefaultTraceContext
+   *   <li>其他值（兼容旧配置）：同 opentelemetry 模式
+   * </ul>
+   *
    * @param properties 监控配置
    * @return 链路上下文实现，永不为 {@code null}
    */
   @Bean
   @ConditionalOnMissingBean(TraceContext.class)
-  /**
-   * trace context。
-   * @param properties 参数
-   * @return 结果
-   */
   public TraceContext traceContext(SentryProperties properties) {
     String primary = properties.getTracing().getPrimary();
-    if ("skywalking".equals(primary)) {
-      try {
-        Class.forName("org.apache.skywalking.apm.toolkit.trace.TraceContext");
-        return new SkyWalkingTraceContext();
-      } catch (ClassNotFoundException e) {
-        log.info("[Sentry] SkyWalking agent 未检测到, 尝试 OpenTelemetry");
-      }
+
+    if ("default".equals(primary)) {
+      log.info("[Sentry] tracing.primary=default，使用 DefaultTraceContext（纯 MDC 降级方案）");
+      return new DefaultTraceContext();
     }
-    if ("opentelemetry".equals(primary) || "skywalking".equals(primary)) {
-      try {
-        if (OpenTelemetryTraceContext.isAvailable()) {
-          return new OpenTelemetryTraceContext();
-        }
-      } catch (Exception e) {
-        log.info("[Sentry] OpenTelemetry SDK 不可用, 降级到 DefaultTraceContext");
+
+    // opentelemetry 模式（默认）：优先尝试 OTel
+    if ("opentelemetry".equals(primary)) {
+      TraceContext otel = tryOpenTelemetry();
+      if (otel != null) {
+        return otel;
       }
+      TraceContext sw = trySkyWalking();
+      if (sw != null) {
+        return sw;
+      }
+      return new DefaultTraceContext();
+    }
+
+    // skywalking 模式：优先尝试 SkyWalking
+    if ("skywalking".equals(primary)) {
+      TraceContext sw = trySkyWalking();
+      if (sw != null) {
+        return sw;
+      }
+      TraceContext otel = tryOpenTelemetry();
+      if (otel != null) {
+        return otel;
+      }
+      return new DefaultTraceContext();
+    }
+
+    // 未知值：按 opentelemetry 模式处理
+    log.warn("[Sentry] tracing.primary={} 不是预定义值，按 opentelemetry 模式处理", primary);
+    TraceContext otel = tryOpenTelemetry();
+    if (otel != null) {
+      return otel;
+    }
+    TraceContext sw = trySkyWalking();
+    if (sw != null) {
+      return sw;
     }
     return new DefaultTraceContext();
+  }
+
+  /**
+   * 尝试 OpenTelemetry SDK 是否可用
+   *
+   * @return OTel 可用返回 {@link OpenTelemetryTraceContext}，否则返回 {@code null}
+   */
+  private TraceContext tryOpenTelemetry() {
+    try {
+      if (OpenTelemetryTraceContext.isAvailable()) {
+        return new OpenTelemetryTraceContext();
+      }
+    } catch (Exception e) {
+      log.info("[Sentry] OpenTelemetry SDK 不可用, 跳过");
+    }
+    return null;
+  }
+
+  /** 尝试 SkyWalking agent 是否已挂载 */
+  /**
+   * try sky walking。
+   * @return 结果
+   */
+  private TraceContext trySkyWalking() {
+    try {
+      Class.forName("org.apache.skywalking.apm.toolkit.trace.TraceContext");
+      return new SkyWalkingTraceContext();
+    } catch (ClassNotFoundException e) {
+      log.info("[Sentry] SkyWalking agent 未检测到, 跳过");
+    }
+    return null;
   }
 
   /**

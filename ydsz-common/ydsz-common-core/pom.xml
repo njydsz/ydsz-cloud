@@ -69,6 +69,41 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- spring-boot-starter-test: 提供 AssertJ + JsonPath + Spring Boot 扩展（scope=test，不打包到主 jar） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- spring-test: 提供 MockMvc / MockMvcBuilders（BaseControllerMockTest 使用，compile scope 打包到主 jar，供下游测试继承） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- mockito-core: 提供 @Mock / @InjectMocks（BaseControllerMockTest 继承链依赖，compile scope 打包） -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- junit-jupiter-api: 提供 @ExtendWith 注解（compile scope 打包） -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- mockito-junit-jupiter: 提供 MockitoExtension（compile scope 打包，下游模块自动继承） -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+
     </dependencies>
 
 </project>

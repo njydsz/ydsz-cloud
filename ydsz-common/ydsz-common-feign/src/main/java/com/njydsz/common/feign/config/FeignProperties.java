@@ -234,9 +234,10 @@ public class FeignProperties {
     /**
      * 是否启用 Resilience4j 熔断能力。
      *
+     * <p>自 26.10.07 起默认开启（安全默认值），未显式配有权重的 Feign 调用自动具备熔断保护。
      * <p>自 26.09.19 起统一使用 circuitBreaker 开关（原 resilience4j.enabled 保留兼容）。
      */
-    private boolean isEnabled = false;
+    private boolean isEnabled = true;
 
     /** 熔断状态 Redis 持久化 TTL（秒），默认 3600 */
     private int stateTtlSeconds = 3600;
@@ -269,8 +270,8 @@ public class FeignProperties {
 
   /** 信号量隔离（Bulkhead）配置 */
   public static class Bulkhead {
-    /** 是否启用信号量隔离，默认false */
-    private boolean isEnabled = false;
+    /** 是否启用信号量隔离，默认true（安全默认值） */
+    private boolean isEnabled = true;
 
     /** 默认最大并发请求数，默认50 */
     private int defaultMaxConcurrent = 50;
@@ -311,8 +312,8 @@ public class FeignProperties {
   @Getter
   @Setter
   public static class RateLimiter {
-    /** 是否启用 QPS 限流，默认 false */
-    private boolean isEnabled = false;
+    /** 是否启用 QPS 限流，默认 true（安全默认值） */
+    private boolean isEnabled = true;
 
     /** 每个周期内允许的最大请求数，默认 100 */
     private int defaultLimitForPeriod = 100;

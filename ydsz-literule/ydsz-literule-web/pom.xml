@@ -105,6 +105,19 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-excel</artifactId>
         </dependency>
+
+        <!-- 单元测试基础设施：MockMvc + Mockito + JUnit 5（云顶编码规范 §14.1） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Mockito JUnit Jupiter 扩展（@ExtendWith(MockitoExtension.class)） -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <finalName>${project.artifactId}</finalName>

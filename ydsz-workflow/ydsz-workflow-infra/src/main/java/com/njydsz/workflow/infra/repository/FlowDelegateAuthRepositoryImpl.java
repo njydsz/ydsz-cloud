@@ -167,4 +167,12 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
   public int markExpired(LocalDateTime now, LocalDateTime endTime) {
     return delegateAuthMapper.markExpired(now, endTime);
   }
+
+  /** {@inheritDoc} */
+  @Override
+  public List<FlowDelegateAuthVO> selectActiveByScope(
+      String tenantId, String flowCode, String nodeCode, LocalDateTime now) {
+    return converter.flowDelegateAuthListToVO(
+        delegateAuthMapper.selectActiveByScope(tenantId, flowCode, nodeCode, now));
+  }
 }

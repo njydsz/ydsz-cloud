@@ -103,6 +103,19 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-lock</artifactId>
         </dependency>
+
+        <!-- spring-boot-starter-test: MockMvc / spring-test / JsonPath / JUnit Jupiter + Mockito） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- mockito-junit-jupiter: 提供 @ExtendWith(MockitoExtension.class) -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <finalName>${project.artifactId}</finalName>

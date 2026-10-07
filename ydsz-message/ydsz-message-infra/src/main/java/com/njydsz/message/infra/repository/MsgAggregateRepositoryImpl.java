@@ -96,6 +96,19 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
     return msgAggregateMapper.update(entity, wrapper);
   }
 
+  @Override
+  public int updateStatusByIds(List<String> ids, String fromStatus, String toStatus) {
+    if (ids == null || ids.isEmpty()) {
+      return 0;
+    }
+    QueryWrapper<MsgAggregate> wrapper = new QueryWrapper<>();
+    wrapper.in("id", ids);
+    wrapper.eq("batch_status", fromStatus);
+    MsgAggregate entity = new MsgAggregate();
+    entity.setBatchStatus(toStatus);
+    return msgAggregateMapper.update(entity, wrapper);
+  }
+
   private QueryWrapper<MsgAggregate> buildWrapper(MsgAggregateQuery query) {
     QueryWrapper<MsgAggregate> wrapper = new QueryWrapper<>();
     if (query.getAggregateGroup() != null && !query.getAggregateGroup().isBlank()) {

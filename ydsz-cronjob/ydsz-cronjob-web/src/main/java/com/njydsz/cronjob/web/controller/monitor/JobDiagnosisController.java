@@ -9,6 +9,8 @@ import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -90,6 +92,11 @@ public class JobDiagnosisController {
    * @return 诊断信息 Map
    */
   @Operation(summary = "诊断指定任务的运行状态")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回任务诊断信息（最近执行日志/锁状态/系统负载）"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 cronjob.stats.view 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/{jobKey}")
   public YdszResponse<Map<String, Object>> diagnose(

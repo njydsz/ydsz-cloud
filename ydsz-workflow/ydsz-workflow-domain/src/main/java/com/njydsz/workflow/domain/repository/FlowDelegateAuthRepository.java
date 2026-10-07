@@ -162,4 +162,21 @@ public interface FlowDelegateAuthRepository {
    * @return 标记过期的授权数
    */
   int markExpired(LocalDateTime now, LocalDateTime endTime);
+
+  /**
+   * N+1 治理: 批量加载指定租户+流程+节点下的全部有效委托授权（单次查询替代逐层 matchAuthByScope）。
+   *
+   * <p>用于 {@code resolveDelegateChain} 中一次性加载所有候选人的委托规则到内存 Map，
+   * 然后在 Map 中向上追溯链路，消除 while 循环内的 N 次 DB 查询。
+   *
+   * <p>逻辑等价于多次调用 {@link #matchAuthByScope} 后用 OR 合并，但执行单次 SQL。
+   *
+   * @param tenantId 租户 ID
+   * @param flowCode 流程编码（可为 null）
+   * @param nodeCode 节点编码（可为 null）
+   * @param now 当前时间
+   * @return 匹配的委托授权列表（按 scope 优先级排好序）
+   */
+  List<FlowDelegateAuthVO> selectActiveByScope(
+      String tenantId, String flowCode, String nodeCode, LocalDateTime now);
 }

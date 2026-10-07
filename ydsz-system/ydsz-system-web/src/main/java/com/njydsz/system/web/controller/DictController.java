@@ -3,6 +3,8 @@ package com.njydsz.system.web.controller;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -78,6 +80,12 @@ public class DictController {
    * @return 分页结果（总记录数、当前页、每页大小、数据列表）
    */
   @Operation(summary = "分页查询")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回分页字典类型列表"),
+      @ApiResponse(responseCode = "400", description = "参数错误，pageSize 超出范围"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 sys:dict:list 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/page")
   public YdszResponse<PageResponse<List<DictTypeVO>>> page(DictPageQuery query) {
     return YdszResponse.success(dictService.page(query));
@@ -90,6 +98,11 @@ public class DictController {
    * @return 字典类型详情；不存在时返回 null
    */
   @Operation(summary = "按 ID 查询")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回字典类型详情"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 sys:dict:list 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/{id}")
   public YdszResponse<DictTypeVO> getById(@PathVariable String id) {
     return YdszResponse.success(dictService.getById(id));
@@ -109,6 +122,12 @@ public class DictController {
       action = AuditAction.CREATE,
       content = "'创建字典类型: ' + #dto.typeCode")
   @Operation(summary = "创建字典类型")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回新创建的字典类型 ID"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无操作权限（需要 sys:dict:add 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @RateLimit(resource = "system.dict.save", threshold = 50)
   @Idempotent(
       key = "'ydsz:system:dict:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
@@ -134,6 +153,12 @@ public class DictController {
       action = AuditAction.UPDATE,
       content = "'更新字典类型: ' + #dto.typeCode")
   @Operation(summary = "更新字典类型")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无操作权限（需要 sys:dict:edit 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @RateLimit(resource = "system.dict.update", threshold = 50)
   @Idempotent(
       key = "'ydsz:system:dict:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
@@ -159,6 +184,12 @@ public class DictController {
       action = AuditAction.DELETE,
       content = "'删除字典类型: ' + #id")
   @Operation(summary = "删除字典类型")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，级联删除其下所有字典项"),
+      @ApiResponse(responseCode = "400", description = "参数错误，ID 为空"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无操作权限（需要 sys:dict:delete 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @RateLimit(resource = "system.dict.remove", threshold = 50)
   @Idempotent(
       key = "'ydsz:system:dict:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id",
@@ -180,6 +211,11 @@ public class DictController {
    * @return 全部字典类型列表
    */
   @Operation(summary = "查询全部字典类型")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回全部字典类型列表"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 sys:dict:list 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/all")
   public YdszResponse<List<DictTypeVO>> listAll() {
     return YdszResponse.success(dictService.listAll());

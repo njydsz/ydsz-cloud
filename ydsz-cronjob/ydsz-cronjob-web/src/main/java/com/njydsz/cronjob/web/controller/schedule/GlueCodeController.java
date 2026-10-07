@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -67,6 +69,12 @@ public class GlueCodeController {
    * @return 统一响应结果，包含新创建的 GLUE 代码版本
    */
   @Operation(summary = "保存 GLUE 代码（新版本）")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回新创建的 GLUE 代码版本"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败（jobId/sourceCode/language 不能为空）"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无操作权限（需要 cronjob.glue.manage 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_MANAGE)
   @Idempotent(key = "ydsz:cronjob:GlueCodeController:save:lock", ttlSeconds = 5)
   @Audit(
@@ -92,6 +100,11 @@ public class GlueCodeController {
    * @return 统一响应结果，包含最新版本 GLUE 代码
    */
   @Operation(summary = "获取最新版本 GLUE 代码")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回最新版本 GLUE 代码"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 cronjob.glue.view 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
   @GetMapping("/latest")
   public YdszResponse<GlueCodeVO> latest(@RequestParam String jobId) {
@@ -106,6 +119,11 @@ public class GlueCodeController {
    * @return 统一响应结果，包含版本列表
    */
   @Operation(summary = "获取 GLUE 代码版本列表")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回版本列表"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 cronjob.glue.view 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
   @GetMapping("/versions")
   public YdszResponse<List<GlueCodeVO>> versions(@RequestParam String jobId) {
@@ -120,6 +138,12 @@ public class GlueCodeController {
    * @return 统一响应结果，包含新创建的回滚版本
    */
   @Operation(summary = "回滚到指定版本")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回新创建的回滚版本"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败（jobId/version 不能为空）"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无操作权限（需要 cronjob.glue.manage 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_MANAGE)
   @Idempotent(key = "ydsz:cronjob:GlueCodeController:rollback:lock", ttlSeconds = 5)
   @Audit(
@@ -146,6 +170,12 @@ public class GlueCodeController {
    * @return 统一响应结果，包含执行结果或错误信息
    */
   @Operation(summary = "在线测试 GLUE 代码")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回执行结果（可能含错误信息）"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败（sourceCode/language 不能为空）"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无操作权限（需要 cronjob.glue.test 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_TEST)
   @RateLimit(
       resource = "cronjob.gluecode.test",
@@ -174,6 +204,11 @@ public class GlueCodeController {
    * @return 统一响应结果，包含模板代码
    */
   @Operation(summary = "获取代码模板")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回代码模板"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 cronjob.glue.view 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
   @GetMapping("/template")
   public YdszResponse<Map<String, String>> template(

@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.workflow.domain.converter.WorkflowRepositoryConverter;
@@ -39,6 +40,7 @@ import com.njydsz.common.auth.util.SecurityUtils;
  * @author ydsz-team
  * @since 26.10.01
  */
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
@@ -87,6 +89,22 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
       return Collections.emptyList();
     }
     return converter.flowInstanceListToVO(instanceMapper.selectBatchIds(ids));
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public int findNestingDepth(String instanceId, int maxDepth) {
+    if (instanceId == null || instanceId.isBlank()) {
+      return 0;
+    }
+    try {
+      return instanceMapper.selectNestingDepth(instanceId, maxDepth);
+    } catch (Exception e) {
+      // 降级：如果递归 CTE 执行失败（如旧版 PostgreSQL），返回 0 表示顶层
+      log.warn("[FlowInstanceRepo] findNestingDepth CTE 执行失败,降级为0: instanceId={} err={}",
+          instanceId, e.getMessage());
+      return 0;
+    }
   }
 
   /** {@inheritDoc} */

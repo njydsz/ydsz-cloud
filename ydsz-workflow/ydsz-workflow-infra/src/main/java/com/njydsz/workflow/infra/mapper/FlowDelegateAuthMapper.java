@@ -119,4 +119,22 @@ public interface FlowDelegateAuthMapper extends BaseMapper<FlowDelegateAuth> {
       @Param("id") String id,
       @Param("status") String status,
       @Param("updatedAt") LocalDateTime updatedAt);
+
+  /**
+   * N+1 治理: 批量加载指定租户+流程+节点下的全部有效委托授权（单次 SQL）。
+   *
+   * <p>用于 resolveDelegateChain 中一次性加载链路可能涉及的所有候选人委托规则到内存，
+   * 消除 while 循环内逐层 matchAuth 的 N+1 查询。
+   *
+   * @param tenantId 租户 ID
+   * @param flowCode 流程编码
+   * @param nodeCode 节点编码
+   * @param now 当前时间
+   * @return 所有命中的授权记录（未做 LIMIT，按 scope 优先级 + created_at 排序）
+   */
+  List<FlowDelegateAuth> selectActiveByScope(
+      @Param("tenantId") String tenantId,
+      @Param("flowCode") String flowCode,
+      @Param("nodeCode") String nodeCode,
+      @Param("now") LocalDateTime now);
 }

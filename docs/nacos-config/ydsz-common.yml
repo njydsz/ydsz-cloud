@@ -349,6 +349,8 @@ ydsz:
     metrics:
       primary: micrometer
       enable-system-metrics: false
+    tracing:
+      primary: opentelemetry  # 优先级: opentelemetry > skywalking > default
 
   # ============================================================
   #  Web 基座（ydsz-common-web）

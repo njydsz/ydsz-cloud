@@ -3,6 +3,8 @@ package com.njydsz.workflow.web.controller.notification;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -101,6 +103,12 @@ public class FlowCommentController {
       action = AuditAction.CREATE,
       content = "'addComment'")
   @Operation(summary = "发表评论/回复")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回新评论 ID"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无操作权限（需要 workflow.task.operate 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   public YdszResponse<String> addComment(@Valid @RequestBody FlowCommentCreateDTO dto) {
     String userId = AuthContextUtils.getUserId();
@@ -115,6 +123,10 @@ public class FlowCommentController {
    * @param instanceId 实例 ID
    * @return 统一响应结果，包含全部评论列表
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回全部评论列表（含回复）"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/instance/{instanceId}")
   @Operation(summary = "查询实例全部评论（树结构）")
   public YdszResponse<List<FlowCommentVO>> listByInstance(@PathVariable String instanceId) {
@@ -127,6 +139,10 @@ public class FlowCommentController {
    * @param instanceId 实例 ID
    * @return 统一响应结果，包含一级评论列表
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回一级评论列表"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/root/{instanceId}")
   @Operation(summary = "查询实例一级评论")
   public YdszResponse<List<FlowCommentVO>> listRootComments(@PathVariable String instanceId) {
@@ -139,6 +155,10 @@ public class FlowCommentController {
    * @param parentCommentId 父评论 ID
    * @return 统一响应结果，包含回复列表
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回回复列表"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/replies/{parentCommentId}")
   @Operation(summary = "查询父评论下的回复")
   public YdszResponse<List<FlowCommentVO>> listReplies(@PathVariable String parentCommentId) {
@@ -160,6 +180,11 @@ public class FlowCommentController {
       action = AuditAction.DELETE,
       content = "'deleteComment'")
   @Operation(summary = "删除评论（仅本人）")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无操作权限（需要 workflow.task.operate 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
   public YdszResponse<Boolean> deleteComment(@PathVariable String commentId) {
     String userId = AuthContextUtils.getUserId();
@@ -173,6 +198,10 @@ public class FlowCommentController {
    *
    * @return 常用语列表
    */
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回常用语列表"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/quick")
   @Operation(summary = "查询当前用户的常用语列表")
   public YdszResponse<List<FlowQuickCommentVO>> listQuickComments() {
@@ -196,6 +225,11 @@ public class FlowCommentController {
       action = AuditAction.CREATE,
       content = "'createQuickComment'")
   @Operation(summary = "新增常用语")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回新建常用语 ID"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   public YdszResponse<String> createQuickComment(@Valid @RequestBody FlowQuickCommentDTO dto) {
     String userId = AuthContextUtils.getUserId();
     String tenantId = TenantContextHolder.getTenantId();
@@ -217,6 +251,11 @@ public class FlowCommentController {
       action = AuditAction.UPDATE,
       content = "'updateQuickComment'")
   @Operation(summary = "编辑常用语")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   public YdszResponse<Void> updateQuickComment(@Valid @RequestBody FlowQuickCommentDTO dto) {
     String userId = AuthContextUtils.getUserId();
     commentService.updateQuickComment(dto, userId);
@@ -238,6 +277,10 @@ public class FlowCommentController {
       action = AuditAction.DELETE,
       content = "'deleteQuickComment'")
   @Operation(summary = "删除常用语")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   public YdszResponse<Void> deleteQuickComment(@PathVariable String id) {
     String userId = AuthContextUtils.getUserId();
     commentService.deleteQuickComment(id, userId);
@@ -261,6 +304,10 @@ public class FlowCommentController {
       action = AuditAction.CREATE,
       content = "'incrementUseCount'")
   @Operation(summary = "增加使用次数（审批时调用）")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   public YdszResponse<Void> incrementUseCount(@PathVariable String id) {
     commentService.incrementQuickCommentUseCount(id);
     return YdszResponse.success();

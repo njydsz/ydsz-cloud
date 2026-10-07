@@ -24,7 +24,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -34,7 +34,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * <p>覆盖场景：分页查询接口、参数校验失败（400）、业务异常错误码包装。
  *
  * <p>使用 {@code @WebMvcTest(ConfigController.class)} 仅加载 Controller 层，
- * 所有 Service 依赖通过 {@code @MockBean} 模拟，{@link SystemExceptionHandler}
+ * 所有 Service 依赖通过 {@code @MockitoBean} 模拟，{@link SystemExceptionHandler}
  * 通过 {@code @Import} 纳入 MVC 异常处理链路。
  *
  * @author ydsz
@@ -48,13 +48,13 @@ class ConfigControllerTest {
   @Autowired
   private MockMvc mockMvc;
 
-  @MockBean
+  @MockitoBean
   private ConfigService configService;
 
-  @MockBean
+  @MockitoBean
   private ConfigBatchService configBatchService;
 
-  @MockBean
+  @MockitoBean
   private ExcelWebSupport excelWebSupport;
 
   @SuppressWarnings("unchecked")

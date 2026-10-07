@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,6 +80,11 @@ public class JobQueueController {
    *     queueRemainingCapacity / completedTaskCount / taskCount 共 7 个字段）
    */
   @Operation(summary = "查询执行队列状态")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回线程池实时状态（活跃数/队列大小/已完成数等）"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 cronjob.stats.view 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/status")
   public YdszResponse<Map<String, Object>> getQueueStatus() {

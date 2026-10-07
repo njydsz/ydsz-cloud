@@ -94,4 +94,17 @@ public interface MsgAggregateRepository {
    * @return 影响行数
    */
   int updateStatusByGroup(String group, String receiver, String fromStatus, String toStatus);
+
+  /**
+   * 按 ID 集合批量 CAS 更新状态（单次 SQL，消除 for 循环逐条更新 N+1）。
+   *
+   * <p>内部通过 {@code UPDATE ... WHERE id IN (...) AND batch_status = fromStatus} 批量流转状态，
+   * 用于调度器扫描到期批次后批量 PENDING→READY 等场景。
+   *
+   * @param ids 批次 ID 集合（非 null 非空）
+   * @param fromStatus 当前状态（期望值）
+   * @param toStatus 目标状态
+   * @return 实际影响行数
+   */
+  int updateStatusByIds(List<String> ids, String fromStatus, String toStatus);
 }

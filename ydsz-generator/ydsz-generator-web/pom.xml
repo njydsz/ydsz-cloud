@@ -68,28 +68,19 @@
       <artifactId>lombok</artifactId>
       <optional>true</optional>
     </dependency>
-          <!-- 单元测试基础设施：JUnit 5 + AssertJ + Mockito（云顶编码规范 §14.1） -->
+          <!-- 单元测试基础设施：MockMvc + Mockito + JUnit 5（云顶编码规范 §14.1，spring-boot-starter-test 统一封装） -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- JUnit Jupiter Params（@ParameterizedTest 支持，修复 TemplateInvocationValidationException） -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
+        <!-- Mockito JUnit Jupiter 扩展（@ExtendWith(MockitoExtension.class)） -->
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
+            <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
-        </dependency></dependencies>
+        </dependency>
+    </dependencies>
 
   <build>
     <plugins>

@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
@@ -15,11 +14,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.userinfo.domain.dto.AssignPermissionsDTO;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
@@ -30,30 +30,26 @@ import com.njydsz.userinfo.server.service.RoleService;
 /**
  * {@link RoleController} 契约测试。
  *
- * <p>覆盖：CRUD 参数校验、分页检索、权限分配。
+ * <p>覆盖：分页检索（游标模式成功路径）、创建参数校验 400、权限分配成功。
  */
 @WebMvcTest(controllers = RoleController.class)
 class RoleControllerTest {
 
   @Autowired private MockMvc mvc;
 
-  @MockBean private RoleService service;
+  @MockitoBean private RoleService service;
 
   @Nested
   @DisplayName("GET /role/page")
   class Page {
 
+    /** 游标模式分页返回 total=0 + empty nextCursor → 200 OK。 */
     @Test
     @DisplayName("should return 200 with empty page when no data")
     void emptyPage() throws Exception {
-      RoleVO vo = new RoleVO();
-      vo.setId("r_001");
-      vo.setRoleCode("ROLE_ADMIN");
-      when(service.page(any(RolePageQuery.class)))
-          .thenReturn(com.njydsz.common.core.response.PageResponse.of(0L, 1, 20, List.of(vo)));
+      when(service.page(any(RolePageQuery.class))).thenReturn(PageResponse.ofList(List.of(), null));
       mvc.perform(get("/role/page").param("pageNum", "1").param("pageSize", "10"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("").exists())
           .andDo(print());
     }
   }
@@ -62,7 +58,7 @@ class RoleControllerTest {
   @DisplayName("POST /role")
   class Create {
 
-    /** roleCode 为空 → 400。 */
+    /** roleCode 空白 → HTTP 400。 */
     @Test
     @DisplayName("should return 400 when roleCode blank")
     void blankRoleCode() throws Exception {
@@ -74,7 +70,7 @@ class RoleControllerTest {
           .andDo(print());
     }
 
-    /** roleName 为空 → 400。 */
+    /** roleName 空白 → HTTP 400。 */
     @Test
     @DisplayName("should return 400 when roleName blank")
     void blankRoleName() throws Exception {
@@ -86,7 +82,7 @@ class RoleControllerTest {
           .andDo(print());
     }
 
-    /** 创建成功 → 200 + 包装 id。 */
+    /** 创建成功 → 200 包装新 roleId。 */
     @Test
     @DisplayName("should return 200 with id on success")
     void ok() throws Exception {
@@ -104,12 +100,13 @@ class RoleControllerTest {
   @DisplayName("POST /role/{roleId}/permissions")
   class AssignPermission {
 
-    /** permissionIds 数组长度超出限制 (>200) → 400。 */
+    /** permissionIds 数组长度超出 {@code @Size(max=200)} → HTTP 400。 */
     @Test
     @DisplayName("should return 400 when permissionIds exceed max size")
-    void assignmentFails() throws Exception {
+    void exceedsMaxSize() throws Exception {
       AssignPermissionsDTO dto = new AssignPermissionsDTO();
-      dto.setPermissionIds(java.util.stream.IntStream.range(0, 201).mapToObj(i -> "m_" + i).toList());
+      dto.setPermissionIds(
+          java.util.stream.IntStream.range(0, 201).mapToObj(i -> "m_" + i).toList());
       mvc.perform(
               post("/role/{roleId}/permissions", "r_001")
                   .contentType(MediaType.APPLICATION_JSON)
@@ -118,7 +115,7 @@ class RoleControllerTest {
           .andDo(print());
     }
 
-    /** 分配成功 → 200 + true。 */
+    /** 正常调用 → 200 包装 true。 */
     @Test
     @DisplayName("should return 200 on success")
     void ok() throws Exception {

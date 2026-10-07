@@ -83,6 +83,11 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
    */
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    // 白名单路径直接放行（WhiteListPreFilter 已标记）
+    if (Boolean.TRUE.equals(exchange.getAttributes().get(WhiteListPreFilter.ATTR_WHITELIST))) {
+      return chain.filter(exchange);
+    }
+
     if (!isEnabled) {
       return chain.filter(exchange);
     }

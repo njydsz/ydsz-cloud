@@ -68,7 +68,7 @@
     {
       "name": "ydsz.feign.circuit-breaker.enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用熔断器（默认 false）。"
+      "description": "是否启用熔断器（默认 true，安全默认值）。"
     },
     {
       "name": "ydsz.feign.circuit-breaker.state-ttl-seconds",
@@ -78,7 +78,7 @@
     {
       "name": "ydsz.feign.bulkhead.enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用信号量隔离（默认 false）。"
+      "description": "是否启用信号量隔离（默认 true，安全默认值）。"
     },
     {
       "name": "ydsz.feign.bulkhead.default-max-concurrent",

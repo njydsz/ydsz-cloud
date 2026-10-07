@@ -2,7 +2,8 @@ package com.njydsz.message.web.controller.template;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -11,181 +12,209 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.message.domain.dto.TemplateAuditDTO;
-import com.njydsz.message.domain.dto.TemplateCreateDTO;
-import com.njydsz.message.domain.dto.TemplateQueryDTO;
-import com.njydsz.message.domain.vo.MsgTemplateVO;
-import com.njydsz.message.server.service.TemplateService;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.message.domain.dto.TemplateCreateDTO;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
+import com.njydsz.message.server.service.TemplateService;
 
 /**
- * {@link TemplateController} 的 MockMvc 集成测试。
+ * TemplateController 集成测试。
  *
- * <p>验证消息模板的完整 CRUD + 审核流程：创建 / 更新 / 删除 / 分页查询 / 详情 / 审核。
+ * <p>使用 {@code MockMvcBuilders.standaloneSetup()} 构建轻量级 Web 层测试，通过 Mockito {@code @Mock} 模拟
+ * {@link TemplateService} 依赖，验证 HTTP 路由、请求参数绑定、响应格式正确性。
  *
  * @author ydsz-team
  * @since 26.10.01
  */
-@WebMvcTest(TemplateController.class)
+@ExtendWith(MockitoExtension.class)
 class TemplateControllerTest {
 
-  @Autowired
   private MockMvc mockMvc;
 
-  @Autowired
-  private ObjectMapper objectMapper;
-
-  @MockBean
+  @Mock
   private TemplateService templateService;
 
+  @InjectMocks
+  private TemplateController templateController;
+
+  private MsgTemplateVO sampleTemplate;
+
+  @BeforeEach
+  void setUp() {
+    mockMvc = MockMvcBuilders.standaloneSetup(templateController).build();
+
+    sampleTemplate = new MsgTemplateVO();
+    sampleTemplate.setId("tpl-001");
+    sampleTemplate.setTemplateCode("SMS_VERIFY_CODE");
+    sampleTemplate.setChannel("SMS");
+    sampleTemplate.setLocale("zh_CN");
+    sampleTemplate.setSubject("验证码通知");
+    sampleTemplate.setContent("您的验证码为 ${code}，5 分钟内有效");
+    sampleTemplate.setStatus("ENABLED");
+    sampleTemplate.setAuditStatus("APPROVED");
+    sampleTemplate.setCreatedAt(LocalDateTime.of(2026, 10, 1, 10, 0));
+  }
+
   @Nested
-  @DisplayName("POST /message/template 创建接口测试")
-  class CreateEndpoint {
+  @DisplayName("POST /message/template - create")
+  class Create {
 
     @Test
-    @DisplayName("创建模板应返回模板详情 VO")
-    void create_shouldReturnTemplateVo() throws Exception {
-      MsgTemplateVO vo = new MsgTemplateVO();
-      vo.setId("tpl-001");
-      vo.setTemplateCode("SMS_VERIFY");
-      vo.setChannel("SMS");
-      vo.setContent("您的验证码是 ${code}");
-
-      when(templateService.create(any(TemplateCreateDTO.class))).thenReturn(vo);
-
+    @DisplayName("创建模板成功时返回 200 + 模板 VO")
+    void shouldReturnTemplateOnSuccess() throws Exception {
       TemplateCreateDTO dto = new TemplateCreateDTO();
-      dto.setTemplateCode("SMS_VERIFY");
+      dto.setTemplateCode("SMS_VERIFY_CODE");
       dto.setChannel("SMS");
-      dto.setContent("您的验证码是 ${code}");
+      dto.setContent("您的验证码为 ${code}，5 分钟内有效");
+
+      when(templateService.create(any(TemplateCreateDTO.class))).thenReturn(sampleTemplate);
 
       mockMvc.perform(post("/message/template")
               .contentType(MediaType.APPLICATION_JSON)
-              .content(objectMapper.writeValueAsString(dto)))
+              .content("{\"templateCode\":\"SMS_VERIFY_CODE\",\"channel\":\"SMS\","
+                  + "\"content\":\"您的验证码为 ${code}，5 分钟内有效\"}"))
           .andExpect(status().isOk())
+          .andExpect(jsonPath("$.code").value("A00000"))
           .andExpect(jsonPath("$.data.id").value("tpl-001"))
-          .andExpect(jsonPath("$.data.templateCode").value("SMS_VERIFY"));
+          .andExpect(jsonPath("$.data.templateCode").value("SMS_VERIFY_CODE"))
+          .andExpect(jsonPath("$.data.channel").value("SMS"));
+
+      verify(templateService, times(1)).create(any(TemplateCreateDTO.class));
     }
   }
 
   @Nested
-  @DisplayName("PUT /message/template/{id} 更新接口测试")
-  class UpdateEndpoint {
+  @DisplayName("PUT /message/template/{id} - update")
+  class Update {
 
     @Test
-    @DisplayName("更新模板应返回更新后的 VO")
-    void update_shouldReturnUpdatedVo() throws Exception {
-      MsgTemplateVO vo = new MsgTemplateVO();
-      vo.setId("tpl-001");
-      vo.setTemplateCode("SMS_VERIFY");
-      vo.setContent("更新后的内容");
+    @DisplayName("更新模板成功时返回 200 + 更新后模板 VO")
+    void shouldReturnUpdatedTemplate() throws Exception {
+      MsgTemplateVO updated = new MsgTemplateVO();
+      updated.setId("tpl-001");
+      updated.setTemplateCode("SMS_VERIFY_CODE");
+      updated.setChannel("SMS");
+      updated.setContent("更新后的验证码内容");
 
-      when(templateService.update(eq("tpl-001"), any(TemplateCreateDTO.class))).thenReturn(vo);
+      when(templateService.update(eq("tpl-001"), any(TemplateCreateDTO.class))).thenReturn(updated);
 
-      TemplateCreateDTO dto = new TemplateCreateDTO();
-      dto.setContent("更新后的内容");
-
-      mockMvc.perform(put("/message/template/tpl-001")
+      mockMvc.perform(put("/message/template/{id}", "tpl-001")
               .contentType(MediaType.APPLICATION_JSON)
-              .content(objectMapper.writeValueAsString(dto)))
+              .content("{\"templateCode\":\"SMS_VERIFY_CODE\",\"channel\":\"SMS\","
+                  + "\"content\":\"更新后的验证码内容\"}"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.data.content").value("更新后的内容"));
+          .andExpect(jsonPath("$.code").value("A00000"))
+          .andExpect(jsonPath("$.data.content").value("更新后的验证码内容"));
+
+      verify(templateService, times(1)).update(eq("tpl-001"), any(TemplateCreateDTO.class));
     }
   }
 
   @Nested
-  @DisplayName("DELETE /message/template/{id} 删除接口测试")
-  class DeleteEndpoint {
+  @DisplayName("DELETE /message/template/{id} - delete")
+  class Delete {
 
     @Test
-    @DisplayName("删除模板应返回操作成功")
-    void delete_shouldReturnSuccess() throws Exception {
-      doNothing().when(templateService).delete("tpl-001");
-
-      mockMvc.perform(delete("/message/template/tpl-001"))
+    @DisplayName("删除模板成功时返回 200 + Void")
+    void shouldReturnSuccessOnDelete() throws Exception {
+      mockMvc.perform(delete("/message/template/{id}", "tpl-001"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.code").value(200));
+          .andExpect(jsonPath("$.code").value("A00000"));
+
+      verify(templateService, times(1)).delete("tpl-001");
     }
   }
 
   @Nested
-  @DisplayName("GET /message/template/{id} 详情接口测试")
-  class GetByIdEndpoint {
+  @DisplayName("GET /message/template/{id} - getById")
+  class GetById {
 
     @Test
-    @DisplayName("查询模板详情应返回完整 VO")
-    void getById_shouldReturnTemplateVo() throws Exception {
-      MsgTemplateVO vo = new MsgTemplateVO();
-      vo.setId("tpl-002");
-      vo.setTemplateCode("EMAIL_WELCOME");
-      vo.setChannel("EMAIL");
-      vo.setStatus("ENABLED");
+    @DisplayName("模板存在时返回 200 + MsgTemplateVO")
+    void shouldReturnTemplateWhenExists() throws Exception {
+      when(templateService.getById("tpl-001")).thenReturn(sampleTemplate);
 
-      when(templateService.getById("tpl-002")).thenReturn(vo);
-
-      mockMvc.perform(get("/message/template/tpl-002"))
+      mockMvc.perform(get("/message/template/{id}", "tpl-001"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.data.id").value("tpl-002"))
-          .andExpect(jsonPath("$.data.templateCode").value("EMAIL_WELCOME"))
-          .andExpect(jsonPath("$.data.status").value("ENABLED"));
+          .andExpect(jsonPath("$.code").value("A00000"))
+          .andExpect(jsonPath("$.data.id").value("tpl-001"))
+          .andExpect(jsonPath("$.data.templateCode").value("SMS_VERIFY_CODE"))
+          .andExpect(jsonPath("$.data.subject").value("验证码通知"));
+
+      verify(templateService, times(1)).getById("tpl-001");
+    }
+
+    @Test
+    @DisplayName("模板不存在时返回 200 + null data")
+    void shouldReturnNullWhenTemplateNotFound() throws Exception {
+      when(templateService.getById("tpl-404")).thenReturn(null);
+
+      mockMvc.perform(get("/message/template/{id}", "tpl-404"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.code").value("A00000"));
+
+      verify(templateService, times(1)).getById("tpl-404");
     }
   }
 
   @Nested
-  @DisplayName("GET /message/template/page 分页接口测试")
-  class PageEndpoint {
+  @DisplayName("GET /message/template/page - page")
+  class Page {
 
     @Test
-    @DisplayName("分页查询应返回模板分页列表")
-    void page_shouldReturnPagedTemplates() throws Exception {
-      MsgTemplateVO vo = new MsgTemplateVO();
-      vo.setId("tpl-001");
-      vo.setTemplateCode("SMS_VERIFY");
+    @DisplayName("分页查询返回 PageResponse 包装数据")
+    void shouldReturnPagedResult() throws Exception {
+      @SuppressWarnings("unchecked")
+      PageResponse<List<MsgTemplateVO>> pageResult = new PageResponse<>();
+      pageResult.setData(List.of(sampleTemplate));
+      pageResult.setTotal(1L);
+      pageResult.setPageNum(1L);
+      pageResult.setPageSize(20L);
 
-      PageResponse<List<MsgTemplateVO>> pageResponse = new PageResponse<>();
-      pageResponse.setData(List.of(vo));
-      pageResponse.setTotal(1L);
-
-      when(templateService.page(any(TemplateQueryDTO.class))).thenReturn(pageResponse);
+      when(templateService.page(any())).thenReturn(pageResult);
 
       mockMvc.perform(get("/message/template/page")
               .param("pageNum", "1")
-              .param("pageSize", "10"))
+              .param("pageSize", "20"))
           .andExpect(status().isOk())
+          .andExpect(jsonPath("$.code").value("A00000"))
           .andExpect(jsonPath("$.data.total").value(1))
-          .andExpect(jsonPath("$.data.data[0].templateCode").value("SMS_VERIFY"));
+          .andExpect(jsonPath("$.data.data[0].id").value("tpl-001"))
+          .andExpect(jsonPath("$.data.data[0].templateCode").value("SMS_VERIFY_CODE"));
+
+      verify(templateService, times(1)).page(any());
     }
   }
 
   @Nested
-  @DisplayName("POST /message/template/{id}/audit 审核接口测试")
-  class AuditEndpoint {
+  @DisplayName("POST /message/template/{id}/audit - audit")
+  class Audit {
 
     @Test
-    @DisplayName("审核模板应返回操作成功")
-    void audit_shouldReturnSuccess() throws Exception {
-      doNothing().when(templateService).audit(eq("tpl-001"), any(TemplateAuditDTO.class));
-
-      TemplateAuditDTO dto = new TemplateAuditDTO();
-      dto.setAuditStatus("APPROVED");
-      dto.setAuditRemark("审核通过");
-
-      mockMvc.perform(post("/message/template/tpl-001/audit")
+    @DisplayName("审核模板成功时返回 200 + Void")
+    void shouldReturnSuccessOnAudit() throws Exception {
+      mockMvc.perform(post("/message/template/{id}/audit", "tpl-001")
               .contentType(MediaType.APPLICATION_JSON)
-              .content(objectMapper.writeValueAsString(dto)))
+              .content("{\"auditStatus\":\"APPROVED\",\"auditRemark\":\"审核通过\"}"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.code").value(200));
+          .andExpect(jsonPath("$.code").value("A00000"));
+
+      verify(templateService, times(1)).audit(eq("tpl-001"), any());
     }
   }
 }

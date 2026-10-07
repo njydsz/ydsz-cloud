@@ -4,6 +4,8 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -86,6 +88,11 @@ public class DictVersionController {
    * @return 版本历史列表（可能为空）
    */
   @Operation(summary = "按类型编码查询版本历史")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回版本历史列表"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 sys:dict:version:list 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/{typeCode}")
   public YdszResponse<List<EntityVersionVO>> listByTypeCode(@PathVariable String typeCode) {
     return YdszResponse.success(
@@ -102,6 +109,12 @@ public class DictVersionController {
    * @return 分页结果（含总记录数）
    */
   @Operation(summary = "按类型编码分页查询版本历史")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回分页版本历史列表"),
+      @ApiResponse(responseCode = "400", description = "参数错误，pageSize 超出范围"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 sys:dict:version:list 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @GetMapping("/page")
   public YdszResponse<PageResponse<List<EntityVersionVO>>> pageByTypeCode(EntityVersionPageQuery query) {
     // pageSize 服务端硬上限截断，防止深度分页 OOM
@@ -137,6 +150,12 @@ public class DictVersionController {
       action = AuditAction.UPDATE,
       content = "'回滚字典: ' + #typeCode + ' → ' + #targetVersion")
   @Operation(summary = "回滚字典到指定版本", description = "将字典回滚到历史版本，操作不可撤销")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回新创建的回放版本 ID"),
+      @ApiResponse(responseCode = "400", description = "参数错误，typeCode 或 targetVersion 为空"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 sys:dict:version:list 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @RateLimit(resource = "system.dict.rollback", threshold = 10)
   @Idempotent(
       key = "'ydsz:system:DictVersionController:rollback:' + #typeCode + ':' + #targetVersion",
