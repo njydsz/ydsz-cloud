@@ -147,6 +147,12 @@
             <artifactId>spring-boot-health</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- ydsz-common-sentry（optional，HikariMetricsReporter 告警发布） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-sentry</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!-- commons-lang3 (ExceptionUtils.getStackTrace) -->
         <dependency>
             <groupId>org.apache.commons</groupId>

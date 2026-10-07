@@ -65,6 +65,9 @@ public class JdbcProperties {
   /** 安全查询配置（ORDER BY 注入防护 + 深度分页检测） */
   private SafeQueryProperties safeQuery = new SafeQueryProperties();
 
+  /** HikariCP 连接池指标采集配置 */
+  private HikariMetricsProperties metrics = new HikariMetricsProperties();
+
   public boolean isEnabled() { return isEnabled; }
   public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
 
@@ -82,4 +85,7 @@ public class JdbcProperties {
 
   public SafeQueryProperties getSafeQuery() { return safeQuery; }
   public void setSafeQuery(SafeQueryProperties safeQuery) { this.safeQuery = safeQuery; }
+
+  public HikariMetricsProperties getMetrics() { return metrics; }
+  public void setMetrics(HikariMetricsProperties metrics) { this.metrics = metrics; }
 }
