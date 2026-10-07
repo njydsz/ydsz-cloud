@@ -128,6 +128,12 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
+        </dependency>
+        <!-- spring-boot-starter-test: 提供 @WebMvcTest / MockMvc / spring-test / JSONassert / JsonPath -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency></dependencies>
     <build>
         <finalName>${project.artifactId}</finalName>
