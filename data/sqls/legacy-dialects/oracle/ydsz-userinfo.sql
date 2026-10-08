@@ -53,11 +53,11 @@ CREATE TABLE ydsz_idm_account_user (
     CONSTRAINT uk_ydsz_idm_account_user_username UNIQUE (username),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -110,11 +110,11 @@ CREATE TABLE ydsz_idm_org_company (
     CONSTRAINT uk_ydsz_idm_org_company_company_code UNIQUE (company_code),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -150,11 +150,11 @@ CREATE TABLE ydsz_idm_org_department (
     CONSTRAINT uk_ydsz_idm_org_department_dept_code UNIQUE (dept_code),
     sort NUMBER(10)               NOT NULL DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -191,11 +191,11 @@ CREATE TABLE ydsz_idm_role (
     CONSTRAINT uk_ydsz_idm_role_role_code UNIQUE (role_code, tenant_id),
     sort NUMBER(10)               NOT NULL DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -234,11 +234,11 @@ CREATE TABLE ydsz_idm_menu (
     CONSTRAINT uk_ydsz_idm_menu_menu_code UNIQUE (menu_code),
     sort NUMBER(10)               NOT NULL DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -277,11 +277,11 @@ CREATE TABLE ydsz_idm_post (
     CONSTRAINT uk_ydsz_idm_post_post_code UNIQUE (post_code),
     sort NUMBER(10)               NOT NULL DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -312,11 +312,11 @@ CREATE TABLE ydsz_idm_account_user_language (
     CONSTRAINT uk_ydsz_idm_account_user_language_language_code UNIQUE (language_code),
     sort NUMBER(10)               NOT NULL DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -345,11 +345,11 @@ CREATE TABLE ydsz_idm_account_user_role (
     CONSTRAINT pk_ydsz_idm_account_user_role PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -378,11 +378,11 @@ CREATE TABLE ydsz_idm_account_user_post (
     CONSTRAINT pk_ydsz_idm_account_user_post PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -412,11 +412,11 @@ CREATE TABLE ydsz_idm_account_user_dept (
     CONSTRAINT pk_ydsz_idm_account_user_dept PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -446,11 +446,11 @@ CREATE TABLE ydsz_idm_org_company_dept (
     CONSTRAINT pk_ydsz_idm_org_company_dept PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -480,11 +480,11 @@ CREATE TABLE ydsz_idm_role_permission (
     CONSTRAINT pk_ydsz_idm_role_permission PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -519,11 +519,11 @@ CREATE TABLE ydsz_idm_account_login_history (
     sort NUMBER DEFAULT 0,
     status NUMBER DEFAULT 1,
     revision NUMBER DEFAULT 0,
-    tenant_id VARCHAR2(64) DEFAULT '1',
+    tenant_id VARCHAR2(36 CHAR) DEFAULT '1',
     is_deleted NUMBER(1) DEFAULT 0,
-    created_by VARCHAR2(64),
+    created_by VARCHAR2(36 CHAR),
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64),
+    updated_by VARCHAR2(36 CHAR),
     updated_at DATE DEFAULT SYSDATE
 );
 
@@ -549,11 +549,11 @@ CREATE TABLE ydsz_idm_account_password_history (
     sort NUMBER DEFAULT 0,
     status NUMBER DEFAULT 1,
     revision NUMBER DEFAULT 0,
-    tenant_id VARCHAR2(64) DEFAULT '1',
+    tenant_id VARCHAR2(36 CHAR) DEFAULT '1',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64),
+    created_by VARCHAR2(36 CHAR),
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64),
+    updated_by VARCHAR2(36 CHAR),
     updated_at DATE DEFAULT SYSDATE
 );
 
@@ -584,11 +584,11 @@ CREATE TABLE ydsz_idm_auth_policy (
     CONSTRAINT uk_ydsz_idm_auth_policy_tenant_id UNIQUE (tenant_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               DEFAULT 0,
-    tenant_id VARCHAR2(64 CHAR)        DEFAULT NULL,
+    tenant_id VARCHAR2(36 CHAR)        DEFAULT NULL,
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -637,11 +637,11 @@ CREATE TABLE ydsz_idm_auth_social_client (
     CONSTRAINT uk_ydsz_idm_auth_social_client_platform UNIQUE (platform),
     sort NUMBER(10)               DEFAULT 100,
     revision NUMBER(10)               DEFAULT 0,
-    tenant_id VARCHAR2(64 CHAR)        DEFAULT NULL,
+    tenant_id VARCHAR2(36 CHAR)        DEFAULT NULL,
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -681,11 +681,11 @@ CREATE TABLE ydsz_idm_identity_saml_config (
     CONSTRAINT uk_ydsz_idm_identity_saml_config_entity_id UNIQUE (entity_id),
     sort NUMBER(10)               DEFAULT 100,
     revision NUMBER(10)               DEFAULT 0,
-    tenant_id VARCHAR2(64 CHAR)        DEFAULT NULL,
+    tenant_id VARCHAR2(36 CHAR)        DEFAULT NULL,
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -727,11 +727,11 @@ CREATE TABLE ydsz_idm_identity_oauth2_application (
     CONSTRAINT uk_ydsz_idm_identity_oauth2_application_client_id UNIQUE (client_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               DEFAULT 0,
-    tenant_id VARCHAR2(64 CHAR)        DEFAULT NULL,
+    tenant_id VARCHAR2(36 CHAR)        DEFAULT NULL,
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -774,11 +774,11 @@ CREATE TABLE ydsz_idm_auth_social_account (
     CONSTRAINT uk_ydsz_idm_auth_social_account_platform_open_id UNIQUE (platform, open_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -820,11 +820,11 @@ CREATE TABLE ydsz_idm_identity_security_alert (
     CONSTRAINT pk_ydsz_idm_identity_security_alert PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               DEFAULT 0,
-    tenant_id VARCHAR2(64 CHAR)        DEFAULT NULL,
+    tenant_id VARCHAR2(36 CHAR)        DEFAULT NULL,
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -855,7 +855,7 @@ CREATE INDEX idx_ydsz_idm_identity_security_alert_source_ip ON ydsz_idm_identity
 CREATE INDEX idx_ydsz_idm_identity_security_alert_tenant_is_deleted ON ydsz_idm_identity_security_alert (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_auth_credential (
-    id                       NUMBER(19) GENERATED BY DEFAULT AS IDENTITY NOT NULL,
+    id                       VARCHAR2(36 CHAR),
     credential_id            VARCHAR2(512 CHAR)       NOT NULL,
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     public_key               VARCHAR2(1024 CHAR)      NOT NULL,
@@ -870,11 +870,11 @@ CREATE TABLE ydsz_idm_auth_credential (
     sort NUMBER DEFAULT 0,
     status NUMBER DEFAULT 1,
     revision NUMBER DEFAULT 0,
-    tenant_id VARCHAR2(64) DEFAULT '1',
+    tenant_id VARCHAR2(36 CHAR) DEFAULT '1',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64),
+    created_by VARCHAR2(36 CHAR),
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64),
+    updated_by VARCHAR2(36 CHAR),
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

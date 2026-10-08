@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.agent.domain.rag.RagDebugEnquirer;
 import com.njydsz.agent.domain.rag.RagDebugInfo;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
+import com.njydsz.agent.server.analytics.CostAnalysisService.BotMetricsDTO;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 
 /**
@@ -145,4 +146,21 @@ public class ObservabilityDashboardService {
    * @param callCount 调用次数
    */
   public record ModelUsageDTO(String modelName, long tokens, BigDecimal costUsd, long callCount) {}
+
+  /**
+   * 按 botId 聚合查询 Agent 指标。
+   *
+   * <p>返回指定 Agent 定义在最近 N 天内的 LLM 调用次数、Token 消耗、成本等聚合指标，
+   * 用于在面板中按 Agent 维度展示用量分析。
+   *
+   * @param botId Agent 定义 ID
+   * @param days 统计天数（从今天往前推）
+   * @return Bot 维度聚合指标 DTO
+   */
+  public BotMetricsDTO getBotMetrics(String botId, int days) {
+    log.info("[Observability] 查询 botId 指标: botId={}, last {} days", botId, days);
+    LocalDateTime endDate = LocalDateTime.now().plusDays(1);
+    LocalDateTime startDate = endDate.minusDays(days);
+    return costAnalysisService.getStatsByBotId(botId, startDate, endDate);
+  }
 }

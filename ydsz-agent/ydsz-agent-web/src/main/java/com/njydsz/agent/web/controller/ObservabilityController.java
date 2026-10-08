@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.agent.server.analytics.CostAnalysisService.BotMetricsDTO;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.DashboardOverviewDTO;
@@ -49,8 +50,8 @@ public class ObservabilityController {
   /** trace-context 返回 Map 初始容量（botId / turnId / conversationId / accountId 四个键） */
   private static final int TRACE_CONTEXT_MAP_CAPACITY = 4;
 
-  /** 按 botId 指标查询返回占位 Map 初始容量 */
-  private static final int BOT_METRICS_MAP_CAPACITY = 4;
+  /** botId 指标结果 Map 初始容量（botId / days / metrics 三个键） */
+  private static final int BOT_METRICS_MAP_CAPACITY = 3;
 
   private final ObservabilityDashboardService dashboardService;
 
@@ -127,11 +128,20 @@ public class ObservabilityController {
    * 按 botId 聚合查询指标数据。
    *
    * <p>返回指定 Agent 定义在最近 N 天内的 LLM 调用次数、Token 消耗、成本等聚合指标，
-   * 用于在面板中按 Agent 维度展示用量分析。
+   * 用于在面板中按 Agent 维度展示用量分析。数据来源：本地持久化审计日志表
+   * （{@code ydsz_agt_token_usage}），按 botId 过滤后逐行累加。
+   *
+   * <p>返回结构包含：
+   * <ul>
+   *   <li>botId - 请求的 Agent 定义 ID</li>
+   *   <li>days - 实际统计天数</li>
+   *   <li>metrics - {@link BotMetricsDTO}（totalPromptTokens / totalCompletionTokens /
+   *       totalTokens / totalCostUsd / totalCalls / avgTokensPerCall）</li>
+   * </ul>
    *
    * @param botId Agent 定义 ID
    * @param days 统计天数（默认 7，最大 30）
-   * @return 统一响应结果，data 为指标数据 Map
+   * @return 统一响应结果，data 为指标数据 Map（含 botId / days / metrics 三个键）
    */
   @GetMapping("/metrics/bot/{botId}")
   public YdszResponse<Map<String, Object>> getMetricsByBotId(
@@ -139,12 +149,11 @@ public class ObservabilityController {
       @RequestParam(defaultValue = "7") int days) {
     int safeDays = Math.min(Math.max(days, 1), MAX_QUERY_DAYS);
     log.info("[Observability-API] 按 botId 查询指标: botId={}, days={}", botId, safeDays);
-    // TODO: 由 dashboardService 提供按 botId 聚合的指标查询能力
-    // 当前返回占位结构，待 ObservabilityDashboardService 扩展后填充实际数据
+    BotMetricsDTO metrics = dashboardService.getBotMetrics(botId, safeDays);
     Map<String, Object> result = new HashMap<>(BOT_METRICS_MAP_CAPACITY);
     result.put("botId", botId);
     result.put("days", safeDays);
-    result.put("placeholder", "待实现按 botId 聚合查询");
+    result.put("metrics", metrics);
     return YdszResponse.success(result);
   }
 }

@@ -209,7 +209,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
     created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
