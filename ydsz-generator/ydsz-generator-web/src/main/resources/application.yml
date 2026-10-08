@@ -32,6 +32,9 @@ mybatis-plus:
       logic-not-delete-value: 0
 
 # 代码生成器自定义配置（ydsz.generator.* — 统一命名空间）
+# SpringDoc OpenAPI 3 文档（ydsz-common-base 自动装配）
+# 统一线程池 / 多租户 / JDBC / 审计 配置（ydsz-common-*）
+# Spring Boot Actuator + Prometheus 端点暴露
 ydsz:
   generator:
     # 默认输出目录
@@ -47,46 +50,43 @@ ydsz:
     # 表前缀（生成类名时去除）
     table-prefix: t_,tab_
     # 数据库类型到 Java 类型的映射（key 为大写的 SQL 类型名，value 为 Java 类型全限定名）
-  type-mapping:
-    VARCHAR: String
-    CHAR: String
-    TEXT: String
-    LONGTEXT: String
-    MEDIUMTEXT: String
-    TINYTEXT: String
-    INT: Integer
-    INTEGER: Integer
-    TINYINT: Integer
-    SMALLINT: Integer
-    MEDIUMINT: Integer
-    BIGINT: Long
-    FLOAT: Float
-    DOUBLE: Double
-    DECIMAL: java.math.BigDecimal
-    NUMERIC: java.math.BigDecimal
-    DATE: java.time.LocalDate
-    DATETIME: java.time.LocalDateTime
-    TIMESTAMP: java.time.LocalDateTime
-    TIME: java.time.LocalTime
-    BOOLEAN: Boolean
-    BOOL: Boolean
-    BIT: Boolean
-    BLOB: "[B"
-    LONGBLOB: "[B"
-    BYTEA: "[B"
-  # 批量生成单表超时（分钟）
-  batch-timeout-minutes: 5
-  # 代码生成异步线程池
-  thread-pool:
-    # 核心线程数（默认 CPU 核数）
-    core-size: 0
-    # 最大线程数（默认 16）
-    max-size: 16
-    # 排队容量
-    queue-capacity: 64
-
-# SpringDoc OpenAPI 3 文档（ydsz-common-base 自动装配）
-ydsz:
+    type-mapping:
+      VARCHAR: String
+      CHAR: String
+      TEXT: String
+      LONGTEXT: String
+      MEDIUMTEXT: String
+      TINYTEXT: String
+      INT: Integer
+      INTEGER: Integer
+      TINYINT: Integer
+      SMALLINT: Integer
+      MEDIUMINT: Integer
+      BIGINT: Long
+      FLOAT: Float
+      DOUBLE: Double
+      DECIMAL: java.math.BigDecimal
+      NUMERIC: java.math.BigDecimal
+      DATE: java.time.LocalDate
+      DATETIME: java.time.LocalDateTime
+      TIMESTAMP: java.time.LocalDateTime
+      TIME: java.time.LocalTime
+      BOOLEAN: Boolean
+      BOOL: Boolean
+      BIT: Boolean
+      BLOB: "[B"
+      LONGBLOB: "[B"
+      BYTEA: "[B"
+    # 批量生成单表超时（分钟）
+    batch-timeout-minutes: 5
+    # 代码生成异步线程池
+    thread-pool:
+      # 核心线程数（默认 CPU 核数）
+      core-size: 0
+      # 最大线程数（默认 16）
+      max-size: 16
+      # 排队容量
+      queue-capacity: 64
   doc:
     enabled: true
     title: 云顶代码生成器 API
@@ -95,9 +95,6 @@ ydsz:
     api-docs-path: /v3/api-docs
     swagger-ui-path: /swagger-ui/index.html
     base-package: com.njydsz.generator.controller
-
-# 统一线程池 / 多租户 / JDBC / 审计 配置（ydsz-common-*）
-ydsz:
   thread:
     pools:
       code-gen:
@@ -160,29 +157,11 @@ ydsz:
       thread-core-size: 1
       thread-max-size: 2
       queue-capacity: 5000
+
 logging:
   level:
     com.njydsz.generator: DEBUG
     com.njydsz.generator.mapper: INFO
-
-# Spring Boot Actuator + Prometheus 端点暴露 审计日志配置（ydsz-common-audit 自动装配读取 ydsz.audit 前缀）
-ydsz:
-  audit:
-    enabled: true
-    app-key: ydsz-generator
-    storage-type: LOCAL
-    record-request: true
-    record-response: false
-    sensitive-params:
-      - password
-      - url
-      - connectionString
-    retention-days: 90
-    async:
-      batch-size: 50
-      thread-core-size: 1
-      thread-max-size: 2
-      queue-capacity: 5000
 
 # Spring Boot Actuator + Prometheus 端点暴露
 management:

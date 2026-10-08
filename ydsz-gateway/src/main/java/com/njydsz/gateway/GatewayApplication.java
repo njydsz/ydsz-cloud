@@ -12,6 +12,7 @@ import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
 import com.njydsz.common.locales.config.EnableYdszI18n;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
+import com.njydsz.gateway.config.ApiVersionProperties;
 import com.njydsz.gateway.config.CorsProperties;
 import com.njydsz.gateway.config.GatewayHealthIndicator;
 import com.njydsz.gateway.config.GatewayMetrics;
@@ -62,7 +63,8 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
   GatewayRateLimitProperties.class,
   SecurityHeaderProperties.class,
   IpAccessControlProperties.class,
-  CorsProperties.class
+  CorsProperties.class,
+  ApiVersionProperties.class
 })
 public class GatewayApplication {
 

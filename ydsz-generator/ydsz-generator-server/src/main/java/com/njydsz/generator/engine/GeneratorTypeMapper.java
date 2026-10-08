@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 /**
  * 数据库 SQL 类型到编程语言的映射器。
  *
- * <p>读取配置中的 {@code generator.type-mapping} 表，将 JDBC 返回的数据库原生类型名
+ * <p>读取配置中的 {@code ydzs.generator.type-mapping} 表，将 JDBC 返回的数据库原生类型名
  * 转换为对应的 Java 类型全限定名或简单名。当配置中无匹配时使用
  * {@link #getDefaultMapping(String)} 兜底。
  *
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@ConfigurationProperties(prefix = "generator")
+@ConfigurationProperties(prefix = "ydsz.generator")
 public class GeneratorTypeMapper {
 
   /** 类型映射表（key 为大写的 SQL 类型名，value 为 Java 类型全限定名或简单名）。 */

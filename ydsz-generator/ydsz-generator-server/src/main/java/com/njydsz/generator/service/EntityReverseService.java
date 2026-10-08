@@ -33,7 +33,7 @@ import com.njydsz.common.locales.util.I18n;
 public class EntityReverseService {
 
   /** 默认作者（来自配置）。 */
-  @Value("${generator.default-author:ydsz-generator}")
+  @Value("${ydsz.generator.default-author:ydsz-generator}")
   private String defaultAuthor;
   /** 类名正则。 */
   private static final Pattern CLASS_NAME_PATTERN =

@@ -13,18 +13,18 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.10.08-v1"  # v28.1: +YDIZ-DB-008 ID字段类型长度统一VARCHAR(36)
-  source: "docs/云顶编码规范.md v1.0.15"
+  version: "26.10.08-v2"  # v28.2: +YDIZ-CONFIG-004 业务配置命名空间 ydzs.{module}.*
+  source: "docs/云顶编码规范.md v1.0.16"
   last_synced: "2026-10-08"
-  last_updated: "26.10.08-v1（+1 P0 YDIZ-DB-008 ID字段类型长度统一为VARCHAR(36)；总规则 189 条）"
-  total_rules: 189
+  last_updated: "26.10.08-v2（+1 P1 YDIZ-CONFIG-004 业务配置统一 ydzs.{module}.* 命名空间；总规则 190 条）"
+  total_rules: 190
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
     P0: 64
-    P1: 88
+    P1: 89
     P2: 24
 
 rules:
@@ -2618,6 +2618,48 @@ rules:
     pattern: "@ConfigurationProperties 类直接裸注解未继承 BaseProperties"
     fix: "1. 引入 ydsz-common-config 依赖 2. 类 extends BaseProperties 3. 调用 super.init() 初始化基类钩子"
     source: "编码规范 §30.3 配置基类规范（YDIZ-CONFIG-003，P2）"
+
+  - id: "YDIZ-CONFIG-004"
+    category: "config"
+    severity: "P1"
+    title: "【强制】业务模块自定义配置必须使用 ydzs.{module}.* 前缀"
+    description: |
+      所有业务模块的自定义配置键（application.yml / Nacos data-id）必须挂在 ydzs.{module}.* 命名空间下，
+      禁止使用无前缀的裸模块名作为配置前缀。
+
+      **为什么必须带 ydzs. 前缀**：
+      - 命名空间隔离：Nacos 配置中心多模块共享同一实例，{module}.* 前缀可能与其他模块/第三方库键名冲突
+      - 一致性：公共 common 模块配置（ydsz.thread / ydzs.tenant / ydzs.jdbc / ydzs.audit）已全部统一在 ydzs.* 下，
+        业务模块私有配置也应遵循同一命名约定
+      - 可识别性：运维查看配置树时能直观区分 ydzs 平台配置与非平台配置
+
+      **正例与反例**：
+      - ✅ `ydsz.generator.output-dir` / `ydsz.flow.enabled` / `ydsz.agent.insight.model`
+      - ❌ `generator.output-dir` / `flow.enabled` / `insight.model`
+
+      **@ConfigurationProperties / @Value 同步修改**：
+      - `@ConfigurationProperties(prefix = "ydsz.generator")` 不仅 yml 前缀要改， Java 注解 prefix 参数也必须同步更新
+      - `@Value("${ydsz.generator.default-author:ydsz-generator}")` 中的占位符 key 必须完整包含 ydzs. 前缀
+    pattern: "@ConfigurationProperties(prefix = \"{module}\") 或 @{module}.* 格式的 @Value"
+    fix: "1. yml 中顶层模块名 key 改为 ydzs.{module} 2. @ConfigurationProperties / @Value 中的 prefix/key 同步追加 ydzs. 前缀"
+    example_bad: |
+      # application.yml
+      generator:
+        output-dir: ./generated
+
+      // Java
+      @ConfigurationProperties(prefix = "generator")
+      public class GeneratorTypeMapper { ... }
+    example_good: |
+      # application.yml
+      ydzs:
+        generator:
+          output-dir: ./generated
+
+      // Java
+      @ConfigurationProperties(prefix = "ydsz.generator")
+      public class GeneratorTypeMapper { ... }
+    source: "编码规范 §31.1 业务配置命名空间规范（YDIZ-CONFIG-004，P1）"
 
 # ============================================
 # 十七、错误码规范（errcode，2 条，P1+P2）

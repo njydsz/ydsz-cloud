@@ -76,8 +76,8 @@ public class LlmInsightReportGenerator implements InsightReportGenerator {
    */
   public LlmInsightReportGenerator(
       LlmClient llmClient,
-      @Value("${generator.insight.model:gpt-4}") String model,
-      @Value("${generator.insight.max-sections:8}") int maxSections) {
+      @Value("${ydsz.agent.insight.model:gpt-4}") String model,
+      @Value("${ydsz.agent.insight.max-sections:8}") int maxSections) {
     this.llmClient = llmClient;
     this.model = model;
     this.maxSections = maxSections;

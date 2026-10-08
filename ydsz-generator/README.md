@@ -90,16 +90,16 @@ ydsz-generator/
 
 | 配置键 | 默认值 | 说明 |
 |--------|--------|------|
-| `generator.output-dir` | `./generated` | 代码输出根目录 |
-| `generator.default-author` | `ydsz-generator` | 默认作者（Javadoc `@author`） |
-| `generator.default-package` | `com.njydsz` | 默认基础包名 |
-| `generator.template-group` | `default` | 默认模板分组 |
-| `generator.conflict-strategy` | `SKIP` | 冲突策略（SKIP / OVERRIDE / MERGE） |
-| `generator.table-prefix` | `t_,tab_` | 表前缀（生成类名时去除） |
-| `generator.batch-timeout-minutes` | `5` | 批量生成单表超时 |
-| `generator.thread-pool.core-size` | `0`（CPU 核数） | 异步生成线程池核心线程数 |
-| `generator.thread-pool.max-size` | `16` | 异步生成线程池最大线程数 |
-| `generator.thread-pool.queue-capacity` | `64` | 异步生成线程池排队容量 |
+| `ydsz.generator.output-dir` | `./generated` | 代码输出根目录 |
+| `ydsz.generator.default-author` | `ydsz-generator` | 默认作者（Javadoc `@author`） |
+| `ydsz.generator.default-package` | `com.njydsz` | 默认基础包名 |
+| `ydsz.generator.template-group` | `default` | 默认模板分组 |
+| `ydsz.generator.conflict-strategy` | `SKIP` | 冲突策略（SKIP / OVERRIDE / MERGE） |
+| `ydsz.generator.table-prefix` | `t_,tab_` | 表前缀（生成类名时去除） |
+| `ydsz.generator.batch-timeout-minutes` | `5` | 批量生成单表超时 |
+| `ydsz.generator.thread-pool.core-size` | `0`（CPU 核数） | 异步生成线程池核心线程数 |
+| `ydsz.generator.thread-pool.max-size` | `16` | 异步生成线程池最大线程数 |
+| `ydsz.generator.thread-pool.queue-capacity` | `64` | 异步生成线程池排队容量 |
 
 ## 启动方式
 

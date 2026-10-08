@@ -24,15 +24,15 @@ import com.njydsz.common.thread.util.ExecutorUtils;
 public class ExecutorConfig {
 
   /** 核心线程数（默认 CPU 核数，最小 2）。 */
-  @Value("${generator.thread-pool.core-size:0}")
+  @Value("${ydsz.generator.thread-pool.core-size:0}")
   private int coreSize;
 
   /** 最大线程数（默认 16）。 */
-  @Value("${generator.thread-pool.max-size:16}")
+  @Value("${ydsz.generator.thread-pool.max-size:16}")
   private int maxSize;
 
   /** 排队容量（默认 64）。 */
-  @Value("${generator.thread-pool.queue-capacity:64}")
+  @Value("${ydsz.generator.thread-pool.queue-capacity:64}")
   private int queueCapacity;
 
   /**

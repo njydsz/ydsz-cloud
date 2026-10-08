@@ -61,7 +61,7 @@ public class CodeGenService {
   private static final int HISTORY_FILE_LIST_CAPACITY = 8;
 
   /** 批量生成单表任务最长等待时间（分钟）。 */
-  @Value("${generator.batch-timeout-minutes:5}")
+  @Value("${ydsz.generator.batch-timeout-minutes:5}")
   private long batchTimeoutMinutes;
 
   private final DatasourceService datasourceService;
@@ -74,11 +74,11 @@ public class CodeGenService {
   private final GenHistoryFileRepository historyFileRepository;
 
   /** 默认作者（来自配置）。 */
-  @Value("${generator.default-author:ydsz-generator}")
+  @Value("${ydsz.generator.default-author:ydsz-generator}")
   private String defaultAuthor;
 
   /** 默认基础包（来自配置）。 */
-  @Value("${generator.default-package:com.njydsz}")
+  @Value("${ydsz.generator.default-package:com.njydsz}")
   private String defaultBasePackage;
 
   /**
