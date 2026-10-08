@@ -92,6 +92,7 @@ ydsz-cloud/
 | NAME-002 | 数据库表名必须以 `ydsz_` 前缀（`@TableName("ydsz_xxx")`）|
 | DB-001 | 排序字段统一命名 `sort`（禁用 `sort_order`/`sortOrder`）|
 | DB-007 | 布尔字段列**必须 `SMALLINT`**，禁止 `BOOLEAN`/`BOOL`/`TINYINT(1)` |
+| DB-008 | **ID 类字段统一 `VARCHAR(36)`**，Java 实体 `MpBaseEntity<String>` + 雪花ID转String；禁止 `MpBaseEntity<Long>` / `BIGINT` 自增 / 其他 VARCHAR 宽度 |
 
 ### OOP
 

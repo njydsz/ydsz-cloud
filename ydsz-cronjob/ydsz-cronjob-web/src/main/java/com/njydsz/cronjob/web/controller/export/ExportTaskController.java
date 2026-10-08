@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
-import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.cronjob.domain.entity.export.ExportTask;
 import com.njydsz.cronjob.server.service.export.ExportTaskService;
@@ -58,7 +57,7 @@ public class ExportTaskController {
     Map<String, Object> params = (Map<String, Object>) request.getOrDefault("params", Map.of());
 
     String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
-    String userId = AuthContextUtils.getCurrentUserId();
+    String userId = AuthContextUtils.getUserId();
 
     String taskId = exportTaskService.submitTask(
         MODULE_CRONJOB, taskType, taskName, params, userId, tenantId);
@@ -90,7 +89,7 @@ public class ExportTaskController {
   public YdszResponse<List<ExportTask>> listMyTasks(
       @RequestParam(defaultValue = "20") int limit) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
-    String userId = AuthContextUtils.getCurrentUserId();
+    String userId = AuthContextUtils.getUserId();
     return YdszResponse.success(exportTaskService.listUserTasks(tenantId, userId, limit));
   }
 
@@ -104,7 +103,7 @@ public class ExportTaskController {
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> cancel(@PathVariable String id) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
-    String userId = AuthContextUtils.getCurrentUserId();
+    String userId = AuthContextUtils.getUserId();
     return YdszResponse.success(exportTaskService.cancelTask(id, userId, tenantId));
   }
 
