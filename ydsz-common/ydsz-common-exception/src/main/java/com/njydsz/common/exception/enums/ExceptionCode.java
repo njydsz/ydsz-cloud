@@ -142,6 +142,28 @@ public interface ExceptionCode extends ResultCode {
   // ======================== 异常级别（驱动前端差异化展示与监控告警） ========================
 
   /**
+   * 向用户展示的错误发生时可执行的建议操作 i18n 键。
+   *
+   * <p>默认返回 {@code null}（前端不渲染建议操作按钮）。 业务枚举可以覆盖此方法以提供操作引导， 例如：
+   *
+   * <ul>
+   *   <li>资源不存在（404） → "action.refresh_and_retry"（刷新页面 / 重试）
+   *   <li>无权限（403） → "action.contact_admin"（联系管理员）
+   *   <li>唯一键冲突（409） → "action.modify_and_retry"（修改数据后重试）
+   *   <li>限流（429） → "action.wait_and_retry"（稍后重试）
+   *   <li>乐观锁冲突（409） → "action.refresh_edit"（刷新后重新编辑）
+   * </ul>
+   *
+   * <p>i18n key 统一存放在 ydsz-common-exception 的 {@code exception-messages*.properties} 中， 前缀为
+   * {@code action.}，由前端消费并在错误提示旁渲染快捷操作按钮。
+   *
+   * @return i18n 键，{@code null} 表示不展示建议操作
+   */
+  default String actionHintKey() {
+    return null;
+  }
+
+  /**
    * 异常级别 — 驱动前端错误提示方式和监控告警等级。
    *
    * <ul>

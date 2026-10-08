@@ -19,7 +19,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.sentry.SentryObservation;
-import com.njydsz.common.thread.factory.InternalExecutorFactory;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient.AgentExecutionResult;
 import com.njydsz.workflow.domain.vo.AiAgentNodeConfigVO;
@@ -58,7 +58,7 @@ import com.njydsz.workflow.server.engine.impl.FlowVariableReplacer;
  * <p>借鉴 Flowlong 的「AI 审批」概念，将 AI Agent 作为流程节点执行器，
  * 实现自然语言驱动的审批决策自动化。
  *
- * <p><b>P0-1 线程池统一：</b>使用 {@link InternalExecutorFactory} 创建命名化、可观测的线程池，
+ * <p><b>P0-1 线程池统一：</b>使用虚拟线程（{@link com.njydsz.common.thread.util.ExecutorUtils} 封装）创建命名化、可观测的线程池，
  * 纳入 {@code ThreadPoolRegistry} 统一监控。
  *
  * @since 26.10.01
@@ -77,19 +77,13 @@ public class FlowAiAgentNodeExecutor {
   /** 重试最大延迟（毫秒，指数退避上限） */
   private static final long RETRY_MAX_DELAY_MS = 5000L;
 
-  /** AI Agent 执行线程池核心线程数 */
-  private static final int EXECUTOR_CORE_SIZE = 2;
-
-  /** AI Agent 执行线程池队列容量 */
-  private static final int EXECUTOR_QUEUE_CAPACITY = 256;
-
-  /** 提示词模板变量替换器 */
+    /** 提示词模板变量替换器 */
   private final FlowVariableReplacer variableReplacer;
 
   /** AI Agent 服务客户端 */
   private final AgentServiceClient agentServiceClient;
 
-  /** AI Agent 执行线程池（P0-1：由 InternalExecutorFactory 统一管理，纳入 ThreadPoolRegistry） */
+  /** AI Agent 执行线程池（P0-1：虚拟线程每任务一线程，IO 密集型） */
   private final ExecutorService aiAgentExecutor;
 
   /**
@@ -102,8 +96,7 @@ public class FlowAiAgentNodeExecutor {
       AgentServiceClient agentServiceClient) {
     this.variableReplacer = variableReplacer;
     this.agentServiceClient = agentServiceClient;
-    this.aiAgentExecutor = InternalExecutorFactory.newFixedThreadPool(
-        "workflow-ai-agent", EXECUTOR_CORE_SIZE, EXECUTOR_QUEUE_CAPACITY);
+    this.aiAgentExecutor = ExecutorUtils.newVirtualThreadExecutor("workflow-ai-agent-");
     log.info("[Flow-AI-Agent] AI 审批节点执行器已初始化");
   }
 

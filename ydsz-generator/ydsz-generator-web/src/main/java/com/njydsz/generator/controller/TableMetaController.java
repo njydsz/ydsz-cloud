@@ -16,13 +16,14 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.entity.GenTableMeta;
+import com.njydsz.generator.exception.GeneratorExceptionCode;
 import com.njydsz.generator.security.PermissionCodes;
 import com.njydsz.generator.service.DatasourceService;
 import com.njydsz.generator.service.TableMetadataService;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 表元数据管理 REST 控制器。
@@ -64,14 +65,14 @@ public class TableMetaController {
    *
    * @param datasourceId 数据源 ID，需为已配置且连接正常的数据源
    * @return 刷新后的表元数据列表
-   * @throws IllegalArgumentException 数据源不存在或已删除
+   * @throws BusinessException 数据源不存在或已删除时抛出 DATASOURCE_NOT_FOUND
    */
   @PostMapping("/refresh")
   @Audit(module = "表元数据", action = AuditAction.SYNC, content = "'刷新表元数据:' + #datasourceId")
   public YdszResponse<List<GenTableMeta>> refreshTables(@RequestParam Long datasourceId) {
     GenDatasource ds = datasourceService.getById(datasourceId);
     if (ds == null) {
-      throw new IllegalArgumentException(I18n.message("generator.table_meta.datasource_not_found", new Object[]{datasourceId}));
+      throw BusinessException.of(GeneratorExceptionCode.DATASOURCE_NOT_FOUND).params(datasourceId);
     }
     return YdszResponse.success(tableMetadataService.refreshTables(ds));
   }

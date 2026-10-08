@@ -18,9 +18,8 @@ import lombok.Getter;
 @YdszExceptionCode(module = "generator", description = "代码生成器模块异常码", since = "26.10.01")
 public enum GeneratorExceptionCode implements ExceptionCode {
 
-  // TODO: 预分配编码，等实际异常场景明确后补充
-  // TEMPLATE_RENDER_FAILED("B96001", "generator.template.render_failed", 500, false, 0),
-  // CODE_GEN_FAILED("B96002", "generator.code.gen_failed", 500, false, 0),
+  DATASOURCE_NOT_FOUND("B96001", "generator.table_meta.datasource_not_found", 500, false, 0),
+  // TODO: 后续异常场景按需补充
   ;
 
   /** 错误码字符串（如 "B96001"） */

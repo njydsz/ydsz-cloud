@@ -91,6 +91,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!-- 审计日志下沉：@Audit 注解注入到 server 层核心 Service 方法 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-audit</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -205,6 +210,12 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
+        </dependency>
+        <!-- 测试基础设施：JUnit 5 + AssertJ + Mockito + Spring Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
 </dependencies>
 </project>

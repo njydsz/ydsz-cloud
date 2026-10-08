@@ -15,6 +15,9 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.locales.util.Locales;
@@ -31,7 +34,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.common.sentry.SentryObservation;
-import com.njydsz.common.thread.factory.InternalExecutorFactory;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.message.domain.constant.MessageConstants;
@@ -133,10 +136,15 @@ public class MessageServiceImpl implements MessageService {
   /** P2-A6: 消息发送事务包装（解决同类 self-invocation 事务不生效问题） */
   private final MessageSendTxService messageSendTxService;
 
-  /** P2-C5: 级联消息发送线程池（固定大小，避免级联消息耗尽主线程池） */
-  private final Executor cascadeExecutor = InternalExecutorFactory.newFixedThreadPool("message-cascade", 4);
+  /** P2-C5: 级联消息发送线程池（虚拟线程，IO 密集型级联发送） */
+  private final Executor cascadeExecutor = ExecutorUtils.newVirtualThreadExecutor("message-cascade-");
 
   @Override
+  @Audit(
+      module = "消息管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'send strategy=' + #request.strategy")
   public MessageSendResultVO send(MessageItemRequestDTO request) {
     try {
       return SentryObservation.<MessageSendResultVO>time("message.send", "单条消息发送", null, () -> sendInternal(request, 0));

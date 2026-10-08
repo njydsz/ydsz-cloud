@@ -43,15 +43,23 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** 参数校验失败 */
   PARAM_INVALID("B30028", "userinfo.param.invalid"),
   /** 用户不存在 */
-  USER_NOT_FOUND("B30001", "userinfo.user.not.found", 404),
+  USER_NOT_FOUND("B30001", "userinfo.user.not.found", 404) {
+    @Override public String actionHintKey() { return "action.contact_admin"; }
+  },
   /** 密码错误 */
   PASSWORD_INCORRECT("B30002", "userinfo.password.incorrect"),
   /** 用户已停用 */
-  USER_DISABLED("B30003", "userinfo.user.disabled", 403),
+  USER_DISABLED("B30003", "userinfo.user.disabled", 403) {
+    @Override public String actionHintKey() { return "action.contact_admin"; }
+  },
   /** 用户名已存在 */
-  USERNAME_DUPLICATE("B30005", "userinfo.username.duplicate"),
+  USERNAME_DUPLICATE("B30005", "userinfo.username.duplicate") {
+    @Override public String actionHintKey() { return "action.modify_and_retry"; }
+  },
   /** 账号已锁定，请稍后再试 */
-  ACCOUNT_LOCKED("A20110", "userinfo.account.locked", 401),
+  ACCOUNT_LOCKED("A20110", "userinfo.account.locked", 401) {
+    @Override public String actionHintKey() { return "action.wait_and_retry"; }
+  },
   /** 验证码无效或已过期 */
   CAPTCHA_INVALID("B30007", "userinfo.captcha.invalid"),
   /** 请输入验证码 */

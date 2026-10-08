@@ -26,6 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
@@ -546,6 +549,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @throws SysException 当任务不存在时抛出
    */
   @Override
+  @Audit(
+      module = "任务管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'pause'")
   public void pause(String id) {
     JobVO vo = jobRepository.findById(id).orElseThrow(() -> SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
@@ -572,6 +580,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @throws SysException 当任务不存在时抛出
    */
   @Override
+  @Audit(
+      module = "任务管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'resume'")
   public void resume(String id) {
     JobVO vo = jobRepository.findById(id).orElseThrow(() -> SysException.builder()
         .resultCode(YdszResultCode.NOT_FOUND)
@@ -621,6 +634,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    * @throws SysException 当任务不存在时抛出
    */
   @Override
+  @Audit(
+      module = "任务管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'trigger'")
   public String trigger(String id, boolean holdLock) {
     JobVO vo = jobRepository.findById(id).orElseThrow(() -> SysException.builder()
         .resultCode(YdszResultCode.NOT_FOUND)

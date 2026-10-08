@@ -14,7 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.thread.factory.InternalExecutorFactory;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.common.exception.custom.SysException;
@@ -114,7 +114,7 @@ public class RuleStressTestService {
    */
   private StressTestResult runInternal(
       String ruleCode, List<Map<String, Object>> factsList, int threads, int iterations) {
-    ExecutorService executor = InternalExecutorFactory.newFixedThreadPool("literule-stress", threads);
+    ExecutorService executor = ExecutorUtils.newVirtualThreadExecutor("literule-stress-");
     try {
       int perThread = Math.max(1, iterations / threads);
       int remainder = iterations % threads;

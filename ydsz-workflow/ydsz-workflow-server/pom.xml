@@ -169,6 +169,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-notify</artifactId>
         </dependency>
+        <!-- 测试基础设施：JUnit 5 + AssertJ + Mockito + Spring Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

@@ -31,7 +31,6 @@ import com.njydsz.system.server.metrics.RedisMetricsService;
  * <ul>
  *   <li>{@link DiscoveryClient}: Nacos 注册中心实时服务实例列表
  *   <li>{@link Environment}: Spring 环境属性（应用名 / 端口 / 版本）
- *   <li>{@link StringRedisTemplate}: Redis INFO 统计（命令数 / 连接数 / 命中/未命中）
  * </ul>
  *
  * <h3>接口清单</h3>

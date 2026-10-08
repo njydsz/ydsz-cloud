@@ -4,23 +4,24 @@ import java.time.LocalDateTime;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.auth.model.LoginUser;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.service.ops.RedisPubSubOps;
 
 @Slf4j
 @Component
 public class DictChangeEventPublisher {
 
-  private final StringRedisTemplate stringRedisTemplate;
+  /** Redis Pub/Sub 操作组件——替代直接注入 StringRedisTemplate，符合 ydzs-common-redis 封装规范 */
+  private final RedisPubSubOps redisPubSubOps;
 
-  public DictChangeEventPublisher(ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider) {
-    this.stringRedisTemplate = stringRedisTemplateProvider.getIfAvailable();
-    if (this.stringRedisTemplate == null) {
-      log.info("[DictChangeEventPublisher] StringRedisTemplate not available, "
+  public DictChangeEventPublisher(ObjectProvider<RedisPubSubOps> redisPubSubOpsProvider) {
+    this.redisPubSubOps = redisPubSubOpsProvider.getIfAvailable();
+    if (this.redisPubSubOps == null) {
+      log.info("[DictChangeEventPublisher] RedisPubSubOps not available, "
           + "dict change events will be silently dropped");
     }
   }
@@ -57,14 +58,14 @@ public class DictChangeEventPublisher {
   }
 
   private void publishEvent(DictChangeEvent event) {
-    if (stringRedisTemplate == null) {
+    if (redisPubSubOps == null) {
       log.debug("[DictChangeEventPublisher] Redis unavailable, skip event: dictCode={}",
           event.getDictCode());
       return;
     }
     try {
       String json = YdszJson.toJson(event);
-      stringRedisTemplate.convertAndSend(DictChangeEventConstants.REDIS_CHANNEL, json);
+      redisPubSubOps.publish(DictChangeEventConstants.REDIS_CHANNEL, json);
       log.debug("[DictChangeEventPublisher] Published dict change event: dictCode={}, eventType={}",
           event.getDictCode(), event.getEventType());
     } catch (Exception e) {

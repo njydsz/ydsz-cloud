@@ -20,7 +20,7 @@ import org.slf4j.MDC;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.thread.factory.InternalExecutorFactory;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.domain.Rule;
 import com.njydsz.literule.domain.RuleEngine;
@@ -71,11 +71,6 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorderVO {
     /** 默认并行执行阈值 */
   private static final int DEFAULT_PARALLEL_THRESHOLD = 50;
 
-  /** 默认线程池最小线程数 */
-  private static final int DEFAULT_MIN_POOL_SIZE = 4;
-
-  /** 默认线程池大小乘数 */
-  private static final int DEFAULT_POOL_MULTIPLIER = 2;
 
 /** 纳秒到毫秒的换算系数 */
 private static final long NANOS_PER_MILLI = 1_000_000L;
@@ -223,23 +218,17 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
   /**
    * 事实/模型并行注入专用线程池（P1-3 可配置）
    *
-   * <p>默认 {@code max(4, CPU * 2)} 线程，分别用于事实采集和模型调用。可通过 {@link #setInjectionExecutor} 替换为配置化线程池。
-   * 使用守护线程，不影响 JVM 关闭。
+   * <p>使用虚拟线程（每任务一线程），分别用于事实采集和模型调用。可通过 {@link #setInjectionExecutor} 替换为配置化线程池。
    */
   private volatile ExecutorService injectionExecutor = createDefaultInjectionExecutor();
 
   /**
-   * 创建默认注入线程池
-   *
-   * <p>线程数 = {@code max(4, CPU 核数 * 2)}，使用守护线程避免阻止 JVM 关闭。
+   * 创建默认注入线程池（虚拟线程，IO 密集型）
    *
    * @return 默认注入线程池
    */
   private static ExecutorService createDefaultInjectionExecutor() {
-    int poolSize =
-        Math.max(DEFAULT_MIN_POOL_SIZE, Runtime.getRuntime().availableProcessors() * DEFAULT_POOL_MULTIPLIER);
-    ExecutorService executor = InternalExecutorFactory.newFixedThreadPool("literule-injection", poolSize);
-    return executor;
+    return ExecutorUtils.newVirtualThreadExecutor("literule-injection-");
   }
 
   /**

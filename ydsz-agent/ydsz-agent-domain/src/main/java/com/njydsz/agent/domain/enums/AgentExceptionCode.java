@@ -60,9 +60,13 @@ public enum AgentExceptionCode implements ExceptionCode {
 
   // ==================== B94251-B94299 配额/成本控制 ====================
   /** 日 Token 配额超限 */
-  QUOTA_DAILY_TOKEN_EXCEEDED("B94251", "agent.quota.daily.token.exceeded", 429),
+  QUOTA_DAILY_TOKEN_EXCEEDED("B94251", "agent.quota.daily.token.exceeded", 429) {
+    @Override public String actionHintKey() { return "action.wait_and_retry"; }
+  },
   /** 月度预算超限 */
-  QUOTA_MONTHLY_BUDGET_EXCEEDED("B94252", "agent.quota.monthly.budget.exceeded", 429),
+  QUOTA_MONTHLY_BUDGET_EXCEEDED("B94252", "agent.quota.monthly.budget.exceeded", 429) {
+    @Override public String actionHintKey() { return "action.contact_admin"; }
+  },
 
   // ==================== B94301-B94399 RAG/工具/Prompt ====================
   /** RAG 检索失败 */
@@ -76,7 +80,9 @@ public enum AgentExceptionCode implements ExceptionCode {
   /** Prompt 模板重复 */
   PROMPT_TEMPLATE_DUPLICATE("B94305", "agent.prompt.template.duplicate"),
   /** 护栏校验拒绝 */
-  GUARDRAIL_REJECTED("B94306", "agent.guardrail.rejected", 403),
+  GUARDRAIL_REJECTED("B94306", "agent.guardrail.rejected", 403) {
+    @Override public String actionHintKey() { return "action.modify_and_retry"; }
+  },
   /** Prompt 版本不存在 */
   PROMPT_VERSION_NOT_FOUND("B94307", "agent.prompt.version.not.found", 404),
   /** 灰度版本不存在 */

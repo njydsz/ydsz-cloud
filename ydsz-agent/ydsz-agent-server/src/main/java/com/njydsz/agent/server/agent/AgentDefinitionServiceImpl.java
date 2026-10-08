@@ -14,6 +14,9 @@ import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.repository.AgentDefinitionRepository;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.json.YdszJson;
 
 /**
@@ -78,6 +81,11 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    * @throws IllegalArgumentException 当 agentCode 已存在时抛出
    */
   @Override
+  @Audit(
+      module = "Agent定义",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'create'")
   @Transactional(rollbackFor = Exception.class)
   public AgentDefinitionVO create(AgentDefinitionDTO dto) {
     // 唯一性校验
@@ -97,6 +105,11 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    * @throws IllegalArgumentException 当 Agent 不存在或已删除时抛出
    */
   @Override
+  @Audit(
+      module = "Agent定义",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'update'")
   @Transactional(rollbackFor = Exception.class)
   public AgentDefinitionVO update(AgentDefinitionDTO dto) {
     AgentDefinitionVO existing = agentDefinitionRepository.findById(dto.getId()).orElse(null);

@@ -33,9 +33,13 @@ public enum SystemExceptionCode implements ExceptionCode {
 
   // ==================== B90001-B90099 系统配置 ====================
   /** CONFIG_NOT_FOUND */
-  CONFIG_NOT_FOUND("B90001", "system.config.not.found", 404), // 系统配置不存在（资源未找到，HTTP 404）
+  CONFIG_NOT_FOUND("B90001", "system.config.not.found", 404) {
+    @Override public String actionHintKey() { return "action.refresh_and_retry"; }
+  }, // 系统配置不存在（资源未找到，HTTP 404）
   /** CONFIG_KEY_DUPLICATE */
-  CONFIG_KEY_DUPLICATE("B90002", "system.config.key.duplicate"), // 配置键在分组内重复，违反唯一约束
+  CONFIG_KEY_DUPLICATE("B90002", "system.config.key.duplicate") {
+    @Override public String actionHintKey() { return "action.modify_and_retry"; }
+  }, // 配置键在分组内重复，违反唯一约束
   /** CONFIG_KEY_FORMAT_INVALID */
   CONFIG_KEY_FORMAT_INVALID("B90003", "system.config.key.format.invalid"), // 配置键格式非法（含非法字符、长度超限）
   /** CONFIG_VALUE_TOO_LONG */
@@ -79,9 +83,13 @@ public enum SystemExceptionCode implements ExceptionCode {
 
   // ==================== B94001-B94099 租户管理 ====================
   /** TENANT_NOT_FOUND */
-  TENANT_NOT_FOUND("B94001", "system.tenant.not.found", 404), // 租户不存在
+  TENANT_NOT_FOUND("B94001", "system.tenant.not.found", 404) {
+    @Override public String actionHintKey() { return "action.contact_admin"; }
+  }, // 租户不存在
   /** TENANT_CODE_DUPLICATE */
-  TENANT_CODE_DUPLICATE("B94002", "system.tenant.code.duplicate"), // 租户编码全局重复
+  TENANT_CODE_DUPLICATE("B94002", "system.tenant.code.duplicate") {
+    @Override public String actionHintKey() { return "action.modify_and_retry"; }
+  }, // 租户编码全局重复
   /** TENANT_PLAN_LINKED */
   TENANT_PLAN_LINKED("B94003", "system.tenant.plan.linked"), // 套餐下存在关联租户，禁止删除
   /** TENANT_LINKED */

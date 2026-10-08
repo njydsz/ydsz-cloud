@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.thread.factory.InternalExecutorFactory;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.server.dsl.RuleDsl;
@@ -402,8 +402,8 @@ public class FileRuleSource implements RuleConfigProvider {
           StandardWatchEventKinds.ENTRY_CREATE,
           StandardWatchEventKinds.ENTRY_MODIFY,
           StandardWatchEventKinds.ENTRY_DELETE);
-      ExecutorService watchExecutor =
-          InternalExecutorFactory.newFixedThreadPool("literule-file-watcher", 1);
+    ExecutorService watchExecutor =
+        ExecutorUtils.newVirtualThreadExecutor("literule-file-watcher-");
       watchThread = watchExecutor;
       watchExecutor.submit(
               () -> {
