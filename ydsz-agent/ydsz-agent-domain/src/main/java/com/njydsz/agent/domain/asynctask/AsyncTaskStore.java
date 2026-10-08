@@ -32,7 +32,7 @@ public interface AsyncTaskStore {
    * @param taskId 任务 ID
    * @return 任务实体
    */
-  Optional<AsyncTask> findById(Long taskId);
+  Optional<AsyncTask> findById(String taskId);
 
   /**
    * 更新任务状态。
@@ -41,7 +41,7 @@ public interface AsyncTaskStore {
    * @param newStatus 新状态
    * @return 更新后的任务
    */
-  AsyncTask updateStatus(Long taskId, AsyncTaskStatus newStatus);
+  AsyncTask updateStatus(String taskId, AsyncTaskStatus newStatus);
 
   /**
    * 更新任务进度。
@@ -50,7 +50,7 @@ public interface AsyncTaskStore {
    * @param percent  进度百分比（0-100）
    * @param workerId Worker 标识
    */
-  void updateProgress(Long taskId, int percent, String workerId);
+  void updateProgress(String taskId, int percent, String workerId);
 
   /**
    * 获取待分配的任务列表（用于 Worker 拉取）。
@@ -68,7 +68,7 @@ public interface AsyncTaskStore {
    * @param workerId Worker 标识
    * @return 竞争成功返回任务实体，已被其他 Worker 认领返回 empty
    */
-  Optional<AsyncTask> claim(Long taskId, String workerId);
+  Optional<AsyncTask> claim(String taskId, String workerId);
 
   /**
    * 释放超时的 RUNNING 任务（重新置为 PENDING 供其他 Worker 认领）。
@@ -84,7 +84,7 @@ public interface AsyncTaskStore {
    * @param taskId 任务 ID
    * @return 取消后的任务
    */
-  AsyncTask cancel(Long taskId);
+  AsyncTask cancel(String taskId);
 
   /**
    * 保存/更新任务（全字段）。

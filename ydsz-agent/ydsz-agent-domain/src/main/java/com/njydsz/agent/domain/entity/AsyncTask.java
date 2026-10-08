@@ -25,7 +25,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("ydsz_agt_async_task")
-public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
+public class AsyncTask extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;
 

@@ -31,7 +31,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 // YDIZ-WARN-001 允许保留：@SuperBuilder 在多层泛型继承链中生成代码的类型擦除
 @SuppressWarnings("unchecked")
 @TableName("ydsz_agt_insight_report")
-public class InsightReport extends MpBaseEntity<Long> {
+public class InsightReport extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
 

@@ -63,7 +63,7 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
   }
 
   @Override
-  public Optional<AsyncTask> findById(Long taskId) {
+  public Optional<AsyncTask> findById(String taskId) {
     if (taskId == null) {
       return Optional.empty();
     }
@@ -71,7 +71,7 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
   }
 
   @Override
-  public AsyncTask updateStatus(Long taskId, AsyncTaskStatus newStatus) {
+  public AsyncTask updateStatus(String taskId, AsyncTaskStatus newStatus) {
     Objects.requireNonNull(newStatus, "newStatus 不能为 null");
     AsyncTask existing = asyncTaskMapper.selectById(taskId);
     if (existing == null) {
@@ -87,7 +87,7 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
   }
 
   @Override
-  public void updateProgress(Long taskId, int percent, String workerId) {
+  public void updateProgress(String taskId, int percent, String workerId) {
     int safePercent = Math.clamp(percent, 0, 100);
     int rows = asyncTaskMapper.updateTaskProgress(taskId, safePercent, workerId);
     if (rows == 0) {
@@ -102,7 +102,7 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
   }
 
   @Override
-  public Optional<AsyncTask> claim(Long taskId, String workerId) {
+  public Optional<AsyncTask> claim(String taskId, String workerId) {
     Objects.requireNonNull(workerId, "workerId 不能为 null");
     LocalDateTime now = LocalDateTime.now();
     int rows = asyncTaskMapper.claimTask(taskId, workerId, now);
@@ -125,7 +125,7 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
   }
 
   @Override
-  public AsyncTask cancel(Long taskId) {
+  public AsyncTask cancel(String taskId) {
     AsyncTask existing = asyncTaskMapper.selectById(taskId);
     if (existing == null) {
       throw new IllegalStateException(I18n.message("agent.error.task.not_found", new Object[]{taskId}));
