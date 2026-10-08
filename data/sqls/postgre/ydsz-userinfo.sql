@@ -51,11 +51,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user (
     CONSTRAINT uk_ydsz_idm_account_user_username UNIQUE (username),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -108,11 +108,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_org_company (
     CONSTRAINT uk_ydsz_idm_org_company_company_code UNIQUE (company_code),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -148,11 +148,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_org_department (
     CONSTRAINT uk_ydsz_idm_org_department_dept_code UNIQUE (dept_code),
     sort INTEGER                  NOT NULL DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -189,11 +189,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_role (
     CONSTRAINT uk_ydsz_idm_role_role_code UNIQUE (role_code, tenant_id),
     sort INTEGER                  NOT NULL DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -232,11 +232,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_menu (
     CONSTRAINT uk_ydsz_idm_menu_menu_code UNIQUE (menu_code),
     sort INTEGER                  NOT NULL DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -275,11 +275,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_post (
     CONSTRAINT uk_ydsz_idm_post_post_code UNIQUE (post_code),
     sort INTEGER                  NOT NULL DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -310,11 +310,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_language (
     CONSTRAINT uk_ydsz_idm_account_user_language_language_code UNIQUE (language_code),
     sort INTEGER                  NOT NULL DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -343,11 +343,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_role (
     CONSTRAINT pk_ydsz_idm_account_user_role PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -376,11 +376,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_post (
     CONSTRAINT pk_ydsz_idm_account_user_post PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -410,11 +410,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_dept (
     CONSTRAINT pk_ydsz_idm_account_user_dept PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -444,11 +444,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_org_company_dept (
     CONSTRAINT pk_ydsz_idm_org_company_dept PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -478,11 +478,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_role_permission (
     CONSTRAINT pk_ydsz_idm_role_permission PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -516,11 +516,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_login_history (
     sort INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR DEFAULT '1',
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_by VARCHAR,
+    tenant_id VARCHAR(36)              DEFAULT '1',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT pk_ydsz_idm_account_login_history PRIMARY KEY (id)
 );
@@ -546,11 +546,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_password_history (
     sort INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR DEFAULT '1',
+    tenant_id VARCHAR(36)              DEFAULT '1',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT pk_ydsz_idm_account_password_history PRIMARY KEY (id)
 );
@@ -582,11 +582,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_policy (
     CONSTRAINT uk_ydsz_idm_auth_policy_tenant_id UNIQUE (tenant_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  DEFAULT 0,
-    tenant_id VARCHAR(64)              DEFAULT NULL,
+    tenant_id VARCHAR(36)              DEFAULT NULL,
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -630,11 +630,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_social_client (
     CONSTRAINT uk_ydsz_idm_auth_social_client_platform UNIQUE (platform),
     sort INTEGER                  DEFAULT 100,
     revision INTEGER                  DEFAULT 0,
-    tenant_id VARCHAR(64)              DEFAULT NULL,
+    tenant_id VARCHAR(36)              DEFAULT NULL,
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -674,11 +674,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_identity_saml_config (
     CONSTRAINT uk_ydsz_idm_identity_saml_config_entity_id UNIQUE (entity_id),
     sort INTEGER                  DEFAULT 100,
     revision INTEGER                  DEFAULT 0,
-    tenant_id VARCHAR(64)              DEFAULT NULL,
+    tenant_id VARCHAR(36)              DEFAULT NULL,
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -720,11 +720,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_identity_oauth2_application (
     CONSTRAINT uk_ydsz_idm_identity_oauth2_application_client_id UNIQUE (client_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  DEFAULT 0,
-    tenant_id VARCHAR(64)              DEFAULT NULL,
+    tenant_id VARCHAR(36)              DEFAULT NULL,
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -767,11 +767,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_social_account (
     CONSTRAINT uk_ydsz_idm_auth_social_account_platform_open_id UNIQUE (platform, open_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -813,11 +813,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_identity_security_alert (
     CONSTRAINT pk_ydsz_idm_identity_security_alert PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  DEFAULT 0,
-    tenant_id VARCHAR(64)              DEFAULT NULL,
+    tenant_id VARCHAR(36)              DEFAULT NULL,
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -848,7 +848,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_identity_security_alert_source_ip ON yds
 CREATE INDEX IF NOT EXISTS idx_ydsz_idm_identity_security_alert_tenant_is_deleted ON ydsz_idm_identity_security_alert (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_auth_credential (
-    id                       BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL,
+    id                       VARCHAR(36)              NOT NULL,
     credential_id            VARCHAR(512)             NOT NULL,
     user_id                  VARCHAR(32)              NOT NULL,
     public_key               VARCHAR(1024)            NOT NULL,
@@ -864,16 +864,16 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_credential (
     CONSTRAINT uk_ydsz_idm_auth_credential_credential_id UNIQUE (credential_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_auth_credential IS 'WebAuthn 凭证表';
-COMMENT ON COLUMN ydsz_idm_auth_credential.id IS '主键 ID（自增）';
+COMMENT ON COLUMN ydsz_idm_auth_credential.id IS '主键 ID（Snowflake）';
 COMMENT ON COLUMN ydsz_idm_auth_credential.credential_id IS '凭证 ID（Base64URL 编码）';
 COMMENT ON COLUMN ydsz_idm_auth_credential.user_id IS '用户 ID（关联 ydsz_idm_account_user.id）';
 COMMENT ON COLUMN ydsz_idm_auth_credential.public_key IS '公钥（COSE 密钥格式，Base64URL 编码）';
@@ -901,10 +901,10 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_auth_credential_tenant_is_deleted ON yds
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_auth_apikey (
-    id                       BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL,
+    id                       VARCHAR(36)              NOT NULL,
     api_key_hash             VARCHAR(128)             NOT NULL,
     api_key_prefix           VARCHAR(16)              NOT NULL,
-    user_id                  VARCHAR(64)              NOT NULL,
+    user_id                  VARCHAR(36)              NOT NULL,
     key_name                 VARCHAR(128)             DEFAULT NULL,
     scopes                   VARCHAR(512)             DEFAULT NULL,
     expire_at                TIMESTAMP                DEFAULT NULL,
@@ -916,11 +916,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_apikey (
     CONSTRAINT uk_ydsz_idm_auth_apikey_hash UNIQUE (api_key_hash),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64)              DEFAULT NULL,
+    tenant_id VARCHAR(36)              DEFAULT NULL,
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

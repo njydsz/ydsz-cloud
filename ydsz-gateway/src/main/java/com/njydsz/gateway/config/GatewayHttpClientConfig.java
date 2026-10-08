@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 
@@ -144,6 +145,7 @@ public class GatewayHttpClientConfig {
    * @return 配置后的 HttpClient
    */
   @Bean
+  @Primary
   public HttpClient gatewayHttpClient(ConnectionProvider connectionProvider) {
     return HttpClient.create(connectionProvider);
   }

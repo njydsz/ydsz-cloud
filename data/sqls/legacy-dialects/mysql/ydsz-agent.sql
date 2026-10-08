@@ -26,10 +26,10 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Prompt 模板主表';
 
@@ -50,10 +50,10 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
     INDEX idx_template_code (template_code),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '操作人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '操作人',
     created_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '版本创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '版本更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Prompt 模板版本历史表';
 
@@ -80,10 +80,10 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 定义（Agent 的完整配置信息）';
 
@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     INDEX idx_trace_tenant_status (tenant_id, status),
     sort INT NOT NULL DEFAULT 0,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
     created_by VARCHAR(64),
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
     sort INT NOT NULL DEFAULT 0,
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
     created_by VARCHAR(64),
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -165,11 +165,11 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     INDEX idx_approval_tenant (tenant_id),
     sort INT NOT NULL DEFAULT 0,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
     created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人 ID（CombinedFieldFillInterceptor 自动填充）',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '请求创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 人工审批请求（Human-in-the-Loop 审批持久化）';
 
@@ -191,10 +191,10 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Token 用量记录（LLM 调用 Token 消耗明细）';
 

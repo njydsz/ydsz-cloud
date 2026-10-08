@@ -3,9 +3,9 @@
 > **本文件为 Claude Code / Cursor / Windsurf / Aider 等 AI 编码工具的 `always` 规则。**
 > 任何 AI 编码助手在本项目中编程时，都必须遵守本文件中的规则。
 >
-> **规范版本**: v26.10.03-v27（188 条红线规则，P0=63 P1=88 P2=24）
+> **规范版本**: v26.10.08-v2（190 条红线规则，P0=64 P1=89 P2=24）
 > **完整规则源**: `docs/ai-rules/shared-rules.yaml`（单一权威源）
-> **编码规范参考**: `docs/云顶编码规范.md`（v1.0.13）
+> **编码规范参考**: `docs/云顶编码规范.md`（v1.0.16）
 
 ---
 
@@ -117,6 +117,12 @@ ydsz-cloud/
 |------|------|
 | DATE-001 | **禁止 SimpleDateFormat 作为共享变量** |
 | DATE-002 | 使用 java.time.* API，禁止 Date/Calendar |
+### 配置管理
+
+| 规则 | 要求 |
+|------|------|
+| CONFIG-004 | **业务模块自定义配置必须使用 `ydsz.{module}.*` 前缀**，禁止裸 `{module}.*` 作前缀（如 `generator.output-dir` → `ydsz.generator.output-dir`），`@ConfigurationProperties(prefix)` 和 `@Value` 中的 key 必须同步追加 `ydzs.` 前缀 |
+
 ### DDD 分层
 
 | 规则 | 要求 |

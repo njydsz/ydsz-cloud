@@ -38,11 +38,11 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
     CONSTRAINT chk_ab_traffic_percent CHECK (ab_traffic_percent IS NULL OR (ab_traffic_percent >= 1 AND ab_traffic_percent <= 100)),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -80,11 +80,11 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
     CONSTRAINT uk_ydsz_agt_prompt_version_template_version UNIQUE (template_code, version, tenant_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -121,11 +121,11 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
     CONSTRAINT uk_ydsz_agt_definition_agent_code UNIQUE (agent_code, tenant_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -162,11 +162,11 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     CONSTRAINT pk_ydsz_agt_trace PRIMARY KEY (trace_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -201,11 +201,11 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
     CONSTRAINT pk_ydsz_agt_trace_step PRIMARY KEY (trace_id, step_index),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -244,11 +244,11 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     CONSTRAINT pk_ydsz_agt_approval PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -275,8 +275,8 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_approval_tenant_deleted ON ydsz_agt_appr
 -- ============================================================================
 
 ALTER TABLE ydsz_agt_approval
-    ADD COLUMN IF NOT EXISTS created_by VARCHAR(64) DEFAULT NULL,
-    ADD COLUMN IF NOT EXISTS updated_by VARCHAR(64) DEFAULT NULL,
+    ADD COLUMN IF NOT EXISTS created_by VARCHAR(36) DEFAULT NULL,
+    ADD COLUMN IF NOT EXISTS updated_by VARCHAR(36) DEFAULT NULL,
     ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 COMMENT ON COLUMN ydsz_agt_approval.created_by IS '创建人 ID（CombinedFieldFillInterceptor 自动填充）';
@@ -301,11 +301,11 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
     CONSTRAINT pk_ydsz_agt_token_usage PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -356,10 +356,10 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_document_chunk (
     sort INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR(64)              DEFAULT NULL,
+    tenant_id VARCHAR(36)              DEFAULT NULL,
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR,
-    updated_by VARCHAR,
+    created_by VARCHAR(36)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -471,9 +471,9 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_user_profile (
     revision INTEGER        NOT NULL DEFAULT 0,
     tenant_id VARCHAR(64)    NOT NULL DEFAULT '0',
     is_deleted SMALLINT       NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)    DEFAULT NULL,
+    created_by VARCHAR(36) DEFAULT NULL,
     created_at TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)    DEFAULT NULL,
+    updated_by VARCHAR(36) DEFAULT NULL,
     updated_at TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -507,7 +507,8 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_user_profile_last_interaction_at ON ydsz
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_insight_report (
-    id                      BIGSERIAL      PRIMARY KEY,
+    id                       VARCHAR(36)              NOT NULL,
+    CONSTRAINT pk_ydsz_agt_insight_report PRIMARY KEY (id),
     report_id               VARCHAR(64)    NOT NULL,
     user_id                 VARCHAR(64)    NOT NULL,
     conversation_id         VARCHAR(64)    DEFAULT NULL,
@@ -527,14 +528,14 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_insight_report (
     revision INTEGER        NOT NULL DEFAULT 0,
     tenant_id VARCHAR(64)    NOT NULL DEFAULT '0',
     is_deleted SMALLINT       NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)    DEFAULT NULL,
+    created_by VARCHAR(36) DEFAULT NULL,
     created_at TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)    DEFAULT NULL,
+    updated_by VARCHAR(36) DEFAULT NULL,
     updated_at TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_agt_insight_report IS '洞察报告表（BI 洞察报告持久化，含分析结果 JSON 与报告内容 JSON）';
-COMMENT ON COLUMN ydsz_agt_insight_report.id IS '自增主键（BIGSERIAL）';
+COMMENT ON COLUMN ydsz_agt_insight_report.id IS '主键 ID（Snowflake）';
 COMMENT ON COLUMN ydsz_agt_insight_report.report_id IS '唯一业务 ID（雪花算法生成）';
 COMMENT ON COLUMN ydsz_agt_insight_report.user_id IS '触发用户 ID';
 COMMENT ON COLUMN ydsz_agt_insight_report.conversation_id IS '关联对话 ID（可选）';
@@ -671,11 +672,11 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_async_task (
     CONSTRAINT pk_ydsz_agt_async_task PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64)              DEFAULT NULL,
+    tenant_id VARCHAR(36)              DEFAULT NULL,
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

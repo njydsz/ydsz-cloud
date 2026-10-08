@@ -39,11 +39,11 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant (
     CONSTRAINT uk_ydsz_sys_tenant_tenant_code UNIQUE (tenant_code),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -82,11 +82,11 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan (
     CONSTRAINT uk_ydsz_sys_tenant_plan_plan_code UNIQUE (plan_code),
     sort INTEGER                  NOT NULL DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -118,11 +118,11 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan_menu (
     CONSTRAINT uk_ydsz_sys_tenant_plan_menu_plan_menu UNIQUE (plan_id, menu_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -151,11 +151,11 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_dict_type (
     CONSTRAINT uk_ydsz_sys_dict_type_type_code UNIQUE (type_code),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -188,11 +188,11 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
     CONSTRAINT uk_ydsz_sys_dict_item_type_item_code UNIQUE (type_code, item_code),
     sort INTEGER                  NOT NULL DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -231,11 +231,11 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_config (
     CONSTRAINT uk_ydsz_sys_config_config_group_key UNIQUE (config_group, config_key),
     sort INTEGER                  NOT NULL DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -271,11 +271,11 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_variable (
     CONSTRAINT uk_ydsz_sys_variable_variable_key UNIQUE (variable_key),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -312,11 +312,11 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_app_info (
     CONSTRAINT uk_ydsz_sys_app_info_tenant_app_key UNIQUE (tenant_id, app_key),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -354,11 +354,11 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_entity_version (
     CONSTRAINT pk_ydsz_sys_entity_version PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -540,11 +540,11 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_api_permission (
     CONSTRAINT uk_ydsz_sys_api_permission_tenant_api UNIQUE (tenant_id, api_code),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -591,11 +591,11 @@ CREATE TABLE IF NOT EXISTS ydsz_system_config_approval (
     CONSTRAINT uk_ydsz_system_config_approval_resource UNIQUE (tenant_id, resource_type, resource_key, status),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

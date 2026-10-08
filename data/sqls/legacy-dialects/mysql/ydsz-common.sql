@@ -17,7 +17,7 @@
 
 CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
     -- ========== 业务主键 ==========
-    id                  VARCHAR(64)     NOT NULL COMMENT '消息唯一标识（Snowflake ID）',
+    id                  VARCHAR(36)     NOT NULL COMMENT '消息唯一标识（Snowflake ID）',
 
     -- ========== 聚合根信息 ==========
     aggregate_type      VARCHAR(128)    NOT NULL COMMENT '聚合根类型（如 Order, User）',
@@ -65,11 +65,11 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
     INDEX idx_ydsz_comm_outbox_aggregate (aggregate_type, aggregate_id, created_at DESC),
     sort INT NOT NULL DEFAULT 0,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64)              COMMENT '租户 ID（多租户隔离）',
+    tenant_id VARCHAR(36)              COMMENT '租户 ID（多租户隔离）',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
 -- 启用条件：ydsz.event.outbox.archive.enabled=true（默认不启用）
 
 CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
-    id              VARCHAR(64)     PRIMARY KEY,
+    id              VARCHAR(36)     PRIMARY KEY,
     aggregate_id    VARCHAR(128)    NOT NULL,
     aggregate_type  VARCHAR(128)    DEFAULT NULL,
     event_type      VARCHAR(256)    NOT NULL,
@@ -104,11 +104,11 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
     INDEX idx_archive_archived_at (archived_at),
     sort INT NOT NULL DEFAULT 0,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64)     DEFAULT NULL,
+    tenant_id VARCHAR(36)     DEFAULT NULL,
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME        NOT NULL,
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME        NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Outbox 事件归档表（已投递或已丢弃的消息）';
 
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
 -- CHECK 约束并入注释、部分索引转译为普通复合索引。
 
 CREATE TABLE IF NOT EXISTS ydsz_comm_search_dead_letter (
-    id            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+    id            VARCHAR(36)  NOT NULL COMMENT '主键 ID（Snowflake）',
     operation     VARCHAR(20)  NOT NULL COMMENT '索引操作类型：UPSERT / DELETE / BULK',
     doc_type      VARCHAR(64)  DEFAULT NULL COMMENT '实体类型（project/wiki/user 等）',
     document_id   VARCHAR(128) DEFAULT NULL COMMENT '文档主键（DELETE 操作时使用）',
@@ -137,11 +137,11 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_search_dead_letter (
     INDEX idx_dlq_doc_type (doc_type, status),
     sort INT NOT NULL DEFAULT 0,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    tenant_id VARCHAR(36) NOT NULL DEFAULT '1',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '入队时间',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='搜索索引死信队列：存储索引写入失败的操作，支持定时重放补偿';
 
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_search_dead_letter (
 -- IF NOT EXISTS 语法调整、移除 CONSTRAINT 命名（MySQL 内联约束）。
 
 CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
-    id                       VARCHAR(64)     NOT NULL  COMMENT '审计记录唯一标识（雪花算法生成）',
+    id                       VARCHAR(36)     NOT NULL  COMMENT '审计记录唯一标识（雪花算法生成）',
     app_key                  VARCHAR(64)     NOT NULL DEFAULT ''  COMMENT '应用标识（区分不同微服务的审计记录）',
     operator_id              VARCHAR(64)     DEFAULT NULL  COMMENT '操作人 ID（来自 RequestContext 透传）',
     operator_name            VARCHAR(64)     DEFAULT NULL  COMMENT '操作人姓名（便于直接展示）',
@@ -186,11 +186,11 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
     sort INT NOT NULL DEFAULT 0,
     status SMALLINT        NOT NULL DEFAULT 1  COMMENT '执行状态（1=成功/0=失败）',
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64)     DEFAULT NULL  COMMENT '租户 ID（多租户隔离）',
+    tenant_id VARCHAR(36)     DEFAULT NULL  COMMENT '租户 ID（多租户隔离）',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '审计日志落库时刻',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4

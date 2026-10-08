@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
+import com.njydsz.common.cache.spring.SpringYdszCache;
 import com.njydsz.common.cache.spring.YdszCacheManager;
 import com.njydsz.common.cache.spring.YdszCacheProperties;
 
@@ -185,8 +185,8 @@ public class GatewayCacheConfig {
    * @return 本地令牌桶缓存
    */
   @Bean
-  public Cache<String, Object> rateLimitCache(YdszCacheManager manager) {
-    return (Cache<String, Object>) manager.getCache(CACHE_RATE_LIMIT);
+  public SpringYdszCache rateLimitCache(YdszCacheManager manager) {
+    return manager.getCache(CACHE_RATE_LIMIT);
   }
 
   /**
@@ -196,8 +196,8 @@ public class GatewayCacheConfig {
    * @return IP 黑名单缓存
    */
   @Bean
-  public Cache<String, Boolean> ipBlacklistCache(YdszCacheManager manager) {
-    return (Cache<String, Boolean>) manager.getCache(CACHE_IP_BLACKLIST);
+  public SpringYdszCache ipBlacklistCache(YdszCacheManager manager) {
+    return manager.getCache(CACHE_IP_BLACKLIST);
   }
 
   /**
@@ -207,8 +207,8 @@ public class GatewayCacheConfig {
    * @return JWT 验证结果缓存
    */
   @Bean
-  public Cache<String, Object> jwtValidationCache(YdszCacheManager manager) {
-    return (Cache<String, Object>) manager.getCache(CACHE_JWT_VALIDATION);
+  public SpringYdszCache jwtValidationCache(YdszCacheManager manager) {
+    return manager.getCache(CACHE_JWT_VALIDATION);
   }
 
   /**
@@ -218,8 +218,8 @@ public class GatewayCacheConfig {
    * @return 灰度路由服务列表缓存
    */
   @Bean
-  public Cache<String, Object> grayServiceListCache(YdszCacheManager manager) {
-    return (Cache<String, Object>) manager.getCache(CACHE_GRAY_SERVICE_LIST);
+  public SpringYdszCache grayServiceListCache(YdszCacheManager manager) {
+    return manager.getCache(CACHE_GRAY_SERVICE_LIST);
   }
 
   // validateCaches 已移除：避免在 PostConstruct 阶段造成循环引用

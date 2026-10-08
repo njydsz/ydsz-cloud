@@ -73,11 +73,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_main (
     CONSTRAINT uk_ydsz_job_job_key UNIQUE (job_key, tenant_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -147,11 +147,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_glue (
     CONSTRAINT uk_ydsz_job_glue_glue_job_version UNIQUE (job_id, version),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -190,11 +190,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_task (
     CONSTRAINT pk_ydsz_job_task PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -243,11 +243,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_node (
     CONSTRAINT uk_ydsz_job_node_node_id UNIQUE (node_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -296,11 +296,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_history (
     sort INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR DEFAULT '1',
+    tenant_id VARCHAR(36)              DEFAULT '1',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT pk_ydsz_job_history PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_job_history_jh_job_version UNIQUE (job_id, version)
@@ -344,11 +344,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_artifact (
     CONSTRAINT pk_ydsz_job_artifact PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -393,11 +393,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_webhook (
     CONSTRAINT pk_ydsz_job_webhook PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -444,11 +444,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_rule (
     CONSTRAINT pk_ydsz_job_alert_rule PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -491,11 +491,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_tenant_quota (
     CONSTRAINT uk_ydsz_job_tenant_quota_tq_tenant UNIQUE (tenant_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -538,11 +538,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag (
     CONSTRAINT uk_ydsz_job_dag_dag_key UNIQUE (dag_key, tenant_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -593,11 +593,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_version (
     CONSTRAINT uk_ydsz_job_dag_version_dv_dag_version UNIQUE (dag_id, version),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -647,11 +647,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance (
     CONSTRAINT pk_ydsz_job_dag_instance PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -706,11 +706,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance (
     CONSTRAINT pk_ydsz_job_dag_node_instance PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    tenant_id VARCHAR(36)              NOT NULL DEFAULT '0',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -770,11 +770,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log (
     CONSTRAINT pk_ydsz_job_log PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR DEFAULT '1',
+    tenant_id VARCHAR(36)              DEFAULT '1',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -826,11 +826,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log_content (
     sort INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR DEFAULT '1',
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_by VARCHAR,
+    tenant_id VARCHAR(36)              DEFAULT '1',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT pk_ydsz_job_log_content PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_job_log_content_jlc_log_line UNIQUE (log_id, line_no)
@@ -863,11 +863,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_daily_stats (
     sort INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR DEFAULT '1',
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_by VARCHAR,
+    tenant_id VARCHAR(36)              DEFAULT '1',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT pk_ydsz_job_daily_stats PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_job_daily_stats_jds_job_date UNIQUE (job_id, stats_date)
@@ -910,11 +910,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_dispatch (
     sort INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR DEFAULT '1',
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_by VARCHAR,
+    tenant_id VARCHAR(36)              DEFAULT '1',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT pk_ydsz_job_alert_dispatch PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_job_alert_dispatch_ad_alert_code UNIQUE (alert_code)
@@ -944,7 +944,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_dispatch_ad_job_id ON ydsz_job_ale
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_dispatch_ad_source_status ON ydsz_job_alert_dispatch (source_type, alert_status);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_outbox (
-    id                       BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL,
+    id                       VARCHAR(36)              NOT NULL,
     event_key                VARCHAR(64)              NOT NULL,
     event_type               VARCHAR(128)             NOT NULL,
     topic                    VARCHAR(128)             NOT NULL,
@@ -956,16 +956,16 @@ CREATE TABLE IF NOT EXISTS ydsz_job_outbox (
     CONSTRAINT uk_ydsz_job_outbox_jo_event_key UNIQUE (event_key),
     sort INTEGER DEFAULT 0,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR DEFAULT '1',
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_by VARCHAR,
+    tenant_id VARCHAR(36)              DEFAULT '1',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_by VARCHAR,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
 COMMENT ON TABLE ydsz_job_outbox IS 'Outbox 事务性事件表：存储待发布的领域事件，保障业务写操作与事件投递的事务一致性';
-COMMENT ON COLUMN ydsz_job_outbox.id IS '事件 ID（自增）';
+COMMENT ON COLUMN ydsz_job_outbox.id IS '事件 ID（Snowflake）';
 COMMENT ON COLUMN ydsz_job_outbox.event_key IS '事件 KEY（幂等去重标识）';
 COMMENT ON COLUMN ydsz_job_outbox.event_type IS '事件类型';
 COMMENT ON COLUMN ydsz_job_outbox.topic IS '目标 topic（webhook / metrics / audit）';
@@ -991,11 +991,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
     sort INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR DEFAULT '1',
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_by VARCHAR(64)              DEFAULT NULL,
+    tenant_id VARCHAR(36)              DEFAULT '1',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_job_dag_context PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_job_dag_context_inst_node UNIQUE (dag_instance_id, node_key)
@@ -1028,11 +1028,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_event_store (
     sort INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR DEFAULT '1',
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_by VARCHAR,
+    tenant_id VARCHAR(36)              DEFAULT '1',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT pk_ydsz_job_event_store PRIMARY KEY (id)
 );
@@ -1074,11 +1074,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_webhook_retry (
     sort INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR DEFAULT '1',
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_by VARCHAR,
+    tenant_id VARCHAR(36)              DEFAULT '1',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR,
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT pk_ydsz_job_webhook_retry PRIMARY KEY (id)
 );
