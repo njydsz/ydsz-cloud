@@ -81,8 +81,8 @@ public class GeneratorCliApplication implements CommandLineRunner {
     log.info("========================================");
 
     Map<String, String> params = parseArgs(args);
-    Long datasourceId = parseLong(params.get("ds"));
-    Long templateGroupId = parseLong(params.get("group"));
+    String datasourceId = params.get("ds");
+    String templateGroupId = params.get("group");
     String tableName = params.get("table");
     String outputDir = params.get("out");
     String strategy = params.get("strategy");

@@ -21,7 +21,7 @@ public class ApiKeyVO implements Serializable {
   private static final long serialVersionUID = 1L;
 
   /** 主键 ID */
-  private Long id;
+  private String id;
 
   /** API Key 明文（仅创建时返回，其余场景为 null） */
   private String apiKey;

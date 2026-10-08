@@ -3,8 +3,8 @@ package com.njydsz.gateway.config;
 import java.time.Duration;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
@@ -35,7 +35,7 @@ import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
  * @author ydsz-team
  * @since 26.10.08
  */
-@AutoConfiguration
+@Configuration
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class GatewayRedisConfig {
 

@@ -198,7 +198,7 @@ public class ApiKeyService {
    * @return 实际撤销数量
    */
   @Transactional(rollbackFor = Exception.class)
-  public int revokeKeys(Collection<Long> ids) {
+  public int revokeKeys(Collection<String> ids) {
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
@@ -213,7 +213,7 @@ public class ApiKeyService {
    * @param id 主键 ID
    * @param enabled 启用/禁用
    */
-  public void updateEnabled(Long id, boolean enabled) {
+  public void updateEnabled(String id, boolean enabled) {
     apiKeyRepository.updateEnabled(id, enabled);
     log.info("API Key 状态已更新: userId={}, id={}, enabled={}", getCurrentUserId(), id, enabled);
   }

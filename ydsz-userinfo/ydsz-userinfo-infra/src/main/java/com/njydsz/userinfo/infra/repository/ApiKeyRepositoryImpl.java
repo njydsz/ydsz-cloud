@@ -38,7 +38,7 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
   }
 
   @Override
-  public Optional<ApiKeyVO> findById(Long id) {
+  public Optional<ApiKeyVO> findById(String id) {
     ApiKey entity = apiKeyMapper.selectById(id);
     if (entity == null || Boolean.TRUE.equals(entity.getIsDeleted())) {
       return Optional.empty();
@@ -74,7 +74,7 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
   }
 
   @Override
-  public int revokeByIds(Collection<Long> ids) {
+  public int revokeByIds(Collection<String> ids) {
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
@@ -82,7 +82,7 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
   }
 
   @Override
-  public int updateEnabled(Long id, boolean enabled) {
+  public int updateEnabled(String id, boolean enabled) {
     ApiKey entity = new ApiKey();
     entity.setId(id);
     entity.setIsEnabled(enabled);
@@ -90,7 +90,7 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
   }
 
   @Override
-  public int updateLastUsedAt(Long id, LocalDateTime lastUsedAt) {
+  public int updateLastUsedAt(String id, LocalDateTime lastUsedAt) {
     return apiKeyMapper.updateLastUsedAt(id, lastUsedAt);
   }
 

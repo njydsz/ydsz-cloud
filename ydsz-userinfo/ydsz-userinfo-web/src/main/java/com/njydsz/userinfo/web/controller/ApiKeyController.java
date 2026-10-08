@@ -111,7 +111,7 @@ public class ApiKeyController {
       content = "'批量撤销 API Key: ' + #ids")
   @DeleteMapping
   @Operation(summary = "批量撤销 API Key")
-  public YdszResponse<Integer> revokeKeys(@RequestParam List<Long> ids) {
+  public YdszResponse<Integer> revokeKeys(@RequestParam List<String> ids) {
     return YdszResponse.success(apiKeyService.revokeKeys(ids));
   }
 
@@ -129,7 +129,7 @@ public class ApiKeyController {
       content = "'更新 API Key 状态: id=' + #id + ', enabled=' + #enabled")
   @PutMapping("/{id}/enabled")
   @Operation(summary = "启用/禁用 API Key")
-  public YdszResponse<Void> updateEnabled(@PathVariable Long id, @RequestParam Boolean enabled) {
+  public YdszResponse<Void> updateEnabled(@PathVariable String id, @RequestParam Boolean enabled) {
     apiKeyService.updateEnabled(id, enabled);
     return YdszResponse.success();
   }

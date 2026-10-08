@@ -34,7 +34,7 @@ public interface ApiKeyRepository {
    * @param id 主键 ID
    * @return API Key VO；不存在返回 Optional.empty()
    */
-  Optional<ApiKeyVO> findById(Long id);
+  Optional<ApiKeyVO> findById(String id);
 
   /**
    * 分页查询 API Key 列表。
@@ -66,7 +66,7 @@ public interface ApiKeyRepository {
    * @param ids 要撤销的 ID 集合
    * @return 实际撤销的数量
    */
-  int revokeByIds(Collection<Long> ids);
+  int revokeByIds(Collection<String> ids);
 
   /**
    * 更新启用状态。
@@ -75,7 +75,7 @@ public interface ApiKeyRepository {
    * @param enabled 启用/禁用
    * @return 影响行数
    */
-  int updateEnabled(Long id, boolean enabled);
+  int updateEnabled(String id, boolean enabled);
 
   /**
    * 更新最后使用时间。
@@ -84,7 +84,7 @@ public interface ApiKeyRepository {
    * @param lastUsedAt 使用时间
    * @return 影响行数
    */
-  int updateLastUsedAt(Long id, LocalDateTime lastUsedAt);
+  int updateLastUsedAt(String id, LocalDateTime lastUsedAt);
 
   /**
    * 统计已过期的 Key 数量（用于定时任务清理）。

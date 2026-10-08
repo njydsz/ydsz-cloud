@@ -31,21 +31,22 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# 代码生成器自定义配置
-generator:
-  # 默认输出目录
-  output-dir: ./generated
-  # 默认作者
-  default-author: ydsz-generator
-  # 默认基础包
-  default-package: com.njydsz
-  # 模板分组
-  template-group: default
-  # 冲突策略: SKIP / OVERRIDE / APPEND（追加模式）
-  conflict-strategy: SKIP
-  # 表前缀（生成类名时去除）
-  table-prefix: t_,tab_
-  # 数据库类型到 Java 类型的映射（key 为大写的 SQL 类型名，value 为 Java 类型全限定名）
+# 代码生成器自定义配置（ydsz.generator.* — 统一命名空间）
+ydsz:
+  generator:
+    # 默认输出目录
+    output-dir: ./generated
+    # 默认作者
+    default-author: ydsz-generator
+    # 默认基础包
+    default-package: com.njydsz
+    # 模板分组
+    template-group: default
+    # 冲突策略: SKIP / OVERRIDE / APPEND（追加模式）
+    conflict-strategy: SKIP
+    # 表前缀（生成类名时去除）
+    table-prefix: t_,tab_
+    # 数据库类型到 Java 类型的映射（key 为大写的 SQL 类型名，value 为 Java 类型全限定名）
   type-mapping:
     VARCHAR: String
     CHAR: String

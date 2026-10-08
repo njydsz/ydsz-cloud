@@ -38,7 +38,7 @@ public interface ApiKeyMapper extends BaseMapper<ApiKey> {
    */
   @Update("UPDATE ydsz_idm_auth_apikey SET last_used_at = #{lastUsedAt}, updated_at = NOW() "
       + "WHERE id = #{id} AND deleted = false")
-  int updateLastUsedAt(@Param("id") Long id, @Param("lastUsedAt") LocalDateTime lastUsedAt);
+  int updateLastUsedAt(@Param("id") String id, @Param("lastUsedAt") LocalDateTime lastUsedAt);
 
   /**
    * 批量撤销（软删除）API Key。
@@ -46,7 +46,7 @@ public interface ApiKeyMapper extends BaseMapper<ApiKey> {
    * @param ids ID 集合
    * @return 影响行数
    */
-  int revokeByIds(@Param("ids") Collection<Long> ids);
+  int revokeByIds(@Param("ids") Collection<String> ids);
 
   /**
    * 删除已过期的 Key（物理删除，定时任务清理）。
