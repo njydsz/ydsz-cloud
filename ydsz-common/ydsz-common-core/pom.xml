@@ -103,6 +103,25 @@
             <scope>compile</scope>
             <optional>true</optional>
         </dependency>
+        <!-- Testcontainers：集成测试数据库/缓存真实环境（compile scope 打包，下游测试继承 TestcontainersBase） -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
 
     </dependencies>
 
