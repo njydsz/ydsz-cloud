@@ -139,6 +139,9 @@ public class CronjobProperties {
   /** P2-3: 节假日 API 配置（WORKDAY / HOLIDAY 策略的全局节假日数据源） */
   private HolidayConfig holiday = new HolidayConfig();
 
+  /** P2-6: 数据归档 TTL 配置（Job 历史 / 审计日志过期清理） */
+  private ArchivalConfig archival = new ArchivalConfig();
+
   /**
    * 获取执行器配置。
    *

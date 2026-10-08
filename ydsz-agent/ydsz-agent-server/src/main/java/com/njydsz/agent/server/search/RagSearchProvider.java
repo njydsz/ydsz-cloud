@@ -16,7 +16,11 @@ import com.njydsz.agent.domain.rag.VectorStore;
  *
  * @author ydsz-team
  * @since 26.09.17
+ * @deprecated 26.10.03 — {@link HybridSearchService} 已标记废弃，本委托实现同步废弃。
+ *             向量检索场景请直接使用 domain 层 {@code VectorStore} 或 {@code Retriever} 接口，
+ *             全文检索请使用 {@link com.njydsz.common.search.service.UnifiedSearchService}。
  */
+@Deprecated(since = "26.10.03", forRemoval = true)
 @Component
 public class RagSearchProvider implements HybridSearchService.RagSearchDelegate {
 

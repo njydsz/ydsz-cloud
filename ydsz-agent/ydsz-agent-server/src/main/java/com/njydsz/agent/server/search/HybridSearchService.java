@@ -23,7 +23,12 @@ import com.njydsz.agent.domain.search.WebSearchService;
  *
  * @author ydsz-team
  * @since 26.09.17
+ * @deprecated 26.10.03 — 统一搜索能力已收拢至 {@code ydsz-common-search} 框架。
+ *             全文检索场景请使用 {@link com.njydsz.common.search.service.UnifiedSearchService}，
+ *             向量检索场景请直接使用 domain 层 {@code VectorStore} 或 {@code Retriever} 接口。
+ *             Agent 模块的通用实体搜索已由 {@code AgentDefinitionSearchProvider} 注册到统一搜索体系。
  */
+@Deprecated(since = "26.10.03", forRemoval = true)
 public class HybridSearchService {
 
   /** 知识库结果默认占比 */

@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import com.njydsz.cronjob.domain.entity.job.JobHistory;
 
@@ -86,4 +87,34 @@ public interface JobHistoryMapper extends BaseMapper<JobHistory> {
           + "  LIMIT #{limit}"
           + "))")
   int cleanExpiredLogs(@Param("before") LocalDateTime before, @Param("limit") int limit);
+
+  /**
+   * 软删除过期历史记录（TTL 归档）。
+   *
+   * <p>将 changed_at 早于阈值且未删除的记录标记 is_deleted = true，而非物理删除。
+   * 使用 ctid 批量定位，每批最多处理 limit 条，避免大事务锁表。
+   *
+   * @param before 过期分界时间
+   * @param limit 单批最多处理条数
+   * @return 实际软删除条数
+   */
+  @Update(
+      "UPDATE ydsz_job_history SET is_deleted = true, updated_at = NOW() "
+          + "WHERE ctid = ANY(ARRAY("
+          + "  SELECT ctid FROM ydsz_job_history "
+          + "  WHERE changed_at < #{before} AND is_deleted = false "
+          + "  LIMIT #{limit}"
+          + "))")
+  int softDeleteExpired(@Param("before") LocalDateTime before, @Param("limit") int limit);
+
+  /**
+   * 统计过期未删除的历史记录条数（dryRun 预览）。
+   *
+   * @param before 过期分界时间
+   * @return 过期且未删除的记录条数
+   */
+  @Select(
+      "SELECT COUNT(*) FROM ydsz_job_history "
+          + "WHERE changed_at < #{before} AND is_deleted = false")
+  int countExpired(@Param("before") LocalDateTime before);
 }

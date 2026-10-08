@@ -47,4 +47,21 @@ public interface JobHistoryRepository {
    * @return 新记录 ID
    */
   String insert(JobHistoryVO vo);
+
+  /**
+   * 软删除过期历史记录（将 is_deleted 标记为 true）。
+   *
+   * @param before 过期时间分界点（此时间之前的记录被软删除）
+   * @param limit 单批最多处理条数
+   * @return 实际软删除的条数
+   */
+  int softDeleteExpired(LocalDateTime before, int limit);
+
+  /**
+   * 统计过期历史记录条数（dryRun 预览用，不实际删除）。
+   *
+   * @param before 过期时间分界点
+   * @return 过期的未删除记录条数
+   */
+  int countExpired(LocalDateTime before);
 }

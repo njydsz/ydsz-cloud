@@ -48,4 +48,14 @@ public class JobHistoryRepositoryImpl implements JobHistoryRepository {
     jobHistoryMapper.insert(entity);
     return entity.getId();
   }
+
+  @Override
+  public int softDeleteExpired(LocalDateTime before, int limit) {
+    return jobHistoryMapper.softDeleteExpired(before, limit);
+  }
+
+  @Override
+  public int countExpired(LocalDateTime before) {
+    return jobHistoryMapper.countExpired(before);
+  }
 }
