@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +17,12 @@ import com.njydsz.agent.domain.entity.AsyncTask;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 基于内存的异步任务存储实现 — 开发环境默认 fallback。
  *
- * <p>使用 {@link ConcurrentHashMap} 存储任务，{@link AtomicLong} 生成自增 ID。
+ * <p>使用 YdszCache 存储任务，{@link com.njydsz.common.util.id.IdGenerator} 生成雪花字符串 ID。
  * 任务数据在应用重启后丢失，且多副本部署时各副本互相不可见。
  * 适用于单实例部署或开发/测试环境。
  *
@@ -45,13 +45,10 @@ public class InMemoryAsyncTaskStore implements AsyncTaskStore {
   private static final int DEFAULT_MAX_ACTIVE_PER_TENANT = 10;
 
   /** 任务内存存储（YdszCache 替代 ConcurrentHashMap，提供 TTL 防泄漏） */
-  private final Cache<Long, AsyncTask> taskStore = YdszCache.<Long, AsyncTask>newBuilder()
+  private final Cache<String, AsyncTask> taskStore = YdszCache.<String, AsyncTask>newBuilder()
       .maximumSize(5000)
       .expireAfterAccess(30, TimeUnit.MINUTES)
       .build();
-
-  /** ID 生成器 */
-  private final AtomicLong idGenerator = new AtomicLong(1);
 
   /** 按创建时间正序的比较器 */
   private static final Comparator<AsyncTask> CREATED_AT_ASC =
@@ -71,7 +68,7 @@ public class InMemoryAsyncTaskStore implements AsyncTaskStore {
   @Override
   public AsyncTask submit(AsyncTask task) {
     Objects.requireNonNull(task, "task 不能为 null");
-    long id = idGenerator.getAndIncrement();
+    String id = IdGenerator.nextIdStr();
     task.setId(id);
     task.setStatus(AsyncTaskStatus.PENDING.getCode());
     task.setProgressPercent(0);
@@ -82,7 +79,7 @@ public class InMemoryAsyncTaskStore implements AsyncTaskStore {
   }
 
   @Override
-  public Optional<AsyncTask> findById(Long taskId) {
+  public Optional<AsyncTask> findById(String taskId) {
     if (taskId == null) {
       return Optional.empty();
     }
@@ -90,7 +87,7 @@ public class InMemoryAsyncTaskStore implements AsyncTaskStore {
   }
 
   @Override
-  public AsyncTask updateStatus(Long taskId, AsyncTaskStatus newStatus) {
+  public AsyncTask updateStatus(String taskId, AsyncTaskStatus newStatus) {
     Objects.requireNonNull(newStatus, "newStatus 不能为 null");
     AsyncTask task = taskStore.getIfPresent(taskId);
     if (task == null) {
@@ -107,7 +104,7 @@ public class InMemoryAsyncTaskStore implements AsyncTaskStore {
   }
 
   @Override
-  public void updateProgress(Long taskId, int percent, String workerId) {
+  public void updateProgress(String taskId, int percent, String workerId) {
     AsyncTask task = taskStore.getIfPresent(taskId);
     if (task == null) {
       log.warn("[AsyncTask-Memory] 更新进度时任务不存在: id={}", taskId);
@@ -135,7 +132,7 @@ public class InMemoryAsyncTaskStore implements AsyncTaskStore {
   }
 
   @Override
-  public Optional<AsyncTask> claim(Long taskId, String workerId) {
+  public Optional<AsyncTask> claim(String taskId, String workerId) {
     Objects.requireNonNull(workerId, "workerId 不能为 null");
     AsyncTask task = taskStore.getIfPresent(taskId);
     if (task == null) {
@@ -181,7 +178,7 @@ public class InMemoryAsyncTaskStore implements AsyncTaskStore {
   }
 
   @Override
-  public AsyncTask cancel(Long taskId) {
+  public AsyncTask cancel(String taskId) {
     AsyncTask task = taskStore.getIfPresent(taskId);
     if (task == null) {
       throw new IllegalStateException(I18n.message("agent.error.task.not_found", new Object[]{taskId}));
@@ -198,7 +195,7 @@ public class InMemoryAsyncTaskStore implements AsyncTaskStore {
   public void save(AsyncTask task) {
     Objects.requireNonNull(task, "task 不能为 null");
     if (task.getId() == null) {
-      long id = idGenerator.getAndIncrement();
+      String id = IdGenerator.nextIdStr();
       task.setId(id);
       task.setCreatedAt(LocalDateTime.now());
     }

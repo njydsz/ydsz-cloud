@@ -133,7 +133,7 @@ public class AsyncTaskWorkerService {
    *
    * @param taskId 任务 ID
    */
-  private void processTask(Long taskId) {
+  private void processTask(String taskId) {
     Optional<AsyncTask> claimed = taskStore.claim(taskId, workerId);
     if (claimed.isEmpty()) {
       log.debug("[AsyncTask-Worker] 任务已被其他 Worker 认领，跳过: id={}", taskId);
@@ -247,7 +247,7 @@ public class AsyncTaskWorkerService {
    * @param userId   关联用户 ID（可能为空）
    * @param reason   告警原因简述
    */
-  private void sendSystemAlertOrLog(Long taskId, String taskType, String userId, String reason) {
+  private void sendSystemAlertOrLog(String taskId, String taskType, String userId, String reason) {
     if (userId != null && !userId.isBlank()) {
       notifyHelper.sendSystemAlert(
           "异步任务执行异常",

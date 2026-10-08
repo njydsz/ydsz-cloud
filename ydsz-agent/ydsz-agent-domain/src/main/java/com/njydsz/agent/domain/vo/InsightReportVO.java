@@ -20,7 +20,7 @@ public class InsightReportVO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 主键 ID */
-  private Long id;
+  private String id;
 
   /** 唯一业务 ID */
   private String reportId;

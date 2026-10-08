@@ -66,11 +66,11 @@ public class AsyncTaskController {
    */
   @PostMapping("/submit")
   @Operation(summary = "提交异步任务", description = "提交一条新异步任务，返回任务 ID")
-  public YdszResponse<Long> submitTask(@Valid @RequestBody AsyncTaskSubmitDTO submitDTO) {
+  public YdszResponse<String> submitTask(@Valid @RequestBody AsyncTaskSubmitDTO submitDTO) {
     log.info("[AsyncTask-API] 提交任务请求: type={}, tenant={}, userId={}",
         submitDTO.getTaskType(), submitDTO.getTenantCode(), submitDTO.getUserId());
 
-    Long taskId = asyncTaskService.submitTask(
+    String taskId = asyncTaskService.submitTask(
         submitDTO.getTaskType(),
         submitDTO.getTenantCode(),
         submitDTO.getUserId(),
@@ -90,7 +90,7 @@ public class AsyncTaskController {
   public YdszResponse<AsyncTaskVO> getTask(
       @PathVariable("taskId")
       @Parameter(description = "任务 ID", required = true)
-      Long taskId) {
+      String taskId) {
     log.debug("[AsyncTask-API] 查询任务详情: id={}", taskId);
     AsyncTaskVO vo = AsyncTaskVO.fromEntity(asyncTaskService.getTask(taskId));
     return YdszResponse.success(vo);
@@ -107,7 +107,7 @@ public class AsyncTaskController {
   public YdszResponse<AsyncTaskVO> cancelTask(
       @PathVariable("taskId")
       @Parameter(description = "任务 ID", required = true)
-      Long taskId) {
+      String taskId) {
     log.info("[AsyncTask-API] 取消任务请求: id={}", taskId);
     AsyncTaskVO vo = AsyncTaskVO.fromEntity(asyncTaskService.cancelTask(taskId));
     return YdszResponse.success(vo);

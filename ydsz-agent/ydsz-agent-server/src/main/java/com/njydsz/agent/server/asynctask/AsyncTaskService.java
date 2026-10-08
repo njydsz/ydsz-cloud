@@ -74,7 +74,7 @@ public class AsyncTaskService {
    * @return 生成的任务 ID
    * @throws BusinessException 任务类型无效或准入配额不足时抛出
    */
-  public Long submitTask(
+  public String submitTask(
       String taskType, String tenantCode, String userId, String inputPayload) {
     if (taskType == null || taskType.isBlank()) {
       throw BusinessException.builder()
@@ -133,7 +133,7 @@ public class AsyncTaskService {
    * @return 任务实体
    * @throws BusinessException 任务不存在时抛出
    */
-  public AsyncTask getTask(Long taskId) {
+  public AsyncTask getTask(String taskId) {
     if (taskId == null) {
       throw BusinessException.builder()
           .code("ASYNC_TASK_ID_INVALID")
@@ -156,12 +156,12 @@ public class AsyncTaskService {
    * @return 取消后的任务实体
    * @throws BusinessException 任务不存在或已处于终态时抛出
    */
-  public AsyncTask cancelTask(Long taskId) {
+  public AsyncTask cancelTask(String taskId) {
     AsyncTask task = getTask(taskId);
     if (AsyncTaskStatus.isTerminal(task.getStatus())) {
       throw BusinessException.builder()
           .code("ASYNC_TASK_CANCEL_FORBIDDEN")
-          .message(String.format("任务已处于终态 %s，无法取消: id=%d",
+          .message(String.format("任务已处于终态 %s，无法取消: id=%s",
               task.getStatus(), taskId))
           .build();
     }
@@ -196,7 +196,7 @@ public class AsyncTaskService {
    * @return 任务状态实体
    * @throws BusinessException 任务不存在时抛出
    */
-  public AsyncTask getTaskStatus(Long taskId) {
+  public AsyncTask getTaskStatus(String taskId) {
     return getTask(taskId);
   }
 }

@@ -29,7 +29,7 @@ public class AsyncTaskVO implements Serializable {
 
   /** 任务唯一 ID */
   @Schema(description = "任务唯一 ID")
-  private Long id;
+  private String id;
 
   /** 任务类型编码 */
   @Schema(description = "任务类型编码")

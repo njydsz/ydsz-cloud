@@ -90,7 +90,7 @@ public interface AsyncTaskMapper extends BaseMapper<AsyncTask> {
       + "SET status = 'RUNNING', worker_id = #{workerId}, started_at = #{startTime}, "
       + "updated_at = CURRENT_TIMESTAMP "
       + "WHERE id = #{id} AND status = 'PENDING'")
-  int claimTask(@Param("id") Long id, @Param("workerId") String workerId,
+  int claimTask(@Param("id") String id, @Param("workerId") String workerId,
       @Param("startTime") LocalDateTime startTime);
 
   /**
@@ -116,6 +116,6 @@ public interface AsyncTaskMapper extends BaseMapper<AsyncTask> {
   @Update("UPDATE ydsz_agt_async_task "
       + "SET progress_percent = #{percent}, updated_at = CURRENT_TIMESTAMP "
       + "WHERE id = #{id} AND worker_id = #{workerId} AND status = 'RUNNING'")
-  int updateTaskProgress(@Param("id") Long id, @Param("percent") int percent,
+  int updateTaskProgress(@Param("id") String id, @Param("percent") int percent,
       @Param("workerId") String workerId);
 }

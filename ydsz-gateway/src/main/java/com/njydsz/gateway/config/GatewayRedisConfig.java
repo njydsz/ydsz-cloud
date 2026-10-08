@@ -1,12 +1,22 @@
 package com.njydsz.gateway.config;
 
+import java.time.Duration;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.metrics.RedisMetricsCollector;
+import com.njydsz.common.redis.service.ops.ReactiveStringRedisOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
 
@@ -16,50 +26,121 @@ import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
  * <p>网关为 WebFlux reactive 栈，使用 spring-boot-starter-data-redis-reactive 的 Lettuce 连接。
  * common-redis 的 {@code RedisConfiguration} 因 Jedis/Lettuce 客户端唯一性校验（{@code validateClientUniqueness}）
  * 无法在 reactive 栈中加载（编译期引用 Jedis 类但运行时缺少，或双客户端冲突），
- * 故本模块通过 {@code spring.autoconfigure.exclude} 排除它，改由此类仅创建网关必需的 {@link RedisStringOps}，
- * 供 {@code JwtConfiguration#tokenBlacklistService} 注入使用。
+ * 故本模块通过 {@code spring.autoconfigure.exclude} 排除它。
  *
- * <p>{@link RedisTemplate} 由 Spring Boot reactive 自动配置提供（Lettuce 连接工厂），
- * 此处仅依赖它构建 {@code RedisStringOps}。
+ * <p>Spring Boot 4.x 的 reactive Redis 自动配置（{@code DataRedisAutoConfiguration}）因
+ * common-redis 同名旧类已被排除而未能激活 Lettuce 连接工厂，故此处手动创建：
+ * LettuceConnectionFactory → ReactiveRedisConnectionFactory → 同步/响应式 RedisTemplate → Ops 封装。
  *
  * @author ydsz-team
  * @since 26.10.08
  */
 @AutoConfiguration
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class GatewayRedisConfig {
 
+  private static final int DEFAULT_REDIS_PORT = 6379;
+  private static final int DEFAULT_REDIS_DB = 0;
+  private static final Duration DEFAULT_COMMAND_TIMEOUT = Duration.ofSeconds(3);
+
+  // ==================== 连接工厂 ====================
+
   /**
-   * 创建网关使用的 RedisStringOps Bean。
+   * 创建 Lettuce 连接工厂（非 reactive，但可被包装为 reactive）。
    *
-   * <p>参数 metricsProvider / tenantPrefixerProvider 均为永远返回 null 的 ObjectProvider，
-   * 因为网关场景不涉及指标采集和租户 Key 前缀特性，RedisStringOps 内部调用 getIfAvailable() 时
-   * 会得到 null，自动降级为无指标 / 无前缀模式。
-   *
-   * @param redisTemplate Spring Boot 自动配置的 RedisTemplate（Lettuce）
-   * @return RedisStringOps 实例
+   * <p>替代已被排除的 common-redis {@code RedisConfiguration#redisConnectionFactory}，
+   * 仅配置单机模式 + 连接池，满足网关开发环境需求。
    */
-  @SuppressWarnings("unchecked")
+  @Bean
+  public LettuceConnectionFactory redisConnectionFactory() {
+    RedisStandaloneConfiguration standaloneConfig =
+        new RedisStandaloneConfiguration("127.0.0.1", DEFAULT_REDIS_PORT);
+    standaloneConfig.setDatabase(DEFAULT_REDIS_DB);
+
+    GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+    poolConfig.setMaxTotal(16);
+    poolConfig.setMaxIdle(8);
+    poolConfig.setMinIdle(2);
+
+    LettuceClientConfiguration clientConfig =
+        LettucePoolingClientConfiguration.builder()
+            .commandTimeout(DEFAULT_COMMAND_TIMEOUT)
+            .poolConfig(poolConfig)
+            .build();
+
+    return new LettuceConnectionFactory(standaloneConfig, clientConfig);
+  }
+
+  /**
+   * 创建响应式 Redis 连接工厂。
+   *
+   * <p>通过 LettuceConnectionFactory.getReactiveConnectionFactory() 获取原生 reactive 适配，
+   * 供 ReactiveStringRedisTemplate 使用。
+   */
+  @Bean
+  public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory(
+      LettuceConnectionFactory connectionFactory) {
+    return connectionFactory.getReactiveConnectionFactory();
+  }
+
+  // ==================== Templates ====================
+
+  /**
+   * 创建同步 RedisTemplate（{@code @Primary} 确保覆盖自动配置的同名 Bean）。
+   */
+  @Bean
+  @org.springframework.context.annotation.Primary
+  public RedisTemplate<String, Object> redisTemplate(
+      LettuceConnectionFactory connectionFactory) {
+    RedisTemplate<String, Object> template = new RedisTemplate<>();
+    template.setConnectionFactory(connectionFactory);
+    template.setKeySerializer(new org.springframework.data.redis.serializer.StringRedisSerializer());
+    template.setValueSerializer(new org.springframework.data.redis.serializer.StringRedisSerializer());
+    template.setHashKeySerializer(new org.springframework.data.redis.serializer.StringRedisSerializer());
+    template.setHashValueSerializer(new org.springframework.data.redis.serializer.StringRedisSerializer());
+    template.afterPropertiesSet();
+    return template;
+  }
+
+  /**
+   * 创建响应式 String RedisTemplate。
+   */
+  @Bean
+  public ReactiveStringRedisTemplate reactiveStringRedisTemplate(
+      ReactiveRedisConnectionFactory connectionFactory) {
+    return new ReactiveStringRedisTemplate(connectionFactory);
+  }
+
+  // ==================== Ops 封装 ====================
+
+  /**
+   * 创建同步 RedisStringOps（供 JwtTokenService 的 TokenBlacklistService 使用）。
+   */
   @Bean
   public RedisStringOps redisStringOps(RedisTemplate<String, Object> redisTemplate) {
     RedisProperties redisProperties = new RedisProperties();
     redisProperties.setKeyPrefix("gateway");
+    ObjectProvider nullProvider = new NullObjectProvider();
     return new RedisStringOps(
-        redisTemplate,
-        redisProperties,
-        (ObjectProvider<RedisMetricsCollector>) (ObjectProvider) new NullObjectProvider(),
-        (ObjectProvider<TenantRedisKeyPrefixer>) (ObjectProvider) new NullObjectProvider());
+        redisTemplate, redisProperties,
+        (ObjectProvider<RedisMetricsCollector>) (ObjectProvider) nullProvider,
+        (ObjectProvider<TenantRedisKeyPrefixer>) (ObjectProvider) nullProvider);
+  }
+
+  /**
+   * 创建响应式 RedisStringOps（供 WebSocketConnectionLimiter、IpAccessControlFilter 使用）。
+   */
+  @Bean
+  public ReactiveStringRedisOps reactiveStringRedisOps(
+      ReactiveStringRedisTemplate reactiveTemplate) {
+    return new ReactiveStringRedisOps(reactiveTemplate);
   }
 
   /** 永远返回 null 的 ObjectProvider 实现。 */
   private static class NullObjectProvider implements ObjectProvider<Object> {
-    @Override
-    public Object getObject(Object... args) { return null; }
-    @Override
-    public Object getObject() { return null; }
-    @Override
-    public Object getIfUnique() { return null; }
-    @Override
-    public Object getIfAvailable() { return null; }
+    @Override public Object getObject(Object... args) { return null; }
+    @Override public Object getObject() { return null; }
+    @Override public Object getIfUnique() { return null; }
+    @Override public Object getIfAvailable() { return null; }
   }
 }
