@@ -46,6 +46,8 @@ spring:
       - org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration
       # 审计自动配置（依赖 DataSource，网关无数据库）
       - com.njydsz.common.audit.config.AuditAutoConfiguration
+      # 字段加密（网关无敏感字段加密需求，且需要密钥配置）
+      - com.njydsz.common.safe.encrypt.FieldEncryptionAutoConfiguration
       # 异常文档端点自动配置（依赖 Servlet 异常体系，WebFlux 不适用）
       - com.njydsz.common.exception.config.YdszExceptionActuatorAutoConfiguration
       - com.njydsz.common.exception.handler.YdszExceptionHandlerAutoConfiguration
