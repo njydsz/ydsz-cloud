@@ -59,7 +59,7 @@ import com.njydsz.common.locales.util.MissingTranslationLogger;
 @Slf4j
 @AutoConfiguration
 @EnableConfigurationProperties(I18nProperties.class)
-@ConditionalOnClass(MessageSource.class)
+@ConditionalOnClass(name = {"org.springframework.context.MessageSource", "org.springframework.web.servlet.LocaleResolver"})
 public class LocalesAutoConfiguration {
 
   /** 自定义 MessageSource Bean 名称（避免与 Spring Boot 默认 messageSource 互相干扰）。 */

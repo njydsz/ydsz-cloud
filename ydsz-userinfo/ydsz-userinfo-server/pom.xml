@@ -55,6 +55,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-event</artifactId>
         </dependency>
+        <!-- OAuthCodeContext 使用 @JsonProperty（YdszJson 注解），需显式声明 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
         <!-- P0-A: common-web 已移除，server 层零 import（违规依赖清理 2026-10-01） -->
         <!-- ydsz-common-base：提供 AbstractModuleHealthIndicator（UserinfoHealthIndicator 使用） -->
         <dependency>
