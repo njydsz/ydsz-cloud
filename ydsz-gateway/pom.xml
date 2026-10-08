@@ -102,7 +102,19 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-cache</artifactId>
         </dependency>
-        <!-- 限流实现已收敛至 ydsz-common-safe 的 RedisClusterRateLimiter（本模块内联 Lua 已移除，
+        <!-- P0-FIX: 提供 spring-webmvc 类供 common 模块自动配置 introspection 使用。
+             网关本身运行 WebFlux 响应式栈，spring-webmvc 仅提供类定义不引入 MVC 容器。
+             LocaleResolver / HandlerInterceptor / WebMvcConfigurer 等类在 common-locales /
+             common-base 的 @ConditionalOnClass 检查中需要可见。 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+        </dependency>
+        <!-- 限流实现已收敛至 ydzs-common-safe 的 RedisClusterRateLimiter（本模块内联 Lua 已移除，
              规范 §33.2 / §33.3；Lua 脚本常量 RedisScriptConstants 由 common-safe 侧统一引用）。
              本依赖的用途是 Redis 客户端自动装配（common-redis RedisConfiguration /
              TenantRedisAutoConfiguration 等运行时 Bean），故本模块源码零 import 属正常形态，
