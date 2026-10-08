@@ -108,9 +108,9 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     revision INT NOT NULL DEFAULT 0,
     tenant_id VARCHAR(36)     NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 执行链路（记录一次 Agent 执行的完整元数据）';
 
@@ -137,9 +137,9 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
     revision INT NOT NULL DEFAULT 0,
     tenant_id VARCHAR(36)     NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 执行链路步骤（记录单个执行步骤，支持回放与调试）';
 
@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     revision INT NOT NULL DEFAULT 0,
     tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人 ID（CombinedFieldFillInterceptor 自动填充）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人 ID（CombinedFieldFillInterceptor 自动填充）',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '请求创建时间',
     updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'

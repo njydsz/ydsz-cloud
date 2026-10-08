@@ -5,6 +5,28 @@
 #  公共配置（datasource / redis / mybatis-plus）由 Nacos ydsz-common.yaml 提供
 # =====================================================================
 
+spring:
+  autoconfigure:
+    exclude:
+      # 线程池 / 文档 / Sentry / WebMVC 自动配置（网关为 WebFlux reactive 栈）
+      - com.njydsz.common.thread.config.ThreadPoolAutoConfiguration
+      - com.njydsz.common.base.config.DocAutoConfiguration
+      - com.njydsz.common.sentry.config.SentryAutoConfiguration
+      - com.njydsz.common.web.config.WebAutoConfiguration
+      - com.njydsz.common.web.config.WebMvcObserverAutoConfiguration
+      - com.njydsz.common.web.config.TenantWebAutoConfiguration
+      # Redis 自动配置（网关手动创建 Lettuce ConnectionFactory 以避免 Jedis/Lettuce 冲突）
+      - com.njydsz.common.redis.config.RedisConfiguration
+      # JDBC 自动配置（网关不依赖数据库，排除避免 DataSource 初始化失败）
+      - com.njydsz.common.jdbc.datasource.DynamicDataSourceAutoConfiguration
+      - com.njydsz.common.jdbc.config.MybatisPlusConfiguration
+      - com.njydsz.common.jdbc.config.MultiDataSourcePoolCustomizer
+      - com.njydsz.common.jdbc.config.SqlTraceAutoConfiguration
+      - com.njydsz.common.jdbc.config.SafeQueryAutoConfiguration
+      - com.njydsz.common.jdbc.config.JdbcMetricsAutoConfiguration
+      - com.njydsz.common.jdbc.actuator.JdbcHealthIndicator
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+
 logging:
   pattern:
     # SkyWalking traceId 支持：Agent 注入时自动填充 X{traceId}，未启用时为空
