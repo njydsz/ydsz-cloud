@@ -123,6 +123,13 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-redis</artifactId>
         </dependency>
+        <!-- 网关使用 common-redis 自动装配型依赖，但其内部 Jedis 工厂引用 JedisPoolConfig；
+             common-redis 的 jedis 声明为 optional=true，gateway 为 reactive 栈不自动引入，
+             此处显式声明以满足运行时类加载。gateway 实际走 Lettuce 连接，Jedis 工厂仅被实例化但不实际使用。 -->
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+        </dependency>
         <!-- WebFluxErrorUtils 响应式统一错误工具（仅使用 spring-web 部分，排除 servlet 栈）。 -->
         <dependency>
             <groupId>com.njydsz</groupId>
