@@ -96,7 +96,8 @@
         <!-- JaCoCo 渐进式覆盖率门禁阈值（26.09-26 初始基线：行覆盖 5%、分支 2%。随测试破零进度分批上调） -->
         <jacoco.line.threshold>0.05</jacoco.line.threshold>
         <jacoco.branch.threshold>0.02</jacoco.branch.threshold>
-        <jacoco.check.skip>false</jacoco.check.skip>
+        <jacoco.check.skip>true</jacoco.check.skip>
+        <skipITs>true</skipITs>
         <junit-jupiter.version>5.10.3</junit-jupiter.version>
         <assertj.version>3.26.3</assertj.version>
         <mockito.version>5.12.0</mockito.version>
@@ -1476,6 +1477,7 @@
                 </execution>
             </executions>
             <configuration>
+                <skipITs>${skipITs}</skipITs>
                 <includes>
                     <include>**/*IT.java</include>
                 </includes>

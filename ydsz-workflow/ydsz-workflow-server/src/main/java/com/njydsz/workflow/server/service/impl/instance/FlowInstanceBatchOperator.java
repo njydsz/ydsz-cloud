@@ -2,6 +2,9 @@ package com.njydsz.workflow.server.service.impl.instance;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.IntStream;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
@@ -44,11 +48,18 @@ public class FlowInstanceBatchOperator {
   /** 流程实例仓储，负责 ydsz_flow_instance 的领域持久化 */
   private final FlowInstanceRepository instanceRepository;
 
+  /** 虚拟线程执行器：用于批量启动实例的并发执行 */
+  private static final ExecutorService VIRTUAL_EXECUTOR =
+      ExecutorUtils.newVirtualThreadExecutor("flow-batch-start-");
+
   /**
-   * P2-6: 批量发起流程实例。
+   * P2-6: 批量发起流程实例 — 虚拟线程并发执行。
    *
-   * <p>每个 {@link FlowStartProcessDTO} 通过 {@link FlowInstanceLifecycleManager#start} 独立事务发起， 单个失败不影响其他实例。返回成功发起的
-   * instanceId 列表 + 失败项明细。
+   * <p>每个 {@link FlowStartProcessDTO} 通过 {@link FlowInstanceLifecycleManager#start} 独立事务发起，
+   * 单个失败不影响其他实例。返回成功发起的 instanceId 列表 + 失败项明细。
+   *
+   * <p>使用虚拟线程池并发处理全部启动请求，IO 等待（DB 写入 / 推进）不阻塞载体线程，
+   * 从而显著减少批量发起的总耗时（受限于 HikariCP 连接池和数据库吞吐）。
    *
    * @param dtos 流程启动参数列表（不能为空，最多 100 条）
    * @return Map 包含：
@@ -75,27 +86,24 @@ public class FlowInstanceBatchOperator {
           .build();
     }
 
+    // 将每条启动请求提交到虚拟线程池，全部提交后再统一 join 收集结果
+    List<CompletableFuture<StartResultItem>> futures = IntStream.range(0, dtos.size())
+        .mapToObj(i -> CompletableFuture.supplyAsync(
+            () -> executeSingleStart(dtos.get(i), i + 1),
+            VIRTUAL_EXECUTOR))
+        .toList();
+
+    // 汇总结果
     int successCount = 0;
     List<String> instanceIds = new ArrayList<>(dtos.size());
     List<FlowBatchStartResultVO.FailedItemVO> failedItems = new ArrayList<>(dtos.size());
-
-    for (int i = 0; i < dtos.size(); i++) {
-      FlowStartProcessDTO dto = dtos.get(i);
-      String businessId = dto != null ? dto.getBusinessId() : null;
-      try {
-        // 委托生命周期管理器执行（独立事务）
-        String instanceId = lifecycleManager.start(dto);
+    for (CompletableFuture<StartResultItem> future : futures) {
+      StartResultItem item = future.join();
+      if (item.success()) {
         successCount++;
-        instanceIds.add(instanceId);
-        log.info("[Flow] 批量发起第 {} 条成功: businessId={} instanceId={}", i + 1, businessId, instanceId);
-      } catch (Exception e) {
-        FlowBatchStartResultVO.FailedItemVO fail = new FlowBatchStartResultVO.FailedItemVO();
-        fail.setIndex(i + 1);
-        fail.setFlowCode(businessId);
-        String reason = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-        fail.setReason(reason);
-        failedItems.add(fail);
-        log.warn("[Flow] 批量发起第 {} 条失败: businessId={} reason={}", i + 1, businessId, reason);
+        instanceIds.add(item.instanceId());
+      } else {
+        failedItems.add(item.fail());
       }
     }
 
@@ -110,6 +118,35 @@ public class FlowInstanceBatchOperator {
         successCount,
         failedItems.size());
     return result;
+  }
+
+  /**
+   * 单条启动结果实体（record），封装成功/失败两类信息。
+   */
+  private record StartResultItem(
+      int index,
+      boolean success,
+      String instanceId,
+      FlowBatchStartResultVO.FailedItemVO fail) {}
+
+  /**
+   * 执行单条流程实例启动，返回成功实例 ID 或构建失败明细。
+   */
+  private StartResultItem executeSingleStart(FlowStartProcessDTO dto, int index) {
+    String businessId = dto != null ? dto.getBusinessId() : null;
+    try {
+      String instanceId = lifecycleManager.start(dto);
+      log.info("[Flow] 批量发起第 {} 条成功: businessId={} instanceId={}", index, businessId, instanceId);
+      return new StartResultItem(index, true, instanceId, null);
+    } catch (Exception e) {
+      String reason = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+      FlowBatchStartResultVO.FailedItemVO fail = new FlowBatchStartResultVO.FailedItemVO();
+      fail.setIndex(index);
+      fail.setFlowCode(businessId);
+      fail.setReason(reason);
+      log.warn("[Flow] 批量发起第 {} 条失败: businessId={} reason={}", index, businessId, reason);
+      return new StartResultItem(index, false, null, fail);
+    }
   }
 
   /**
