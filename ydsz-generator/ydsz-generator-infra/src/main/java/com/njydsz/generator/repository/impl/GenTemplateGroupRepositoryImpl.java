@@ -43,7 +43,7 @@ public class GenTemplateGroupRepositoryImpl implements GenTemplateGroupRepositor
   }
 
   @Override
-  public Optional<GenTemplateGroup> findById(final Long id) {
+  public Optional<GenTemplateGroup> findById(final String id) {
     return Optional.ofNullable(mapper.selectById(id));
   }
 
@@ -69,7 +69,7 @@ public class GenTemplateGroupRepositoryImpl implements GenTemplateGroupRepositor
   }
 
   @Override
-  public void deleteById(final Long id) {
+  public void deleteById(final String id) {
     mapper.deleteById(id);
     log.info("删除模板分组 id={}", id);
   }

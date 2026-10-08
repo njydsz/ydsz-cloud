@@ -1,15 +1,11 @@
 package com.njydsz.generator.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * 代码生成任务文件明细领域实体。
@@ -24,15 +20,10 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_gen_history_file")
-public class GenHistoryFile extends MpBaseEntity<Long> {
+public class GenHistoryFile extends MpBaseEntity<String> {
 
-  /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
-  @TableId(type = IdType.AUTO)
-  private Long id;
-  /** 租户 ID（多租户隔离）。 */
-  private String tenantId;
   /** 所属任务 ID。 */
-  private Long historyId;
+  private String historyId;
   /** 生成文件路径。 */
   private String filePath;
   /** 原文件备份路径（用于回滚）。 */

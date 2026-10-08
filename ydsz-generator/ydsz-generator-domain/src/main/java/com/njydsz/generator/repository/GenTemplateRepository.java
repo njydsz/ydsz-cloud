@@ -27,7 +27,7 @@ public interface GenTemplateRepository {
    * @param id 主键
    * @return Optional 实体
    */
-  Optional<GenTemplate> findById(Long id);
+  Optional<GenTemplate> findById(String id);
 
   /**
    * 根据分组 ID + 文件名查询。
@@ -36,7 +36,7 @@ public interface GenTemplateRepository {
    * @param fileName 文件名
    * @return Optional 实体
    */
-  Optional<GenTemplate> findByGroupIdAndFileName(Long groupId, String fileName);
+  Optional<GenTemplate> findByGroupIdAndFileName(String groupId, String fileName);
 
   /**
    * 查询分组全部模板。
@@ -44,7 +44,7 @@ public interface GenTemplateRepository {
    * @param groupId 分组 ID
    * @return 模板列表
    */
-  List<GenTemplate> findByGroupIdOrderByFileNameAsc(Long groupId);
+  List<GenTemplate> findByGroupIdOrderByFileNameAsc(String groupId);
 
   /**
    * 批量持久化模板集合。
@@ -59,14 +59,14 @@ public interface GenTemplateRepository {
    *
    * @param id 主键
    */
-  void deleteById(Long id);
+  void deleteById(String id);
 
   /**
    * 删除分组全部模板。
    *
    * @param groupId 分组 ID
    */
-  void deleteByGroupId(Long groupId);
+  void deleteByGroupId(String groupId);
 
   /**
    * 统计分组模板数量。
@@ -74,5 +74,5 @@ public interface GenTemplateRepository {
    * @param groupId 分组 ID
    * @return 数量
    */
-  long countByGroupId(Long groupId);
+  long countByGroupId(String groupId);
 }

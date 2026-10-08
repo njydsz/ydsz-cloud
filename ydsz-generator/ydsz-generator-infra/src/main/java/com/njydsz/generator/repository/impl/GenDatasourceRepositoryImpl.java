@@ -43,7 +43,7 @@ public class GenDatasourceRepositoryImpl implements GenDatasourceRepository {
   }
 
   @Override
-  public Optional<GenDatasource> findById(final Long id) {
+  public Optional<GenDatasource> findById(final String id) {
     return Optional.ofNullable(mapper.selectById(id));
   }
 
@@ -69,7 +69,7 @@ public class GenDatasourceRepositoryImpl implements GenDatasourceRepository {
   }
 
   @Override
-  public void deleteById(final Long id) {
+  public void deleteById(final String id) {
     mapper.deleteById(id);
     log.info("删除数据源 id={}", id);
   }

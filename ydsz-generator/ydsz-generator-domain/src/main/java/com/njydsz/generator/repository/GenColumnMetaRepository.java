@@ -34,7 +34,7 @@ public interface GenColumnMetaRepository {
    * @param id 主键
    * @return 列元数据
    */
-  GenColumnMeta findById(Long id);
+  GenColumnMeta findById(String id);
 
   /**
    * 查询表全部列元数据。
@@ -42,19 +42,19 @@ public interface GenColumnMetaRepository {
    * @param tableMetaId 表元数据 ID
    * @return 列元数据列表
    */
-  List<GenColumnMeta> findByTableMetaIdOrderByIdAsc(Long tableMetaId);
+  List<GenColumnMeta> findByTableMetaIdOrderByIdAsc(String tableMetaId);
 
   /**
    * 删除列元数据。
    *
    * @param id 主键
    */
-  void deleteById(Long id);
+  void deleteById(String id);
 
   /**
    * 删除表全部列元数据。
    *
    * @param tableMetaId 表元数据 ID
    */
-  void deleteByTableMetaId(Long tableMetaId);
+  void deleteByTableMetaId(String tableMetaId);
 }

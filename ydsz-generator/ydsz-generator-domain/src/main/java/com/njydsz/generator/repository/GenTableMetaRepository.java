@@ -27,7 +27,7 @@ public interface GenTableMetaRepository {
    * @param id 主键
    * @return Optional 实体
    */
-  Optional<GenTableMeta> findById(Long id);
+  Optional<GenTableMeta> findById(String id);
 
   /**
    * 根据数据源 ID + 表名查询。
@@ -36,7 +36,7 @@ public interface GenTableMetaRepository {
    * @param tableName    物理表名
    * @return Optional 实体
    */
-  Optional<GenTableMeta> findByDatasourceIdAndTableName(Long datasourceId, String tableName);
+  Optional<GenTableMeta> findByDatasourceIdAndTableName(String datasourceId, String tableName);
 
   /**
    * 查询某个数据源全部表元数据。
@@ -44,21 +44,21 @@ public interface GenTableMetaRepository {
    * @param datasourceId 数据源 ID
    * @return 表元数据列表
    */
-  List<GenTableMeta> findByDatasourceIdOrderByTableNameAsc(Long datasourceId);
+  List<GenTableMeta> findByDatasourceIdOrderByTableNameAsc(String datasourceId);
 
   /**
    * 删除表元数据。
    *
    * @param id 主键
    */
-  void deleteById(Long id);
+  void deleteById(String id);
 
   /**
    * 删除数据源下全部表元数据。
    *
    * @param datasourceId 数据源 ID
    */
-  void deleteByDatasourceId(Long datasourceId);
+  void deleteByDatasourceId(String datasourceId);
 
   /**
    * 统计数据源下表元数据数量。
@@ -66,5 +66,5 @@ public interface GenTableMetaRepository {
    * @param datasourceId 数据源 ID
    * @return 数量
    */
-  long countByDatasourceId(Long datasourceId);
+  long countByDatasourceId(String datasourceId);
 }

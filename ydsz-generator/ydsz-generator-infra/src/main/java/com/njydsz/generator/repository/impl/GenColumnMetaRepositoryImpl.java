@@ -78,12 +78,12 @@ public class GenColumnMetaRepositoryImpl implements GenColumnMetaRepository {
   }
 
   @Override
-  public GenColumnMeta findById(final Long id) {
+  public GenColumnMeta findById(final String id) {
     return mapper.selectById(id);
   }
 
   @Override
-  public List<GenColumnMeta> findByTableMetaIdOrderByIdAsc(final Long tableMetaId) {
+  public List<GenColumnMeta> findByTableMetaIdOrderByIdAsc(final String tableMetaId) {
     LambdaQueryWrapper<GenColumnMeta> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenColumnMeta::getTableMetaId, tableMetaId)
         .orderByAsc(GenColumnMeta::getId);
@@ -91,12 +91,12 @@ public class GenColumnMetaRepositoryImpl implements GenColumnMetaRepository {
   }
 
   @Override
-  public void deleteById(final Long id) {
+  public void deleteById(final String id) {
     mapper.deleteById(id);
   }
 
   @Override
-  public void deleteByTableMetaId(final Long tableMetaId) {
+  public void deleteByTableMetaId(final String tableMetaId) {
     LambdaQueryWrapper<GenColumnMeta> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenColumnMeta::getTableMetaId, tableMetaId);
     mapper.delete(wrapper);

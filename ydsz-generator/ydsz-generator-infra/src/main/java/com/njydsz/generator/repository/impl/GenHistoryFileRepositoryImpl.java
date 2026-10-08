@@ -39,14 +39,14 @@ public class GenHistoryFileRepositoryImpl implements GenHistoryFileRepository {
   }
 
   @Override
-  public List<GenHistoryFile> findByHistoryId(final Long historyId) {
+  public List<GenHistoryFile> findByHistoryId(final String historyId) {
     LambdaQueryWrapper<GenHistoryFile> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenHistoryFile::getHistoryId, historyId);
     return mapper.selectList(wrapper);
   }
 
   @Override
-  public void deleteByHistoryId(final Long historyId) {
+  public void deleteByHistoryId(final String historyId) {
     LambdaQueryWrapper<GenHistoryFile> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenHistoryFile::getHistoryId, historyId);
     mapper.delete(wrapper);

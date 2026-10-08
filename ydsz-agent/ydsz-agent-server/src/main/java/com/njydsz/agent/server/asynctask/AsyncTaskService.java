@@ -101,7 +101,7 @@ public class AsyncTaskService {
     }
 
     try {
-      return SentryObservation.<Long>time("agent.async_task.create", null, null, () -> {
+      return SentryObservation.<String>time("agent.async_task.create", null, null, () -> {
         // 构建任务实体
         AsyncTask task = new AsyncTask(taskType, tenantCode, userId, inputPayload);
 

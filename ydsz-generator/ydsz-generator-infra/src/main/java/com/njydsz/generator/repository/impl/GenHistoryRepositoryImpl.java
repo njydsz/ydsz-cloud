@@ -42,7 +42,7 @@ public class GenHistoryRepositoryImpl implements GenHistoryRepository {
   }
 
   @Override
-  public Optional<GenHistory> findById(final Long id) {
+  public Optional<GenHistory> findById(final String id) {
     return Optional.ofNullable(mapper.selectById(id));
   }
 
@@ -64,7 +64,7 @@ public class GenHistoryRepositoryImpl implements GenHistoryRepository {
   }
 
   @Override
-  public void deleteById(final Long id) {
+  public void deleteById(final String id) {
     mapper.deleteById(id);
     log.info("删除任务记录 id={}", id);
   }

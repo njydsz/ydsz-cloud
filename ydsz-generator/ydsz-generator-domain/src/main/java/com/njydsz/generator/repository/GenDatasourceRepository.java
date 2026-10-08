@@ -27,7 +27,7 @@ public interface GenDatasourceRepository {
    * @param id 主键
    * @return Optional 实体
    */
-  Optional<GenDatasource> findById(Long id);
+  Optional<GenDatasource> findById(String id);
 
   /**
    * 查询全部数据源。
@@ -56,7 +56,7 @@ public interface GenDatasourceRepository {
    *
    * @param id 主键
    */
-  void deleteById(Long id);
+  void deleteById(String id);
 
   /**
    * 统计数量。

@@ -41,12 +41,12 @@ public class GenTableMetaRepositoryImpl implements GenTableMetaRepository {
   }
 
   @Override
-  public Optional<GenTableMeta> findById(final Long id) {
+  public Optional<GenTableMeta> findById(final String id) {
     return Optional.ofNullable(mapper.selectById(id));
   }
 
   @Override
-  public Optional<GenTableMeta> findByDatasourceIdAndTableName(final Long datasourceId,
+  public Optional<GenTableMeta> findByDatasourceIdAndTableName(final String datasourceId,
                                                                final String tableName) {
     LambdaQueryWrapper<GenTableMeta> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenTableMeta::getDatasourceId, datasourceId)
@@ -55,7 +55,7 @@ public class GenTableMetaRepositoryImpl implements GenTableMetaRepository {
   }
 
   @Override
-  public List<GenTableMeta> findByDatasourceIdOrderByTableNameAsc(final Long datasourceId) {
+  public List<GenTableMeta> findByDatasourceIdOrderByTableNameAsc(final String datasourceId) {
     LambdaQueryWrapper<GenTableMeta> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenTableMeta::getDatasourceId, datasourceId)
         .orderByAsc(GenTableMeta::getTableName);
@@ -63,13 +63,13 @@ public class GenTableMetaRepositoryImpl implements GenTableMetaRepository {
   }
 
   @Override
-  public void deleteById(final Long id) {
+  public void deleteById(final String id) {
     mapper.deleteById(id);
     log.info("删除表元数据 id={}", id);
   }
 
   @Override
-  public void deleteByDatasourceId(final Long datasourceId) {
+  public void deleteByDatasourceId(final String datasourceId) {
     LambdaQueryWrapper<GenTableMeta> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenTableMeta::getDatasourceId, datasourceId);
     mapper.delete(wrapper);
@@ -77,7 +77,7 @@ public class GenTableMetaRepositoryImpl implements GenTableMetaRepository {
   }
 
   @Override
-  public long countByDatasourceId(final Long datasourceId) {
+  public long countByDatasourceId(final String datasourceId) {
     LambdaQueryWrapper<GenTableMeta> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenTableMeta::getDatasourceId, datasourceId);
     return mapper.selectCount(wrapper);

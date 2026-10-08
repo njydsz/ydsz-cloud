@@ -34,12 +34,12 @@ public interface GenHistoryFileRepository {
    * @param historyId 任务 ID
    * @return 文件列表
    */
-  List<GenHistoryFile> findByHistoryId(Long historyId);
+  List<GenHistoryFile> findByHistoryId(String historyId);
 
   /**
    * 删除任务全部文件明细。
    *
    * @param historyId 任务 ID
    */
-  void deleteByHistoryId(Long historyId);
+  void deleteByHistoryId(String historyId);
 }

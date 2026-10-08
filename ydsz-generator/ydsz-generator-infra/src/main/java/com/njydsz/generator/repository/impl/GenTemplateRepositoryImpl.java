@@ -62,12 +62,12 @@ public class GenTemplateRepositoryImpl implements GenTemplateRepository {
   }
 
   @Override
-  public Optional<GenTemplate> findById(final Long id) {
+  public Optional<GenTemplate> findById(final String id) {
     return Optional.ofNullable(mapper.selectById(id));
   }
 
   @Override
-  public Optional<GenTemplate> findByGroupIdAndFileName(final Long groupId, final String fileName) {
+  public Optional<GenTemplate> findByGroupIdAndFileName(final String groupId, final String fileName) {
     LambdaQueryWrapper<GenTemplate> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenTemplate::getGroupId, groupId)
         .eq(GenTemplate::getFileName, fileName);
@@ -75,7 +75,7 @@ public class GenTemplateRepositoryImpl implements GenTemplateRepository {
   }
 
   @Override
-  public List<GenTemplate> findByGroupIdOrderByFileNameAsc(final Long groupId) {
+  public List<GenTemplate> findByGroupIdOrderByFileNameAsc(final String groupId) {
     LambdaQueryWrapper<GenTemplate> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenTemplate::getGroupId, groupId)
         .eq(GenTemplate::getIsActive, true)
@@ -110,13 +110,13 @@ public class GenTemplateRepositoryImpl implements GenTemplateRepository {
   }
 
   @Override
-  public void deleteById(final Long id) {
+  public void deleteById(final String id) {
     mapper.deleteById(id);
     log.info("删除模板 id={}", id);
   }
 
   @Override
-  public void deleteByGroupId(final Long groupId) {
+  public void deleteByGroupId(final String groupId) {
     LambdaQueryWrapper<GenTemplate> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenTemplate::getGroupId, groupId);
     mapper.delete(wrapper);
@@ -124,7 +124,7 @@ public class GenTemplateRepositoryImpl implements GenTemplateRepository {
   }
 
   @Override
-  public long countByGroupId(final Long groupId) {
+  public long countByGroupId(final String groupId) {
     LambdaQueryWrapper<GenTemplate> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenTemplate::getGroupId, groupId);
     return mapper.selectCount(wrapper);

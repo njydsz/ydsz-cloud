@@ -27,7 +27,7 @@ public interface GenHistoryRepository {
    * @param id 主键
    * @return Optional 实体
    */
-  Optional<GenHistory> findById(Long id);
+  Optional<GenHistory> findById(String id);
 
   /**
    * 查询最近 N 条任务记录（按开始时间倒序）。
@@ -50,7 +50,7 @@ public interface GenHistoryRepository {
    *
    * @param id 主键
    */
-  void deleteById(Long id);
+  void deleteById(String id);
 
   /**
    * 统计任务总数。

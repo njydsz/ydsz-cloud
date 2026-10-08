@@ -5,13 +5,14 @@ import java.time.Duration;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 import com.njydsz.common.redis.config.RedisProperties;
@@ -28,9 +29,8 @@ import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
  * 无法在 reactive 栈中加载（编译期引用 Jedis 类但运行时缺少，或双客户端冲突），
  * 故本模块通过 {@code spring.autoconfigure.exclude} 排除它。
  *
- * <p>Spring Boot 4.x 的 reactive Redis 自动配置（{@code DataRedisAutoConfiguration}）因
- * common-redis 同名旧类已被排除而未能激活 Lettuce 连接工厂，故此处手动创建：
- * LettuceConnectionFactory → ReactiveRedisConnectionFactory → 同步/响应式 RedisTemplate → Ops 封装。
+ * <p>Spring Boot 4.x 的 {@code DataRedisAutoConfiguration} 因与 common-redis 同名旧类
+ * 冲突未激活 Lettuce 连接工厂，故此处手动创建 Lettuce 连接工厂 + 同步/响应式 RedisTemplate + Ops 封装。
  *
  * @author ydsz-team
  * @since 26.10.08
@@ -43,13 +43,12 @@ public class GatewayRedisConfig {
   private static final int DEFAULT_REDIS_DB = 0;
   private static final Duration DEFAULT_COMMAND_TIMEOUT = Duration.ofSeconds(3);
 
-  // ==================== 连接工厂 ====================
-
   /**
-   * 创建 Lettuce 连接工厂（非 reactive，但可被包装为 reactive）。
+   * 创建 Lettuce 连接工厂。
    *
-   * <p>替代已被排除的 common-redis {@code RedisConfiguration#redisConnectionFactory}，
-   * 仅配置单机模式 + 连接池，满足网关开发环境需求。
+   * <p>在 Spring Data Redis 4.x 中，{@link LettuceConnectionFactory} 同时实现了
+   * {@code RedisConnectionFactory} 和 {@code ReactiveRedisConnectionFactory}，
+   * 可直接用于同步和响应式模板。替代已被排除的 common-redis {@code RedisConfiguration#redisConnectionFactory}。
    */
   @Bean
   public LettuceConnectionFactory redisConnectionFactory() {
@@ -72,46 +71,35 @@ public class GatewayRedisConfig {
   }
 
   /**
-   * 创建响应式 Redis 连接工厂。
-   *
-   * <p>通过 LettuceConnectionFactory.getReactiveConnectionFactory() 获取原生 reactive 适配，
-   * 供 ReactiveStringRedisTemplate 使用。
-   */
-  @Bean
-  public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory(
-      LettuceConnectionFactory connectionFactory) {
-    return connectionFactory.getReactiveConnectionFactory();
-  }
-
-  // ==================== Templates ====================
-
-  /**
    * 创建同步 RedisTemplate（{@code @Primary} 确保覆盖自动配置的同名 Bean）。
    */
   @Bean
-  @org.springframework.context.annotation.Primary
-  public RedisTemplate<String, Object> redisTemplate(
-      LettuceConnectionFactory connectionFactory) {
+  @Primary
+  public RedisTemplate<String, Object> redisTemplate(LettuceConnectionFactory connectionFactory) {
     RedisTemplate<String, Object> template = new RedisTemplate<>();
     template.setConnectionFactory(connectionFactory);
-    template.setKeySerializer(new org.springframework.data.redis.serializer.StringRedisSerializer());
-    template.setValueSerializer(new org.springframework.data.redis.serializer.StringRedisSerializer());
-    template.setHashKeySerializer(new org.springframework.data.redis.serializer.StringRedisSerializer());
-    template.setHashValueSerializer(new org.springframework.data.redis.serializer.StringRedisSerializer());
+    StringRedisSerializer serializer = new StringRedisSerializer();
+    template.setKeySerializer(serializer);
+    template.setValueSerializer(serializer);
+    template.setHashKeySerializer(serializer);
+    template.setHashValueSerializer(serializer);
     template.afterPropertiesSet();
     return template;
   }
 
   /**
    * 创建响应式 String RedisTemplate。
+   *
+   * <p>LettuceConnectionFactory 本身实现了 ReactiveRedisConnectionFactory 接口（Spring Data Redis 4.x），
+   * 此处直接转型注入。
    */
   @Bean
   public ReactiveStringRedisTemplate reactiveStringRedisTemplate(
-      ReactiveRedisConnectionFactory connectionFactory) {
-    return new ReactiveStringRedisTemplate(connectionFactory);
+      LettuceConnectionFactory connectionFactory) {
+    return new ReactiveStringRedisTemplate(
+        (org.springframework.data.redis.connection.ReactiveRedisConnectionFactory)
+            connectionFactory);
   }
-
-  // ==================== Ops 封装 ====================
 
   /**
    * 创建同步 RedisStringOps（供 JwtTokenService 的 TokenBlacklistService 使用）。
