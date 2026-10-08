@@ -21,18 +21,18 @@
 -- =============================================================================
 
 CREATE TABLE "ydsz_flow_join_token" (
-  "id" character varying(64) NOT NULL,
-  "instance_id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "instance_id" character varying(36) NOT NULL,
   "join_node_code" character varying(255) NOT NULL,
   "total_branches" integer NOT NULL DEFAULT 0,
   "required_branches" integer NOT NULL DEFAULT 0,
   "arrived_count" integer NOT NULL DEFAULT 0,
   "join_status" character varying(32) NOT NULL DEFAULT 'PENDING'::character varying,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "revision" integer NOT NULL DEFAULT 0,
   CONSTRAINT "pk_ydsz_flow_join_token" PRIMARY KEY (id)

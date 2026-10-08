@@ -5,9 +5,9 @@
 DROP TABLE IF EXISTS "ydsz_agt_approval" CASCADE;
 
 CREATE TABLE "ydsz_agt_approval" (
-  "id" character varying(64) NOT NULL,
-  "conversation_id" character varying(64) DEFAULT NULL::character varying,
-  "trace_id" character varying(64) DEFAULT NULL::character varying,
+  "id" character varying(36) NOT NULL,
+  "conversation_id" character varying(36) DEFAULT NULL::character varying,
+  "trace_id" character varying(36) DEFAULT NULL::character varying,
   "step_description" character varying(512) DEFAULT NULL::character varying,
   "context_json" text,
   "status" character varying(32) NOT NULL DEFAULT 'PENDING'::character varying,
@@ -16,11 +16,11 @@ CREATE TABLE "ydsz_agt_approval" (
   "resolved_at" timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_approval" PRIMARY KEY (id)
 );
@@ -51,10 +51,10 @@ CREATE INDEX "idx_ydsz_agt_approval_tenant_deleted" ON "ydsz_agt_approval" USING
 DROP TABLE IF EXISTS "ydsz_agt_async_task" CASCADE;
 
 CREATE TABLE "ydsz_agt_async_task" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "task_type" character varying(64) NOT NULL,
   "status" character varying(32) NOT NULL DEFAULT 'PENDING'::character varying,
-  "user_id" character varying(64) DEFAULT NULL::character varying,
+  "user_id" character varying(36) DEFAULT NULL::character varying,
   "input_payload" text,
   "output_payload" text,
   "error_message" character varying(1024) DEFAULT NULL::character varying,
@@ -69,11 +69,11 @@ CREATE TABLE "ydsz_agt_async_task" (
   "expire_at" timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_async_task" PRIMARY KEY (id)
 );
@@ -109,7 +109,7 @@ CREATE INDEX "idx_ydsz_agt_async_task_tenant_status" ON "ydsz_agt_async_task" US
 DROP TABLE IF EXISTS "ydsz_agt_dag_workflow" CASCADE;
 
 CREATE TABLE "ydsz_agt_dag_workflow" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "workflow_code" character varying(64) NOT NULL,
   "workflow_name" character varying(128) NOT NULL,
   "description" text,
@@ -120,11 +120,11 @@ CREATE TABLE "ydsz_agt_dag_workflow" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64),
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64),
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "ydsz_agt_dag_workflow_pkey" PRIMARY KEY (id),
   CONSTRAINT "ydsz_agt_dag_workflow_workflow_code_key" UNIQUE (workflow_code)
@@ -141,7 +141,7 @@ CREATE INDEX "idx_dag_wf_published" ON "ydsz_agt_dag_workflow" USING btree ("is_
 DROP TABLE IF EXISTS "ydsz_agt_definition" CASCADE;
 
 CREATE TABLE "ydsz_agt_definition" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "agent_code" character varying(64) NOT NULL,
   "agent_name" character varying(128) NOT NULL,
   "agent_type" character varying(32) NOT NULL,
@@ -154,11 +154,11 @@ CREATE TABLE "ydsz_agt_definition" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_definition" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_agt_definition_agent_code" UNIQUE (agent_code, tenant_id)
@@ -188,8 +188,8 @@ CREATE INDEX "idx_ydsz_agt_definition_tenant_is_deleted" ON "ydsz_agt_definition
 DROP TABLE IF EXISTS "ydsz_agt_document_chunk" CASCADE;
 
 CREATE TABLE "ydsz_agt_document_chunk" (
-  "id" character varying(64) NOT NULL,
-  "document_id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "document_id" character varying(36) NOT NULL,
   "content" text NOT NULL,
   "embedding" bytea,
   "chunk_index" integer,
@@ -201,10 +201,10 @@ CREATE TABLE "ydsz_agt_document_chunk" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying,
-  "updated_by" character varying,
+  "created_by" character varying(36),
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_agt_document_chunk" PRIMARY KEY (id)
 );
@@ -226,20 +226,12 @@ CREATE INDEX "idx_ydsz_agt_document_chunk_tenant" ON "ydsz_agt_document_chunk" U
 
 DROP TABLE IF EXISTS "ydsz_agt_insight_report" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_agt_insight_report_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
 
 CREATE TABLE "ydsz_agt_insight_report" (
-  "id" bigserial NOT NULL,
-  "report_id" character varying(64) NOT NULL,
-  "user_id" character varying(64) NOT NULL,
-  "conversation_id" character varying(64) DEFAULT NULL::character varying,
+  "id" character varying(36) NOT NULL,
+  "report_id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
+  "conversation_id" character varying(36) DEFAULT NULL::character varying,
   "title" character varying(256) NOT NULL,
   "query" text,
   "data_source_type" character varying(32) DEFAULT NULL::character varying,
@@ -252,11 +244,11 @@ CREATE TABLE "ydsz_agt_insight_report" (
   "duration_ms" integer,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "ydsz_agt_insight_report_pkey" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_agt_insight_report_report_id" UNIQUE (report_id)
@@ -290,7 +282,7 @@ CREATE INDEX "idx_ydsz_agt_insight_report_user_id" ON "ydsz_agt_insight_report" 
 DROP TABLE IF EXISTS "ydsz_agt_prompt_template" CASCADE;
 
 CREATE TABLE "ydsz_agt_prompt_template" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "template_code" character varying(64) NOT NULL,
   "template_name" character varying(128) NOT NULL,
   "content" text NOT NULL,
@@ -303,11 +295,11 @@ CREATE TABLE "ydsz_agt_prompt_template" (
   "ab_traffic_percent" integer,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_prompt_template" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_agt_prompt_template_template_code" UNIQUE (template_code, tenant_id),
@@ -342,7 +334,7 @@ INSERT INTO "ydsz_agt_prompt_template" ("id", "template_code", "template_name", 
 DROP TABLE IF EXISTS "ydsz_agt_prompt_version" CASCADE;
 
 CREATE TABLE "ydsz_agt_prompt_version" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "template_code" character varying(64) NOT NULL,
   "version" integer NOT NULL,
   "content" text NOT NULL,
@@ -350,11 +342,11 @@ CREATE TABLE "ydsz_agt_prompt_version" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_prompt_version" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_agt_prompt_version_template_version" UNIQUE (template_code, version, tenant_id)
@@ -382,8 +374,8 @@ INSERT INTO "ydsz_agt_prompt_version" ("id", "template_code", "version", "conten
 DROP TABLE IF EXISTS "ydsz_agt_token_usage" CASCADE;
 
 CREATE TABLE "ydsz_agt_token_usage" (
-  "id" character varying(32) NOT NULL,
-  "conversation_id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "conversation_id" character varying(36) NOT NULL,
   "model_name" character varying(64) NOT NULL,
   "prompt_tokens" bigint NOT NULL DEFAULT 0,
   "completion_tokens" bigint NOT NULL DEFAULT 0,
@@ -391,11 +383,11 @@ CREATE TABLE "ydsz_agt_token_usage" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_token_usage" PRIMARY KEY (id)
 );
@@ -420,18 +412,18 @@ CREATE INDEX "idx_ydsz_agt_token_usage_tenant_is_deleted" ON "ydsz_agt_token_usa
 DROP TABLE IF EXISTS "ydsz_agt_trace" CASCADE;
 
 CREATE TABLE "ydsz_agt_trace" (
-  "trace_id" character varying(64) NOT NULL,
-  "conversation_id" character varying(64) NOT NULL,
-  "agent_id" character varying(64) NOT NULL,
+  "trace_id" character varying(36) NOT NULL,
+  "conversation_id" character varying(36) NOT NULL,
+  "agent_id" character varying(36) NOT NULL,
   "status" character varying(32) NOT NULL,
   "total_duration_ms" bigint,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone DEFAULT now(),
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_trace" PRIMARY KEY (trace_id)
 );
@@ -454,7 +446,7 @@ CREATE INDEX "idx_ydsz_agt_trace_trace_status" ON "ydsz_agt_trace" USING btree (
 DROP TABLE IF EXISTS "ydsz_agt_trace_step" CASCADE;
 
 CREATE TABLE "ydsz_agt_trace_step" (
-  "trace_id" character varying(64) NOT NULL,
+  "trace_id" character varying(36) NOT NULL,
   "step_index" integer NOT NULL,
   "step_type" character varying(32) NOT NULL,
   "content" text,
@@ -465,11 +457,11 @@ CREATE TABLE "ydsz_agt_trace_step" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_trace_step" PRIMARY KEY (trace_id, step_index)
 );
@@ -496,7 +488,7 @@ CREATE INDEX "idx_ydsz_agt_trace_step_trace_step_cost" ON "ydsz_agt_trace_step" 
 DROP TABLE IF EXISTS "ydsz_agt_user_profile" CASCADE;
 
 CREATE TABLE "ydsz_agt_user_profile" (
-  "user_id" character varying(32) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "preferred_language" character varying(32) DEFAULT NULL::character varying,
   "interested_domains" text,
   "domain_frequency" text,
@@ -507,11 +499,11 @@ CREATE TABLE "ydsz_agt_user_profile" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_user_profile" PRIMARY KEY (user_id)
 );
@@ -537,9 +529,9 @@ CREATE INDEX "idx_ydsz_agt_user_profile_last_interaction_at" ON "ydsz_agt_user_p
 DROP TABLE IF EXISTS "ydsz_comm_audit_log" CASCADE;
 
 CREATE TABLE "ydsz_comm_audit_log" (
-  "id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "app_key" character varying(64) NOT NULL DEFAULT ''::character varying,
-  "operator_id" character varying(64) DEFAULT NULL::character varying,
+  "operator_id" character varying(36) DEFAULT NULL::character varying,
   "operator_name" character varying(64) DEFAULT NULL::character varying,
   "audit_type" smallint NOT NULL DEFAULT 1,
   "action" smallint NOT NULL DEFAULT 99,
@@ -553,16 +545,16 @@ CREATE TABLE "ydsz_comm_audit_log" (
   "diff_after_snapshot" text,
   "error_message" character varying(512) DEFAULT NULL::character varying,
   "cost_time" bigint DEFAULT 0,
-  "trace_id" character varying(64) DEFAULT NULL::character varying,
+  "trace_id" character varying(36) DEFAULT NULL::character varying,
   "operation_time" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "sort" integer DEFAULT 0,
   "status" smallint NOT NULL DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_comm_audit_log" PRIMARY KEY (id)
 );
@@ -600,7 +592,7 @@ CREATE INDEX "idx_ydsz_comm_audit_log_trace_id" ON "ydsz_comm_audit_log" USING b
 DROP TABLE IF EXISTS "ydsz_comm_outbox" CASCADE;
 
 CREATE TABLE "ydsz_comm_outbox" (
-  "id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "aggregate_type" character varying(128) NOT NULL,
   "aggregate_id" character varying(128) NOT NULL,
   "event_type" character varying(128) NOT NULL,
@@ -612,16 +604,16 @@ CREATE TABLE "ydsz_comm_outbox" (
   "error_message" text,
   "schema_version" integer NOT NULL DEFAULT 1,
   "compressed" boolean NOT NULL DEFAULT false,
-  "trace_id" character varying(64),
+  "trace_id" character varying(36),
   "idempotency_key" character varying(64),
   "sent_at" timestamp(3) without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64),
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "tenant_id" character varying(36),
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   CONSTRAINT "pk_ydsz_comm_outbox" PRIMARY KEY (id),
   CONSTRAINT "ck_ydsz_comm_outbox_status" CHECK (status::text = ANY (ARRAY['PENDING'::character varying, 'PROCESSING'::character varying, 'SENT'::character varying, 'DEAD_LETTER'::character varying]::text[]))
@@ -656,7 +648,7 @@ CREATE INDEX "idx_ydsz_comm_outbox_tenant" ON "ydsz_comm_outbox" USING btree ("t
 DROP TABLE IF EXISTS "ydsz_comm_outbox_archive" CASCADE;
 
 CREATE TABLE "ydsz_comm_outbox_archive" (
-  "id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "aggregate_id" character varying(128) NOT NULL,
   "aggregate_type" character varying(128) DEFAULT NULL::character varying,
   "event_type" character varying(256) NOT NULL,
@@ -665,7 +657,7 @@ CREATE TABLE "ydsz_comm_outbox_archive" (
   "retry_count" integer NOT NULL DEFAULT 0,
   "max_retries" integer NOT NULL DEFAULT 5,
   "idempotency_key" character varying(128) DEFAULT NULL::character varying,
-  "trace_id" character varying(64) DEFAULT NULL::character varying,
+  "trace_id" character varying(36) DEFAULT NULL::character varying,
   "schema_version" integer NOT NULL DEFAULT 1,
   "compressed" boolean NOT NULL DEFAULT false,
   "sent_at" timestamp without time zone,
@@ -673,11 +665,11 @@ CREATE TABLE "ydsz_comm_outbox_archive" (
   "error_message" text,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone NOT NULL,
   CONSTRAINT "ydsz_comm_outbox_archive_pkey" PRIMARY KEY (id)
 );
@@ -689,17 +681,9 @@ CREATE INDEX "idx_ydsz_comm_outbox_archive_event_type" ON "ydsz_comm_outbox_arch
 
 DROP TABLE IF EXISTS "ydsz_comm_search_dead_letter" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_comm_search_dead_letter_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
 
 CREATE TABLE "ydsz_comm_search_dead_letter" (
-  "id" bigint generated by default as identity (start with 1 increment by 1) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "operation" character varying(20) NOT NULL,
   "doc_type" character varying(64) DEFAULT NULL::character varying,
   "document_id" character varying(128) DEFAULT NULL::character varying,
@@ -711,10 +695,10 @@ CREATE TABLE "ydsz_comm_search_dead_letter" (
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_comm_search_dead_letter" PRIMARY KEY (id)
 );
@@ -749,10 +733,10 @@ CREATE TABLE "ydsz_comm_search_index_partitioned" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
-  "updated_by" character varying,
+  "tenant_id" character varying(36) NOT NULL,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
+  "updated_by" character varying(36),
   CONSTRAINT "pk_search_partitioned" PRIMARY KEY (tenant_id, id, doc_type)
 ) PARTITION BY HASH (tenant_id);
 COMMENT ON TABLE "ydsz_comm_search_index_partitioned" IS '搜索全文索引分区表（按 tenant_id HASH 分区，原 ydzs_wiki_search_index 升级）';
@@ -760,21 +744,21 @@ COMMENT ON TABLE "ydsz_comm_search_index_partitioned" IS '搜索全文索引分�
 DROP TABLE IF EXISTS "ydsz_file_file_acl" CASCADE;
 
 CREATE TABLE "ydsz_file_file_acl" (
-  "id" character varying(32) NOT NULL,
-  "file_node_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "file_node_id" character varying(36) NOT NULL,
   "grantee_type" character varying(32) NOT NULL,
-  "grantee_id" character varying(64) NOT NULL,
+  "grantee_id" character varying(36) NOT NULL,
   "permission_mask" integer NOT NULL DEFAULT 0,
   "is_inherited" smallint NOT NULL DEFAULT 1,
   "is_owner" smallint NOT NULL DEFAULT 0,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_file_acl" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_file_acl_file_grantee" UNIQUE (file_node_id, grantee_type, grantee_id)
@@ -801,21 +785,21 @@ CREATE INDEX "idx_ydsz_file_file_acl_tenant_is_deleted" ON "ydsz_file_file_acl" 
 DROP TABLE IF EXISTS "ydsz_file_file_comment" CASCADE;
 
 CREATE TABLE "ydsz_file_file_comment" (
-  "id" character varying(32) NOT NULL,
-  "file_node_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "file_node_id" character varying(36) NOT NULL,
   "content" text NOT NULL,
-  "parent_comment_id" character varying(32) DEFAULT NULL::character varying,
+  "parent_comment_id" character varying(36) DEFAULT NULL::character varying,
   "is_resolved" smallint NOT NULL DEFAULT 0,
   "position" jsonb,
   "is_edited" smallint NOT NULL DEFAULT 0,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_file_comment" PRIMARY KEY (id)
 );
@@ -842,8 +826,8 @@ CREATE INDEX "idx_ydsz_file_file_comment_tenant_is_deleted" ON "ydsz_file_file_c
 DROP TABLE IF EXISTS "ydsz_file_file_node" CASCADE;
 
 CREATE TABLE "ydsz_file_file_node" (
-  "id" character varying(32) NOT NULL,
-  "parent_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "id" character varying(36) NOT NULL,
+  "parent_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "name" character varying(255) NOT NULL,
   "node_type" character varying(32) NOT NULL,
   "suffix" character varying(64) DEFAULT NULL::character varying,
@@ -865,11 +849,11 @@ CREATE TABLE "ydsz_file_file_node" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_file_node" PRIMARY KEY (id)
 );
@@ -917,17 +901,17 @@ CREATE INDEX "idx_ydsz_file_file_node_tenant_parent_is_deleted" ON "ydsz_file_fi
 DROP TABLE IF EXISTS "ydsz_file_file_tag" CASCADE;
 
 CREATE TABLE "ydsz_file_file_tag" (
-  "id" character varying(32) NOT NULL,
-  "file_node_id" character varying(32) NOT NULL,
-  "tag_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "file_node_id" character varying(36) NOT NULL,
+  "tag_id" character varying(36) NOT NULL,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_file_tag" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_file_tag_file_node_tag" UNIQUE (file_node_id, tag_id)
@@ -950,8 +934,8 @@ CREATE INDEX "idx_ydsz_file_file_tag_tenant_is_deleted" ON "ydsz_file_file_tag" 
 DROP TABLE IF EXISTS "ydsz_file_file_version" CASCADE;
 
 CREATE TABLE "ydsz_file_file_version" (
-  "id" character varying(32) NOT NULL,
-  "file_node_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "file_node_id" character varying(36) NOT NULL,
   "version_number" integer NOT NULL,
   "storage_key" character varying(1024) DEFAULT NULL::character varying,
   "size" bigint NOT NULL DEFAULT 0,
@@ -963,11 +947,11 @@ CREATE TABLE "ydsz_file_file_version" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_file_version" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_file_version_file_node_version" UNIQUE (file_node_id, version_number)
@@ -996,8 +980,8 @@ CREATE INDEX "idx_ydsz_file_file_version_tenant_is_deleted" ON "ydsz_file_file_v
 DROP TABLE IF EXISTS "ydsz_file_search_index" CASCADE;
 
 CREATE TABLE "ydsz_file_search_index" (
-  "id" character varying(32) NOT NULL,
-  "file_node_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "file_node_id" character varying(36) NOT NULL,
   "name" character varying(255) NOT NULL,
   "path" character varying(1024) DEFAULT NULL::character varying,
   "content" text,
@@ -1008,11 +992,11 @@ CREATE TABLE "ydsz_file_search_index" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_search_index" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_search_index_file_node_id" UNIQUE (file_node_id)
@@ -1041,11 +1025,11 @@ CREATE INDEX "idx_ydsz_file_search_index_tenant_is_deleted" ON "ydsz_file_search
 DROP TABLE IF EXISTS "ydsz_file_share_access_log" CASCADE;
 
 CREATE TABLE "ydsz_file_share_access_log" (
-  "id" character varying(32) NOT NULL,
-  "share_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "share_id" character varying(36) NOT NULL,
   "share_code" character varying(64) NOT NULL,
-  "file_node_id" character varying(32) NOT NULL,
-  "visitor_id" character varying(64) DEFAULT NULL::character varying,
+  "file_node_id" character varying(36) NOT NULL,
+  "visitor_id" character varying(36) DEFAULT NULL::character varying,
   "visitor_name" character varying(128) DEFAULT NULL::character varying,
   "visitor_ip" character varying(64) DEFAULT NULL::character varying,
   "user_agent" character varying(512) DEFAULT NULL::character varying,
@@ -1056,11 +1040,11 @@ CREATE TABLE "ydsz_file_share_access_log" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_share_access_log" PRIMARY KEY (id)
 );
@@ -1094,11 +1078,11 @@ CREATE INDEX "idx_ydsz_file_share_access_log_visitor" ON "ydsz_file_share_access
 DROP TABLE IF EXISTS "ydsz_file_share_access_log_archive" CASCADE;
 
 CREATE TABLE "ydsz_file_share_access_log_archive" (
-  "id" character varying(32) NOT NULL,
-  "share_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "share_id" character varying(36) NOT NULL,
   "share_code" character varying(64) NOT NULL,
-  "file_node_id" character varying(32) NOT NULL,
-  "visitor_id" character varying(64) DEFAULT NULL::character varying,
+  "file_node_id" character varying(36) NOT NULL,
+  "visitor_id" character varying(36) DEFAULT NULL::character varying,
   "visitor_name" character varying(128) DEFAULT NULL::character varying,
   "visitor_ip" character varying(64) DEFAULT NULL::character varying,
   "user_agent" character varying(512) DEFAULT NULL::character varying,
@@ -1109,11 +1093,11 @@ CREATE TABLE "ydsz_file_share_access_log_archive" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_file_share_access_log_archive" PRIMARY KEY (id)
 );
@@ -1141,8 +1125,8 @@ CREATE INDEX "idx_ydsz_file_share_access_log_archive_tenant_is_deleted" ON "ydsz
 DROP TABLE IF EXISTS "ydsz_file_share_link" CASCADE;
 
 CREATE TABLE "ydsz_file_share_link" (
-  "id" character varying(32) NOT NULL,
-  "file_node_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "file_node_id" character varying(36) NOT NULL,
   "share_code" character varying(64) NOT NULL,
   "extract_code" character varying(8) DEFAULT NULL::character varying,
   "share_type" character varying(32) NOT NULL DEFAULT 'view'::character varying,
@@ -1156,11 +1140,11 @@ CREATE TABLE "ydsz_file_share_link" (
   "title" character varying(255) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_share_link" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_share_link_share_code" UNIQUE (share_code)
@@ -1193,20 +1177,20 @@ CREATE INDEX "idx_ydsz_file_share_link_tenant_is_deleted" ON "ydsz_file_share_li
 DROP TABLE IF EXISTS "ydsz_file_share_recipient" CASCADE;
 
 CREATE TABLE "ydsz_file_share_recipient" (
-  "id" character varying(32) NOT NULL,
-  "share_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "share_id" character varying(36) NOT NULL,
   "recipient_type" character varying(32) NOT NULL DEFAULT 'USER'::character varying,
-  "recipient_id" character varying(64) NOT NULL,
+  "recipient_id" character varying(36) NOT NULL,
   "recipient_name" character varying(128) DEFAULT NULL::character varying,
   "status" character varying(32) NOT NULL DEFAULT 'ACTIVE'::character varying,
   "viewed_at" timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_share_recipient" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_share_recipient_share_recipient" UNIQUE (share_id, recipient_type, recipient_id)
@@ -1233,12 +1217,12 @@ CREATE INDEX "idx_ydsz_file_share_recipient_user_is_deleted" ON "ydsz_file_share
 DROP TABLE IF EXISTS "ydsz_file_space" CASCADE;
 
 CREATE TABLE "ydsz_file_space" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "name" character varying(128) NOT NULL,
   "description" character varying(512) DEFAULT NULL::character varying,
   "icon_url" character varying(1024) DEFAULT NULL::character varying,
   "cover_url" character varying(1024) DEFAULT NULL::character varying,
-  "owner_id" character varying(64) NOT NULL,
+  "owner_id" character varying(36) NOT NULL,
   "status" character varying(32) NOT NULL DEFAULT 'active'::character varying,
   "visibility" character varying(32) NOT NULL DEFAULT 'private'::character varying,
   "member_count" integer NOT NULL DEFAULT 1,
@@ -1248,11 +1232,11 @@ CREATE TABLE "ydsz_file_space" (
   "deleted_time" timestamp without time zone,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_space" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_space_tenant_name" UNIQUE (tenant_id, name)
@@ -1285,19 +1269,19 @@ CREATE INDEX "idx_ydsz_file_space_tenant_sort" ON "ydsz_file_space" USING btree 
 DROP TABLE IF EXISTS "ydsz_file_space_member" CASCADE;
 
 CREATE TABLE "ydsz_file_space_member" (
-  "id" character varying(32) NOT NULL,
-  "space_id" character varying(32) NOT NULL,
-  "user_id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "space_id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "role" character varying(32) NOT NULL,
   "joined_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_space_member" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_space_member_space_user" UNIQUE (space_id, user_id)
@@ -1321,7 +1305,7 @@ CREATE INDEX "idx_ydsz_file_space_member_user" ON "ydsz_file_space_member" USING
 DROP TABLE IF EXISTS "ydsz_file_space_template" CASCADE;
 
 CREATE TABLE "ydsz_file_space_template" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "name" character varying(128) NOT NULL,
   "description" character varying(512) DEFAULT NULL::character varying,
   "category" character varying(32) NOT NULL DEFAULT 'general'::character varying,
@@ -1331,16 +1315,16 @@ CREATE TABLE "ydsz_file_space_template" (
   "structure_json" jsonb NOT NULL,
   "usage_count" integer NOT NULL DEFAULT 0,
   "template_type" character varying(32) DEFAULT 'space'::character varying,
-  "source_node_id" character varying(32) DEFAULT NULL::character varying,
+  "source_node_id" character varying(36) DEFAULT NULL::character varying,
   "visibility" character varying(32) DEFAULT 'system'::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_space_template" PRIMARY KEY (id)
 );
@@ -1371,9 +1355,9 @@ CREATE INDEX "idx_ydsz_file_space_template_tenant_is_deleted" ON "ydsz_file_spac
 DROP TABLE IF EXISTS "ydsz_file_storage_quota" CASCADE;
 
 CREATE TABLE "ydsz_file_storage_quota" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "scope_type" character varying(32) NOT NULL,
-  "scope_id" character varying(64) NOT NULL,
+  "scope_id" character varying(36) NOT NULL,
   "quota_limit" bigint NOT NULL DEFAULT 0,
   "quota_used" bigint NOT NULL DEFAULT 0,
   "file_count_limit" integer,
@@ -1381,11 +1365,11 @@ CREATE TABLE "ydsz_file_storage_quota" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_storage_quota" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_storage_quota_scope" UNIQUE (scope_type, scope_id)
@@ -1411,7 +1395,7 @@ CREATE INDEX "idx_ydsz_file_storage_quota_tenant_is_deleted" ON "ydsz_file_stora
 DROP TABLE IF EXISTS "ydsz_file_tag" CASCADE;
 
 CREATE TABLE "ydsz_file_tag" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "name" character varying(255) NOT NULL,
   "color" character varying(32) DEFAULT NULL::character varying,
   "type" character varying(32) NOT NULL DEFAULT 'manual'::character varying,
@@ -1419,11 +1403,11 @@ CREATE TABLE "ydsz_file_tag" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_tag" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_tag_tenant_tag_name" UNIQUE (tenant_id, name)
@@ -1447,11 +1431,11 @@ CREATE INDEX "idx_ydsz_file_tag_tenant_is_deleted" ON "ydsz_file_tag" USING btre
 DROP TABLE IF EXISTS "ydsz_file_trash_item" CASCADE;
 
 CREATE TABLE "ydsz_file_trash_item" (
-  "id" character varying(32) NOT NULL,
-  "file_node_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "file_node_id" character varying(36) NOT NULL,
   "original_name" character varying(255) NOT NULL,
   "original_path" character varying(1024) DEFAULT NULL::character varying,
-  "original_parent_id" character varying(32) DEFAULT NULL::character varying,
+  "original_parent_id" character varying(36) DEFAULT NULL::character varying,
   "node_type" character varying(32) NOT NULL,
   "size" bigint NOT NULL DEFAULT 0,
   "deleted_time" timestamp without time zone NOT NULL,
@@ -1459,11 +1443,11 @@ CREATE TABLE "ydsz_file_trash_item" (
   "status" character varying(32) NOT NULL DEFAULT 'in_trash'::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_trash_item" PRIMARY KEY (id)
 );
@@ -1493,18 +1477,18 @@ CREATE INDEX "idx_ydsz_file_trash_item_tenant_is_deleted" ON "ydsz_file_trash_it
 DROP TABLE IF EXISTS "ydsz_file_user_favorite" CASCADE;
 
 CREATE TABLE "ydsz_file_user_favorite" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(64) NOT NULL,
-  "node_id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
+  "node_id" character varying(36) NOT NULL,
   "deleted_time" timestamp without time zone,
   "sort" integer NOT NULL DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_user_favorite" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_user_favorite_user_node" UNIQUE (user_id, node_id)
@@ -1527,19 +1511,19 @@ CREATE INDEX "idx_ydsz_file_user_favorite_user_sort" ON "ydsz_file_user_favorite
 DROP TABLE IF EXISTS "ydsz_file_user_recent" CASCADE;
 
 CREATE TABLE "ydsz_file_user_recent" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(64) NOT NULL,
-  "node_id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
+  "node_id" character varying(36) NOT NULL,
   "access_type" character varying(32) NOT NULL DEFAULT 'view'::character varying,
   "accessed_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_user_recent" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_user_recent_user_node" UNIQUE (user_id, node_id)
@@ -1563,8 +1547,8 @@ CREATE INDEX "idx_ydsz_file_user_recent_user_accessed" ON "ydsz_file_user_recent
 DROP TABLE IF EXISTS "ydsz_flow_admin_role" CASCADE;
 
 CREATE TABLE "ydsz_flow_admin_role" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "role_code" character varying(64) NOT NULL,
   "is_enabled" smallint NOT NULL DEFAULT 1,
   "granted_by" character varying(32) DEFAULT NULL::character varying,
@@ -1573,11 +1557,11 @@ CREATE TABLE "ydsz_flow_admin_role" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_admin_role" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_admin_role_user_role" UNIQUE (user_id, role_code)
@@ -1604,18 +1588,18 @@ CREATE INDEX "idx_ydsz_flow_admin_role_tenant_is_deleted" ON "ydsz_flow_admin_ro
 DROP TABLE IF EXISTS "ydsz_flow_archive_cursor" CASCADE;
 
 CREATE TABLE "ydsz_flow_archive_cursor" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "archive_type" character varying(32) NOT NULL,
   "cursor_value" character varying(64) NOT NULL,
   "cursor_data" jsonb,
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) DEFAULT '0'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "tenant_id" character varying(36) DEFAULT '0'::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "ydsz_flow_archive_cursor_pkey" PRIMARY KEY (id)
 );
@@ -1627,9 +1611,9 @@ CREATE UNIQUE INDEX "uk_ydsz_flow_archive_cursor_type_tenant" ON "ydsz_flow_arch
 DROP TABLE IF EXISTS "ydsz_flow_attachment" CASCADE;
 
 CREATE TABLE "ydsz_flow_attachment" (
-  "id" character varying(32) NOT NULL,
-  "instance_id" character varying(32) NOT NULL,
-  "task_id" character varying(32) DEFAULT NULL::character varying,
+  "id" character varying(36) NOT NULL,
+  "instance_id" character varying(36) NOT NULL,
+  "task_id" character varying(36) DEFAULT NULL::character varying,
   "node_code" character varying(64) DEFAULT NULL::character varying,
   "biz_type" character varying(32) NOT NULL,
   "file_name" character varying(255) NOT NULL,
@@ -1638,19 +1622,19 @@ CREATE TABLE "ydsz_flow_attachment" (
   "content_type" character varying(128) DEFAULT NULL::character varying,
   "storage_key" character varying(512) NOT NULL,
   "storage_type" character varying(32) NOT NULL,
-  "uploader_id" character varying(32) NOT NULL,
+  "uploader_id" character varying(36) NOT NULL,
   "uploader_name" character varying(64) DEFAULT NULL::character varying,
   "download_url" character varying(1024) DEFAULT NULL::character varying,
   "md5" character varying(64) DEFAULT NULL::character varying,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_attachment" PRIMARY KEY (id)
 );
@@ -1687,31 +1671,31 @@ CREATE INDEX "idx_ydsz_flow_attachment_tenant_is_deleted" ON "ydsz_flow_attachme
 DROP TABLE IF EXISTS "ydsz_flow_audit_log" CASCADE;
 
 CREATE TABLE "ydsz_flow_audit_log" (
-  "id" character varying(32) NOT NULL,
-  "instance_id" character varying(32) NOT NULL,
-  "task_id" character varying(32) DEFAULT NULL::character varying,
+  "id" character varying(36) NOT NULL,
+  "instance_id" character varying(36) NOT NULL,
+  "task_id" character varying(36) DEFAULT NULL::character varying,
   "flow_code" character varying(64) NOT NULL,
   "business_type" character varying(64) DEFAULT NULL::character varying,
-  "business_id" character varying(64) DEFAULT NULL::character varying,
+  "business_id" character varying(36) DEFAULT NULL::character varying,
   "node_code" character varying(64) DEFAULT NULL::character varying,
   "node_name" character varying(128) DEFAULT NULL::character varying,
   "action" character varying(32) NOT NULL,
-  "operator_id" character varying(32) NOT NULL,
+  "operator_id" character varying(36) NOT NULL,
   "operator_name" character varying(64) DEFAULT NULL::character varying,
-  "target_id" character varying(32) DEFAULT NULL::character varying,
+  "target_id" character varying(36) DEFAULT NULL::character varying,
   "target_name" character varying(64) DEFAULT NULL::character varying,
   "comment" character varying(512) DEFAULT NULL::character varying,
   "comment_type" character varying(32) DEFAULT NULL::character varying,
   "operated_at" timestamp without time zone NOT NULL,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_audit_log" PRIMARY KEY (id, operated_at)
 ) PARTITION BY RANGE (operated_at);
@@ -1734,7 +1718,7 @@ CREATE INDEX "idx_ydsz_flow_audit_log_tenant_is_deleted" ON "ydsz_flow_audit_log
 DROP TABLE IF EXISTS "ydsz_flow_auto_trigger" CASCADE;
 
 CREATE TABLE "ydsz_flow_auto_trigger" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "source_flow_code" character varying(64) NOT NULL,
   "target_flow_code" character varying(64) NOT NULL,
   "condition_expression" character varying(512) DEFAULT NULL::character varying,
@@ -1743,11 +1727,11 @@ CREATE TABLE "ydsz_flow_auto_trigger" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_auto_trigger" PRIMARY KEY (id)
 );
@@ -1775,20 +1759,20 @@ CREATE INDEX "idx_ydsz_flow_auto_trigger_tenant_is_deleted" ON "ydsz_flow_auto_t
 DROP TABLE IF EXISTS "ydsz_flow_category" CASCADE;
 
 CREATE TABLE "ydsz_flow_category" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "category_code" character varying(64) NOT NULL,
   "category_name" character varying(128) NOT NULL,
-  "parent_id" character varying(32) DEFAULT NULL::character varying,
+  "parent_id" character varying(36) DEFAULT NULL::character varying,
   "icon" character varying(128) DEFAULT NULL::character varying,
   "remark" character varying(512) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_category" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_category_category_code" UNIQUE (category_code, tenant_id)
@@ -1815,32 +1799,32 @@ CREATE INDEX "idx_ydsz_flow_category_tenant_is_deleted" ON "ydsz_flow_category" 
 DROP TABLE IF EXISTS "ydsz_flow_cc" CASCADE;
 
 CREATE TABLE "ydsz_flow_cc" (
-  "id" character varying(32) NOT NULL,
-  "instance_id" character varying(32) NOT NULL,
-  "task_id" character varying(32) DEFAULT NULL::character varying,
+  "id" character varying(36) NOT NULL,
+  "instance_id" character varying(36) NOT NULL,
+  "task_id" character varying(36) DEFAULT NULL::character varying,
   "node_code" character varying(64) DEFAULT NULL::character varying,
   "node_name" character varying(128) DEFAULT NULL::character varying,
   "flow_code" character varying(64) NOT NULL,
   "flow_name" character varying(128) DEFAULT NULL::character varying,
   "business_key" character varying(64) DEFAULT NULL::character varying,
-  "cc_user_id" character varying(32) NOT NULL,
+  "cc_user_id" character varying(36) NOT NULL,
   "cc_user_name" character varying(64) DEFAULT NULL::character varying,
   "cc_type" character varying(32) NOT NULL,
-  "trigger_user_id" character varying(32) DEFAULT NULL::character varying,
+  "trigger_user_id" character varying(36) DEFAULT NULL::character varying,
   "trigger_user_name" character varying(64) DEFAULT NULL::character varying,
   "title" character varying(128) DEFAULT NULL::character varying,
   "content" character varying(512) DEFAULT NULL::character varying,
   "read_status" character varying(32) NOT NULL DEFAULT 'UNREAD'::character varying,
   "read_at" timestamp without time zone,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_cc" PRIMARY KEY (id)
 );
@@ -1879,21 +1863,21 @@ CREATE INDEX "idx_ydsz_flow_cc_tenant_is_deleted" ON "ydsz_flow_cc" USING btree 
 DROP TABLE IF EXISTS "ydsz_flow_cc_rule" CASCADE;
 
 CREATE TABLE "ydsz_flow_cc_rule" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "flow_code" character varying(64) DEFAULT NULL::character varying,
   "node_code" character varying(64) DEFAULT NULL::character varying,
   "rule_type" character varying(32) NOT NULL,
   "rule_target" character varying(512) DEFAULT NULL::character varying,
   "is_enabled" integer NOT NULL DEFAULT 1,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_cc_rule" PRIMARY KEY (id)
 );
@@ -1920,26 +1904,26 @@ CREATE INDEX "idx_ydsz_flow_cc_rule_tenant_is_deleted" ON "ydsz_flow_cc_rule" US
 DROP TABLE IF EXISTS "ydsz_flow_comment" CASCADE;
 
 CREATE TABLE "ydsz_flow_comment" (
-  "id" character varying(32) NOT NULL,
-  "instance_id" character varying(32) NOT NULL,
-  "task_id" character varying(32) DEFAULT NULL::character varying,
+  "id" character varying(36) NOT NULL,
+  "instance_id" character varying(36) NOT NULL,
+  "task_id" character varying(36) DEFAULT NULL::character varying,
   "node_code" character varying(64) DEFAULT NULL::character varying,
-  "user_id" character varying(32) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "user_name" character varying(64) DEFAULT NULL::character varying,
   "content" character varying(2000) NOT NULL,
   "type" character varying(32) NOT NULL DEFAULT 'COMMENT'::character varying,
-  "parent_comment_id" character varying(32) DEFAULT NULL::character varying,
-  "reply_to_user_id" character varying(32) DEFAULT NULL::character varying,
+  "parent_comment_id" character varying(36) DEFAULT NULL::character varying,
+  "reply_to_user_id" character varying(36) DEFAULT NULL::character varying,
   "reply_to_user_name" character varying(64) DEFAULT NULL::character varying,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_comment" PRIMARY KEY (id)
 );
@@ -1971,7 +1955,7 @@ CREATE INDEX "idx_ydsz_flow_comment_tenant_is_deleted" ON "ydsz_flow_comment" US
 DROP TABLE IF EXISTS "ydsz_flow_definition" CASCADE;
 
 CREATE TABLE "ydsz_flow_definition" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "flow_code" character varying(64) NOT NULL,
   "flow_name" character varying(128) NOT NULL,
   "category" character varying(64) DEFAULT NULL::character varying,
@@ -1985,7 +1969,7 @@ CREATE TABLE "ydsz_flow_definition" (
   "listener_path" character varying(128) DEFAULT NULL::character varying,
   "ext" jsonb,
   "description" character varying(512) DEFAULT NULL::character varying,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "canary_percent" integer NOT NULL DEFAULT 0,
   "canary_status" character varying(32) DEFAULT NULL::character varying,
   "canary_strategy" character varying(32) DEFAULT NULL::character varying,
@@ -1995,11 +1979,11 @@ CREATE TABLE "ydsz_flow_definition" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_definition" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_definition_flow_code_version" UNIQUE (flow_code, flow_version, tenant_id)
@@ -2040,10 +2024,10 @@ CREATE INDEX "idx_ydsz_flow_definition_tenant_is_deleted" ON "ydsz_flow_definiti
 DROP TABLE IF EXISTS "ydsz_flow_delegate_auth" CASCADE;
 
 CREATE TABLE "ydsz_flow_delegate_auth" (
-  "id" character varying(32) NOT NULL,
-  "owner_user_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "owner_user_id" character varying(36) NOT NULL,
   "owner_user_name" character varying(64) DEFAULT NULL::character varying,
-  "delegate_user_id" character varying(32) NOT NULL,
+  "delegate_user_id" character varying(36) NOT NULL,
   "delegate_user_name" character varying(64) DEFAULT NULL::character varying,
   "scope_type" character varying(32) NOT NULL,
   "flow_code" character varying(64) DEFAULT NULL::character varying,
@@ -2053,15 +2037,15 @@ CREATE TABLE "ydsz_flow_delegate_auth" (
   "end_time" timestamp without time zone NOT NULL,
   "auth_status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
   "reason" character varying(512) DEFAULT NULL::character varying,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_delegate_auth" PRIMARY KEY (id)
 );
@@ -2096,30 +2080,30 @@ CREATE INDEX "idx_ydsz_flow_delegate_auth_tenant_is_deleted" ON "ydsz_flow_deleg
 DROP TABLE IF EXISTS "ydsz_flow_event_subscription" CASCADE;
 
 CREATE TABLE "ydsz_flow_event_subscription" (
-  "id" character varying(32) NOT NULL,
-  "instance_id" character varying(32) NOT NULL,
-  "definition_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "instance_id" character varying(36) NOT NULL,
+  "definition_id" character varying(36) NOT NULL,
   "flow_code" character varying(64) DEFAULT NULL::character varying,
   "node_code" character varying(64) NOT NULL,
   "node_name" character varying(128) DEFAULT NULL::character varying,
   "event_type" character varying(32) NOT NULL,
   "event_ref" character varying(64) NOT NULL,
   "correlation_key" character varying(64) DEFAULT NULL::character varying,
-  "boundary_task_id" character varying(32) DEFAULT NULL::character varying,
+  "boundary_task_id" character varying(36) DEFAULT NULL::character varying,
   "subscription_status" character varying(32) NOT NULL DEFAULT 'WAITING'::character varying,
   "payload" jsonb,
   "triggered_at" timestamp without time zone,
   "trigger_source" character varying(32) DEFAULT NULL::character varying,
   "cancel_reason" character varying(512) DEFAULT NULL::character varying,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_event_subscription" PRIMARY KEY (id)
 );
@@ -2158,16 +2142,16 @@ CREATE INDEX "idx_ydsz_flow_event_subscription_tenant_is_deleted" ON "ydsz_flow_
 DROP TABLE IF EXISTS "ydsz_flow_his_instance" CASCADE;
 
 CREATE TABLE "ydsz_flow_his_instance" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "flow_code" character varying(64) NOT NULL,
   "flow_name" character varying(128) DEFAULT NULL::character varying,
-  "definition_id" character varying(32) NOT NULL,
+  "definition_id" character varying(36) NOT NULL,
   "flow_version" character varying(32) DEFAULT NULL::character varying,
   "business_type" character varying(64) NOT NULL,
-  "business_id" character varying(64) NOT NULL,
+  "business_id" character varying(36) NOT NULL,
   "business_no" character varying(64) DEFAULT NULL::character varying,
   "title" character varying(128) DEFAULT NULL::character varying,
-  "initiator_id" character varying(32) NOT NULL,
+  "initiator_id" character varying(36) NOT NULL,
   "initiator_name" character varying(64) DEFAULT NULL::character varying,
   "current_node_code" character varying(64) DEFAULT NULL::character varying,
   "current_node_name" character varying(128) DEFAULT NULL::character varying,
@@ -2178,15 +2162,15 @@ CREATE TABLE "ydsz_flow_his_instance" (
   "end_at" timestamp without time zone,
   "duration_ms" bigint,
   "archived_at" timestamp without time zone,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_his_instance" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_his_instance_business_type_id" UNIQUE (business_type, business_id)
@@ -2229,21 +2213,21 @@ CREATE INDEX "idx_ydsz_flow_his_instance_tenant_is_deleted" ON "ydsz_flow_his_in
 DROP TABLE IF EXISTS "ydsz_flow_his_task" CASCADE;
 
 CREATE TABLE "ydsz_flow_his_task" (
-  "id" character varying(32) NOT NULL,
-  "instance_id" character varying(32) NOT NULL,
-  "task_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "instance_id" character varying(36) NOT NULL,
+  "task_id" character varying(36) NOT NULL,
   "flow_code" character varying(64) NOT NULL,
-  "definition_id" character varying(32) NOT NULL,
+  "definition_id" character varying(36) NOT NULL,
   "node_code" character varying(64) NOT NULL,
   "node_name" character varying(128) DEFAULT NULL::character varying,
   "node_type" integer,
   "business_type" character varying(64) DEFAULT NULL::character varying,
-  "business_id" character varying(64) DEFAULT NULL::character varying,
+  "business_id" character varying(36) DEFAULT NULL::character varying,
   "business_no" character varying(64) DEFAULT NULL::character varying,
   "flow_name" character varying(128) DEFAULT NULL::character varying,
   "title" character varying(128) DEFAULT NULL::character varying,
   "assignee_type" character varying(32) DEFAULT NULL::character varying,
-  "assignee_id" character varying(64) DEFAULT NULL::character varying,
+  "assignee_id" character varying(36) DEFAULT NULL::character varying,
   "assignee_name" character varying(64) DEFAULT NULL::character varying,
   "perform_type" character varying(32) DEFAULT NULL::character varying,
   "approve_count" integer,
@@ -2255,16 +2239,16 @@ CREATE TABLE "ydsz_flow_his_task" (
   "finish_at" timestamp without time zone,
   "effective_time" timestamp without time zone,
   "duration_ms" bigint,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "iter_var" character varying(128) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_his_task" PRIMARY KEY (id)
 );
@@ -2315,7 +2299,7 @@ CREATE INDEX "idx_ydsz_flow_his_task_tenant_is_deleted" ON "ydsz_flow_his_task" 
 DROP TABLE IF EXISTS "ydsz_flow_idempotent" CASCADE;
 
 CREATE TABLE "ydsz_flow_idempotent" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "scope" character varying(64) NOT NULL,
   "key_hash" character varying(64) NOT NULL,
   "key_raw" character varying(512) DEFAULT NULL::character varying,
@@ -2326,11 +2310,11 @@ CREATE TABLE "ydsz_flow_idempotent" (
   "ttl_at" timestamp without time zone NOT NULL DEFAULT (CURRENT_TIMESTAMP + '7 days'::interval),
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) DEFAULT '0'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "tenant_id" character varying(36) DEFAULT '0'::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "ydsz_flow_idempotent_pkey" PRIMARY KEY (id)
 );
@@ -2351,16 +2335,16 @@ CREATE UNIQUE INDEX "uk_ydsz_flow_idempotent_scope_hash" ON "ydsz_flow_idempoten
 DROP TABLE IF EXISTS "ydsz_flow_instance" CASCADE;
 
 CREATE TABLE "ydsz_flow_instance" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "flow_code" character varying(64) NOT NULL,
   "flow_name" character varying(128) NOT NULL,
-  "definition_id" character varying(32) NOT NULL,
+  "definition_id" character varying(36) NOT NULL,
   "flow_version" character varying(32) NOT NULL,
   "business_type" character varying(64) NOT NULL,
-  "business_id" character varying(64) NOT NULL,
+  "business_id" character varying(36) NOT NULL,
   "business_no" character varying(64) DEFAULT NULL::character varying,
   "title" character varying(128) DEFAULT NULL::character varying,
-  "initiator_id" character varying(32) NOT NULL,
+  "initiator_id" character varying(36) NOT NULL,
   "initiator_name" character varying(64) DEFAULT NULL::character varying,
   "current_node_code" character varying(64) DEFAULT NULL::character varying,
   "current_node_name" character varying(128) DEFAULT NULL::character varying,
@@ -2370,19 +2354,19 @@ CREATE TABLE "ydsz_flow_instance" (
   "start_at" timestamp without time zone,
   "end_at" timestamp without time zone,
   "duration_ms" bigint,
-  "parent_instance_id" character varying(32) DEFAULT NULL::character varying,
+  "parent_instance_id" character varying(36) DEFAULT NULL::character varying,
   "parent_node_code" character varying(64) DEFAULT NULL::character varying,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "due_at" timestamp without time zone,
   "reject_reason" character varying(512) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_instance" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_instance_business_type_id" UNIQUE (business_type, business_id)
@@ -2429,8 +2413,8 @@ CREATE INDEX "idx_ydsz_flow_instance_tenant_is_deleted" ON "ydsz_flow_instance" 
 DROP TABLE IF EXISTS "ydsz_flow_node" CASCADE;
 
 CREATE TABLE "ydsz_flow_node" (
-  "id" character varying(32) NOT NULL,
-  "definition_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "definition_id" character varying(36) NOT NULL,
   "flow_code" character varying(64) NOT NULL,
   "node_type" integer NOT NULL,
   "node_code" character varying(64) NOT NULL,
@@ -2442,15 +2426,15 @@ CREATE TABLE "ydsz_flow_node" (
   "ext" jsonb,
   "form_fields_config" jsonb,
   "sla_config" jsonb,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_node" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_node_definition_node_code" UNIQUE (definition_id, node_code)
@@ -2484,8 +2468,8 @@ CREATE INDEX "idx_ydsz_flow_node_tenant_is_deleted" ON "ydsz_flow_node" USING bt
 DROP TABLE IF EXISTS "ydsz_flow_quick_comment" CASCADE;
 
 CREATE TABLE "ydsz_flow_quick_comment" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "content" character varying(500) NOT NULL,
   "comment_type" character varying(32) DEFAULT NULL::character varying,
   "sort_num" integer NOT NULL DEFAULT 0,
@@ -2494,11 +2478,11 @@ CREATE TABLE "ydsz_flow_quick_comment" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_quick_comment" PRIMARY KEY (id)
 );
@@ -2526,22 +2510,22 @@ CREATE INDEX "idx_ydsz_flow_quick_comment_user_id" ON "ydsz_flow_quick_comment" 
 DROP TABLE IF EXISTS "ydsz_flow_run_task" CASCADE;
 
 CREATE TABLE "ydsz_flow_run_task" (
-  "id" character varying(32) NOT NULL,
-  "instance_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "instance_id" character varying(36) NOT NULL,
   "flow_code" character varying(64) NOT NULL,
-  "definition_id" character varying(32) NOT NULL,
+  "definition_id" character varying(36) NOT NULL,
   "node_code" character varying(64) NOT NULL,
   "node_name" character varying(128) DEFAULT NULL::character varying,
   "node_type" integer,
   "business_type" character varying(64) DEFAULT NULL::character varying,
-  "business_id" character varying(64) DEFAULT NULL::character varying,
+  "business_id" character varying(36) DEFAULT NULL::character varying,
   "business_no" character varying(64) DEFAULT NULL::character varying,
   "flow_name" character varying(128) DEFAULT NULL::character varying,
   "title" character varying(128) DEFAULT NULL::character varying,
-  "assignor_id" character varying(32) DEFAULT NULL::character varying,
+  "assignor_id" character varying(36) DEFAULT NULL::character varying,
   "assignor_name" character varying(64) DEFAULT NULL::character varying,
   "assignee_type" character varying(32) DEFAULT NULL::character varying,
-  "assignee_id" character varying(64) NOT NULL,
+  "assignee_id" character varying(36) NOT NULL,
   "assignee_name" character varying(64) DEFAULT NULL::character varying,
   "permission_flag" character varying(512) DEFAULT NULL::character varying,
   "perform_type" character varying(32) DEFAULT NULL::character varying,
@@ -2564,15 +2548,15 @@ CREATE TABLE "ydsz_flow_run_task" (
   "sla_action" character varying(32) DEFAULT NULL::character varying,
   "sla_escalated" integer NOT NULL DEFAULT 0,
   "iter_var" character varying(128) NOT NULL DEFAULT ''::character varying,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_run_task" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_run_task_instance_node_assignee" UNIQUE (instance_id, node_code, assignee_id, iter_var)
@@ -2634,8 +2618,8 @@ CREATE INDEX "idx_ydsz_flow_run_task_tenant_is_deleted" ON "ydsz_flow_run_task" 
 DROP TABLE IF EXISTS "ydsz_flow_skip" CASCADE;
 
 CREATE TABLE "ydsz_flow_skip" (
-  "id" character varying(32) NOT NULL,
-  "definition_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "definition_id" character varying(36) NOT NULL,
   "flow_code" character varying(64) NOT NULL,
   "skip_name" character varying(128) DEFAULT NULL::character varying,
   "skip_type" character varying(32) NOT NULL,
@@ -2647,15 +2631,15 @@ CREATE TABLE "ydsz_flow_skip" (
   "coordinate_next" jsonb,
   "skip_list" jsonb,
   "ext" jsonb,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_skip" PRIMARY KEY (id)
 );
@@ -2690,7 +2674,7 @@ CREATE INDEX "idx_ydsz_flow_skip_tenant_is_deleted" ON "ydsz_flow_skip" USING bt
 DROP TABLE IF EXISTS "ydsz_flow_template" CASCADE;
 
 CREATE TABLE "ydsz_flow_template" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "template_code" character varying(64) NOT NULL,
   "template_name" character varying(128) NOT NULL,
   "category" character varying(32) DEFAULT NULL::character varying,
@@ -2699,7 +2683,7 @@ CREATE TABLE "ydsz_flow_template" (
   "bpmn_xml" text,
   "form_path" character varying(1024) DEFAULT NULL::character varying,
   "use_count" integer NOT NULL DEFAULT 0,
-  "parent_template_id" character varying(32) DEFAULT NULL::character varying,
+  "parent_template_id" character varying(36) DEFAULT NULL::character varying,
   "version" integer NOT NULL DEFAULT 1,
   "version_label" character varying(32) DEFAULT NULL::character varying,
   "inherit_type" character varying(32) DEFAULT NULL::character varying,
@@ -2707,11 +2691,11 @@ CREATE TABLE "ydsz_flow_template" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_template" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_template_template_code_version" UNIQUE (template_code, version, tenant_id)
@@ -2747,28 +2731,28 @@ CREATE INDEX "idx_ydsz_flow_template_tenant_is_deleted" ON "ydsz_flow_template" 
 DROP TABLE IF EXISTS "ydsz_flow_timer" CASCADE;
 
 CREATE TABLE "ydsz_flow_timer" (
-  "id" character varying(32) NOT NULL,
-  "instance_id" character varying(32) NOT NULL,
-  "definition_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "instance_id" character varying(36) NOT NULL,
+  "definition_id" character varying(36) NOT NULL,
   "flow_code" character varying(64) DEFAULT NULL::character varying,
   "node_code" character varying(64) NOT NULL,
   "node_name" character varying(128) DEFAULT NULL::character varying,
   "timer_type" character varying(32) NOT NULL,
-  "boundary_task_id" character varying(32) DEFAULT NULL::character varying,
+  "boundary_task_id" character varying(36) DEFAULT NULL::character varying,
   "fire_at" timestamp without time zone NOT NULL,
   "cycle" character varying(64) DEFAULT NULL::character varying,
   "timer_status" character varying(32) NOT NULL DEFAULT 'PENDING'::character varying,
   "fired_at" timestamp without time zone,
   "cancel_reason" character varying(512) DEFAULT NULL::character varying,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_timer" PRIMARY KEY (id)
 );
@@ -2803,27 +2787,27 @@ CREATE INDEX "idx_ydsz_flow_timer_timer_status" ON "ydsz_flow_timer" USING btree
 DROP TABLE IF EXISTS "ydsz_flow_user" CASCADE;
 
 CREATE TABLE "ydsz_flow_user" (
-  "id" character varying(32) NOT NULL,
-  "task_id" character varying(32) NOT NULL,
-  "instance_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "task_id" character varying(36) NOT NULL,
+  "instance_id" character varying(36) NOT NULL,
   "node_code" character varying(64) NOT NULL,
   "user_type" character varying(32) DEFAULT NULL::character varying,
-  "user_id" character varying(64) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "user_name" character varying(64) DEFAULT NULL::character varying,
   "processed" integer NOT NULL DEFAULT 0,
   "process_at" timestamp without time zone,
   "comment" character varying(512) DEFAULT NULL::character varying,
   "weight" integer NOT NULL DEFAULT 1,
   "sign_type" character varying(32) NOT NULL DEFAULT 'ORIGINAL'::character varying,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_user" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_user_task_user" UNIQUE (task_id, user_id, sign_type)
@@ -2855,17 +2839,9 @@ CREATE INDEX "idx_ydsz_flow_user_tenant_is_deleted" ON "ydsz_flow_user" USING bt
 
 DROP TABLE IF EXISTS "ydsz_gen_datasource" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_gen_datasource_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
 
 CREATE TABLE "ydsz_gen_datasource" (
-  "id" bigint generated by default as identity (start with 1 increment by 1) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "name" character varying(64) NOT NULL,
   "jdbc_url" character varying(512) NOT NULL,
   "username" character varying(128) NOT NULL,
@@ -2876,11 +2852,11 @@ CREATE TABLE "ydsz_gen_datasource" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_gen_datasource" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_gen_datasource_name" UNIQUE (name)
@@ -2903,17 +2879,9 @@ CREATE INDEX "idx_ydsz_gen_datasource_tenant_deleted" ON "ydsz_gen_datasource" U
 
 DROP TABLE IF EXISTS "ydsz_gen_template_group" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_gen_template_group_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
 
 CREATE TABLE "ydsz_gen_template_group" (
-  "id" bigint generated by default as identity (start with 1 increment by 1) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "name" character varying(64) NOT NULL,
   "description" character varying(255) DEFAULT NULL::character varying,
   "is_system" smallint NOT NULL DEFAULT 0,
@@ -2921,11 +2889,11 @@ CREATE TABLE "ydsz_gen_template_group" (
   "sort" integer NOT NULL DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_gen_template_group" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_gen_template_group_name" UNIQUE (name)
@@ -2949,8 +2917,8 @@ INSERT INTO "ydsz_gen_template_group" ("id", "name", "description", "is_system",
 DROP TABLE IF EXISTS "ydsz_idm_account_login_history" CASCADE;
 
 CREATE TABLE "ydsz_idm_account_login_history" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(32) DEFAULT NULL::character varying,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) DEFAULT NULL::character varying,
   "username" character varying(64) DEFAULT NULL::character varying,
   "login_ip" character varying(64) DEFAULT NULL::character varying,
   "login_result" character varying(32) NOT NULL,
@@ -2960,10 +2928,10 @@ CREATE TABLE "ydsz_idm_account_login_history" (
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_idm_account_login_history" PRIMARY KEY (id)
 );
@@ -2983,17 +2951,17 @@ CREATE INDEX "idx_ydsz_idm_account_login_history_user_id_created_at" ON "ydsz_id
 DROP TABLE IF EXISTS "ydsz_idm_account_password_history" CASCADE;
 
 CREATE TABLE "ydsz_idm_account_password_history" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "password_hash" character varying(255) NOT NULL,
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_idm_account_password_history" PRIMARY KEY (id)
 );
@@ -3009,7 +2977,7 @@ CREATE INDEX "idx_ydsz_idm_account_password_history_user_id_created_at" ON "ydsz
 DROP TABLE IF EXISTS "ydsz_idm_account_user" CASCADE;
 
 CREATE TABLE "ydsz_idm_account_user" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "username" character varying(64) NOT NULL,
   "password" character varying(255) NOT NULL,
   "real_name" character varying(512) DEFAULT NULL::character varying,
@@ -3018,13 +2986,13 @@ CREATE TABLE "ydsz_idm_account_user" (
   "avatar" character varying(1024) DEFAULT NULL::character varying,
   "status" character varying(32) NOT NULL DEFAULT '1'::character varying,
   "user_type" character varying(32) DEFAULT NULL::character varying,
-  "company_id" character varying(32) DEFAULT NULL::character varying,
+  "company_id" character varying(36) DEFAULT NULL::character varying,
   "last_login_at" timestamp without time zone,
   "last_login_ip" character varying(64) DEFAULT NULL::character varying,
   "login_fail_count" integer NOT NULL DEFAULT 0,
   "locked_until" timestamp without time zone,
-  "dept_id" character varying(32) DEFAULT NULL::character varying,
-  "leader_id" character varying(32) DEFAULT NULL::character varying,
+  "dept_id" character varying(36) DEFAULT NULL::character varying,
+  "leader_id" character varying(36) DEFAULT NULL::character varying,
   "position_code" character varying(32) DEFAULT NULL::character varying,
   "ban_type" character varying(32) DEFAULT NULL::character varying,
   "ban_reason" character varying(512) DEFAULT NULL::character varying,
@@ -3033,11 +3001,11 @@ CREATE TABLE "ydsz_idm_account_user" (
   "banned_at" timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_account_user" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_account_user_username" UNIQUE (username)
@@ -3080,18 +3048,18 @@ CREATE INDEX "idx_ydsz_idm_account_user_tenant_is_deleted" ON "ydsz_idm_account_
 DROP TABLE IF EXISTS "ydsz_idm_account_user_dept" CASCADE;
 
 CREATE TABLE "ydsz_idm_account_user_dept" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(32) NOT NULL,
-  "dept_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
+  "dept_id" character varying(36) NOT NULL,
   "is_primary" smallint NOT NULL DEFAULT 0,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_account_user_dept" PRIMARY KEY (id)
 );
@@ -3115,18 +3083,18 @@ CREATE INDEX "idx_ydsz_idm_account_user_dept_user_id" ON "ydsz_idm_account_user_
 DROP TABLE IF EXISTS "ydsz_idm_account_user_language" CASCADE;
 
 CREATE TABLE "ydsz_idm_account_user_language" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "language_code" character varying(32) NOT NULL,
   "language_name" character varying(128) NOT NULL,
   "is_default" smallint NOT NULL DEFAULT 0,
   "status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_account_user_language" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_account_user_language_language_code" UNIQUE (language_code)
@@ -3150,17 +3118,17 @@ CREATE INDEX "idx_ydsz_idm_account_user_language_tenant_is_deleted" ON "ydsz_idm
 DROP TABLE IF EXISTS "ydsz_idm_account_user_post" CASCADE;
 
 CREATE TABLE "ydsz_idm_account_user_post" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(32) NOT NULL,
-  "post_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
+  "post_id" character varying(36) NOT NULL,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_account_user_post" PRIMARY KEY (id)
 );
@@ -3183,17 +3151,17 @@ CREATE INDEX "idx_ydsz_idm_account_user_post_user_id" ON "ydsz_idm_account_user_
 DROP TABLE IF EXISTS "ydsz_idm_account_user_role" CASCADE;
 
 CREATE TABLE "ydsz_idm_account_user_role" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(32) NOT NULL,
-  "role_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
+  "role_id" character varying(36) NOT NULL,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_account_user_role" PRIMARY KEY (id)
 );
@@ -3215,20 +3183,12 @@ CREATE INDEX "idx_ydsz_idm_account_user_role_user_id" ON "ydsz_idm_account_user_
 
 DROP TABLE IF EXISTS "ydsz_idm_auth_apikey" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_idm_auth_apikey_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
 
 CREATE TABLE "ydsz_idm_auth_apikey" (
-  "id" bigint generated by default as identity (start with 1 increment by 1) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "api_key_hash" character varying(128) NOT NULL,
   "api_key_prefix" character varying(16) NOT NULL,
-  "user_id" character varying(64) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "key_name" character varying(128) DEFAULT NULL::character varying,
   "scopes" character varying(512) DEFAULT NULL::character varying,
   "expire_at" timestamp without time zone,
@@ -3238,11 +3198,11 @@ CREATE TABLE "ydsz_idm_auth_apikey" (
   "status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_auth_apikey" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_auth_apikey_hash" UNIQUE (api_key_hash)
@@ -3271,19 +3231,11 @@ CREATE INDEX "idx_ydsz_idm_auth_apikey_user_id" ON "ydsz_idm_auth_apikey" USING 
 
 DROP TABLE IF EXISTS "ydsz_idm_auth_credential" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_idm_auth_credential_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
 
 CREATE TABLE "ydsz_idm_auth_credential" (
-  "id" bigint generated by default as identity (start with 1 increment by 1) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "credential_id" character varying(512) NOT NULL,
-  "user_id" character varying(32) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "public_key" character varying(1024) NOT NULL,
   "sign_count" bigint NOT NULL DEFAULT 0,
   "credential_type" character varying(32) DEFAULT NULL::character varying,
@@ -3294,11 +3246,11 @@ CREATE TABLE "ydsz_idm_auth_credential" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_auth_credential" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_auth_credential_credential_id" UNIQUE (credential_id)
@@ -3328,7 +3280,7 @@ CREATE INDEX "idx_ydsz_idm_auth_credential_user_id" ON "ydsz_idm_auth_credential
 DROP TABLE IF EXISTS "ydsz_idm_auth_policy" CASCADE;
 
 CREATE TABLE "ydsz_idm_auth_policy" (
-  "id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "name" character varying(64) NOT NULL,
   "password_min_length" integer DEFAULT 8,
   "is_password_require_uppercase" boolean DEFAULT true,
@@ -3342,11 +3294,11 @@ CREATE TABLE "ydsz_idm_auth_policy" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_auth_policy" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_auth_policy_tenant_id" UNIQUE (tenant_id)
@@ -3377,8 +3329,8 @@ INSERT INTO "ydsz_idm_auth_policy" ("id", "name", "password_min_length", "is_pas
 DROP TABLE IF EXISTS "ydsz_idm_auth_social_account" CASCADE;
 
 CREATE TABLE "ydsz_idm_auth_social_account" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "platform" character varying(32) NOT NULL,
   "open_id" character varying(128) NOT NULL,
   "union_id" character varying(128) DEFAULT NULL::character varying,
@@ -3390,11 +3342,11 @@ CREATE TABLE "ydsz_idm_auth_social_account" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_auth_social_account" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_auth_social_account_platform_open_id" UNIQUE (platform, open_id)
@@ -3424,7 +3376,7 @@ CREATE INDEX "idx_ydsz_idm_auth_social_account_user_id" ON "ydsz_idm_auth_social
 DROP TABLE IF EXISTS "ydsz_idm_auth_social_client" CASCADE;
 
 CREATE TABLE "ydsz_idm_auth_social_client" (
-  "id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "platform" character varying(32) NOT NULL,
   "platform_name" character varying(64) DEFAULT NULL::character varying,
   "app_id" character varying(128) NOT NULL,
@@ -3435,11 +3387,11 @@ CREATE TABLE "ydsz_idm_auth_social_client" (
   "remark" character varying(256) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 100,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_auth_social_client" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_auth_social_client_platform" UNIQUE (platform)
@@ -3468,7 +3420,7 @@ CREATE INDEX "idx_ydsz_idm_auth_social_client_tenant_is_deleted" ON "ydsz_idm_au
 DROP TABLE IF EXISTS "ydsz_idm_identity_oauth2_application" CASCADE;
 
 CREATE TABLE "ydsz_idm_identity_oauth2_application" (
-  "id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "client_id" character varying(128) NOT NULL,
   "client_name" character varying(256) NOT NULL,
   "client_secret" character varying(256) NOT NULL,
@@ -3481,11 +3433,11 @@ CREATE TABLE "ydsz_idm_identity_oauth2_application" (
   "icon_url" character varying(512) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_identity_oauth2_application" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_identity_oauth2_application_client_id" UNIQUE (client_id)
@@ -3515,7 +3467,7 @@ CREATE INDEX "idx_ydsz_idm_identity_oauth2_application_tenant_is_deleted" ON "yd
 DROP TABLE IF EXISTS "ydsz_idm_identity_saml_config" CASCADE;
 
 CREATE TABLE "ydsz_idm_identity_saml_config" (
-  "id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "name" character varying(64) NOT NULL,
   "entity_id" character varying(512) NOT NULL,
   "sso_url" character varying(512) DEFAULT NULL::character varying,
@@ -3526,11 +3478,11 @@ CREATE TABLE "ydsz_idm_identity_saml_config" (
   "remark" character varying(256) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 100,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_identity_saml_config" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_identity_saml_config_entity_id" UNIQUE (entity_id)
@@ -3559,10 +3511,10 @@ CREATE INDEX "idx_ydsz_idm_identity_saml_config_tenant_is_deleted" ON "ydsz_idm_
 DROP TABLE IF EXISTS "ydsz_idm_identity_security_alert" CASCADE;
 
 CREATE TABLE "ydsz_idm_identity_security_alert" (
-  "id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "alert_type" character varying(32) NOT NULL,
   "risk_level" character varying(16) NOT NULL,
-  "user_id" character varying(64) DEFAULT NULL::character varying,
+  "user_id" character varying(36) DEFAULT NULL::character varying,
   "username" character varying(128) DEFAULT NULL::character varying,
   "source_ip" character varying(64) DEFAULT NULL::character varying,
   "title" character varying(256) NOT NULL,
@@ -3572,11 +3524,11 @@ CREATE TABLE "ydsz_idm_identity_security_alert" (
   "handler_note" character varying(512) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_identity_security_alert" PRIMARY KEY (id)
 );
@@ -3608,8 +3560,8 @@ CREATE INDEX "idx_ydsz_idm_identity_security_alert_user_id" ON "ydsz_idm_identit
 DROP TABLE IF EXISTS "ydsz_idm_menu" CASCADE;
 
 CREATE TABLE "ydsz_idm_menu" (
-  "id" character varying(32) NOT NULL,
-  "parent_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "id" character varying(36) NOT NULL,
+  "parent_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "menu_name" character varying(128) NOT NULL,
   "menu_code" character varying(64) NOT NULL,
   "menu_type" character varying(32) NOT NULL,
@@ -3621,11 +3573,11 @@ CREATE TABLE "ydsz_idm_menu" (
   "status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_menu" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_menu_menu_code" UNIQUE (menu_code)
@@ -3657,21 +3609,21 @@ CREATE INDEX "idx_ydsz_idm_menu_tenant_is_deleted" ON "ydsz_idm_menu" USING btre
 DROP TABLE IF EXISTS "ydsz_idm_org_company" CASCADE;
 
 CREATE TABLE "ydsz_idm_org_company" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "company_name" character varying(128) NOT NULL,
   "company_code" character varying(64) NOT NULL,
-  "parent_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "parent_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "contact_person" character varying(64) DEFAULT NULL::character varying,
   "contact_phone" character varying(128) DEFAULT NULL::character varying,
   "address" character varying(512) DEFAULT NULL::character varying,
   "status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_org_company" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_org_company_company_code" UNIQUE (company_code)
@@ -3698,17 +3650,17 @@ CREATE INDEX "idx_ydsz_idm_org_company_tenant_is_deleted" ON "ydsz_idm_org_compa
 DROP TABLE IF EXISTS "ydsz_idm_org_company_dept" CASCADE;
 
 CREATE TABLE "ydsz_idm_org_company_dept" (
-  "id" character varying(32) NOT NULL,
-  "company_id" character varying(32) NOT NULL,
-  "dept_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "company_id" character varying(36) NOT NULL,
+  "dept_id" character varying(36) NOT NULL,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_org_company_dept" PRIMARY KEY (id)
 );
@@ -3731,20 +3683,20 @@ CREATE INDEX "idx_ydsz_idm_org_company_dept_tenant_is_deleted" ON "ydsz_idm_org_
 DROP TABLE IF EXISTS "ydsz_idm_org_department" CASCADE;
 
 CREATE TABLE "ydsz_idm_org_department" (
-  "id" character varying(32) NOT NULL,
-  "parent_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "id" character varying(36) NOT NULL,
+  "parent_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "dept_name" character varying(128) NOT NULL,
   "dept_code" character varying(64) NOT NULL,
   "description" character varying(512) DEFAULT NULL::character varying,
-  "leader_id" character varying(32) DEFAULT NULL::character varying,
+  "leader_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_org_department" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_org_department_dept_code" UNIQUE (dept_code)
@@ -3772,18 +3724,18 @@ CREATE INDEX "idx_ydsz_idm_org_department_tenant_is_deleted" ON "ydsz_idm_org_de
 DROP TABLE IF EXISTS "ydsz_idm_post" CASCADE;
 
 CREATE TABLE "ydsz_idm_post" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "post_name" character varying(128) NOT NULL,
   "post_code" character varying(64) NOT NULL,
   "description" character varying(512) DEFAULT NULL::character varying,
   "status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_post" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_post_post_code" UNIQUE (post_code)
@@ -3807,7 +3759,7 @@ CREATE INDEX "idx_ydsz_idm_post_tenant_is_deleted" ON "ydsz_idm_post" USING btre
 DROP TABLE IF EXISTS "ydsz_idm_role" CASCADE;
 
 CREATE TABLE "ydsz_idm_role" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "role_code" character varying(64) NOT NULL,
   "role_name" character varying(128) NOT NULL,
   "description" character varying(512) DEFAULT NULL::character varying,
@@ -3816,11 +3768,11 @@ CREATE TABLE "ydsz_idm_role" (
   "status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_role" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_role_role_code" UNIQUE (role_code, tenant_id)
@@ -3846,18 +3798,18 @@ CREATE INDEX "idx_ydsz_idm_role_tenant_is_deleted" ON "ydsz_idm_role" USING btre
 DROP TABLE IF EXISTS "ydsz_idm_role_permission" CASCADE;
 
 CREATE TABLE "ydsz_idm_role_permission" (
-  "id" character varying(32) NOT NULL,
-  "role_id" character varying(32) NOT NULL,
-  "permission_id" character varying(32) NOT NULL,
-  "menu_id" character varying(32) DEFAULT NULL::character varying,
+  "id" character varying(36) NOT NULL,
+  "role_id" character varying(36) NOT NULL,
+  "permission_id" character varying(36) NOT NULL,
+  "menu_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_role_permission" PRIMARY KEY (id)
 );
@@ -3882,12 +3834,12 @@ CREATE INDEX "idx_ydsz_idm_role_permission_tenant_is_deleted" ON "ydsz_idm_role_
 DROP TABLE IF EXISTS "ydsz_job_alert_dispatch" CASCADE;
 
 CREATE TABLE "ydsz_job_alert_dispatch" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "alert_code" character varying(64) NOT NULL,
   "source_type" character varying(32) NOT NULL,
-  "rule_id" character varying(32) DEFAULT NULL::character varying,
+  "rule_id" character varying(36) DEFAULT NULL::character varying,
   "rule_name" character varying(128) DEFAULT NULL::character varying,
-  "job_id" character varying(32) DEFAULT NULL::character varying,
+  "job_id" character varying(36) DEFAULT NULL::character varying,
   "job_key" character varying(64) DEFAULT NULL::character varying,
   "alert_type" character varying(32) DEFAULT NULL::character varying,
   "alert_level" character varying(32) DEFAULT NULL::character varying,
@@ -3896,16 +3848,16 @@ CREATE TABLE "ydsz_job_alert_dispatch" (
   "channels" character varying(256) DEFAULT NULL::character varying,
   "alert_status" character varying(32) DEFAULT NULL::character varying,
   "error_message" text,
-  "trace_id" character varying(64) DEFAULT NULL::character varying,
-  "trigger_log_id" character varying(32) DEFAULT NULL::character varying,
+  "trace_id" character varying(36) DEFAULT NULL::character varying,
+  "trigger_log_id" character varying(36) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_alert_dispatch" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_alert_dispatch_ad_alert_code" UNIQUE (alert_code)
@@ -3935,9 +3887,9 @@ CREATE INDEX "idx_ydsz_job_alert_dispatch_ad_source_status" ON "ydsz_job_alert_d
 DROP TABLE IF EXISTS "ydsz_job_alert_rule" CASCADE;
 
 CREATE TABLE "ydsz_job_alert_rule" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "rule_name" character varying(128) NOT NULL,
-  "job_id" character varying(32) DEFAULT NULL::character varying,
+  "job_id" character varying(36) DEFAULT NULL::character varying,
   "job_key" character varying(64) DEFAULT NULL::character varying,
   "alert_type" character varying(32) NOT NULL,
   "alert_level" character varying(32) NOT NULL,
@@ -3952,11 +3904,11 @@ CREATE TABLE "ydsz_job_alert_rule" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_alert_rule" PRIMARY KEY (id)
 );
@@ -3990,9 +3942,9 @@ CREATE INDEX "idx_ydsz_job_alert_rule_tenant_is_deleted" ON "ydsz_job_alert_rule
 DROP TABLE IF EXISTS "ydsz_job_artifact" CASCADE;
 
 CREATE TABLE "ydsz_job_artifact" (
-  "id" character varying(32) NOT NULL,
-  "job_id" character varying(32) NOT NULL,
-  "log_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "job_id" character varying(36) NOT NULL,
+  "log_id" character varying(36) NOT NULL,
   "job_key" character varying(64) NOT NULL,
   "artifact_name" character varying(128) NOT NULL,
   "artifact_type" character varying(32) NOT NULL,
@@ -4004,11 +3956,11 @@ CREATE TABLE "ydsz_job_artifact" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_artifact" PRIMARY KEY (id)
 );
@@ -4040,7 +3992,7 @@ CREATE INDEX "idx_ydsz_job_artifact_tenant_is_deleted" ON "ydsz_job_artifact" US
 DROP TABLE IF EXISTS "ydsz_job_dag" CASCADE;
 
 CREATE TABLE "ydsz_job_dag" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "dag_key" character varying(64) NOT NULL,
   "dag_name" character varying(128) NOT NULL,
   "dag_definition" jsonb NOT NULL,
@@ -4060,11 +4012,11 @@ CREATE TABLE "ydsz_job_dag" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_dag" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_dag_dag_key" UNIQUE (dag_key, tenant_id)
@@ -4101,18 +4053,18 @@ CREATE INDEX "idx_ydsz_job_dag_tenant_is_deleted" ON "ydsz_job_dag" USING btree 
 DROP TABLE IF EXISTS "ydsz_job_dag_context" CASCADE;
 
 CREATE TABLE "ydsz_job_dag_context" (
-  "id" character varying(32) NOT NULL,
-  "dag_instance_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "dag_instance_id" character varying(36) NOT NULL,
   "node_key" character varying(128) NOT NULL,
   "result_json" text,
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_dag_context" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_dag_context_inst_node" UNIQUE (dag_instance_id, node_key)
@@ -4131,13 +4083,13 @@ CREATE INDEX "idx_ydsz_job_dag_context_instance" ON "ydsz_job_dag_context" USING
 DROP TABLE IF EXISTS "ydsz_job_dag_instance" CASCADE;
 
 CREATE TABLE "ydsz_job_dag_instance" (
-  "id" character varying(32) NOT NULL,
-  "dag_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "dag_id" character varying(36) NOT NULL,
   "dag_key" character varying(64) NOT NULL,
   "instance_status" character varying(32) NOT NULL,
   "trigger_type" character varying(32) DEFAULT NULL::character varying,
   "trigger_by" character varying(64) DEFAULT NULL::character varying,
-  "trigger_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "trigger_trace_id" character varying(36) DEFAULT NULL::character varying,
   "context_json" jsonb,
   "started_at" timestamp without time zone,
   "finished_at" timestamp without time zone,
@@ -4151,11 +4103,11 @@ CREATE TABLE "ydsz_job_dag_instance" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_dag_instance" PRIMARY KEY (id)
 );
@@ -4193,13 +4145,13 @@ CREATE INDEX "idx_ydsz_job_dag_instance_tenant_is_deleted" ON "ydsz_job_dag_inst
 DROP TABLE IF EXISTS "ydsz_job_dag_node_instance" CASCADE;
 
 CREATE TABLE "ydsz_job_dag_node_instance" (
-  "id" character varying(32) NOT NULL,
-  "dag_instance_id" character varying(32) NOT NULL,
-  "dag_id" character varying(32) NOT NULL,
-  "job_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "dag_instance_id" character varying(36) NOT NULL,
+  "dag_id" character varying(36) NOT NULL,
+  "job_id" character varying(36) NOT NULL,
   "job_key" character varying(64) NOT NULL,
   "node_status" character varying(32) DEFAULT NULL::character varying,
-  "log_id" character varying(32) DEFAULT NULL::character varying,
+  "log_id" character varying(36) DEFAULT NULL::character varying,
   "retry_count" integer,
   "max_retries" integer,
   "started_at" timestamp without time zone,
@@ -4210,11 +4162,11 @@ CREATE TABLE "ydsz_job_dag_node_instance" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_dag_node_instance" PRIMARY KEY (id)
 );
@@ -4249,8 +4201,8 @@ CREATE INDEX "idx_ydsz_job_dag_node_instance_tenant_is_deleted" ON "ydsz_job_dag
 DROP TABLE IF EXISTS "ydsz_job_dag_version" CASCADE;
 
 CREATE TABLE "ydsz_job_dag_version" (
-  "id" character varying(32) NOT NULL,
-  "dag_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "dag_id" character varying(36) NOT NULL,
   "dag_key" character varying(64) NOT NULL,
   "version" integer NOT NULL,
   "dag_definition" jsonb NOT NULL,
@@ -4263,11 +4215,11 @@ CREATE TABLE "ydsz_job_dag_version" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_dag_version" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_dag_version_dv_dag_version" UNIQUE (dag_id, version)
@@ -4298,8 +4250,8 @@ CREATE INDEX "idx_ydsz_job_dag_version_tenant_is_deleted" ON "ydsz_job_dag_versi
 DROP TABLE IF EXISTS "ydsz_job_daily_stats" CASCADE;
 
 CREATE TABLE "ydsz_job_daily_stats" (
-  "id" character varying(32) NOT NULL,
-  "job_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "job_id" character varying(36) NOT NULL,
   "job_key" character varying(64) NOT NULL,
   "stats_date" date NOT NULL,
   "fire_count" bigint NOT NULL DEFAULT 0,
@@ -4314,10 +4266,10 @@ CREATE TABLE "ydsz_job_daily_stats" (
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_daily_stats" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_daily_stats_jds_job_date" UNIQUE (job_id, stats_date)
@@ -4341,9 +4293,9 @@ CREATE INDEX "idx_ydsz_job_daily_stats_jds_stats_date" ON "ydsz_job_daily_stats"
 DROP TABLE IF EXISTS "ydsz_job_event_store" CASCADE;
 
 CREATE TABLE "ydsz_job_event_store" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "aggregate_type" character varying(64) NOT NULL,
-  "aggregate_id" character varying(32) NOT NULL,
+  "aggregate_id" character varying(36) NOT NULL,
   "event_type" character varying(128) NOT NULL,
   "payload" text,
   "operator" character varying(64) DEFAULT NULL::character varying,
@@ -4352,10 +4304,10 @@ CREATE TABLE "ydsz_job_event_store" (
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_event_store" PRIMARY KEY (id)
 );
@@ -4374,8 +4326,8 @@ CREATE INDEX "idx_ydsz_job_event_store_occurred" ON "ydsz_job_event_store" USING
 DROP TABLE IF EXISTS "ydsz_job_glue" CASCADE;
 
 CREATE TABLE "ydsz_job_glue" (
-  "id" character varying(32) NOT NULL,
-  "job_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "job_id" character varying(36) NOT NULL,
   "source_code" text NOT NULL,
   "language" character varying(32) NOT NULL DEFAULT 'GROOVY'::character varying,
   "version" integer NOT NULL DEFAULT 1,
@@ -4383,11 +4335,11 @@ CREATE TABLE "ydsz_job_glue" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_glue" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_glue_glue_job_version" UNIQUE (job_id, version)
@@ -4412,8 +4364,8 @@ CREATE INDEX "idx_ydsz_job_glue_tenant_is_deleted" ON "ydsz_job_glue" USING btre
 DROP TABLE IF EXISTS "ydsz_job_history" CASCADE;
 
 CREATE TABLE "ydsz_job_history" (
-  "id" character varying(32) NOT NULL,
-  "job_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "job_id" character varying(36) NOT NULL,
   "version" integer NOT NULL,
   "snapshot" jsonb,
   "change_type" character varying(32) NOT NULL,
@@ -4432,9 +4384,9 @@ CREATE TABLE "ydsz_job_history" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_history" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_history_jh_job_version" UNIQUE (job_id, version)
@@ -4463,8 +4415,8 @@ CREATE INDEX "idx_ydsz_job_history_jh_job_id" ON "ydsz_job_history" USING btree 
 DROP TABLE IF EXISTS "ydsz_job_log" CASCADE;
 
 CREATE TABLE "ydsz_job_log" (
-  "id" character varying(32) NOT NULL,
-  "job_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "job_id" character varying(36) NOT NULL,
   "job_key" character varying(64) NOT NULL,
   "start_time" timestamp without time zone,
   "end_time" timestamp without time zone,
@@ -4472,11 +4424,11 @@ CREATE TABLE "ydsz_job_log" (
   "error_message" text,
   "params_json" jsonb,
   "result_json" jsonb,
-  "trace_id" character varying(64) DEFAULT NULL::character varying,
+  "trace_id" character varying(36) DEFAULT NULL::character varying,
   "trigger_type" character varying(32) DEFAULT NULL::character varying,
   "lock_holder" character varying(64) DEFAULT NULL::character varying,
-  "exec_node_id" character varying(64) DEFAULT NULL::character varying,
-  "exec_thread_id" bigint,
+  "exec_node_id" character varying(36) DEFAULT NULL::character varying,
+  "exec_thread_id" character varying(36),
   "shard_index" integer,
   "shard_total" integer,
   "slow" smallint NOT NULL DEFAULT 0,
@@ -4490,9 +4442,9 @@ CREATE TABLE "ydsz_job_log" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_log" PRIMARY KEY (id)
 );
@@ -4533,8 +4485,8 @@ CREATE INDEX "idx_ydsz_job_log_job_key_status_created" ON "ydsz_job_log" USING b
 DROP TABLE IF EXISTS "ydsz_job_log_content" CASCADE;
 
 CREATE TABLE "ydsz_job_log_content" (
-  "id" character varying(32) NOT NULL,
-  "log_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "log_id" character varying(36) NOT NULL,
   "job_key" character varying(64) NOT NULL,
   "line_no" integer NOT NULL,
   "log_level" character varying(32) DEFAULT NULL::character varying,
@@ -4543,10 +4495,10 @@ CREATE TABLE "ydsz_job_log_content" (
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_log_content" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_log_content_jlc_log_line" UNIQUE (log_id, line_no)
@@ -4564,7 +4516,7 @@ CREATE INDEX "idx_ydsz_job_log_content_jlc_job_key" ON "ydsz_job_log_content" US
 DROP TABLE IF EXISTS "ydsz_job_main" CASCADE;
 
 CREATE TABLE "ydsz_job_main" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "job_name" character varying(128) NOT NULL,
   "job_group" character varying(128) DEFAULT NULL::character varying,
   "job_key" character varying(64) NOT NULL,
@@ -4603,11 +4555,11 @@ CREATE TABLE "ydsz_job_main" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_main" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_job_key" UNIQUE (job_key, tenant_id)
@@ -4665,8 +4617,8 @@ CREATE INDEX "idx_ydsz_job_tenant_is_deleted" ON "ydsz_job_main" USING btree ("t
 DROP TABLE IF EXISTS "ydsz_job_node" CASCADE;
 
 CREATE TABLE "ydsz_job_node" (
-  "id" character varying(32) NOT NULL,
-  "node_id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "node_id" character varying(36) NOT NULL,
   "app_name" character varying(128) DEFAULT NULL::character varying,
   "host" character varying(128) NOT NULL,
   "port" integer NOT NULL,
@@ -4681,11 +4633,11 @@ CREATE TABLE "ydsz_job_node" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_node" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_node_node_id" UNIQUE (node_id)
@@ -4717,17 +4669,9 @@ CREATE INDEX "idx_ydsz_job_node_tenant_is_deleted" ON "ydsz_job_node" USING btre
 
 DROP TABLE IF EXISTS "ydsz_job_outbox" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_job_outbox_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
 
 CREATE TABLE "ydsz_job_outbox" (
-  "id" bigint generated by default as identity (start with 1 increment by 1) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "event_key" character varying(64) NOT NULL,
   "event_type" character varying(128) NOT NULL,
   "topic" character varying(128) NOT NULL,
@@ -4738,10 +4682,10 @@ CREATE TABLE "ydsz_job_outbox" (
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone DEFAULT now(),
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_outbox" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_outbox_jo_event_key" UNIQUE (event_key)
@@ -4763,9 +4707,9 @@ CREATE INDEX "idx_ydsz_job_outbox_jo_status_retry" ON "ydsz_job_outbox" USING bt
 DROP TABLE IF EXISTS "ydsz_job_task" CASCADE;
 
 CREATE TABLE "ydsz_job_task" (
-  "id" character varying(32) NOT NULL,
-  "job_id" character varying(32) NOT NULL,
-  "log_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "job_id" character varying(36) NOT NULL,
+  "log_id" character varying(36) NOT NULL,
   "job_key" character varying(64) NOT NULL,
   "task_name" character varying(128) NOT NULL,
   "task_params" jsonb,
@@ -4773,16 +4717,16 @@ CREATE TABLE "ydsz_job_task" (
   "task_status" character varying(32) NOT NULL,
   "result" jsonb,
   "error_message" text,
-  "exec_node_id" character varying(64) DEFAULT NULL::character varying,
+  "exec_node_id" character varying(36) DEFAULT NULL::character varying,
   "retry_count" integer NOT NULL DEFAULT 0,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_task" PRIMARY KEY (id)
 );
@@ -4814,7 +4758,7 @@ CREATE INDEX "idx_ydsz_job_task_tenant_is_deleted" ON "ydsz_job_task" USING btre
 DROP TABLE IF EXISTS "ydsz_job_tenant_quota" CASCADE;
 
 CREATE TABLE "ydsz_job_tenant_quota" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "max_jobs" integer,
   "max_concurrent" integer,
   "max_daily_executions" integer,
@@ -4822,11 +4766,11 @@ CREATE TABLE "ydsz_job_tenant_quota" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_tenant_quota" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_tenant_quota_tq_tenant" UNIQUE (tenant_id)
@@ -4849,7 +4793,7 @@ COMMENT ON COLUMN "ydsz_job_tenant_quota"."updated_at" IS '最后更新时间';
 DROP TABLE IF EXISTS "ydsz_job_webhook" CASCADE;
 
 CREATE TABLE "ydsz_job_webhook" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "name" character varying(128) NOT NULL,
   "event_type" character varying(64) NOT NULL,
   "job_key" character varying(64) DEFAULT NULL::character varying,
@@ -4862,11 +4806,11 @@ CREATE TABLE "ydsz_job_webhook" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_webhook" PRIMARY KEY (id)
 );
@@ -4896,11 +4840,11 @@ CREATE INDEX "idx_ydsz_job_webhook_tenant_is_deleted" ON "ydsz_job_webhook" USIN
 DROP TABLE IF EXISTS "ydsz_job_webhook_retry" CASCADE;
 
 CREATE TABLE "ydsz_job_webhook_retry" (
-  "id" character varying(32) NOT NULL,
-  "webhook_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "webhook_id" character varying(36) NOT NULL,
   "event_type" character varying(128) NOT NULL,
   "job_key" character varying(64) DEFAULT NULL::character varying,
-  "log_id" character varying(32) DEFAULT NULL::character varying,
+  "log_id" character varying(36) DEFAULT NULL::character varying,
   "callback_url" character varying(1024) NOT NULL,
   "http_method" character varying(10) NOT NULL DEFAULT 'POST'::character varying,
   "headers" jsonb,
@@ -4916,10 +4860,10 @@ CREATE TABLE "ydsz_job_webhook_retry" (
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_webhook_retry" PRIMARY KEY (id)
 );
@@ -4947,7 +4891,7 @@ CREATE INDEX "idx_ydsz_job_webhook_retry_webhook" ON "ydsz_job_webhook_retry" US
 DROP TABLE IF EXISTS "ydsz_msg_aggregate" CASCADE;
 
 CREATE TABLE "ydsz_msg_aggregate" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "aggregate_group" character varying(64) NOT NULL,
   "receiver" character varying(128) NOT NULL,
   "channel" character varying(32) NOT NULL,
@@ -4961,11 +4905,11 @@ CREATE TABLE "ydsz_msg_aggregate" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_aggregate" PRIMARY KEY (id)
 );
@@ -4997,8 +4941,8 @@ CREATE INDEX "idx_ydsz_msg_aggregate_tenant_is_deleted" ON "ydsz_msg_aggregate" 
 DROP TABLE IF EXISTS "ydsz_msg_batch" CASCADE;
 
 CREATE TABLE "ydsz_msg_batch" (
-  "id" character varying(32) NOT NULL,
-  "batch_id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "batch_id" character varying(36) NOT NULL,
   "batch_name" character varying(128) DEFAULT NULL::character varying,
   "channel" character varying(32) NOT NULL,
   "template_code" character varying(64) DEFAULT NULL::character varying,
@@ -5012,16 +4956,16 @@ CREATE TABLE "ydsz_msg_batch" (
   "error_message" character varying(512) DEFAULT NULL::character varying,
   "started_at" timestamp without time zone,
   "completed_at" timestamp without time zone,
-  "sender_id" character varying(32) DEFAULT NULL::character varying,
+  "sender_id" character varying(36) DEFAULT NULL::character varying,
   "priority" character varying(32) NOT NULL DEFAULT 'NORMAL'::character varying,
   "payload" jsonb,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_batch" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_batch_batch_id" UNIQUE (batch_id)
@@ -5059,7 +5003,7 @@ CREATE INDEX "idx_ydsz_msg_batch_tenant_is_deleted" ON "ydsz_msg_batch" USING bt
 DROP TABLE IF EXISTS "ydsz_msg_canary" CASCADE;
 
 CREATE TABLE "ydsz_msg_canary" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "canary_key" character varying(128) NOT NULL,
   "experiment_name" character varying(128) NOT NULL,
   "template_code" character varying(64) NOT NULL,
@@ -5072,11 +5016,11 @@ CREATE TABLE "ydsz_msg_canary" (
   "status" character varying(32) NOT NULL DEFAULT 'ACTIVE'::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_canary" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_canary_canary_key" UNIQUE (canary_key)
@@ -5106,10 +5050,10 @@ CREATE INDEX "idx_ydsz_msg_canary_tenant_is_deleted" ON "ydsz_msg_canary" USING 
 DROP TABLE IF EXISTS "ydsz_msg_feedback" CASCADE;
 
 CREATE TABLE "ydsz_msg_feedback" (
-  "id" character varying(32) NOT NULL,
-  "msg_id" character varying(64) NOT NULL,
-  "notification_id" character varying(32) DEFAULT NULL::character varying,
-  "user_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "msg_id" character varying(36) NOT NULL,
+  "notification_id" character varying(36) DEFAULT NULL::character varying,
+  "user_id" character varying(36) NOT NULL,
   "channel" character varying(32) DEFAULT NULL::character varying,
   "biz_type" character varying(64) DEFAULT NULL::character varying,
   "rating" integer NOT NULL,
@@ -5118,11 +5062,11 @@ CREATE TABLE "ydsz_msg_feedback" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_feedback" PRIMARY KEY (id)
 );
@@ -5151,10 +5095,10 @@ CREATE INDEX "idx_ydsz_msg_feedback_user_id" ON "ydsz_msg_feedback" USING btree 
 DROP TABLE IF EXISTS "ydsz_msg_log" CASCADE;
 
 CREATE TABLE "ydsz_msg_log" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "channel" character varying(32) NOT NULL,
   "biz_type" character varying(64) DEFAULT NULL::character varying,
-  "biz_id" character varying(64) DEFAULT NULL::character varying,
+  "biz_id" character varying(36) DEFAULT NULL::character varying,
   "receiver" character varying(128) DEFAULT NULL::character varying,
   "template_code" character varying(64) DEFAULT NULL::character varying,
   "template_params" jsonb,
@@ -5162,10 +5106,10 @@ CREATE TABLE "ydsz_msg_log" (
   "status" character varying(32) NOT NULL DEFAULT 'PENDING'::character varying,
   "error_message" text,
   "priority" character varying(32) NOT NULL DEFAULT 'NORMAL'::character varying,
-  "sender_id" character varying(32) DEFAULT NULL::character varying,
+  "sender_id" character varying(36) DEFAULT NULL::character varying,
   "message_group" character varying(64) DEFAULT NULL::character varying,
-  "batch_id" character varying(64) DEFAULT NULL::character varying,
-  "route_rule_id" character varying(32) DEFAULT NULL::character varying,
+  "batch_id" character varying(36) DEFAULT NULL::character varying,
+  "route_rule_id" character varying(36) DEFAULT NULL::character varying,
   "canary" smallint DEFAULT 0,
   "canary_key" character varying(128) DEFAULT NULL::character varying,
   "dedup_key" character varying(128) DEFAULT NULL::character varying,
@@ -5178,19 +5122,19 @@ CREATE TABLE "ydsz_msg_log" (
   "provider_trace_id" character varying(128) DEFAULT NULL::character varying,
   "cost_ms" bigint,
   "cost" numeric(20,6) DEFAULT NULL::numeric,
-  "trace_id" character varying(64) DEFAULT NULL::character varying,
-  "msg_id" character varying(64) DEFAULT NULL::character varying,
+  "trace_id" character varying(36) DEFAULT NULL::character varying,
+  "msg_id" character varying(36) DEFAULT NULL::character varying,
   "topic" character varying(128) DEFAULT NULL::character varying,
   "reconsume_times" integer,
-  "parent_msg_id" character varying(64) DEFAULT NULL::character varying,
+  "parent_msg_id" character varying(36) DEFAULT NULL::character varying,
   "scheduled_at" timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_log" PRIMARY KEY (id)
 );
@@ -5250,18 +5194,18 @@ CREATE INDEX "idx_ydsz_msg_log_trace_id" ON "ydsz_msg_log" USING btree ("trace_i
 DROP TABLE IF EXISTS "ydsz_msg_notification" CASCADE;
 
 CREATE TABLE "ydsz_msg_notification" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "title" character varying(255) NOT NULL,
   "content" text,
   "level" character varying(32) NOT NULL DEFAULT 'INFO'::character varying,
   "category" character varying(32) NOT NULL DEFAULT 'SYSTEM'::character varying,
   "priority" character varying(32) NOT NULL DEFAULT 'NORMAL'::character varying,
-  "sender_id" character varying(32) DEFAULT NULL::character varying,
-  "receiver_id" character varying(32) NOT NULL,
+  "sender_id" character varying(36) DEFAULT NULL::character varying,
+  "receiver_id" character varying(36) NOT NULL,
   "biz_type" character varying(64) DEFAULT NULL::character varying,
-  "biz_id" character varying(64) DEFAULT NULL::character varying,
+  "biz_id" character varying(36) DEFAULT NULL::character varying,
   "message_group" character varying(64) DEFAULT NULL::character varying,
-  "batch_id" character varying(64) DEFAULT NULL::character varying,
+  "batch_id" character varying(36) DEFAULT NULL::character varying,
   "action_url" character varying(1024) DEFAULT NULL::character varying,
   "action_text" character varying(128) DEFAULT NULL::character varying,
   "icon" character varying(255) DEFAULT NULL::character varying,
@@ -5276,11 +5220,11 @@ CREATE TABLE "ydsz_msg_notification" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_notification" PRIMARY KEY (id)
 );
@@ -5323,8 +5267,8 @@ CREATE INDEX "idx_ydsz_msg_notification_tenant_is_deleted" ON "ydsz_msg_notifica
 DROP TABLE IF EXISTS "ydsz_msg_offline" CASCADE;
 
 CREATE TABLE "ydsz_msg_offline" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "msg_type" character varying(32) DEFAULT NULL::character varying,
   "payload" jsonb NOT NULL,
   "msg_timestamp" bigint,
@@ -5333,11 +5277,11 @@ CREATE TABLE "ydsz_msg_offline" (
   "expired_at" timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_offline" PRIMARY KEY (id)
 );
@@ -5364,7 +5308,7 @@ CREATE INDEX "idx_ydsz_msg_offline_user_status" ON "ydsz_msg_offline" USING btre
 DROP TABLE IF EXISTS "ydsz_msg_outbox" CASCADE;
 
 CREATE TABLE "ydsz_msg_outbox" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "aggregate_type" character varying(128) NOT NULL,
   "aggregate_id" character varying(128) NOT NULL,
   "event_type" character varying(128) NOT NULL,
@@ -5374,11 +5318,11 @@ CREATE TABLE "ydsz_msg_outbox" (
   "published_at" timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) DEFAULT NULL::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_msg_outbox" PRIMARY KEY (id)
 );
@@ -5401,8 +5345,8 @@ CREATE INDEX "idx_ydsz_msg_outbox_tenant_status" ON "ydsz_msg_outbox" USING btre
 DROP TABLE IF EXISTS "ydsz_msg_preference" CASCADE;
 
 CREATE TABLE "ydsz_msg_preference" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "channel" character varying(32) NOT NULL,
   "biz_type" character varying(64) NOT NULL DEFAULT '__DEFAULT__'::character varying,
   "is_enabled" smallint NOT NULL DEFAULT 1,
@@ -5418,11 +5362,11 @@ CREATE TABLE "ydsz_msg_preference" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_preference" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_preference_preference" UNIQUE (user_id, channel, biz_type)
@@ -5455,8 +5399,8 @@ CREATE INDEX "idx_ydsz_msg_preference_tenant_is_deleted" ON "ydsz_msg_preference
 DROP TABLE IF EXISTS "ydsz_msg_receipt" CASCADE;
 
 CREATE TABLE "ydsz_msg_receipt" (
-  "id" character varying(32) NOT NULL,
-  "log_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "log_id" character varying(36) NOT NULL,
   "provider_trace_id" character varying(128) DEFAULT NULL::character varying,
   "receipt_type" character varying(32) NOT NULL,
   "receipt_time" timestamp without time zone NOT NULL,
@@ -5466,11 +5410,11 @@ CREATE TABLE "ydsz_msg_receipt" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_receipt" PRIMARY KEY (id)
 );
@@ -5499,7 +5443,7 @@ CREATE INDEX "idx_ydsz_msg_receipt_tenant_is_deleted" ON "ydsz_msg_receipt" USIN
 DROP TABLE IF EXISTS "ydsz_msg_route_rule" CASCADE;
 
 CREATE TABLE "ydsz_msg_route_rule" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "rule_code" character varying(64) NOT NULL,
   "rule_name" character varying(128) NOT NULL,
   "biz_type" character varying(64) DEFAULT NULL::character varying,
@@ -5512,11 +5456,11 @@ CREATE TABLE "ydsz_msg_route_rule" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_route_rule" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_route_rule_rule_code" UNIQUE (rule_code, tenant_id)
@@ -5547,8 +5491,8 @@ CREATE INDEX "idx_ydsz_msg_route_rule_tenant_is_deleted" ON "ydsz_msg_route_rule
 DROP TABLE IF EXISTS "ydsz_msg_subscription" CASCADE;
 
 CREATE TABLE "ydsz_msg_subscription" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "topic_code" character varying(64) NOT NULL,
   "channel" character varying(32) NOT NULL,
   "status" character varying(32) NOT NULL DEFAULT 'SUBSCRIBED'::character varying,
@@ -5557,11 +5501,11 @@ CREATE TABLE "ydsz_msg_subscription" (
   "unsubscribed_at" timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_subscription" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_subscription_subscription" UNIQUE (user_id, topic_code, channel)
@@ -5588,7 +5532,7 @@ CREATE INDEX "idx_ydsz_msg_subscription_topic_code" ON "ydsz_msg_subscription" U
 DROP TABLE IF EXISTS "ydsz_msg_template" CASCADE;
 
 CREATE TABLE "ydsz_msg_template" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "template_code" character varying(64) NOT NULL,
   "channel" character varying(32) NOT NULL,
   "locale" character varying(16) DEFAULT 'zh-CN'::character varying,
@@ -5609,11 +5553,11 @@ CREATE TABLE "ydsz_msg_template" (
   "variable_defs" jsonb,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_template" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_template_template_code" UNIQUE (template_code, tenant_id)
@@ -5651,7 +5595,7 @@ CREATE INDEX "idx_ydsz_msg_template_tenant_is_deleted" ON "ydsz_msg_template" US
 DROP TABLE IF EXISTS "ydsz_msg_template_version" CASCADE;
 
 CREATE TABLE "ydsz_msg_template_version" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "template_code" character varying(64) NOT NULL,
   "version" integer NOT NULL,
   "content" text NOT NULL,
@@ -5662,11 +5606,11 @@ CREATE TABLE "ydsz_msg_template_version" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_template_version" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_template_version_tpl_version" UNIQUE (template_code, version)
@@ -5693,7 +5637,7 @@ CREATE INDEX "idx_ydsz_msg_template_version_tenant_is_deleted" ON "ydsz_msg_temp
 DROP TABLE IF EXISTS "ydsz_msg_tenant_config" CASCADE;
 
 CREATE TABLE "ydsz_msg_tenant_config" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "tenant_name" character varying(128) DEFAULT NULL::character varying,
   "daily_limit" bigint,
   "hourly_limit" bigint,
@@ -5702,11 +5646,11 @@ CREATE TABLE "ydsz_msg_tenant_config" (
   "status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "tenant_id" character varying(36) NOT NULL,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone DEFAULT now(),
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_msg_tenant_config" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_tenant_config_tenant_id" UNIQUE (tenant_id)
@@ -5724,15 +5668,15 @@ COMMENT ON COLUMN "ydsz_msg_tenant_config"."tenant_id" IS '租户 ID';
 DROP TABLE IF EXISTS "ydsz_msg_trace" CASCADE;
 
 CREATE TABLE "ydsz_msg_trace" (
-  "id" character varying(32) NOT NULL,
-  "msg_id" character varying(64) NOT NULL,
-  "trace_id" character varying(64) DEFAULT NULL::character varying,
+  "id" character varying(36) NOT NULL,
+  "msg_id" character varying(36) NOT NULL,
+  "trace_id" character varying(36) DEFAULT NULL::character varying,
   "node" character varying(64) NOT NULL,
   "status" character varying(32) NOT NULL,
   "channel" character varying(32) DEFAULT NULL::character varying,
   "receiver" character varying(128) DEFAULT NULL::character varying,
   "biz_type" character varying(64) DEFAULT NULL::character varying,
-  "biz_id" character varying(64) DEFAULT NULL::character varying,
+  "biz_id" character varying(36) DEFAULT NULL::character varying,
   "template_code" character varying(64) DEFAULT NULL::character varying,
   "cost_ms" bigint,
   "message" character varying(512) DEFAULT NULL::character varying,
@@ -5741,10 +5685,10 @@ CREATE TABLE "ydsz_msg_trace" (
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone DEFAULT now(),
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_msg_trace" PRIMARY KEY (id)
 );
@@ -5771,8 +5715,8 @@ CREATE INDEX "idx_ydsz_msg_trace_trace_id" ON "ydsz_msg_trace" USING btree ("tra
 DROP TABLE IF EXISTS "ydsz_msg_user_channel" CASCADE;
 
 CREATE TABLE "ydsz_msg_user_channel" (
-  "id" character varying(32) NOT NULL,
-  "user_id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "user_id" character varying(36) NOT NULL,
   "channel_type" character varying(32) NOT NULL,
   "channel_user_id" character varying(128) NOT NULL,
   "verified" smallint NOT NULL DEFAULT 0,
@@ -5781,11 +5725,11 @@ CREATE TABLE "ydsz_msg_user_channel" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_user_channel" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_user_channel_user_channel" UNIQUE (user_id, channel_type, channel_user_id)
@@ -5812,7 +5756,7 @@ CREATE INDEX "idx_ydsz_msg_user_channel_tenant_is_deleted" ON "ydsz_msg_user_cha
 DROP TABLE IF EXISTS "ydsz_msg_variable_source" CASCADE;
 
 CREATE TABLE "ydsz_msg_variable_source" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "template_code" character varying(64) NOT NULL,
   "variable_name" character varying(64) NOT NULL,
   "source_type" character varying(32) NOT NULL,
@@ -5822,11 +5766,11 @@ CREATE TABLE "ydsz_msg_variable_source" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_variable_source" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_variable_source_variable" UNIQUE (template_code, variable_name)
@@ -5852,7 +5796,7 @@ CREATE INDEX "idx_ydsz_msg_variable_source_tenant_is_deleted" ON "ydsz_msg_varia
 DROP TABLE IF EXISTS "ydsz_rule_ab_policy" CASCADE;
 
 CREATE TABLE "ydsz_rule_ab_policy" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "rule_code" character varying(64) NOT NULL,
   "is_auto_rollback_enabled" smallint NOT NULL DEFAULT 0,
   "rollback_action" character varying(32) DEFAULT NULL::character varying,
@@ -5866,11 +5810,11 @@ CREATE TABLE "ydsz_rule_ab_policy" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_ab_policy" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_ab_policy_rule_code" UNIQUE (rule_code, tenant_id)
@@ -5900,7 +5844,7 @@ CREATE INDEX "idx_ydsz_rule_ab_policy_tenant_is_deleted" ON "ydsz_rule_ab_policy
 DROP TABLE IF EXISTS "ydsz_rule_ab_rollback" CASCADE;
 
 CREATE TABLE "ydsz_rule_ab_rollback" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "rule_code" character varying(64) NOT NULL,
   "trigger_reason" character varying(32) NOT NULL,
   "error_rate" numeric(20,6) DEFAULT NULL::numeric,
@@ -5911,11 +5855,11 @@ CREATE TABLE "ydsz_rule_ab_rollback" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_ab_rollback" PRIMARY KEY (id)
 );
@@ -5943,7 +5887,7 @@ CREATE INDEX "idx_ydsz_rule_ab_rollback_tenant_is_deleted" ON "ydsz_rule_ab_roll
 DROP TABLE IF EXISTS "ydsz_rule_canary_bucket" CASCADE;
 
 CREATE TABLE "ydsz_rule_canary_bucket" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "rule_code" character varying(64) NOT NULL,
   "bucket_type" character varying(32) NOT NULL,
   "bucket_count" bigint NOT NULL DEFAULT 0,
@@ -5951,11 +5895,11 @@ CREATE TABLE "ydsz_rule_canary_bucket" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_canary_bucket" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_canary_bucket_rule_bucket_date" UNIQUE (rule_code, bucket_type, stat_date)
@@ -5980,7 +5924,7 @@ CREATE INDEX "idx_ydsz_rule_canary_bucket_tenant_is_deleted" ON "ydsz_rule_canar
 DROP TABLE IF EXISTS "ydsz_rule_chain_graph" CASCADE;
 
 CREATE TABLE "ydsz_rule_chain_graph" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "rule_code" character varying(64) NOT NULL,
   "name" character varying(128) NOT NULL,
   "description" character varying(512) DEFAULT NULL::character varying,
@@ -5990,11 +5934,11 @@ CREATE TABLE "ydsz_rule_chain_graph" (
   "content_json" jsonb,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_chain_graph" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_chain_graph_rule_code" UNIQUE (rule_code, tenant_id)
@@ -6020,7 +5964,7 @@ CREATE INDEX "idx_ydsz_rule_chain_graph_tenant_is_deleted" ON "ydsz_rule_chain_g
 DROP TABLE IF EXISTS "ydsz_rule_decision_table" CASCADE;
 
 CREATE TABLE "ydsz_rule_decision_table" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "table_code" character varying(64) NOT NULL,
   "table_name" character varying(128) NOT NULL,
   "description" character varying(512) DEFAULT NULL::character varying,
@@ -6036,11 +5980,11 @@ CREATE TABLE "ydsz_rule_decision_table" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_decision_table" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_decision_table_table_code" UNIQUE (table_code, tenant_id)
@@ -6073,7 +6017,7 @@ CREATE INDEX "idx_ydsz_rule_decision_table_tenant_is_deleted" ON "ydsz_rule_deci
 DROP TABLE IF EXISTS "ydsz_rule_decision_tree" CASCADE;
 
 CREATE TABLE "ydsz_rule_decision_tree" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "rule_code" character varying(64) NOT NULL,
   "rule_name" character varying(128) NOT NULL,
   "category" character varying(64) DEFAULT NULL::character varying,
@@ -6083,15 +6027,15 @@ CREATE TABLE "ydsz_rule_decision_tree" (
   "is_enabled" smallint NOT NULL DEFAULT 1,
   "scope" character varying(128) DEFAULT NULL::character varying,
   "version" integer NOT NULL DEFAULT 1,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_decision_tree" PRIMARY KEY (id)
 );
@@ -6121,7 +6065,7 @@ CREATE INDEX "idx_ydsz_rule_decision_tree_tenant_is_deleted" ON "ydsz_rule_decis
 DROP TABLE IF EXISTS "ydsz_rule_def" CASCADE;
 
 CREATE TABLE "ydsz_rule_def" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "rule_code" character varying(64) NOT NULL,
   "rule_name" character varying(128) NOT NULL,
   "category" character varying(64) DEFAULT NULL::character varying,
@@ -6151,11 +6095,11 @@ CREATE TABLE "ydsz_rule_def" (
   "canary_severity_expression" text,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_def" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_def_rule_code" UNIQUE (rule_code, tenant_id)
@@ -6203,7 +6147,7 @@ CREATE INDEX "idx_ydsz_rule_def_tenant_is_deleted" ON "ydsz_rule_def" USING btre
 DROP TABLE IF EXISTS "ydsz_rule_dependency" CASCADE;
 
 CREATE TABLE "ydsz_rule_dependency" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "rule_code" character varying(64) NOT NULL,
   "depends_on_rule_code" character varying(64) NOT NULL,
   "dependency_type" character varying(32) NOT NULL,
@@ -6212,11 +6156,11 @@ CREATE TABLE "ydsz_rule_dependency" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_dependency" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_dependency_rule_dep" UNIQUE (rule_code, depends_on_rule_code)
@@ -6242,8 +6186,8 @@ CREATE INDEX "idx_ydsz_rule_dependency_tenant_is_deleted" ON "ydsz_rule_dependen
 DROP TABLE IF EXISTS "ydsz_rule_execution_trace" CASCADE;
 
 CREATE TABLE "ydsz_rule_execution_trace" (
-  "id" character varying(32) NOT NULL,
-  "trace_id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "trace_id" character varying(36) NOT NULL,
   "rule_code" character varying(64) NOT NULL,
   "rule_name" character varying(128) DEFAULT NULL::character varying,
   "scenario" character varying(64) DEFAULT NULL::character varying,
@@ -6258,10 +6202,10 @@ CREATE TABLE "ydsz_rule_execution_trace" (
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_rule_execution_trace" PRIMARY KEY (id)
 );
@@ -6286,7 +6230,7 @@ CREATE INDEX "idx_ydsz_rule_execution_trace_trace_id" ON "ydsz_rule_execution_tr
 DROP TABLE IF EXISTS "ydsz_rule_pack" CASCADE;
 
 CREATE TABLE "ydsz_rule_pack" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "pack_code" character varying(64) NOT NULL,
   "pack_version" character varying(32) NOT NULL,
   "pack_name" character varying(128) NOT NULL,
@@ -6304,11 +6248,11 @@ CREATE TABLE "ydsz_rule_pack" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_pack" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_pack_pack_code" UNIQUE (pack_code, pack_version)
@@ -6344,18 +6288,18 @@ CREATE INDEX "idx_ydsz_rule_pack_tenant_is_deleted" ON "ydsz_rule_pack" USING bt
 DROP TABLE IF EXISTS "ydsz_rule_pack_install" CASCADE;
 
 CREATE TABLE "ydsz_rule_pack_install" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "installed_by" character varying(64) DEFAULT NULL::character varying,
   "installed_at" timestamp without time zone,
   "status" character varying(32) DEFAULT NULL::character varying,
   "error_message" text,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_pack_install" PRIMARY KEY (id)
 );
@@ -6379,7 +6323,7 @@ CREATE INDEX "idx_ydsz_rule_pack_install_tenant_is_deleted" ON "ydsz_rule_pack_i
 DROP TABLE IF EXISTS "ydsz_rule_scorecard" CASCADE;
 
 CREATE TABLE "ydsz_rule_scorecard" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "rule_code" character varying(64) NOT NULL,
   "rule_name" character varying(128) NOT NULL,
   "category" character varying(64) DEFAULT NULL::character varying,
@@ -6392,15 +6336,15 @@ CREATE TABLE "ydsz_rule_scorecard" (
   "is_enabled" smallint NOT NULL DEFAULT 1,
   "scope" character varying(128) DEFAULT NULL::character varying,
   "version" integer NOT NULL DEFAULT 1,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_scorecard" PRIMARY KEY (id)
 );
@@ -6434,7 +6378,7 @@ CREATE INDEX "idx_ydsz_rule_scorecard_tenant_is_deleted" ON "ydsz_rule_scorecard
 DROP TABLE IF EXISTS "ydsz_rule_script" CASCADE;
 
 CREATE TABLE "ydsz_rule_script" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "rule_code" character varying(64) NOT NULL,
   "rule_name" character varying(128) NOT NULL,
   "category" character varying(64) DEFAULT NULL::character varying,
@@ -6446,15 +6390,15 @@ CREATE TABLE "ydsz_rule_script" (
   "is_enabled" smallint NOT NULL DEFAULT 1,
   "scope" character varying(128) DEFAULT NULL::character varying,
   "version" integer NOT NULL DEFAULT 1,
-  "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+  "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_script" PRIMARY KEY (id)
 );
@@ -6486,7 +6430,7 @@ CREATE INDEX "idx_ydsz_rule_script_tenant_is_deleted" ON "ydsz_rule_script" USIN
 DROP TABLE IF EXISTS "ydsz_rule_template" CASCADE;
 
 CREATE TABLE "ydsz_rule_template" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "template_code" character varying(64) NOT NULL,
   "template_name" character varying(128) NOT NULL,
   "category" character varying(64) DEFAULT NULL::character varying,
@@ -6503,11 +6447,11 @@ CREATE TABLE "ydsz_rule_template" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_template" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_template_template_code" UNIQUE (template_code, tenant_id)
@@ -6541,7 +6485,7 @@ CREATE INDEX "idx_ydsz_rule_template_tenant_is_deleted" ON "ydsz_rule_template" 
 DROP TABLE IF EXISTS "ydsz_rule_variable_def" CASCADE;
 
 CREATE TABLE "ydsz_rule_variable_def" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "var_name" character varying(128) NOT NULL,
   "var_type" character varying(32) DEFAULT NULL::character varying,
   "description" character varying(512) DEFAULT NULL::character varying,
@@ -6552,11 +6496,11 @@ CREATE TABLE "ydsz_rule_variable_def" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_variable_def" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_variable_def_var_name" UNIQUE (var_name, tenant_id)
@@ -6584,7 +6528,7 @@ CREATE INDEX "idx_ydsz_rule_variable_def_tenant_is_deleted" ON "ydsz_rule_variab
 DROP TABLE IF EXISTS "ydsz_rule_version_history" CASCADE;
 
 CREATE TABLE "ydsz_rule_version_history" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "rule_code" character varying(64) NOT NULL,
   "version" integer NOT NULL,
   "definition_json" jsonb,
@@ -6594,10 +6538,10 @@ CREATE TABLE "ydsz_rule_version_history" (
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
   "tenant_id" character varying DEFAULT '1'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_rule_version_history" PRIMARY KEY (id)
 );
@@ -6614,7 +6558,7 @@ CREATE INDEX "idx_ydsz_rule_version_history_rule_version" ON "ydsz_rule_version_
 DROP TABLE IF EXISTS "ydsz_sys_api_permission" CASCADE;
 
 CREATE TABLE "ydsz_sys_api_permission" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "api_code" character varying(128) NOT NULL,
   "api_name" character varying(256) DEFAULT NULL::character varying,
   "http_method" character varying(10) DEFAULT NULL::character varying,
@@ -6625,11 +6569,11 @@ CREATE TABLE "ydsz_sys_api_permission" (
   "status" character varying(32) DEFAULT 'ENABLED'::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_api_permission" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_api_permission_tenant_api" UNIQUE (tenant_id, api_code)
@@ -6657,7 +6601,7 @@ CREATE INDEX "idx_ydsz_sys_api_permission_tenant_deleted" ON "ydsz_sys_api_permi
 DROP TABLE IF EXISTS "ydsz_sys_app_info" CASCADE;
 
 CREATE TABLE "ydsz_sys_app_info" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "app_code" character varying(64) NOT NULL,
   "app_name" character varying(128) NOT NULL,
   "app_key" character varying(64) NOT NULL,
@@ -6669,11 +6613,11 @@ CREATE TABLE "ydsz_sys_app_info" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_app_info" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_app_info_app_code" UNIQUE (app_code),
@@ -6702,7 +6646,7 @@ CREATE INDEX "idx_ydsz_sys_app_info_tenant_deleted" ON "ydsz_sys_app_info" USING
 DROP TABLE IF EXISTS "ydsz_sys_config" CASCADE;
 
 CREATE TABLE "ydsz_sys_config" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "config_group" character varying(64) NOT NULL,
   "config_key" character varying(128) NOT NULL,
   "config_value" text,
@@ -6713,11 +6657,11 @@ CREATE TABLE "ydsz_sys_config" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_config" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_config_config_group_key" UNIQUE (config_group, config_key)
@@ -6752,21 +6696,21 @@ INSERT INTO "ydsz_sys_config" ("id", "config_group", "config_key", "config_value
 DROP TABLE IF EXISTS "ydsz_sys_dict_item" CASCADE;
 
 CREATE TABLE "ydsz_sys_dict_item" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "type_code" character varying(64) NOT NULL,
   "item_code" character varying(64) NOT NULL,
   "item_value" character varying(128) NOT NULL,
-  "parent_id" character varying(32) DEFAULT NULL::character varying,
+  "parent_id" character varying(36) DEFAULT NULL::character varying,
   "description" character varying(512) DEFAULT NULL::character varying,
   "ext_json" jsonb,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_dict_item" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_dict_item_type_item_code" UNIQUE (type_code, item_code)
@@ -6804,18 +6748,18 @@ INSERT INTO "ydsz_sys_dict_item" ("id", "type_code", "item_code", "item_value", 
 DROP TABLE IF EXISTS "ydsz_sys_dict_type" CASCADE;
 
 CREATE TABLE "ydsz_sys_dict_type" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "type_code" character varying(64) NOT NULL,
   "type_name" character varying(128) NOT NULL,
   "description" character varying(512) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_dict_type" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_dict_type_type_code" UNIQUE (type_code)
@@ -6844,7 +6788,7 @@ INSERT INTO "ydsz_sys_dict_type" ("id", "type_code", "type_name", "description",
 DROP TABLE IF EXISTS "ydsz_sys_entity_version" CASCADE;
 
 CREATE TABLE "ydsz_sys_entity_version" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "resource_type" character varying(32) NOT NULL,
   "resource_key" character varying(128) NOT NULL,
   "resource_group" character varying(64) DEFAULT NULL::character varying,
@@ -6855,11 +6799,11 @@ CREATE TABLE "ydsz_sys_entity_version" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_entity_version" PRIMARY KEY (id)
 );
@@ -6886,24 +6830,24 @@ CREATE INDEX "idx_ydsz_sys_entity_version_tenant_deleted" ON "ydsz_sys_entity_ve
 DROP TABLE IF EXISTS "ydsz_sys_tenant" CASCADE;
 
 CREATE TABLE "ydsz_sys_tenant" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "tenant_code" character varying(64) NOT NULL,
   "tenant_name" character varying(128) NOT NULL,
   "contact_name" character varying(64) DEFAULT NULL::character varying,
   "contact_phone" character varying(32) DEFAULT NULL::character varying,
   "contact_email" character varying(128) DEFAULT NULL::character varying,
-  "plan_id" character varying(32) DEFAULT NULL::character varying,
+  "plan_id" character varying(36) DEFAULT NULL::character varying,
   "expire_at" timestamp without time zone,
   "datasource_key" character varying(64) DEFAULT NULL::character varying,
   "remark" character varying(512) DEFAULT NULL::character varying,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_tenant" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_tenant_tenant_code" UNIQUE (tenant_code)
@@ -6933,7 +6877,7 @@ CREATE INDEX "idx_ydsz_sys_tenant_tenant_deleted" ON "ydsz_sys_tenant" USING btr
 DROP TABLE IF EXISTS "ydsz_sys_tenant_plan" CASCADE;
 
 CREATE TABLE "ydsz_sys_tenant_plan" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "plan_code" character varying(64) NOT NULL,
   "plan_name" character varying(128) NOT NULL,
   "description" text,
@@ -6942,11 +6886,11 @@ CREATE TABLE "ydsz_sys_tenant_plan" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer NOT NULL DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_tenant_plan" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_tenant_plan_plan_code" UNIQUE (plan_code)
@@ -6977,17 +6921,17 @@ INSERT INTO "ydsz_sys_tenant_plan" ("id", "plan_code", "plan_name", "description
 DROP TABLE IF EXISTS "ydsz_sys_tenant_plan_menu" CASCADE;
 
 CREATE TABLE "ydsz_sys_tenant_plan_menu" (
-  "id" character varying(32) NOT NULL,
-  "plan_id" character varying(32) NOT NULL,
-  "menu_id" character varying(64) NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "plan_id" character varying(36) NOT NULL,
+  "menu_id" character varying(36) NOT NULL,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_tenant_plan_menu" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_tenant_plan_menu_plan_menu" UNIQUE (plan_id, menu_id)
@@ -7009,7 +6953,7 @@ CREATE INDEX "idx_ydsz_sys_tenant_plan_menu_tenant_deleted" ON "ydsz_sys_tenant_
 DROP TABLE IF EXISTS "ydsz_sys_variable" CASCADE;
 
 CREATE TABLE "ydsz_sys_variable" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "variable_key" character varying(128) NOT NULL,
   "variable_value" text,
   "value_type" character varying(32) NOT NULL,
@@ -7017,11 +6961,11 @@ CREATE TABLE "ydsz_sys_variable" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_variable" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_variable_variable_key" UNIQUE (variable_key)
@@ -7045,7 +6989,7 @@ CREATE INDEX "idx_ydsz_sys_variable_tenant_deleted" ON "ydsz_sys_variable" USING
 DROP TABLE IF EXISTS "ydsz_system_config_approval" CASCADE;
 
 CREATE TABLE "ydsz_system_config_approval" (
-  "id" character varying(32) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "resource_type" character varying(32) NOT NULL,
   "resource_key" character varying(128) NOT NULL,
   "resource_group" character varying(128) DEFAULT NULL::character varying,
@@ -7053,18 +6997,18 @@ CREATE TABLE "ydsz_system_config_approval" (
   "before_json" text,
   "after_json" text,
   "status" character varying(16) NOT NULL DEFAULT 'PENDING'::character varying,
-  "submitter_id" character varying(32) DEFAULT NULL::character varying,
+  "submitter_id" character varying(36) DEFAULT NULL::character varying,
   "submitted_at" timestamp without time zone,
   "reason" character varying(512) DEFAULT NULL::character varying,
   "rejection_reason" character varying(512) DEFAULT NULL::character varying,
   "closed_at" timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_system_config_approval" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_system_config_approval_resource" UNIQUE (tenant_id, resource_type, resource_key, status)
@@ -7199,18 +7143,10 @@ CREATE INDEX "idx_ydsz_flow_audit_log_2027_09_tenant_del_at" ON "ydsz_flow_audit
 
 DROP TABLE IF EXISTS "ydsz_gen_table_meta" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_gen_table_meta_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
 
 CREATE TABLE "ydsz_gen_table_meta" (
-  "id" bigint generated by default as identity (start with 1 increment by 1) NOT NULL,
-  "datasource_id" bigint NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "datasource_id" character varying(36) NOT NULL,
   "table_name" character varying(128) NOT NULL,
   "comment" character varying(255) DEFAULT NULL::character varying,
   "alias_name" character varying(64) DEFAULT NULL::character varying,
@@ -7219,11 +7155,11 @@ CREATE TABLE "ydsz_gen_table_meta" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_gen_table_meta" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_gen_table_meta_ds_table" UNIQUE (datasource_id, table_name)
@@ -7241,20 +7177,12 @@ CREATE INDEX "idx_ydsz_gen_table_meta_datasource" ON "ydsz_gen_table_meta" USING
 
 DROP TABLE IF EXISTS "ydsz_gen_history" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_gen_history_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
 
 CREATE TABLE "ydsz_gen_history" (
-  "id" bigint generated by default as identity (start with 1 increment by 1) NOT NULL,
+  "id" character varying(36) NOT NULL,
   "module_name" character varying(64) NOT NULL,
-  "datasource_id" bigint NOT NULL,
-  "template_group_id" bigint NOT NULL,
+  "datasource_id" character varying(36) NOT NULL,
+  "template_group_id" character varying(36) NOT NULL,
   "table_count" integer NOT NULL DEFAULT 0,
   "file_count" integer NOT NULL DEFAULT 0,
   "status" character varying(16) NOT NULL DEFAULT 'RUNNING'::character varying,
@@ -7265,11 +7193,11 @@ CREATE TABLE "ydsz_gen_history" (
   "gen_params" jsonb,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_gen_history" PRIMARY KEY (id)
 );
@@ -7292,18 +7220,10 @@ CREATE INDEX "idx_ydsz_gen_history_status" ON "ydsz_gen_history" USING btree ("s
 
 DROP TABLE IF EXISTS "ydsz_gen_template" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_gen_template_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
 
 CREATE TABLE "ydsz_gen_template" (
-  "id" bigint generated by default as identity (start with 1 increment by 1) NOT NULL,
-  "group_id" bigint NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "group_id" character varying(36) NOT NULL,
   "file_name" character varying(128) NOT NULL,
   "description" character varying(255) DEFAULT NULL::character varying,
   "content" text NOT NULL,
@@ -7316,11 +7236,11 @@ CREATE TABLE "ydsz_gen_template" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_gen_template" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_gen_template_group_file" UNIQUE (group_id, file_name)
@@ -7345,18 +7265,10 @@ CREATE INDEX "idx_ydsz_gen_template_group" ON "ydsz_gen_template" USING btree ("
 
 DROP TABLE IF EXISTS "ydsz_gen_column_meta" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_gen_column_meta_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
 
 CREATE TABLE "ydsz_gen_column_meta" (
-  "id" bigint generated by default as identity (start with 1 increment by 1) NOT NULL,
-  "table_meta_id" bigint NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "table_meta_id" character varying(36) NOT NULL,
   "column_name" character varying(128) NOT NULL,
   "data_type" character varying(64) NOT NULL,
   "column_size" integer,
@@ -7372,11 +7284,11 @@ CREATE TABLE "ydsz_gen_column_meta" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_gen_column_meta" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_gen_column_meta_table_column" UNIQUE (table_meta_id, column_name)
@@ -7401,18 +7313,10 @@ CREATE INDEX "idx_ydsz_gen_column_meta_table" ON "ydsz_gen_column_meta" USING bt
 
 DROP TABLE IF EXISTS "ydsz_gen_history_file" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_gen_history_file_id_seq"
-  AS bigint
-  START WITH 1
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  CACHE 1
-  NO CYCLE;
 
 CREATE TABLE "ydsz_gen_history_file" (
-  "id" bigint generated by default as identity (start with 1 increment by 1) NOT NULL,
-  "history_id" bigint NOT NULL,
+  "id" character varying(36) NOT NULL,
+  "history_id" character varying(36) NOT NULL,
   "file_path" character varying(512) NOT NULL,
   "original_backup_path" character varying(512) DEFAULT NULL::character varying,
   "file_hash" character(32) DEFAULT NULL::bpchar,
@@ -7420,11 +7324,11 @@ CREATE TABLE "ydsz_gen_history_file" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
-  "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
+  "is_deleted" smallint NOT NULL DEFAULT 0,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_gen_history_file" PRIMARY KEY (id)
 );
@@ -7438,31 +7342,6 @@ COMMENT ON COLUMN "ydsz_gen_history_file"."action" IS '文件操作类型（CREA
 COMMENT ON COLUMN "ydsz_gen_history_file"."created_at" IS '创建时间';
 CREATE INDEX "idx_ydsz_gen_history_file_history" ON "ydsz_gen_history_file" USING btree ("history_id" ASC NULLS LAST);
 
-ALTER SEQUENCE "ydsz_agt_insight_report_id_seq" OWNED BY "ydsz_agt_insight_report"."id";
-
-ALTER SEQUENCE "ydsz_comm_search_dead_letter_id_seq" OWNED BY "ydsz_comm_search_dead_letter"."id";
-
-ALTER SEQUENCE "ydsz_gen_column_meta_id_seq" OWNED BY "ydsz_gen_column_meta"."id";
-
-ALTER SEQUENCE "ydsz_gen_datasource_id_seq" OWNED BY "ydsz_gen_datasource"."id";
-
-ALTER SEQUENCE "ydsz_gen_history_file_id_seq" OWNED BY "ydsz_gen_history_file"."id";
-
-ALTER SEQUENCE "ydsz_gen_history_id_seq" OWNED BY "ydsz_gen_history"."id";
-
-ALTER SEQUENCE "ydsz_gen_table_meta_id_seq" OWNED BY "ydsz_gen_table_meta"."id";
-
-ALTER SEQUENCE "ydsz_gen_template_group_id_seq" OWNED BY "ydsz_gen_template_group"."id";
-
-ALTER SEQUENCE "ydsz_gen_template_id_seq" OWNED BY "ydsz_gen_template"."id";
-
-ALTER SEQUENCE "ydsz_idm_auth_apikey_id_seq" OWNED BY "ydsz_idm_auth_apikey"."id";
-
-ALTER SEQUENCE "ydsz_idm_auth_credential_id_seq" OWNED BY "ydsz_idm_auth_credential"."id";
-
-ALTER SEQUENCE "ydsz_job_outbox_id_seq" OWNED BY "ydsz_job_outbox"."id";
-
-SELECT setval('"ydsz_gen_template_group_id_seq"', GREATEST(COALESCE(MAX("id"), 2), 2), true) FROM "ydsz_gen_template_group";
 
 CREATE OR REPLACE FUNCTION public.fn_ydsz_agt_async_task_set_updated_at()
  RETURNS trigger

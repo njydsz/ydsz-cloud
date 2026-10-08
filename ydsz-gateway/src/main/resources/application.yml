@@ -11,6 +11,8 @@ spring:
       # 线程池 / 文档 / Sentry / WebMVC 自动配置（网关为 WebFlux reactive 栈）
       - com.njydsz.common.thread.config.ThreadPoolAutoConfiguration
       - com.njydsz.common.base.config.DocAutoConfiguration
+      - com.njydsz.common.base.config.DocSecurityConfiguration
+      - com.njydsz.common.base.config.YdszAutoConfiguration
       - com.njydsz.common.sentry.config.SentryAutoConfiguration
       - com.njydsz.common.web.config.WebAutoConfiguration
       - com.njydsz.common.web.config.WebMvcObserverAutoConfiguration
@@ -25,7 +27,23 @@ spring:
       - com.njydsz.common.jdbc.config.SafeQueryAutoConfiguration
       - com.njydsz.common.jdbc.config.JdbcMetricsAutoConfiguration
       - com.njydsz.common.jdbc.actuator.JdbcHealthIndicator
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.JdbcClientAutoConfiguration
+      - org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration
+      - org.springframework.boot.jdbc.autoconfigure.health.DataSourceHealthContributorAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+      - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+      - org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration
+      # 审计自动配置（依赖 DataSource，网关无数据库）
+      - com.njydsz.common.audit.config.AuditAutoConfiguration
+      # 异常文档端点自动配置（依赖 Servlet 异常体系，WebFlux 不适用）
+      - com.njydsz.common.exception.config.YdszExceptionActuatorAutoConfiguration
+      - com.njydsz.common.exception.handler.YdszExceptionHandlerAutoConfiguration
+      # OpenAPI / Knife4j（仅 Servlet 业务服务需要）
+      - com.njydsz.common.base.config.OpenApiAutoConfiguration
+      - com.njydsz.common.base.config.Knife4jAutoConfiguration
 
 logging:
   pattern:

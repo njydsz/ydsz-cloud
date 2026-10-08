@@ -2,7 +2,7 @@
 -- V26.10.03 — 数据库规范修复集（P0 生产安全 + 存储优化）
 --
 -- 目的：
---   1. tenant_id 长度统一（Agent 模块 varchar(32) → varchar(64)），消除跨模块 JOIN 隐式转换
+--   1. tenant_id 长度统一（Agent 模块 varchar(32) → varchar(36)），消除跨模块 JOIN 隐式转换
 --   2. ydsz_idm_account_user_role 补唯一约束（防重复授权）
 --   3. TIMESTAMP 类型统一（timestamp with time zone → timestamp without time zone）
 --   4. 布尔字段类型统一（boolean → smallint），DagWorkflow.is_published
@@ -12,15 +12,15 @@
 -- =============================================================================
 
 -- ============================================================================
--- Step 1: tenant_id 长度统一（Agent 模块 varchar(32) → varchar(64)）
+-- Step 1: tenant_id 长度统一（Agent 模块 varchar(32) → varchar(36)）
 -- ============================================================================
 
 -- 1.1 ydsz_agt_definition
 ALTER TABLE ydsz_agt_definition
-  ALTER COLUMN tenant_id TYPE VARCHAR(64),
+  ALTER COLUMN tenant_id TYPE VARCHAR(36),
   ALTER COLUMN tenant_id SET DEFAULT '0';
 
-COMMENT ON COLUMN ydsz_agt_definition.tenant_id IS '租户ID（统一 varchar(64)，与全平台一致）';
+COMMENT ON COLUMN ydsz_agt_definition.tenant_id IS '租户ID（统一 varchar(36)，与全平台一致）';
 
 -- ============================================================================
 -- Step 2: 用户-角色中间表唯一约束（防重复授权漏洞）
