@@ -27,12 +27,12 @@ ALTER TABLE "ydsz_msg_log" RENAME TO "ydsz_msg_log_old";
 
 -- 1.3 创建新分区表（与原表结构完全一致，含所有约束、默认值）
 CREATE TABLE "ydsz_msg_log" (
-  "id"              character varying(32)  NOT NULL,
+  "id"              character varying(36)  NOT NULL,
   "channel"         character varying(32)  NOT NULL,
-  "biz_type"        character varying(64)  DEFAULT NULL::character varying,
-  "biz_id"          character varying(64)  DEFAULT NULL::character varying,
+  "biz_type"        character varying(36)  DEFAULT NULL::character varying,
+  "biz_id"          character varying(36)  DEFAULT NULL::character varying,
   "receiver"        character varying(128) DEFAULT NULL::character varying,
-  "template_code"   character varying(64)  DEFAULT NULL::character varying,
+  "template_code"   character varying(36)  DEFAULT NULL::character varying,
   "template_params" jsonb,
   "content"         text,
   "status"          character varying(32)  NOT NULL DEFAULT 'PENDING'::character varying,
@@ -55,18 +55,18 @@ CREATE TABLE "ydsz_msg_log" (
   "cost_ms"         bigint,
   "cost"            numeric(20,6)         DEFAULT NULL::numeric,
   "trace_id"        character varying(64)  DEFAULT NULL::character varying,
-  "msg_id"          character varying(64)  DEFAULT NULL::character varying,
+  "msg_id"          character varying(36)  DEFAULT NULL::character varying,
   "topic"           character varying(128) DEFAULT NULL::character varying,
   "reconsume_times" integer,
-  "parent_msg_id"   character varying(64)  DEFAULT NULL::character varying,
+  "parent_msg_id"   character varying(36)  DEFAULT NULL::character varying,
   "scheduled_at"    timestamp without time zone,
   "sort"            integer               DEFAULT 0,
   "revision"        integer               DEFAULT 0,
-  "tenant_id"       character varying(32)  NOT NULL DEFAULT '0'::character varying,
+  "tenant_id"       character varying(36)  NOT NULL DEFAULT '0'::character varying,
   "is_deleted"      smallint              NOT NULL DEFAULT 0,
-  "created_by"      character varying(64)  DEFAULT NULL::character varying,
+  "created_by"      character varying(36)  DEFAULT NULL::character varying,
   "created_at"      timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by"      character varying(64)  DEFAULT NULL::character varying,
+  "updated_by"      character varying(36)  DEFAULT NULL::character varying,
   "updated_at"      timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_log" PRIMARY KEY (id, created_at)
 ) PARTITION BY RANGE (created_at);
@@ -180,7 +180,7 @@ ALTER TABLE "ydsz_msg_outbox" RENAME TO "ydsz_msg_outbox_old";
 -- 2.2 创建新分区表
 --     ⚠ 注意：原表 is_deleted 为 boolean，此处改为 smallint 以符合项目规范
 CREATE TABLE "ydsz_msg_outbox" (
-  "id"              character varying(32)  NOT NULL,
+  "id"              character varying(36)  NOT NULL,
   "aggregate_type"  character varying(128) NOT NULL,
   "aggregate_id"    character varying(128) NOT NULL,
   "event_type"      character varying(128) NOT NULL,
@@ -190,11 +190,11 @@ CREATE TABLE "ydsz_msg_outbox" (
   "published_at"    timestamp without time zone,
   "sort"            integer               DEFAULT 0,
   "revision"        integer               DEFAULT 0,
-  "tenant_id"       character varying(32)  DEFAULT NULL::character varying,
+  "tenant_id"       character varying(36)  DEFAULT NULL::character varying,
   "is_deleted"      smallint              NOT NULL DEFAULT 0,
-  "created_by"      character varying,
+  "created_by"      character varying(36),
   "created_at"      timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by"      character varying,
+  "updated_by"      character varying(36),
   "updated_at"      timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_msg_outbox" PRIMARY KEY (id, created_at)
 ) PARTITION BY RANGE (created_at);

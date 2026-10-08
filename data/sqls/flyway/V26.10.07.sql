@@ -468,7 +468,7 @@ COMMENT ON COLUMN ydsz_idm_role_permission.tenant_id IS '租户 ID';
 --     WHERE table_schema = 'public'
 --       AND column_name = 'tenant_id'
 --       AND data_type = 'character varying'
---       AND character_maximum_length = 64;
+--       AND character_maximum_length = 36;
 --
 --     RAISE NOTICE '已统一为 varchar(36) 的表数量: %', v_count;
 --
@@ -479,7 +479,7 @@ COMMENT ON COLUMN ydsz_idm_role_permission.tenant_id IS '租户 ID';
 --         WHERE table_schema = 'public'
 --           AND column_name = 'tenant_id'
 --           AND (data_type != 'character varying'
---                OR character_maximum_length != 64)
+--                OR character_maximum_length != 36)
 --         ORDER BY table_name
 --     ) LOOP
 --         RAISE NOTICE '待修复: % (当前长度: %', rec.table_name,

@@ -18,6 +18,7 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.metrics.RedisMetricsCollector;
 import com.njydsz.common.redis.service.ops.ReactiveStringRedisOps;
+import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
 
@@ -108,6 +109,24 @@ public class GatewayRedisConfig {
     redisProperties.setKeyPrefix("gateway");
     ObjectProvider nullProvider = new NullObjectProvider();
     return new RedisStringOps(
+        redisTemplate, redisProperties,
+        (ObjectProvider<RedisMetricsCollector>) (ObjectProvider) nullProvider,
+        (ObjectProvider<TenantRedisKeyPrefixer>) (ObjectProvider) nullProvider);
+  }
+
+  /**
+   * 创建 RedisHashOps（供 RBAC 权限缓存 RedisRbacUserInfoService 使用）。
+   *
+   * <p>网关作为 WebFlux reactive 栈，本不需要 RBAC 数据层。但 ydsz-common-auth 的 RbacConfiguration
+   * 默认装配 RbacPermissionEvaluator，后者依赖 RbacUserInfoService → RedisHashOps 链。
+   * 提供本 Bean 以避免启动期依赖解析失败（网关的权限校验由 AuthGlobalFilter 完成，不使用 RBAC 切面）。
+   */
+  @Bean
+  public RedisHashOps redisHashOps(RedisTemplate<String, Object> redisTemplate) {
+    RedisProperties redisProperties = new RedisProperties();
+    redisProperties.setKeyPrefix("gateway");
+    ObjectProvider nullProvider = new NullObjectProvider();
+    return new RedisHashOps(
         redisTemplate, redisProperties,
         (ObjectProvider<RedisMetricsCollector>) (ObjectProvider) nullProvider,
         (ObjectProvider<TenantRedisKeyPrefixer>) (ObjectProvider) nullProvider);

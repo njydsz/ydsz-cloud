@@ -6,6 +6,9 @@
 # =====================================================================
 
 spring:
+  main:
+    # 允许循环引用（DistributedLockAutoConfiguration 内部存在自引用）
+    allow-circular-references: true
   autoconfigure:
     exclude:
       # 线程池 / 文档 / Sentry / WebMVC 自动配置（网关为 WebFlux reactive 栈）

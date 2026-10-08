@@ -254,7 +254,7 @@ CREATE TABLE "ydsz_agt_insight_report" (
   CONSTRAINT "uk_ydsz_agt_insight_report_report_id" UNIQUE (report_id)
 );
 COMMENT ON TABLE "ydsz_agt_insight_report" IS '洞察报告表（BI 洞察报告持久化，含分析结果 JSON 与报告内容 JSON）';
-COMMENT ON COLUMN "ydsz_agt_insight_report"."id" IS '自增主键（BIGSERIAL）';
+COMMENT ON COLUMN "ydsz_agt_insight_report"."id" IS '主键 ID（雪花算法 String，VARCHAR(36)）';
 COMMENT ON COLUMN "ydsz_agt_insight_report"."report_id" IS '唯一业务 ID（雪花算法生成）';
 COMMENT ON COLUMN "ydsz_agt_insight_report"."user_id" IS '触发用户 ID';
 COMMENT ON COLUMN "ydsz_agt_insight_report"."conversation_id" IS '关联对话 ID（可选）';
@@ -703,7 +703,7 @@ CREATE TABLE "ydsz_comm_search_dead_letter" (
   CONSTRAINT "pk_ydsz_comm_search_dead_letter" PRIMARY KEY (id)
 );
 COMMENT ON TABLE "ydsz_comm_search_dead_letter" IS '搜索索引死信队列：存储索引写入失败的操作，支持定时重放补偿';
-COMMENT ON COLUMN "ydsz_comm_search_dead_letter"."id" IS '自增主键';
+COMMENT ON COLUMN "ydsz_comm_search_dead_letter"."id" IS '主键 ID（雪花算法 String，VARCHAR(36)）';
 COMMENT ON COLUMN "ydsz_comm_search_dead_letter"."operation" IS '索引操作类型：UPSERT / DELETE / BULK';
 COMMENT ON COLUMN "ydsz_comm_search_dead_letter"."doc_type" IS '实体类型（project/wiki/user 等）';
 COMMENT ON COLUMN "ydsz_comm_search_dead_letter"."document_id" IS '文档主键（DELETE 操作时使用）';

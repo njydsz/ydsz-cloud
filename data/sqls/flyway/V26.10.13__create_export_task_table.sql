@@ -20,7 +20,7 @@
 -- 第 1 步：创建通用导出任务表
 -- ===========================================================================
 CREATE TABLE "ydsz_comm_export_task" (
-  "id"              character varying(32)  NOT NULL,
+  "id"              character varying(36)  NOT NULL,
   "module"          character varying(64)  NOT NULL,
   "task_name"       character varying(128) NOT NULL,
   "task_type"       character varying(64)  NOT NULL,
@@ -41,11 +41,11 @@ CREATE TABLE "ydsz_comm_export_task" (
   "max_retry"       smallint              NOT NULL DEFAULT 3,
   "sort"            integer               DEFAULT 0,
   "revision"        integer               DEFAULT 0,
-  "tenant_id"       character varying(64) NOT NULL DEFAULT '0',
+  "tenant_id"       character varying(36) NOT NULL DEFAULT '0',
   "is_deleted"      smallint              NOT NULL DEFAULT 0,
-  "created_by"      character varying(64),
+  "created_by"      character varying(36),
   "created_at"      timestamp without time zone NOT NULL DEFAULT now(),
-  "updated_by"      character varying(64),
+  "updated_by"      character varying(36),
   "updated_at"      timestamp without time zone NOT NULL DEFAULT now(),
   CONSTRAINT "pk_ydsz_comm_export_task" PRIMARY KEY (id)
 );

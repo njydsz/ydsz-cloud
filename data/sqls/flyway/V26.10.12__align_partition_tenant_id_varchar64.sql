@@ -1,13 +1,13 @@
 -- =============================================================================
 -- Flyway Migration: V26.10.12
--- Description: 分区表 tenant_id 字段对齐 varchar(64) + 残留 BOOLEAN 字段二次扫描修复
+-- Description: 分区表 tenant_id 字段对齐 varchar(36) + 残留 BOOLEAN 字段二次扫描修复
 -- Author:      ydsz-team
 -- Created:     2026-10-08
 -- =============================================================================
 --
 -- 背景: V26.10.11 创建分区表时 tenant_id 使用了 varchar(36)，但其他业务模块
---       已统一扩展为 varchar(64) 以支持更灵活的租户标识（如 UUID 带前缀格式）。
---       本次迁移将分区表及其子分区的 tenant_id 对齐为 varchar(64)。
+--       已统一扩展为 varchar(36) 以支持更灵活的租户标识（如 UUID 带前缀格式）。
+--       本次迁移将分区表及其子分区的 tenant_id 对齐为 varchar(36)。
 --
 --       同时扫描 V26.10.09 可能遗漏的 BOOLEAN 字段，进行补充修复。
 --
@@ -19,12 +19,12 @@
 BEGIN;
 
 -- ===========================================================================
--- 第 1 步：对齐 ydsz_msg_log 分区表 tenant_id 为 varchar(64)
+-- 第 1 步：对齐 ydsz_msg_log 分区表 tenant_id 为 varchar(36)
 -- ===========================================================================
 
 -- 1.1 修改父表（级联到子分区）
 ALTER TABLE "ydsz_msg_log" 
-  ALTER COLUMN "tenant_id" TYPE character varying(64);
+  ALTER COLUMN "tenant_id" TYPE character varying(36);
 
 -- 1.2 验证子分区自动继承（PG 分区表父表 ALTER 自动级联）
 -- 如有未级联的子分区，手动执行以下 DO 块补充：
@@ -53,11 +53,11 @@ BEGIN
 END$$;
 
 -- ===========================================================================
--- 第 2 步：对齐 ydsz_msg_outbox 分区表 tenant_id 为 varchar(64)
+-- 第 2 步：对齐 ydsz_msg_outbox 分区表 tenant_id 为 varchar(36)
 -- ===========================================================================
 
 ALTER TABLE "ydsz_msg_outbox" 
-  ALTER COLUMN "tenant_id" TYPE character varying(64);
+  ALTER COLUMN "tenant_id" TYPE character varying(36);
 
 DO $$
 DECLARE
