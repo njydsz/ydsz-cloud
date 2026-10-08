@@ -1,7 +1,5 @@
 package com.njydsz.generator.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -26,21 +24,14 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_gen_template_group")
-public class GenTemplateGroup extends MpBaseEntity<Long> {
+public class GenTemplateGroup extends MpBaseEntity<String> {
 
-  /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
-  @TableId(type = IdType.AUTO)
-  private Long id;
-  /** 租户 ID（多租户隔离）。 */
-  private String tenantId;
   /** 分组名（UNIQUE，如 default、mybatis-plus）。 */
   private String name;
   /** 分组描述。 */
   private String description;
   /** 是否为系统分组（系统分组不可删除）。 */
   private Boolean isSystem;
-  /** 排序序号（升序）。 */
-  private Integer sort;
   /** 是否激活为当前使用分组。 */
   private Boolean isActive;
 }

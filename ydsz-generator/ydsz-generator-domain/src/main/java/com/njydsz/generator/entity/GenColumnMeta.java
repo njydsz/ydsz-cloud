@@ -1,8 +1,6 @@
 package com.njydsz.generator.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -17,7 +15,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * 列元数据领域实体。
@@ -32,15 +29,10 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_gen_column_meta")
-public class GenColumnMeta extends MpBaseEntity<Long> {
+public class GenColumnMeta extends MpBaseEntity<String> {
 
-  /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
-  @TableId(type = IdType.AUTO)
-  private Long id;
-  /** 租户 ID（多租户隔离）。 */
-  private String tenantId;
   /** 所属表 ID。 */
-  private Long tableMetaId;
+  private String tableMetaId;
   /** 列名。 */
   private String columnName;
   /** 数据类型（数据库原生类型名，如 VARCHAR、BIGINT）。 */

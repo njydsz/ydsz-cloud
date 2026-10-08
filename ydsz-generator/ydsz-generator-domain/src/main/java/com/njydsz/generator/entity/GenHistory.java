@@ -2,9 +2,7 @@ package com.njydsz.generator.entity;
 
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -12,7 +10,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**
@@ -28,19 +25,14 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_gen_history")
-public class GenHistory extends MpBaseEntity<Long> {
+public class GenHistory extends MpBaseEntity<String> {
 
-  /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
-  @TableId(type = IdType.AUTO)
-  private Long id;
-  /** 租户 ID（多租户隔离）。 */
-  private String tenantId;
   /** 模块名称。 */
   private String moduleName;
   /** 使用的数据源 ID。 */
-  private Long datasourceId;
+  private String datasourceId;
   /** 使用的模板分组 ID。 */
-  private Long templateGroupId;
+  private String templateGroupId;
   /** 涉及表数量。 */
   private Integer tableCount;
   /** 生成文件总数。 */

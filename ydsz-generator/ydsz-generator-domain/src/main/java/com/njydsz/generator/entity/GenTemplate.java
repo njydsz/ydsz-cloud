@@ -1,7 +1,5 @@
 package com.njydsz.generator.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -24,15 +22,10 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_gen_template")
-public class GenTemplate extends MpBaseEntity<Long> {
+public class GenTemplate extends MpBaseEntity<String> {
 
-  /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
-  @TableId(type = IdType.AUTO)
-  private Long id;
-  /** 租户 ID（多租户隔离）。 */
-  private String tenantId;
   /** 所属模板分组 ID。 */
-  private Long groupId;
+  private String groupId;
   /** 文件名（如 entity.vm、vue/api.vm）。 */
   private String fileName;
   /** 模板用途描述。 */
