@@ -91,6 +91,10 @@ public class GrayLoadBalancerConfig {
    * @return 健康检查装饰后的实例列表供给者
    */
   @Bean
+  @ConditionalOnProperty(
+      value = "spring.cloud.loadbalancer.health-check.enabled",
+      havingValue = "true",
+      matchIfMissing = false)
   ServiceInstanceListSupplier serviceInstanceListSupplier(
       DiscoveryClient discoveryClient, Environment environment, LoadBalancerClientFactory factory) {
     // 基类供给者：从 Nacos 拉取服务实例
