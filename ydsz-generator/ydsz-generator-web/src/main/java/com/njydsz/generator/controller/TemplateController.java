@@ -2,6 +2,8 @@ package com.njydsz.generator.controller;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -33,6 +35,7 @@ import com.njydsz.generator.vo.TemplateValidateVO;
  * @since 26.09.05
  */
 @Slf4j
+@Tag(name = "模板管理")
 @ApiVersion("26.10.01")
 @AuthApiPermission(apiCodes = PermissionCodes.GENERATOR_USER)
 @RestController
@@ -53,6 +56,7 @@ public class TemplateController {
    *
    * @return 全部分组列表，每个元素包含 id、name、description、isActive 等
    */
+  @Operation(summary = "查询全部分组")
   @GetMapping("/groups")
   public YdszResponse<List<GenTemplateGroup>> listGroups() {
     return YdszResponse.success(groupService.listAll());
@@ -65,6 +69,7 @@ public class TemplateController {
    *
    * @return 当前激活的分组实体；未配置时返回 null
    */
+  @Operation(summary = "获取当前激活分组")
   @GetMapping("/groups/active")
   public YdszResponse<GenTemplateGroup> getActiveGroup() {
     return YdszResponse.success(groupService.getActive());
@@ -78,6 +83,7 @@ public class TemplateController {
    * @param id 分组 ID
    * @return 操作结果，成功时 data 为 null
    */
+  @Operation(summary = "激活指定分组")
   @PostMapping("/groups/{id}/activate")
   @Audit(module = "模板管理", action = AuditAction.ENABLE, content = "'激活模板分组:' + #id")
   public YdszResponse<Void> activateGroup(@PathVariable Long id) {
@@ -94,6 +100,7 @@ public class TemplateController {
    * @param group 分组实体，需包含 name（名称，非空）和 description（描述）
    * @return 持久化后的分组实体
    */
+  @Operation(summary = "创建模板分组")
   @PostMapping("/groups")
   @Audit(module = "模板管理", action = AuditAction.CREATE, content = "'创建模板分组:' + #group.name")
   public YdszResponse<GenTemplateGroup> createGroup(@RequestBody GenTemplateGroup group) {
@@ -109,6 +116,7 @@ public class TemplateController {
    * @param id 分组 ID
    * @return 操作结果，成功时 data 为 null
    */
+  @Operation(summary = "删除模板分组")
   @DeleteMapping("/groups/{id}")
   @Audit(module = "模板管理", action = AuditAction.DELETE, content = "'删除模板分组:' + #id")
   public YdszResponse<Void> deleteGroup(@PathVariable Long id) {
@@ -127,6 +135,7 @@ public class TemplateController {
    * @param groupId 模板分组 ID，决定模板风格与目标技术栈
    * @return 模板列表，每个元素包含 id、fileName、content（Velocity 模板文本）、description 等
    */
+  @Operation(summary = "查询分组下的全部模板")
   @GetMapping("/templates")
   public YdszResponse<List<GenTemplate>> listTemplates(@RequestParam Long groupId) {
     return YdszResponse.success(templateService.listByGroup(groupId));
@@ -138,6 +147,7 @@ public class TemplateController {
    * @param id 模板 ID
    * @return 模板实体，包含 fileName、content（Velocity 模板语法文本）、description 等
    */
+  @Operation(summary = "查询单个模板详情")
   @GetMapping("/templates/{id}")
   public YdszResponse<GenTemplate> getTemplate(@PathVariable Long id) {
     return YdszResponse.success(templateService.getById(id));
@@ -153,6 +163,7 @@ public class TemplateController {
    * @param template 模板实体，id 必填（指定更新目标），content 为新的 Velocity 模板文本
    * @return 更新后的模板实体
    */
+  @Operation(summary = "更新模板内容")
   @PostMapping("/templates/update")
   @Audit(module = "模板管理", action = AuditAction.UPDATE, content = "'更新模板:' + #template.id")
   public YdszResponse<GenTemplate> updateTemplate(@RequestBody GenTemplate template) {
@@ -166,6 +177,7 @@ public class TemplateController {
    * @param keyword 搜索关键词，匹配 fileName 或 description 字段，可为空（返回全部分组模板）
    * @return 匹配的模板列表，无匹配时返回空列表
    */
+  @Operation(summary = "搜索模板")
   @GetMapping("/templates/search")
   public YdszResponse<List<GenTemplate>> search(
       @RequestParam Long groupId, @RequestParam String keyword) {
@@ -184,6 +196,7 @@ public class TemplateController {
    * @return 校验结果，包含 valid（是否通过）、errorLine（错误行号，通过时为 null）、
    *         errorMessage（错误描述，通过时为 null）
    */
+  @Operation(summary = "校验Velocity模板语法")
   @PostMapping("/templates/validate")
   public YdszResponse<TemplateValidateVO> validateTemplate(@RequestBody String content) {
     return YdszResponse.success(templateService.validateTemplate(content));
@@ -199,6 +212,7 @@ public class TemplateController {
    * @return diff 行列表，每行包含 lineNumber（行号）、lineContent（行文本）、
    *         changeType（变更类型：UNCHANGED 未变更 / ADDED 新增 / REMOVED 删除）
    */
+  @Operation(summary = "对比两个版本模板的diff")
   @PostMapping("/templates/diff")
   public YdszResponse<List<DiffLineVO>> diffTemplates(
       @RequestParam String oldContent, @RequestParam String newContent) {

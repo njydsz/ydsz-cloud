@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
@@ -30,6 +33,7 @@ import com.njydsz.generator.vo.TemplateZipVO;
  * @since 26.09.05
  */
 @Slf4j
+@Tag(name = "模板导入导出")
 @ApiVersion("26.10.01")
 @AuthApiPermission(apiCodes = PermissionCodes.GENERATOR_USER)
 @RestController
@@ -51,6 +55,7 @@ public class ImportExportController {
    * @param groupId 模板分组 ID
    * @return zip 二进制流，响应头包含 Content-Disposition: attachment; filename="xxx.zip"
    */
+  @Operation(summary = "导出分组模板为ZIP")
   @GetMapping("/export")
   @Audit(module = "模板管理", action = AuditAction.EXPORT, content = "'导出模板分组:' + #groupId", recordRequest = false)
   public ResponseEntity<byte[]> exportTemplates(@RequestParam Long groupId) {
@@ -76,6 +81,7 @@ public class ImportExportController {
    * @param overwrite 是否覆盖同名模板：true 覆盖已有模板，false 跳过同名文件
    * @return 实际导入成功的模板数量
    */
+  @Operation(summary = "从ZIP导入模板到分组")
   @PostMapping("/import")
   @Audit(module = "模板管理", action = AuditAction.IMPORT, content = "'导入模板:' + #groupId", recordRequest = false)
   public YdszResponse<Integer> importTemplates(

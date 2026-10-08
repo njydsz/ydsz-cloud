@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -39,8 +41,9 @@ import com.njydsz.generator.vo.GenResultVO;
  * @author ydsz-team
  * @since 26.09.05
  */
-@ApiVersion("26.10.01")
 @Slf4j
+@Tag(name = "代码生成")
+@ApiVersion("26.10.01")
 @AuthApiPermission(apiCodes = PermissionCodes.GENERATOR_USER)
 @RestController
 @RequestMapping("/generator/code")
@@ -62,6 +65,7 @@ public class CodeGenController {
    * @return 预览结果列表，每项包含 fileName（文件名）、filePath（相对路径）、
    *         content（渲染后的代码文本）、isConflict（目标文件是否已存在）
    */
+  @Operation(summary = "预览代码生成结果")
   @Audit(module = "代码生成", action = AuditAction.QUERY, recordRequest = false)
   @GetMapping("/preview")
   public YdszResponse<List<CodePreviewVO>> preview(
@@ -84,6 +88,7 @@ public class CodeGenController {
    * @param tableName       表名
    * @return zip 二进制流
    */
+  @Operation(summary = "预览并下载为ZIP")
   @Audit(module = "代码生成", action = AuditAction.DOWNLOAD, content = "'下载代码ZIP:' + #tableName", recordRequest = false)
   @GetMapping("/preview/zip")
   public ResponseEntity<byte[]> downloadPreviewZip(
@@ -138,6 +143,7 @@ public class CodeGenController {
    * @return 生成结果，包含 historyId（任务 ID）、fileCount（总文件数）、
    *         successCount（成功数）、skipCount（跳过数）、failCount（失败数）
    */
+  @Operation(summary = "正式生成代码到输出目录")
   @Audit(module = "代码生成", action = AuditAction.CREATE, content = "'生成代码:' + #query.tableName", recordRequest = false)
   @PostMapping("/generate")
   public YdszResponse<GenResultVO> generate(@RequestBody GenCodeGenerateQuery query) {
@@ -165,6 +171,7 @@ public class CodeGenController {
    * @return 汇总结果，包含 historyId（批次任务 ID）、fileCount（总文件数）、
    *         successCount（成功数）、skipCount（跳过数）、failCount（失败数）
    */
+  @Operation(summary = "全量生成数据源下全部表的代码")
   @Audit(module = "代码生成", action = AuditAction.CREATE, content = "'全量生成代码:' + #datasourceId", recordRequest = false)
   @PostMapping("/generate/all")
   public YdszResponse<GenResultVO> generateAll(

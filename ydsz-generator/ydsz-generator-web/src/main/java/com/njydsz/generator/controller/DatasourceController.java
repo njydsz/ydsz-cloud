@@ -2,6 +2,8 @@ package com.njydsz.generator.controller;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,6 +31,7 @@ import com.njydsz.generator.vo.GenDatasourceRespVO;
  * @since 26.09.05
  */
 @Slf4j
+@Tag(name = "数据源管理")
 @ApiVersion("26.10.01")
 @AuthApiPermission(apiCodes = PermissionCodes.GENERATOR_ADMIN)
 @RestController
@@ -47,6 +50,7 @@ public class DatasourceController {
    * @return 数据源列表，每个元素包含 id、name、jdbcUrl、username、dialect（数据库方言）、
    *         isDefault（是否默认数据源）、description 等；无数据源时返回空列表
    */
+  @Operation(summary = "查询全部数据源")
   @GetMapping
   public YdszResponse<List<GenDatasourceRespVO>> list() {
     return YdszResponse.success(datasourceService.listAllVO());
@@ -60,6 +64,7 @@ public class DatasourceController {
    * @return 默认数据源配置（VO），含 id、name、jdbcUrl、dialect 等；
    *         未配置默认数据源时返回 null
    */
+  @Operation(summary = "获取默认数据源")
   @GetMapping("/default")
   public YdszResponse<GenDatasourceRespVO> getDefault() {
     return YdszResponse.success(datasourceService.getDefaultVO());
@@ -75,6 +80,7 @@ public class DatasourceController {
    * @param datasource 数据源配置，至少需包含 jdbcUrl、username、password
    * @return true 表示连接成功，false 表示连接失败
    */
+  @Operation(summary = "测试数据库连接")
   @Audit(module = "数据源管理", action = AuditAction.OTHER, content = "'测试数据库连接'", recordRequest = false)
   @PostMapping("/test")
   public YdszResponse<Boolean> testConnection(@RequestBody GenDatasource datasource) {
@@ -92,6 +98,7 @@ public class DatasourceController {
    *                   如 mysql/postgresql/oracle/sqlserver）
    * @return 持久化后的数据源 VO（不含 password 字段）
    */
+  @Operation(summary = "创建数据源")
   @Audit(module = "数据源管理", action = AuditAction.CREATE, excludeParams = {"password", "url"}, recordRequest = false)
   @PostMapping
   public YdszResponse<GenDatasourceRespVO> create(@RequestBody GenDatasource datasource) {
@@ -106,6 +113,7 @@ public class DatasourceController {
    * @param datasource 数据源实体，id 必填，其余字段为需更新的内容
    * @return 更新后的数据源 VO（不含 password 字段）
    */
+  @Operation(summary = "更新数据源")
   @Audit(module = "数据源管理", action = AuditAction.UPDATE, excludeParams = {"password", "url"}, recordRequest = false)
   @PostMapping("/update")
   public YdszResponse<GenDatasourceRespVO> update(@RequestBody GenDatasource datasource) {
@@ -121,6 +129,7 @@ public class DatasourceController {
    * @param id 数据源 ID
    * @return 操作结果，成功时无数据返回（data 为 null）
    */
+  @Operation(summary = "删除数据源")
   @Audit(module = "数据源管理", action = AuditAction.DELETE, content = "'删除数据源:' + #id")
   @DeleteMapping("/{id}")
   public YdszResponse<Void> delete(@PathVariable Long id) {

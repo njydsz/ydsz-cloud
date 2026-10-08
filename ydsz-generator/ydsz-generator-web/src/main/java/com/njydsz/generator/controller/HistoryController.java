@@ -2,6 +2,8 @@ package com.njydsz.generator.controller;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,6 +31,7 @@ import com.njydsz.generator.service.GenHistoryService;
  * @since 26.09.05
  */
 @Slf4j
+@Tag(name = "生成历史管理")
 @ApiVersion("26.10.01")
 @AuthApiPermission(apiCodes = PermissionCodes.GENERATOR_USER)
 @RestController
@@ -47,6 +50,7 @@ public class HistoryController {
    * @param limit 返回数量上限，默认 20，最大值 100
    * @return 历史任务列表，按生成时间倒序排列
    */
+  @Operation(summary = "查询最近生成历史列表")
   @GetMapping
   public YdszResponse<List<GenHistory>> listRecent(
       @RequestParam(defaultValue = "20") int limit) {
@@ -62,6 +66,7 @@ public class HistoryController {
    * @return 任务实体，包含 datasourceId、templateGroupId、tableName、
    *         fileCount、successCount、datasource 等详细信息
    */
+  @Operation(summary = "查询生成历史详情")
   @GetMapping("/{id}")
   public YdszResponse<GenHistory> getById(@PathVariable Long id) {
     return YdszResponse.success(historyService.getById(id));
@@ -77,6 +82,7 @@ public class HistoryController {
    *         fileType（文件类型：ENTITY/MAPPER/SERVICE/CONTROLLER 等）、
    *         generateStatus（生成状态：SUCCESS/SKIPPED/FAILED）
    */
+  @Operation(summary = "查询生成任务的文件明细")
   @GetMapping("/{id}/files")
   public YdszResponse<List<GenHistoryFile>> listFiles(@PathVariable Long id) {
     return YdszResponse.success(historyService.listFiles(id));
@@ -92,6 +98,7 @@ public class HistoryController {
    * @param id 任务 ID
    * @return 操作结果，成功时 data 为 null
    */
+  @Operation(summary = "回滚指定的生成任务")
   @PostMapping("/{id}/rollback")
   @Audit(module = "生成历史", action = AuditAction.OTHER, content = "'回滚生成历史:' + #id")
   public YdszResponse<Void> rollback(@PathVariable Long id) {
@@ -108,6 +115,7 @@ public class HistoryController {
    * @param id 任务 ID
    * @return 操作结果，成功时 data 为 null
    */
+  @Operation(summary = "删除生成历史")
   @DeleteMapping("/{id}")
   @Audit(module = "生成历史", action = AuditAction.DELETE, content = "'删除生成历史:' + #id")
   public YdszResponse<Void> delete(@PathVariable Long id) {

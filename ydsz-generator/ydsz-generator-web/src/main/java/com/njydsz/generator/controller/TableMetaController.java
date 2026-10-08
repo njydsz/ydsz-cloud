@@ -2,6 +2,8 @@ package com.njydsz.generator.controller;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.annotation.Secured;
@@ -32,6 +34,7 @@ import com.njydsz.generator.service.TableMetadataService;
  * @since 26.09.05
  */
 @Slf4j
+@Tag(name = "表元数据管理")
 @ApiVersion("26.10.01")
 @AuthApiPermission(apiCodes = PermissionCodes.GENERATOR_USER)
 @RestController
@@ -52,6 +55,7 @@ public class TableMetaController {
    * @return 表元数据列表，包含 tableName（物理表名）、comment（表注释）、
    *         aliasName（别名/类名来源）、moduleName（模块名）等；无表时返回空列表
    */
+  @Operation(summary = "查询数据源下全部表结构")
   @GetMapping
   public YdszResponse<List<GenTableMeta>> listTables(@RequestParam Long datasourceId) {
     return YdszResponse.success(tableMetadataService.listCachedTables(datasourceId));
@@ -67,6 +71,7 @@ public class TableMetaController {
    * @return 刷新后的表元数据列表
    * @throws BusinessException 数据源不存在或已删除时抛出 DATASOURCE_NOT_FOUND
    */
+  @Operation(summary = "重新连接数据库刷新表元数据缓存")
   @PostMapping("/refresh")
   @Audit(module = "表元数据", action = AuditAction.SYNC, content = "'刷新表元数据:' + #datasourceId")
   public YdszResponse<List<GenTableMeta>> refreshTables(@RequestParam Long datasourceId) {
@@ -88,6 +93,7 @@ public class TableMetaController {
    *         javaType（Java 类型映射）、columnComment（列注释）、
    *         isPrimaryKey（是否主键）等；无列时返回空列表
    */
+  @Operation(summary = "查询指定表的列元数据")
   @GetMapping("/columns")
   public YdszResponse<List<GenColumnMeta>> getColumns(@RequestParam Long tableMetaId) {
     return YdszResponse.success(tableMetadataService.listColumns(tableMetaId));
@@ -104,6 +110,7 @@ public class TableMetaController {
    * @return 刷新后的列元数据列表
    * @throws IllegalArgumentException 数据源不存在
    */
+  @Operation(summary = "从数据库刷新指定表的列元数据")
   @PostMapping("/columns/refresh")
   @Audit(module = "表元数据", action = AuditAction.SYNC, content = "'刷新列元数据:' + #tableName")
   public YdszResponse<List<GenColumnMeta>> refreshColumns(

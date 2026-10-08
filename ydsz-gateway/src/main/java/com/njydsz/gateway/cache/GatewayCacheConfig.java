@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import jakarta.annotation.PostConstruct;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -223,22 +222,5 @@ public class GatewayCacheConfig {
     return (Cache<String, Object>) manager.getCache(CACHE_GRAY_SERVICE_LIST);
   }
 
-  /**
-   * 启动后验证所有缓存 Bean 创建成功（Fail-Fast）。
-   *
-   * @param manager 网关缓存管理器
-   */
-  @PostConstruct
-  public void validateCaches(YdszCacheManager manager) {
-    for (String name :
-        java.util.List.of(
-            CACHE_RATE_LIMIT, CACHE_IP_BLACKLIST,
-            CACHE_JWT_VALIDATION, CACHE_GRAY_SERVICE_LIST)) {
-      var cache = manager.getCache(name);
-      if (cache == null) {
-        throw new IllegalStateException(
-            "Gateway 缓存启动验证失败: " + name + " Cache Bean 未创建");
-      }
-    }
-  }
+  // validateCaches 已移除：避免在 PostConstruct 阶段造成循环引用
 }

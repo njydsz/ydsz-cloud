@@ -84,6 +84,17 @@ generator:
     # 排队容量
     queue-capacity: 64
 
+# SpringDoc OpenAPI 3 文档（ydsz-common-base 自动装配）
+ydsz:
+  doc:
+    enabled: true
+    title: 云顶代码生成器 API
+    description: ydzs-generator 代码生成器模块 REST API 文档
+    version: 26.10.12
+    api-docs-path: /v3/api-docs
+    swagger-ui-path: /swagger-ui/index.html
+    base-package: com.njydsz.generator.controller
+
 # 统一线程池 / 多租户 / JDBC / 审计 配置（ydsz-common-*）
 ydsz:
   thread:

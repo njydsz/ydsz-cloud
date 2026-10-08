@@ -2,6 +2,8 @@ package com.njydsz.generator.controller;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +29,7 @@ import com.njydsz.generator.service.EntityReverseService;
  * @since 26.09.05
  */
 @Slf4j
+@Tag(name = "实体类反向生成", description = "实验性功能，接口签名可能在后续版本变动")
 @ApiVersion("26.10.01")
 @AuthApiPermission(apiCodes = PermissionCodes.GENERATOR_USER)
 @RestController
@@ -48,6 +51,7 @@ public class ReverseController {
    * @param outputDir       生成文件的输出目录
    * @return 分析报告（JSON 格式），包含生成的文件列表及状态
    */
+  @Operation(summary = "反向分析单个Java源文件并生成代码")
   @PostMapping("/analyze")
   @Audit(module = "反向生成", action = AuditAction.OTHER, content = "'反向分析Java源文件'", recordRequest = false)
   public YdszResponse<String> analyze(
@@ -69,6 +73,7 @@ public class ReverseController {
    * @param outputDir       生成文件的输出目录
    * @return 分析报告列表（JSON 格式），每项对应一个 Java 源文件的分析结果
    */
+  @Operation(summary = "批量反向分析目录下所有Java源文件")
   @PostMapping("/analyze-batch")
   @Audit(module = "反向生成", action = AuditAction.OTHER, content = "'批量反向分析目录'", recordRequest = false)
   public YdszResponse<List<String>> analyzeBatch(
