@@ -16,11 +16,11 @@ CREATE TABLE "ydsz_agt_approval" (
   "resolved_at" timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_approval" PRIMARY KEY (id)
 );
@@ -69,11 +69,11 @@ CREATE TABLE "ydsz_agt_async_task" (
   "expire_at" timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_async_task" PRIMARY KEY (id)
 );
@@ -120,11 +120,11 @@ CREATE TABLE "ydsz_agt_dag_workflow" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64),
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64),
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "ydsz_agt_dag_workflow_pkey" PRIMARY KEY (id),
   CONSTRAINT "ydsz_agt_dag_workflow_workflow_code_key" UNIQUE (workflow_code)
@@ -156,9 +156,9 @@ CREATE TABLE "ydsz_agt_definition" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_definition" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_agt_definition_agent_code" UNIQUE (agent_code, tenant_id)
@@ -201,10 +201,10 @@ CREATE TABLE "ydsz_agt_document_chunk" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying,
-  "updated_by" character varying,
+  "created_by" character varying(36),
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_agt_document_chunk" PRIMARY KEY (id)
 );
@@ -226,7 +226,6 @@ CREATE INDEX "idx_ydsz_agt_document_chunk_tenant" ON "ydsz_agt_document_chunk" U
 
 DROP TABLE IF EXISTS "ydsz_agt_insight_report" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_agt_insight_report_id_seq"
   AS bigint
   START WITH 1
   INCREMENT BY 1
@@ -252,17 +251,17 @@ CREATE TABLE "ydsz_agt_insight_report" (
   "duration_ms" integer,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "ydsz_agt_insight_report_pkey" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_agt_insight_report_report_id" UNIQUE (report_id)
 );
 COMMENT ON TABLE "ydsz_agt_insight_report" IS '洞察报告表（BI 洞察报告持久化，含分析结果 JSON 与报告内容 JSON）';
-COMMENT ON COLUMN "ydsz_agt_insight_report"."id" IS '自增主键（BIGSERIAL）';
+COMMENT ON COLUMN "ydsz_agt_insight_report"."id" IS '主键 ID（雪花算法 String）';
 COMMENT ON COLUMN "ydsz_agt_insight_report"."report_id" IS '唯一业务 ID（雪花算法生成）';
 COMMENT ON COLUMN "ydsz_agt_insight_report"."user_id" IS '触发用户 ID';
 COMMENT ON COLUMN "ydsz_agt_insight_report"."conversation_id" IS '关联对话 ID（可选）';
@@ -305,9 +304,9 @@ CREATE TABLE "ydsz_agt_prompt_template" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_prompt_template" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_agt_prompt_template_template_code" UNIQUE (template_code, tenant_id),
@@ -352,9 +351,9 @@ CREATE TABLE "ydsz_agt_prompt_version" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_prompt_version" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_agt_prompt_version_template_version" UNIQUE (template_code, version, tenant_id)
@@ -393,9 +392,9 @@ CREATE TABLE "ydsz_agt_token_usage" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_token_usage" PRIMARY KEY (id)
 );
@@ -427,11 +426,11 @@ CREATE TABLE "ydsz_agt_trace" (
   "total_duration_ms" bigint,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone DEFAULT now(),
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_trace" PRIMARY KEY (trace_id)
 );
@@ -465,11 +464,11 @@ CREATE TABLE "ydsz_agt_trace_step" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_trace_step" PRIMARY KEY (trace_id, step_index)
 );
@@ -507,11 +506,11 @@ CREATE TABLE "ydsz_agt_user_profile" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL DEFAULT '0'::character varying,
+  "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_agt_user_profile" PRIMARY KEY (user_id)
 );
@@ -558,11 +557,11 @@ CREATE TABLE "ydsz_comm_audit_log" (
   "sort" integer DEFAULT 0,
   "status" smallint NOT NULL DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_comm_audit_log" PRIMARY KEY (id)
 );
@@ -617,11 +616,11 @@ CREATE TABLE "ydsz_comm_outbox" (
   "sent_at" timestamp(3) without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64),
+  "tenant_id" character varying(36),
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   CONSTRAINT "pk_ydsz_comm_outbox" PRIMARY KEY (id),
   CONSTRAINT "ck_ydsz_comm_outbox_status" CHECK (status::text = ANY (ARRAY['PENDING'::character varying, 'PROCESSING'::character varying, 'SENT'::character varying, 'DEAD_LETTER'::character varying]::text[]))
@@ -673,11 +672,11 @@ CREATE TABLE "ydsz_comm_outbox_archive" (
   "error_message" text,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone NOT NULL,
   CONSTRAINT "ydsz_comm_outbox_archive_pkey" PRIMARY KEY (id)
 );
@@ -689,7 +688,6 @@ CREATE INDEX "idx_ydsz_comm_outbox_archive_event_type" ON "ydsz_comm_outbox_arch
 
 DROP TABLE IF EXISTS "ydsz_comm_search_dead_letter" CASCADE;
 
-CREATE SEQUENCE IF NOT EXISTS "ydsz_comm_search_dead_letter_id_seq"
   AS bigint
   START WITH 1
   INCREMENT BY 1
@@ -710,16 +708,16 @@ CREATE TABLE "ydsz_comm_search_dead_letter" (
   "resolved_at" timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_comm_search_dead_letter" PRIMARY KEY (id)
 );
 COMMENT ON TABLE "ydsz_comm_search_dead_letter" IS '搜索索引死信队列：存储索引写入失败的操作，支持定时重放补偿';
-COMMENT ON COLUMN "ydsz_comm_search_dead_letter"."id" IS '自增主键';
+COMMENT ON COLUMN "ydsz_comm_search_dead_letter"."id" IS '主键 ID（雪花算法 String）';
 COMMENT ON COLUMN "ydsz_comm_search_dead_letter"."operation" IS '索引操作类型：UPSERT / DELETE / BULK';
 COMMENT ON COLUMN "ydsz_comm_search_dead_letter"."doc_type" IS '实体类型（project/wiki/user 等）';
 COMMENT ON COLUMN "ydsz_comm_search_dead_letter"."document_id" IS '文档主键（DELETE 操作时使用）';
@@ -749,10 +747,10 @@ CREATE TABLE "ydsz_comm_search_index_partitioned" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) NOT NULL,
+  "tenant_id" character varying(36) NOT NULL,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
-  "updated_by" character varying,
+  "created_by" character varying(36),
+  "updated_by" character varying(36),
   CONSTRAINT "pk_search_partitioned" PRIMARY KEY (tenant_id, id, doc_type)
 ) PARTITION BY HASH (tenant_id);
 COMMENT ON TABLE "ydsz_comm_search_index_partitioned" IS '搜索全文索引分区表（按 tenant_id HASH 分区，原 ydzs_wiki_search_index 升级）';
@@ -772,9 +770,9 @@ CREATE TABLE "ydsz_file_file_acl" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_file_acl" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_file_acl_file_grantee" UNIQUE (file_node_id, grantee_type, grantee_id)
@@ -813,9 +811,9 @@ CREATE TABLE "ydsz_file_file_comment" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_file_comment" PRIMARY KEY (id)
 );
@@ -867,9 +865,9 @@ CREATE TABLE "ydsz_file_file_node" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_file_node" PRIMARY KEY (id)
 );
@@ -925,9 +923,9 @@ CREATE TABLE "ydsz_file_file_tag" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_file_tag" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_file_tag_file_node_tag" UNIQUE (file_node_id, tag_id)
@@ -965,9 +963,9 @@ CREATE TABLE "ydsz_file_file_version" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_file_version" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_file_version_file_node_version" UNIQUE (file_node_id, version_number)
@@ -1010,9 +1008,9 @@ CREATE TABLE "ydsz_file_search_index" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_search_index" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_search_index_file_node_id" UNIQUE (file_node_id)
@@ -1058,9 +1056,9 @@ CREATE TABLE "ydsz_file_share_access_log" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_share_access_log" PRIMARY KEY (id)
 );
@@ -1111,9 +1109,9 @@ CREATE TABLE "ydsz_file_share_access_log_archive" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_file_share_access_log_archive" PRIMARY KEY (id)
 );
@@ -1158,9 +1156,9 @@ CREATE TABLE "ydsz_file_share_link" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_share_link" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_share_link_share_code" UNIQUE (share_code)
@@ -1204,9 +1202,9 @@ CREATE TABLE "ydsz_file_share_recipient" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_share_recipient" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_share_recipient_share_recipient" UNIQUE (share_id, recipient_type, recipient_id)
@@ -1250,9 +1248,9 @@ CREATE TABLE "ydsz_file_space" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_space" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_space_tenant_name" UNIQUE (tenant_id, name)
@@ -1295,9 +1293,9 @@ CREATE TABLE "ydsz_file_space_member" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_space_member" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_space_member_space_user" UNIQUE (space_id, user_id)
@@ -1338,9 +1336,9 @@ CREATE TABLE "ydsz_file_space_template" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_space_template" PRIMARY KEY (id)
 );
@@ -1383,9 +1381,9 @@ CREATE TABLE "ydsz_file_storage_quota" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_storage_quota" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_storage_quota_scope" UNIQUE (scope_type, scope_id)
@@ -1421,9 +1419,9 @@ CREATE TABLE "ydsz_file_tag" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_tag" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_tag_tenant_tag_name" UNIQUE (tenant_id, name)
@@ -1461,9 +1459,9 @@ CREATE TABLE "ydsz_file_trash_item" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_trash_item" PRIMARY KEY (id)
 );
@@ -1502,9 +1500,9 @@ CREATE TABLE "ydsz_file_user_favorite" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_user_favorite" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_user_favorite_user_node" UNIQUE (user_id, node_id)
@@ -1537,9 +1535,9 @@ CREATE TABLE "ydsz_file_user_recent" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_file_user_recent" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_file_user_recent_user_node" UNIQUE (user_id, node_id)
@@ -1575,9 +1573,9 @@ CREATE TABLE "ydsz_flow_admin_role" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_admin_role" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_admin_role_user_role" UNIQUE (user_id, role_code)
@@ -1613,9 +1611,9 @@ CREATE TABLE "ydsz_flow_archive_cursor" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) DEFAULT '0'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "ydsz_flow_archive_cursor_pkey" PRIMARY KEY (id)
 );
@@ -1648,9 +1646,9 @@ CREATE TABLE "ydsz_flow_attachment" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_attachment" PRIMARY KEY (id)
 );
@@ -1709,9 +1707,9 @@ CREATE TABLE "ydsz_flow_audit_log" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_audit_log" PRIMARY KEY (id, operated_at)
 ) PARTITION BY RANGE (operated_at);
@@ -1745,9 +1743,9 @@ CREATE TABLE "ydsz_flow_auto_trigger" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_auto_trigger" PRIMARY KEY (id)
 );
@@ -1786,9 +1784,9 @@ CREATE TABLE "ydsz_flow_category" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_category" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_category_category_code" UNIQUE (category_code, tenant_id)
@@ -1838,9 +1836,9 @@ CREATE TABLE "ydsz_flow_cc" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_cc" PRIMARY KEY (id)
 );
@@ -1891,9 +1889,9 @@ CREATE TABLE "ydsz_flow_cc_rule" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_cc_rule" PRIMARY KEY (id)
 );
@@ -1937,9 +1935,9 @@ CREATE TABLE "ydsz_flow_comment" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_comment" PRIMARY KEY (id)
 );
@@ -1997,9 +1995,9 @@ CREATE TABLE "ydsz_flow_definition" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_definition" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_definition_flow_code_version" UNIQUE (flow_code, flow_version, tenant_id)
@@ -2059,9 +2057,9 @@ CREATE TABLE "ydsz_flow_delegate_auth" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_delegate_auth" PRIMARY KEY (id)
 );
@@ -2117,9 +2115,9 @@ CREATE TABLE "ydsz_flow_event_subscription" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_event_subscription" PRIMARY KEY (id)
 );
@@ -2184,9 +2182,9 @@ CREATE TABLE "ydsz_flow_his_instance" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_his_instance" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_his_instance_business_type_id" UNIQUE (business_type, business_id)
@@ -2262,9 +2260,9 @@ CREATE TABLE "ydsz_flow_his_task" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_his_task" PRIMARY KEY (id)
 );
@@ -2328,9 +2326,9 @@ CREATE TABLE "ydsz_flow_idempotent" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) DEFAULT '0'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "ydsz_flow_idempotent_pkey" PRIMARY KEY (id)
 );
@@ -2380,9 +2378,9 @@ CREATE TABLE "ydsz_flow_instance" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_instance" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_instance_business_type_id" UNIQUE (business_type, business_id)
@@ -2448,9 +2446,9 @@ CREATE TABLE "ydsz_flow_node" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_node" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_node_definition_node_code" UNIQUE (definition_id, node_code)
@@ -2496,9 +2494,9 @@ CREATE TABLE "ydsz_flow_quick_comment" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_quick_comment" PRIMARY KEY (id)
 );
@@ -2570,9 +2568,9 @@ CREATE TABLE "ydsz_flow_run_task" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_run_task" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_run_task_instance_node_assignee" UNIQUE (instance_id, node_code, assignee_id, iter_var)
@@ -2653,9 +2651,9 @@ CREATE TABLE "ydsz_flow_skip" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_skip" PRIMARY KEY (id)
 );
@@ -2709,9 +2707,9 @@ CREATE TABLE "ydsz_flow_template" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_template" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_template_template_code_version" UNIQUE (template_code, version, tenant_id)
@@ -2766,9 +2764,9 @@ CREATE TABLE "ydsz_flow_timer" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_timer" PRIMARY KEY (id)
 );
@@ -2821,9 +2819,9 @@ CREATE TABLE "ydsz_flow_user" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_flow_user" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_flow_user_task_user" UNIQUE (task_id, user_id, sign_type)
@@ -2878,9 +2876,9 @@ CREATE TABLE "ydsz_gen_datasource" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_gen_datasource" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_gen_datasource_name" UNIQUE (name)
@@ -2923,9 +2921,9 @@ CREATE TABLE "ydsz_gen_template_group" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_gen_template_group" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_gen_template_group_name" UNIQUE (name)
@@ -2959,11 +2957,11 @@ CREATE TABLE "ydsz_idm_account_login_history" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_idm_account_login_history" PRIMARY KEY (id)
 );
@@ -2989,11 +2987,11 @@ CREATE TABLE "ydsz_idm_account_password_history" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_idm_account_password_history" PRIMARY KEY (id)
 );
@@ -3035,9 +3033,9 @@ CREATE TABLE "ydsz_idm_account_user" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_account_user" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_account_user_username" UNIQUE (username)
@@ -3089,9 +3087,9 @@ CREATE TABLE "ydsz_idm_account_user_dept" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_account_user_dept" PRIMARY KEY (id)
 );
@@ -3124,9 +3122,9 @@ CREATE TABLE "ydsz_idm_account_user_language" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_account_user_language" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_account_user_language_language_code" UNIQUE (language_code)
@@ -3158,9 +3156,9 @@ CREATE TABLE "ydsz_idm_account_user_post" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_account_user_post" PRIMARY KEY (id)
 );
@@ -3191,9 +3189,9 @@ CREATE TABLE "ydsz_idm_account_user_role" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_account_user_role" PRIMARY KEY (id)
 );
@@ -3238,11 +3236,11 @@ CREATE TABLE "ydsz_idm_auth_apikey" (
   "status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_auth_apikey" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_auth_apikey_hash" UNIQUE (api_key_hash)
@@ -3296,9 +3294,9 @@ CREATE TABLE "ydsz_idm_auth_credential" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_auth_credential" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_auth_credential_credential_id" UNIQUE (credential_id)
@@ -3342,11 +3340,11 @@ CREATE TABLE "ydsz_idm_auth_policy" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_auth_policy" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_auth_policy_tenant_id" UNIQUE (tenant_id)
@@ -3392,9 +3390,9 @@ CREATE TABLE "ydsz_idm_auth_social_account" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_auth_social_account" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_auth_social_account_platform_open_id" UNIQUE (platform, open_id)
@@ -3435,11 +3433,11 @@ CREATE TABLE "ydsz_idm_auth_social_client" (
   "remark" character varying(256) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 100,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_auth_social_client" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_auth_social_client_platform" UNIQUE (platform)
@@ -3481,11 +3479,11 @@ CREATE TABLE "ydsz_idm_identity_oauth2_application" (
   "icon_url" character varying(512) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_identity_oauth2_application" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_identity_oauth2_application_client_id" UNIQUE (client_id)
@@ -3526,11 +3524,11 @@ CREATE TABLE "ydsz_idm_identity_saml_config" (
   "remark" character varying(256) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 100,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_identity_saml_config" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_identity_saml_config_entity_id" UNIQUE (entity_id)
@@ -3572,11 +3570,11 @@ CREATE TABLE "ydsz_idm_identity_security_alert" (
   "handler_note" character varying(512) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying(64) DEFAULT NULL::character varying,
+  "tenant_id" character varying(36) DEFAULT NULL::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_identity_security_alert" PRIMARY KEY (id)
 );
@@ -3623,9 +3621,9 @@ CREATE TABLE "ydsz_idm_menu" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_menu" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_menu_menu_code" UNIQUE (menu_code)
@@ -3669,9 +3667,9 @@ CREATE TABLE "ydsz_idm_org_company" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_org_company" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_org_company_company_code" UNIQUE (company_code)
@@ -3706,9 +3704,9 @@ CREATE TABLE "ydsz_idm_org_company_dept" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_org_company_dept" PRIMARY KEY (id)
 );
@@ -3742,9 +3740,9 @@ CREATE TABLE "ydsz_idm_org_department" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_org_department" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_org_department_dept_code" UNIQUE (dept_code)
@@ -3781,9 +3779,9 @@ CREATE TABLE "ydsz_idm_post" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_post" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_post_post_code" UNIQUE (post_code)
@@ -3818,9 +3816,9 @@ CREATE TABLE "ydsz_idm_role" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_role" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_idm_role_role_code" UNIQUE (role_code, tenant_id)
@@ -3855,9 +3853,9 @@ CREATE TABLE "ydsz_idm_role_permission" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_idm_role_permission" PRIMARY KEY (id)
 );
@@ -3901,11 +3899,11 @@ CREATE TABLE "ydsz_job_alert_dispatch" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_alert_dispatch" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_alert_dispatch_ad_alert_code" UNIQUE (alert_code)
@@ -3954,9 +3952,9 @@ CREATE TABLE "ydsz_job_alert_rule" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_alert_rule" PRIMARY KEY (id)
 );
@@ -4006,9 +4004,9 @@ CREATE TABLE "ydsz_job_artifact" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_artifact" PRIMARY KEY (id)
 );
@@ -4062,9 +4060,9 @@ CREATE TABLE "ydsz_job_dag" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_dag" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_dag_dag_key" UNIQUE (dag_key, tenant_id)
@@ -4108,11 +4106,11 @@ CREATE TABLE "ydsz_job_dag_context" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_dag_context" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_dag_context_inst_node" UNIQUE (dag_instance_id, node_key)
@@ -4153,9 +4151,9 @@ CREATE TABLE "ydsz_job_dag_instance" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_dag_instance" PRIMARY KEY (id)
 );
@@ -4212,9 +4210,9 @@ CREATE TABLE "ydsz_job_dag_node_instance" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_dag_node_instance" PRIMARY KEY (id)
 );
@@ -4265,9 +4263,9 @@ CREATE TABLE "ydsz_job_dag_version" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_dag_version" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_dag_version_dv_dag_version" UNIQUE (dag_id, version)
@@ -4313,11 +4311,11 @@ CREATE TABLE "ydsz_job_daily_stats" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_daily_stats" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_daily_stats_jds_job_date" UNIQUE (job_id, stats_date)
@@ -4351,11 +4349,11 @@ CREATE TABLE "ydsz_job_event_store" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_event_store" PRIMARY KEY (id)
 );
@@ -4385,9 +4383,9 @@ CREATE TABLE "ydsz_job_glue" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_glue" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_glue_glue_job_version" UNIQUE (job_id, version)
@@ -4430,11 +4428,11 @@ CREATE TABLE "ydsz_job_history" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_history" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_history_jh_job_version" UNIQUE (job_id, version)
@@ -4488,11 +4486,11 @@ CREATE TABLE "ydsz_job_log" (
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_log" PRIMARY KEY (id)
 );
@@ -4542,11 +4540,11 @@ CREATE TABLE "ydsz_job_log_content" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_log_content" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_log_content_jlc_log_line" UNIQUE (log_id, line_no)
@@ -4605,9 +4603,9 @@ CREATE TABLE "ydsz_job_main" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_main" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_job_key" UNIQUE (job_key, tenant_id)
@@ -4683,9 +4681,9 @@ CREATE TABLE "ydsz_job_node" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_node" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_node_node_id" UNIQUE (node_id)
@@ -4737,11 +4735,11 @@ CREATE TABLE "ydsz_job_outbox" (
   "next_retry_time" timestamp(3) without time zone DEFAULT NULL::timestamp without time zone,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone DEFAULT now(),
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_outbox" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_outbox_jo_event_key" UNIQUE (event_key)
@@ -4780,9 +4778,9 @@ CREATE TABLE "ydsz_job_task" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_task" PRIMARY KEY (id)
 );
@@ -4824,9 +4822,9 @@ CREATE TABLE "ydsz_job_tenant_quota" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_tenant_quota" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_job_tenant_quota_tq_tenant" UNIQUE (tenant_id)
@@ -4864,9 +4862,9 @@ CREATE TABLE "ydsz_job_webhook" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_job_webhook" PRIMARY KEY (id)
 );
@@ -4915,11 +4913,11 @@ CREATE TABLE "ydsz_job_webhook_retry" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_job_webhook_retry" PRIMARY KEY (id)
 );
@@ -4963,9 +4961,9 @@ CREATE TABLE "ydsz_msg_aggregate" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_aggregate" PRIMARY KEY (id)
 );
@@ -5019,9 +5017,9 @@ CREATE TABLE "ydsz_msg_batch" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_batch" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_batch_batch_id" UNIQUE (batch_id)
@@ -5074,9 +5072,9 @@ CREATE TABLE "ydsz_msg_canary" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_canary" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_canary_canary_key" UNIQUE (canary_key)
@@ -5120,9 +5118,9 @@ CREATE TABLE "ydsz_msg_feedback" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_feedback" PRIMARY KEY (id)
 );
@@ -5188,9 +5186,9 @@ CREATE TABLE "ydsz_msg_log" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_log" PRIMARY KEY (id)
 );
@@ -5278,9 +5276,9 @@ CREATE TABLE "ydsz_msg_notification" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_notification" PRIMARY KEY (id)
 );
@@ -5335,9 +5333,9 @@ CREATE TABLE "ydsz_msg_offline" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_offline" PRIMARY KEY (id)
 );
@@ -5376,9 +5374,9 @@ CREATE TABLE "ydsz_msg_outbox" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) DEFAULT NULL::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_msg_outbox" PRIMARY KEY (id)
 );
@@ -5420,9 +5418,9 @@ CREATE TABLE "ydsz_msg_preference" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_preference" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_preference_preference" UNIQUE (user_id, channel, biz_type)
@@ -5468,9 +5466,9 @@ CREATE TABLE "ydsz_msg_receipt" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_receipt" PRIMARY KEY (id)
 );
@@ -5514,9 +5512,9 @@ CREATE TABLE "ydsz_msg_route_rule" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_route_rule" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_route_rule_rule_code" UNIQUE (rule_code, tenant_id)
@@ -5559,9 +5557,9 @@ CREATE TABLE "ydsz_msg_subscription" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_subscription" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_subscription_subscription" UNIQUE (user_id, topic_code, channel)
@@ -5611,9 +5609,9 @@ CREATE TABLE "ydsz_msg_template" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_template" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_template_template_code" UNIQUE (template_code, tenant_id)
@@ -5664,9 +5662,9 @@ CREATE TABLE "ydsz_msg_template_version" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_template_version" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_template_version_tpl_version" UNIQUE (template_code, version)
@@ -5704,9 +5702,9 @@ CREATE TABLE "ydsz_msg_tenant_config" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone DEFAULT now(),
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_msg_tenant_config" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_tenant_config_tenant_id" UNIQUE (tenant_id)
@@ -5740,11 +5738,11 @@ CREATE TABLE "ydsz_msg_trace" (
   "event_at" timestamp without time zone NOT NULL,
   "sort" integer DEFAULT 0,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone DEFAULT now(),
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_msg_trace" PRIMARY KEY (id)
 );
@@ -5783,9 +5781,9 @@ CREATE TABLE "ydsz_msg_user_channel" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_user_channel" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_user_channel_user_channel" UNIQUE (user_id, channel_type, channel_user_id)
@@ -5824,9 +5822,9 @@ CREATE TABLE "ydsz_msg_variable_source" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_msg_variable_source" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_msg_variable_source_variable" UNIQUE (template_code, variable_name)
@@ -5868,9 +5866,9 @@ CREATE TABLE "ydsz_rule_ab_policy" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_ab_policy" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_ab_policy_rule_code" UNIQUE (rule_code, tenant_id)
@@ -5913,9 +5911,9 @@ CREATE TABLE "ydsz_rule_ab_rollback" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_ab_rollback" PRIMARY KEY (id)
 );
@@ -5953,9 +5951,9 @@ CREATE TABLE "ydsz_rule_canary_bucket" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_canary_bucket" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_canary_bucket_rule_bucket_date" UNIQUE (rule_code, bucket_type, stat_date)
@@ -5992,9 +5990,9 @@ CREATE TABLE "ydsz_rule_chain_graph" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_chain_graph" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_chain_graph_rule_code" UNIQUE (rule_code, tenant_id)
@@ -6038,9 +6036,9 @@ CREATE TABLE "ydsz_rule_decision_table" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_decision_table" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_decision_table_table_code" UNIQUE (table_code, tenant_id)
@@ -6089,9 +6087,9 @@ CREATE TABLE "ydsz_rule_decision_tree" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_decision_tree" PRIMARY KEY (id)
 );
@@ -6153,9 +6151,9 @@ CREATE TABLE "ydsz_rule_def" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_def" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_def_rule_code" UNIQUE (rule_code, tenant_id)
@@ -6214,9 +6212,9 @@ CREATE TABLE "ydsz_rule_dependency" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_dependency" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_dependency_rule_dep" UNIQUE (rule_code, depends_on_rule_code)
@@ -6257,11 +6255,11 @@ CREATE TABLE "ydsz_rule_execution_trace" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_rule_execution_trace" PRIMARY KEY (id)
 );
@@ -6306,9 +6304,9 @@ CREATE TABLE "ydsz_rule_pack" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_pack" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_pack_pack_code" UNIQUE (pack_code, pack_version)
@@ -6353,9 +6351,9 @@ CREATE TABLE "ydsz_rule_pack_install" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_pack_install" PRIMARY KEY (id)
 );
@@ -6398,9 +6396,9 @@ CREATE TABLE "ydsz_rule_scorecard" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_scorecard" PRIMARY KEY (id)
 );
@@ -6452,9 +6450,9 @@ CREATE TABLE "ydsz_rule_script" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_script" PRIMARY KEY (id)
 );
@@ -6505,9 +6503,9 @@ CREATE TABLE "ydsz_rule_template" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_template" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_template_template_code" UNIQUE (template_code, tenant_id)
@@ -6554,9 +6552,9 @@ CREATE TABLE "ydsz_rule_variable_def" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_rule_variable_def" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_rule_variable_def_var_name" UNIQUE (var_name, tenant_id)
@@ -6593,11 +6591,11 @@ CREATE TABLE "ydsz_rule_version_history" (
   "sort" integer DEFAULT 0,
   "status" integer DEFAULT 1,
   "revision" integer DEFAULT 0,
-  "tenant_id" character varying DEFAULT '1'::character varying,
+  "tenant_id" character varying(36) DEFAULT '1'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_rule_version_history" PRIMARY KEY (id)
 );
@@ -6627,9 +6625,9 @@ CREATE TABLE "ydsz_sys_api_permission" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_api_permission" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_api_permission_tenant_api" UNIQUE (tenant_id, api_code)
@@ -6671,9 +6669,9 @@ CREATE TABLE "ydsz_sys_app_info" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_app_info" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_app_info_app_code" UNIQUE (app_code),
@@ -6715,9 +6713,9 @@ CREATE TABLE "ydsz_sys_config" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_config" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_config_config_group_key" UNIQUE (config_group, config_key)
@@ -6764,9 +6762,9 @@ CREATE TABLE "ydsz_sys_dict_item" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_dict_item" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_dict_item_type_item_code" UNIQUE (type_code, item_code)
@@ -6813,9 +6811,9 @@ CREATE TABLE "ydsz_sys_dict_type" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_dict_type" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_dict_type_type_code" UNIQUE (type_code)
@@ -6857,9 +6855,9 @@ CREATE TABLE "ydsz_sys_entity_version" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_entity_version" PRIMARY KEY (id)
 );
@@ -6901,9 +6899,9 @@ CREATE TABLE "ydsz_sys_tenant" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_tenant" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_tenant_tenant_code" UNIQUE (tenant_code)
@@ -6944,9 +6942,9 @@ CREATE TABLE "ydsz_sys_tenant_plan" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_tenant_plan" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_tenant_plan_plan_code" UNIQUE (plan_code)
@@ -6985,9 +6983,9 @@ CREATE TABLE "ydsz_sys_tenant_plan_menu" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_tenant_plan_menu" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_tenant_plan_menu_plan_menu" UNIQUE (plan_id, menu_id)
@@ -7019,9 +7017,9 @@ CREATE TABLE "ydsz_sys_variable" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_sys_variable" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_sys_variable_variable_key" UNIQUE (variable_key)
@@ -7062,9 +7060,9 @@ CREATE TABLE "ydsz_system_config_approval" (
   "revision" integer NOT NULL DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" smallint NOT NULL DEFAULT 0,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_system_config_approval" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_system_config_approval_resource" UNIQUE (tenant_id, resource_type, resource_key, status)
@@ -7221,9 +7219,9 @@ CREATE TABLE "ydsz_gen_table_meta" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_gen_table_meta" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_gen_table_meta_ds_table" UNIQUE (datasource_id, table_name)
@@ -7267,9 +7265,9 @@ CREATE TABLE "ydsz_gen_history" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_gen_history" PRIMARY KEY (id)
 );
@@ -7318,9 +7316,9 @@ CREATE TABLE "ydsz_gen_template" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying(64) DEFAULT NULL::character varying,
+  "created_by" character varying(36) DEFAULT NULL::character varying,
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying(64) DEFAULT NULL::character varying,
+  "updated_by" character varying(36) DEFAULT NULL::character varying,
   "updated_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "pk_ydsz_gen_template" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_gen_template_group_file" UNIQUE (group_id, file_name)
@@ -7374,9 +7372,9 @@ CREATE TABLE "ydsz_gen_column_meta" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_gen_column_meta" PRIMARY KEY (id),
   CONSTRAINT "uk_ydsz_gen_column_meta_table_column" UNIQUE (table_meta_id, column_name)
@@ -7422,9 +7420,9 @@ CREATE TABLE "ydsz_gen_history_file" (
   "revision" integer DEFAULT 0,
   "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
   "is_deleted" boolean DEFAULT false,
-  "created_by" character varying,
+  "created_by" character varying(36),
   "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_by" character varying,
+  "updated_by" character varying(36),
   "updated_at" timestamp without time zone DEFAULT now(),
   CONSTRAINT "pk_ydsz_gen_history_file" PRIMARY KEY (id)
 );
@@ -7438,9 +7436,7 @@ COMMENT ON COLUMN "ydsz_gen_history_file"."action" IS '文件操作类型（CREA
 COMMENT ON COLUMN "ydsz_gen_history_file"."created_at" IS '创建时间';
 CREATE INDEX "idx_ydsz_gen_history_file_history" ON "ydsz_gen_history_file" USING btree ("history_id" ASC NULLS LAST);
 
-ALTER SEQUENCE "ydsz_agt_insight_report_id_seq" OWNED BY "ydsz_agt_insight_report"."id";
 
-ALTER SEQUENCE "ydsz_comm_search_dead_letter_id_seq" OWNED BY "ydsz_comm_search_dead_letter"."id";
 
 ALTER SEQUENCE "ydsz_gen_column_meta_id_seq" OWNED BY "ydsz_gen_column_meta"."id";
 
