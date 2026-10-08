@@ -69,8 +69,8 @@ public class CodeGenController {
   @Audit(module = "代码生成", action = AuditAction.QUERY, recordRequest = false)
   @GetMapping("/preview")
   public YdszResponse<List<CodePreviewVO>> preview(
-      @RequestParam Long datasourceId,
-      @RequestParam Long templateGroupId,
+      @RequestParam String datasourceId,
+      @RequestParam String templateGroupId,
       @RequestParam String tableName) {
     log.info("预览代码 ds={} group={} table={}", datasourceId, templateGroupId, tableName);
     return YdszResponse.success(
@@ -92,8 +92,8 @@ public class CodeGenController {
   @Audit(module = "代码生成", action = AuditAction.DOWNLOAD, content = "'下载代码ZIP:' + #tableName", recordRequest = false)
   @GetMapping("/preview/zip")
   public ResponseEntity<byte[]> downloadPreviewZip(
-      @RequestParam Long datasourceId,
-      @RequestParam Long templateGroupId,
+      @RequestParam String datasourceId,
+      @RequestParam String templateGroupId,
       @RequestParam String tableName) throws IOException {
     log.info("下载代码 ZIP ds={} group={} table={}", datasourceId, templateGroupId, tableName);
     List<CodePreviewVO> previews = codeGenService.preview(datasourceId, templateGroupId, tableName);
@@ -175,8 +175,8 @@ public class CodeGenController {
   @Audit(module = "代码生成", action = AuditAction.CREATE, content = "'全量生成代码:' + #datasourceId", recordRequest = false)
   @PostMapping("/generate/all")
   public YdszResponse<GenResultVO> generateAll(
-      @RequestParam Long datasourceId,
-      @RequestParam Long templateGroupId,
+      @RequestParam String datasourceId,
+      @RequestParam String templateGroupId,
       @RequestParam String outputDir,
       @RequestParam(defaultValue = "SKIP") ConflictStrategyEnum conflictStrategy,
       @RequestParam(defaultValue = "system") String triggeredBy) {

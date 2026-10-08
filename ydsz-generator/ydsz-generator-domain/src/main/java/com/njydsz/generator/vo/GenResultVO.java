@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class GenResultVO {
 
   /** 任务 ID。 */
-  private Long historyId;
+  private String historyId;
   /** 生成文件数量。 */
   private Integer fileCount;
   /** 成功文件数量。 */

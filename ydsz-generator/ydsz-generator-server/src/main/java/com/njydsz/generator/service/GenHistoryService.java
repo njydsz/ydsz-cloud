@@ -46,7 +46,7 @@ public class GenHistoryService {
    * @param id 任务 ID
    * @return Optional 任务
    */
-  public GenHistory getById(Long id) {
+  public GenHistory getById(String id) {
     return historyRepository.findById(id).orElse(null);
   }
 
@@ -56,7 +56,7 @@ public class GenHistoryService {
    * @param historyId 任务 ID
    * @return 文件明细列表
    */
-  public List<GenHistoryFile> listFiles(Long historyId) {
+  public List<GenHistoryFile> listFiles(String historyId) {
     return historyFileRepository.findByHistoryId(historyId);
   }
 
@@ -73,7 +73,7 @@ public class GenHistoryService {
    * @param historyId 任务 ID
    */
   @Transactional(rollbackFor = Exception.class)
-  public void rollback(Long historyId) {
+  public void rollback(String historyId) {
     GenHistory history = historyRepository.findById(historyId)
         .orElseThrow(() -> new IllegalArgumentException("任务不存在: " + historyId));
     List<GenHistoryFile> files = historyFileRepository.findByHistoryId(historyId);
@@ -118,7 +118,7 @@ public class GenHistoryService {
    * @param id 任务 ID
    */
   @Transactional(rollbackFor = Exception.class)
-  public void deleteHistory(Long id) {
+  public void deleteHistory(String id) {
     historyFileRepository.deleteByHistoryId(id);
     historyRepository.deleteById(id);
     log.info("删除历史记录 id={}", id);

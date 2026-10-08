@@ -50,7 +50,7 @@ public class TemplateGroupService {
    * @param id 分组 ID
    * @return Optional 分组
    */
-  public GenTemplateGroup getById(Long id) {
+  public GenTemplateGroup getById(String id) {
     return groupRepository.findById(id).orElse(null);
   }
 
@@ -87,7 +87,7 @@ public class TemplateGroupService {
    * @param id 分组 ID
    */
   @Transactional(rollbackFor = Exception.class)
-  public void activate(Long id) {
+  public void activate(String id) {
     List<GenTemplateGroup> all = groupRepository.findAllByOrderBysortAsc();
     for (GenTemplateGroup g : all) {
       g.setIsActive(g.getId().equals(id));
@@ -102,7 +102,7 @@ public class TemplateGroupService {
    * @param id 分组 ID
    */
   @Transactional(rollbackFor = Exception.class)
-  public void deleteById(Long id) {
+  public void deleteById(String id) {
     GenTemplateGroup group = groupRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("分组不存在: " + id));
     if (Boolean.TRUE.equals(group.getIsSystem())) {

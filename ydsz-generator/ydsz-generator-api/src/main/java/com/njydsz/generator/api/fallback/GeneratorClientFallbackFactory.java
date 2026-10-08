@@ -62,32 +62,32 @@ public class GeneratorClientFallbackFactory implements FallbackFactory<Generator
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<Void> activateGroup(Long groupId) {
+      public YdszResponse<Void> activateGroup(String groupId) {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<List<GenTableMeta>> listTables(Long datasourceId) {
+      public YdszResponse<List<GenTableMeta>> listTables(String datasourceId) {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<List<GenTableMeta>> refreshTables(Long datasourceId) {
+      public YdszResponse<List<GenTableMeta>> refreshTables(String datasourceId) {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<List<GenColumnMeta>> getColumns(Long tableMetaId) {
+      public YdszResponse<List<GenColumnMeta>> getColumns(String tableMetaId) {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 
       /** {@inheritDoc} */
       @Override
       public YdszResponse<List<CodePreviewVO>> preview(
-          Long datasourceId, Long templateGroupId, String tableName) {
+          String datasourceId, String templateGroupId, String tableName) {
         return YdszResponse.error("代码生成服务暂不可用");
       }
 
@@ -105,7 +105,7 @@ public class GeneratorClientFallbackFactory implements FallbackFactory<Generator
 
       /** {@inheritDoc} */
       @Override
-      public YdszResponse<Void> rollback(Long historyId) {
+      public YdszResponse<Void> rollback(String historyId) {
         return YdszResponse.error("代码生成服务暂不可用");
       }
     };

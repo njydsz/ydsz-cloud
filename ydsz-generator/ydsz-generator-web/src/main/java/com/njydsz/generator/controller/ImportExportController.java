@@ -58,7 +58,7 @@ public class ImportExportController {
   @Operation(summary = "导出分组模板为ZIP")
   @GetMapping("/export")
   @Audit(module = "模板管理", action = AuditAction.EXPORT, content = "'导出模板分组:' + #groupId", recordRequest = false)
-  public ResponseEntity<byte[]> exportTemplates(@RequestParam Long groupId) {
+  public ResponseEntity<byte[]> exportTemplates(@RequestParam String groupId) {
     log.info("导出模板 groupId={}", groupId);
     TemplateZipVO zip = importExportService.exportZip(groupId);
 
@@ -85,7 +85,7 @@ public class ImportExportController {
   @PostMapping("/import")
   @Audit(module = "模板管理", action = AuditAction.IMPORT, content = "'导入模板:' + #groupId", recordRequest = false)
   public YdszResponse<Integer> importTemplates(
-      @RequestParam Long groupId,
+      @RequestParam String groupId,
       @RequestPart("file") MultipartFile file,
       @RequestParam(defaultValue = "false") boolean overwrite) {
     try {

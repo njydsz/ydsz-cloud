@@ -121,7 +121,7 @@ public class CodeGenService {
    * @param tableName      表名
    * @return 预览结果列表
    */
-  public List<CodePreviewVO> preview(Long datasourceId, Long templateGroupId, String tableName) {
+  public List<CodePreviewVO> preview(String datasourceId, String templateGroupId, String tableName) {
     GenDatasource ds = datasourceService.getById(datasourceId);
     GenTableMeta tableMeta = tableMetadataService.getOrRefresh(ds, tableName);
     List<GenColumnMeta> columns = tableMetadataService.listColumns(tableMeta.getId());
@@ -214,7 +214,7 @@ public class CodeGenService {
    * @return 生成结果汇总
    */
   public GenResultVO generateAll(
-      Long datasourceId, Long templateGroupId, String outputDir,
+      String datasourceId, String templateGroupId, String outputDir,
       ConflictStrategyEnum conflictStrategy, String triggeredBy) {
     GenDatasource ds = datasourceService.getById(datasourceId);
     List<GenTableMeta> tables = tableMetadataService.listCachedTables(datasourceId);
@@ -252,7 +252,7 @@ public class CodeGenService {
     AtomicInteger totalSuccess = new AtomicInteger();
     AtomicInteger totalSkip = new AtomicInteger();
     AtomicInteger totalFail = new AtomicInteger();
-    Long[] firstHistoryId = new Long[1];
+    String[] firstHistoryId = new String[1];
 
     List<Future<?>> futures = new ArrayList<>(tableNames.size());
     try {
@@ -320,7 +320,7 @@ public class CodeGenService {
    * @return 已持久化的历史记录
    */
   private GenHistory createHistory(
-      Long datasourceId, Long templateGroupId, String tableName, String triggeredBy) {
+      String datasourceId, String templateGroupId, String tableName, String triggeredBy) {
     GenHistory history = GenHistory.builder()
         .moduleName(tableName)
         .datasourceId(datasourceId)

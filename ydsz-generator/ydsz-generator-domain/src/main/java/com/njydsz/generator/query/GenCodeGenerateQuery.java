@@ -20,9 +20,9 @@ import lombok.NoArgsConstructor;
 public class GenCodeGenerateQuery {
 
   /** 数据源 ID。 */
-  private Long datasourceId;
+  private String datasourceId;
   /** 模板分组 ID。 */
-  private Long templateGroupId;
+  private String templateGroupId;
   /** 表名。 */
   private String tableName;
   /** 输出目录。 */

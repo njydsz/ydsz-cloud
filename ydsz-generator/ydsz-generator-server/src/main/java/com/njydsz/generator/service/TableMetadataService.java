@@ -60,7 +60,7 @@ public class TableMetadataService {
    * @param datasourceId 数据源 ID
    * @return 表元数据列表
    */
-  public List<GenTableMeta> listCachedTables(Long datasourceId) {
+  public List<GenTableMeta> listCachedTables(String datasourceId) {
     return tableMetaRepository.findByDatasourceIdOrderByTableNameAsc(datasourceId);
   }
 
@@ -137,7 +137,7 @@ public class TableMetadataService {
    * @param tableMetaId 表元数据 ID
    * @return 列元数据列表
    */
-  public List<GenColumnMeta> listColumns(Long tableMetaId) {
+  public List<GenColumnMeta> listColumns(String tableMetaId) {
     return columnMetaRepository.findByTableMetaIdOrderByIdAsc(tableMetaId);
   }
 

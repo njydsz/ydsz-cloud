@@ -94,7 +94,7 @@ public interface GeneratorFeignClient {
    * @return 操作结果，成功时 data 为 null
    */
   @PostMapping("/groups/{groupId}/activate")
-  YdszResponse<Void> activateGroup(@PathVariable("groupId") Long groupId);
+  YdszResponse<Void> activateGroup(@PathVariable("groupId") String groupId);
 
   // ════════════════════════════════════════════════════════════
   // 表元数据管理
@@ -109,7 +109,7 @@ public interface GeneratorFeignClient {
    * @return 表元数据列表，包含 tableName、comment、aliasName、moduleName 等
    */
   @GetMapping("/tables")
-  YdszResponse<List<GenTableMeta>> listTables(@RequestParam("datasourceId") Long datasourceId);
+  YdszResponse<List<GenTableMeta>> listTables(@RequestParam("datasourceId") String datasourceId);
 
   /**
    * 重新连接数据库刷新表元数据缓存（Feign 远程调用）。
@@ -121,7 +121,7 @@ public interface GeneratorFeignClient {
    * @return 刷新后的表元数据列表
    */
   @PostMapping("/tables/refresh")
-  YdszResponse<List<GenTableMeta>> refreshTables(@RequestParam("datasourceId") Long datasourceId);
+  YdszResponse<List<GenTableMeta>> refreshTables(@RequestParam("datasourceId") String datasourceId);
 
   /**
    * 查询指定表的列元数据（Feign 远程调用）。
@@ -132,7 +132,7 @@ public interface GeneratorFeignClient {
    * @return 列元数据列表，包含 columnName、columnType、javaType、columnComment、isPrimaryKey 等
    */
   @GetMapping("/tables/columns")
-  YdszResponse<List<GenColumnMeta>> getColumns(@RequestParam("tableMetaId") Long tableMetaId);
+  YdszResponse<List<GenColumnMeta>> getColumns(@RequestParam("tableMetaId") String tableMetaId);
 
   // ════════════════════════════════════════════════════════════
   // 代码生成
@@ -152,8 +152,8 @@ public interface GeneratorFeignClient {
    */
   @GetMapping("/code/preview")
   YdszResponse<List<CodePreviewVO>> preview(
-      @RequestParam("datasourceId") Long datasourceId,
-      @RequestParam("templateGroupId") Long templateGroupId,
+      @RequestParam("datasourceId") String datasourceId,
+      @RequestParam("templateGroupId") String templateGroupId,
       @RequestParam("tableName") String tableName);
 
   /**
@@ -192,5 +192,5 @@ public interface GeneratorFeignClient {
    * @return 操作结果，成功时 data 为 null
    */
   @PostMapping("/history/{historyId}/rollback")
-  YdszResponse<Void> rollback(@PathVariable("historyId") Long historyId);
+  YdszResponse<Void> rollback(@PathVariable("historyId") String historyId);
 }

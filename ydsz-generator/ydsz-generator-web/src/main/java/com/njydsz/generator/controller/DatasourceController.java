@@ -132,7 +132,7 @@ public class DatasourceController {
   @Operation(summary = "删除数据源")
   @Audit(module = "数据源管理", action = AuditAction.DELETE, content = "'删除数据源:' + #id")
   @DeleteMapping("/{id}")
-  public YdszResponse<Void> delete(@PathVariable Long id) {
+  public YdszResponse<Void> delete(@PathVariable String id) {
     datasourceService.deleteById(id);
     return YdszResponse.success(null);
   }

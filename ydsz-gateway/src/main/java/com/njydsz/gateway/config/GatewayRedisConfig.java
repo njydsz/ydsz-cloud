@@ -90,15 +90,13 @@ public class GatewayRedisConfig {
   /**
    * 创建响应式 String RedisTemplate。
    *
-   * <p>LettuceConnectionFactory 本身实现了 ReactiveRedisConnectionFactory 接口（Spring Data Redis 4.x），
-   * 此处直接转型注入。
+   * <p>LettuceConnectionFactory 本身实现了 ReactiveRedisConnectionFactory（Spring Data Redis 4.x），
+   * 直接转型注入给 ReactiveStringRedisTemplate 构造器。
    */
   @Bean
   public ReactiveStringRedisTemplate reactiveStringRedisTemplate(
       LettuceConnectionFactory connectionFactory) {
-    return new ReactiveStringRedisTemplate(
-        (org.springframework.data.redis.connection.ReactiveRedisConnectionFactory)
-            connectionFactory);
+    return new ReactiveStringRedisTemplate(connectionFactory);
   }
 
   /**

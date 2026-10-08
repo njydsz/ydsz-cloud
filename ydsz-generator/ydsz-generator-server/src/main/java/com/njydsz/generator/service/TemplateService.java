@@ -45,7 +45,7 @@ public class TemplateService {
    * @param groupId 分组 ID
    * @return 模板列表
    */
-  public List<GenTemplate> listByGroup(Long groupId) {
+  public List<GenTemplate> listByGroup(String groupId) {
     return templateRepository.findByGroupIdOrderByFileNameAsc(groupId);
   }
 
@@ -55,7 +55,7 @@ public class TemplateService {
    * @param groupId 分组 ID
    * @return 文件名列表
    */
-  public List<String> listFileNames(Long groupId) {
+  public List<String> listFileNames(String groupId) {
     return templateRepository.findByGroupIdOrderByFileNameAsc(groupId).stream()
         .map(GenTemplate::getFileName)
         .collect(Collectors.toList());
@@ -67,7 +67,7 @@ public class TemplateService {
    * @param id 模板 ID
    * @return 模板实体
    */
-  public GenTemplate getById(Long id) {
+  public GenTemplate getById(String id) {
     return templateRepository.findById(id).orElse(null);
   }
 
@@ -78,7 +78,7 @@ public class TemplateService {
    * @param fileName 文件名
    * @return 模板实体
    */
-  public GenTemplate getByFileName(Long groupId, String fileName) {
+  public GenTemplate getByFileName(String groupId, String fileName) {
     return templateRepository.findByGroupIdAndFileName(groupId, fileName).orElse(null);
   }
 
@@ -126,7 +126,7 @@ public class TemplateService {
    * @param id 模板 ID
    */
   @Transactional(rollbackFor = Exception.class)
-  public void deleteById(Long id) {
+  public void deleteById(String id) {
     templateRepository.deleteById(id);
     log.info("删除模板 id={}", id);
   }
@@ -137,7 +137,7 @@ public class TemplateService {
    * @param groupId 分组 ID
    */
   @Transactional(rollbackFor = Exception.class)
-  public void deleteByGroup(Long groupId) {
+  public void deleteByGroup(String groupId) {
     templateRepository.deleteByGroupId(groupId);
     log.info("删除模板全部分组 groupId={}", groupId);
   }
@@ -149,7 +149,7 @@ public class TemplateService {
    * @param keyword 搜索关键词
    * @return 匹配模板列表
    */
-  public List<GenTemplate> search(Long groupId, String keyword) {
+  public List<GenTemplate> search(String groupId, String keyword) {
     if (keyword == null || keyword.isBlank()) {
       return listByGroup(groupId);
     }
@@ -165,7 +165,7 @@ public class TemplateService {
    * @param groupId 分组 ID
    * @return 数量
    */
-  public long countByGroup(Long groupId) {
+  public long countByGroup(String groupId) {
     return templateRepository.countByGroupId(groupId);
   }
 

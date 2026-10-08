@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 public class GenDatasourceRespVO {
 
   /** 主键 ID。 */
-  private Long id;
+  private String id;
   /** 数据源名称。 */
   private String name;
   /** JDBC URL。 */

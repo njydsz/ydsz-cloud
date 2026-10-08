@@ -56,7 +56,7 @@ public class DatasourceService {
    * @param id 数据源 ID
    * @return Optional 数据源
    */
-  public GenDatasource getById(Long id) {
+  public GenDatasource getById(String id) {
     return datasourceRepository.findById(id).orElse(null);
   }
 
@@ -141,7 +141,7 @@ public class DatasourceService {
    * @param id 数据源 ID
    */
   @Transactional(rollbackFor = Exception.class)
-  public void deleteById(Long id) {
+  public void deleteById(String id) {
     datasourceRepository.deleteById(id);
     log.info("删除数据源 id={}", id);
   }

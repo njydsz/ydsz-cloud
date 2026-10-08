@@ -61,7 +61,7 @@ public class EntityReverseService {
    * @param outputDir 输出目录
    * @return 反向生成分析结果
    */
-  public String reverseGenerate(String sourceFilePath, Long templateGroupId, String outputDir) {
+  public String reverseGenerate(String sourceFilePath, String templateGroupId, String outputDir) {
     File sourceFile = new File(sourceFilePath);
     if (!sourceFile.exists() || !sourceFile.isFile()) {
       throw SysException.of("源文件不存在: " + sourceFilePath);
@@ -90,7 +90,7 @@ public class EntityReverseService {
    * @param outputDir 输出目录
    * @return 每个文件的分析报告
    */
-  public List<String> reverseBatch(String sourceDirPath, Long templateGroupId, String outputDir) {
+  public List<String> reverseBatch(String sourceDirPath, String templateGroupId, String outputDir) {
     File dir = new File(sourceDirPath);
     if (!dir.exists() || !dir.isDirectory()) {
       throw new IllegalArgumentException(I18n.message("generator.reverse.invalid_dir", new Object[]{sourceDirPath}));

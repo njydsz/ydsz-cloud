@@ -57,7 +57,7 @@ public class TableMetaController {
    */
   @Operation(summary = "查询数据源下全部表结构")
   @GetMapping
-  public YdszResponse<List<GenTableMeta>> listTables(@RequestParam Long datasourceId) {
+  public YdszResponse<List<GenTableMeta>> listTables(@RequestParam String datasourceId) {
     return YdszResponse.success(tableMetadataService.listCachedTables(datasourceId));
   }
 
@@ -74,7 +74,7 @@ public class TableMetaController {
   @Operation(summary = "重新连接数据库刷新表元数据缓存")
   @PostMapping("/refresh")
   @Audit(module = "表元数据", action = AuditAction.SYNC, content = "'刷新表元数据:' + #datasourceId")
-  public YdszResponse<List<GenTableMeta>> refreshTables(@RequestParam Long datasourceId) {
+  public YdszResponse<List<GenTableMeta>> refreshTables(@RequestParam String datasourceId) {
     GenDatasource ds = datasourceService.getById(datasourceId);
     if (ds == null) {
       throw BusinessException.of(GeneratorExceptionCode.DATASOURCE_NOT_FOUND).params(datasourceId);
@@ -95,7 +95,7 @@ public class TableMetaController {
    */
   @Operation(summary = "查询指定表的列元数据")
   @GetMapping("/columns")
-  public YdszResponse<List<GenColumnMeta>> getColumns(@RequestParam Long tableMetaId) {
+  public YdszResponse<List<GenColumnMeta>> getColumns(@RequestParam String tableMetaId) {
     return YdszResponse.success(tableMetadataService.listColumns(tableMetaId));
   }
 
@@ -114,7 +114,7 @@ public class TableMetaController {
   @PostMapping("/columns/refresh")
   @Audit(module = "表元数据", action = AuditAction.SYNC, content = "'刷新列元数据:' + #tableName")
   public YdszResponse<List<GenColumnMeta>> refreshColumns(
-      @RequestParam Long datasourceId, @RequestParam String tableName) {
+      @RequestParam String datasourceId, @RequestParam String tableName) {
     GenDatasource ds = datasourceService.getById(datasourceId);
     GenTableMeta tableMeta = tableMetadataService.getOrRefresh(ds, tableName);
     return YdszResponse.success(tableMetadataService.refreshColumns(ds, tableMeta));

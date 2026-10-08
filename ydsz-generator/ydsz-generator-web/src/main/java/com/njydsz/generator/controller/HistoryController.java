@@ -68,7 +68,7 @@ public class HistoryController {
    */
   @Operation(summary = "查询生成历史详情")
   @GetMapping("/{id}")
-  public YdszResponse<GenHistory> getById(@PathVariable Long id) {
+  public YdszResponse<GenHistory> getById(@PathVariable String id) {
     return YdszResponse.success(historyService.getById(id));
   }
 
@@ -84,7 +84,7 @@ public class HistoryController {
    */
   @Operation(summary = "查询生成任务的文件明细")
   @GetMapping("/{id}/files")
-  public YdszResponse<List<GenHistoryFile>> listFiles(@PathVariable Long id) {
+  public YdszResponse<List<GenHistoryFile>> listFiles(@PathVariable String id) {
     return YdszResponse.success(historyService.listFiles(id));
   }
 
@@ -101,7 +101,7 @@ public class HistoryController {
   @Operation(summary = "回滚指定的生成任务")
   @PostMapping("/{id}/rollback")
   @Audit(module = "生成历史", action = AuditAction.OTHER, content = "'回滚生成历史:' + #id")
-  public YdszResponse<Void> rollback(@PathVariable Long id) {
+  public YdszResponse<Void> rollback(@PathVariable String id) {
     historyService.rollback(id);
     return YdszResponse.success(null);
   }
@@ -118,7 +118,7 @@ public class HistoryController {
   @Operation(summary = "删除生成历史")
   @DeleteMapping("/{id}")
   @Audit(module = "生成历史", action = AuditAction.DELETE, content = "'删除生成历史:' + #id")
-  public YdszResponse<Void> delete(@PathVariable Long id) {
+  public YdszResponse<Void> delete(@PathVariable String id) {
     historyService.deleteHistory(id);
     return YdszResponse.success(null);
   }

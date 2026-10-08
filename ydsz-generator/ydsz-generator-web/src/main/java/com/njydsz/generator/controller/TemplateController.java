@@ -86,7 +86,7 @@ public class TemplateController {
   @Operation(summary = "激活指定分组")
   @PostMapping("/groups/{id}/activate")
   @Audit(module = "模板管理", action = AuditAction.ENABLE, content = "'激活模板分组:' + #id")
-  public YdszResponse<Void> activateGroup(@PathVariable Long id) {
+  public YdszResponse<Void> activateGroup(@PathVariable String id) {
     groupService.activate(id);
     return YdszResponse.success(null);
   }
@@ -119,7 +119,7 @@ public class TemplateController {
   @Operation(summary = "删除模板分组")
   @DeleteMapping("/groups/{id}")
   @Audit(module = "模板管理", action = AuditAction.DELETE, content = "'删除模板分组:' + #id")
-  public YdszResponse<Void> deleteGroup(@PathVariable Long id) {
+  public YdszResponse<Void> deleteGroup(@PathVariable String id) {
     groupService.deleteById(id);
     return YdszResponse.success(null);
   }
@@ -137,7 +137,7 @@ public class TemplateController {
    */
   @Operation(summary = "查询分组下的全部模板")
   @GetMapping("/templates")
-  public YdszResponse<List<GenTemplate>> listTemplates(@RequestParam Long groupId) {
+  public YdszResponse<List<GenTemplate>> listTemplates(@RequestParam String groupId) {
     return YdszResponse.success(templateService.listByGroup(groupId));
   }
 
@@ -149,7 +149,7 @@ public class TemplateController {
    */
   @Operation(summary = "查询单个模板详情")
   @GetMapping("/templates/{id}")
-  public YdszResponse<GenTemplate> getTemplate(@PathVariable Long id) {
+  public YdszResponse<GenTemplate> getTemplate(@PathVariable String id) {
     return YdszResponse.success(templateService.getById(id));
   }
 
@@ -180,7 +180,7 @@ public class TemplateController {
   @Operation(summary = "搜索模板")
   @GetMapping("/templates/search")
   public YdszResponse<List<GenTemplate>> search(
-      @RequestParam Long groupId, @RequestParam String keyword) {
+      @RequestParam String groupId, @RequestParam String keyword) {
     return YdszResponse.success(templateService.search(groupId, keyword));
   }
 

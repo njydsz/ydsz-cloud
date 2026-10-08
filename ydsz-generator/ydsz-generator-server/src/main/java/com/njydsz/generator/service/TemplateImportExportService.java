@@ -61,7 +61,7 @@ public class TemplateImportExportService {
    * @param groupId 分组 ID
    * @return zip 字节数据
    */
-  public TemplateZipVO exportZip(Long groupId) {
+  public TemplateZipVO exportZip(String groupId) {
     GenTemplateGroup group = groupRepository.findById(groupId)
         .orElseThrow(() -> SysException.of("分组不存在: " + groupId));
     List<GenTemplate> templates = templateRepository.findByGroupIdOrderByFileNameAsc(groupId);
@@ -111,7 +111,7 @@ public class TemplateImportExportService {
    * @return 导入模板数量
    */
   @Transactional(rollbackFor = Exception.class)
-  public int importZip(Long targetGroupId, byte[] zipData, boolean overwrite) {
+  public int importZip(String targetGroupId, byte[] zipData, boolean overwrite) {
     groupRepository.findById(targetGroupId)
         .orElseThrow(() -> SysException.of("目标分组不存在: " + targetGroupId));
 

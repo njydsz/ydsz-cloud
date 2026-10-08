@@ -56,7 +56,7 @@ public class ReverseController {
   @Audit(module = "反向生成", action = AuditAction.OTHER, content = "'反向分析Java源文件'", recordRequest = false)
   public YdszResponse<String> analyze(
       @RequestParam String sourceFilePath,
-      @RequestParam Long templateGroupId,
+      @RequestParam String templateGroupId,
       @RequestParam String outputDir) {
     String result = reverseService.reverseGenerate(sourceFilePath, templateGroupId, outputDir);
     return YdszResponse.success(result);
@@ -78,7 +78,7 @@ public class ReverseController {
   @Audit(module = "反向生成", action = AuditAction.OTHER, content = "'批量反向分析目录'", recordRequest = false)
   public YdszResponse<List<String>> analyzeBatch(
       @RequestParam String sourceDirPath,
-      @RequestParam Long templateGroupId,
+      @RequestParam String templateGroupId,
       @RequestParam String outputDir) {
     List<String> results = reverseService.reverseBatch(sourceDirPath, templateGroupId, outputDir);
     return YdszResponse.success(results);
