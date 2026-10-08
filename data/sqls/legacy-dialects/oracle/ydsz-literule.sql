@@ -57,11 +57,11 @@ CREATE TABLE ydsz_rule_def (
     CONSTRAINT uk_ydsz_rule_def_rule_code UNIQUE (rule_code, tenant_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -120,11 +120,11 @@ CREATE TABLE ydsz_rule_variable_def (
     CONSTRAINT uk_ydsz_rule_variable_def_var_name UNIQUE (var_name, tenant_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -169,11 +169,11 @@ CREATE TABLE ydsz_rule_template (
     CONSTRAINT uk_ydsz_rule_template_template_code UNIQUE (template_code, tenant_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -222,11 +222,11 @@ CREATE TABLE ydsz_rule_script (
     CONSTRAINT pk_ydsz_rule_script PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -275,11 +275,11 @@ CREATE TABLE ydsz_rule_decision_table (
     CONSTRAINT uk_ydsz_rule_decision_table_table_code UNIQUE (table_code, tenant_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -325,11 +325,11 @@ CREATE TABLE ydsz_rule_decision_tree (
     CONSTRAINT pk_ydsz_rule_decision_tree PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -376,11 +376,11 @@ CREATE TABLE ydsz_rule_scorecard (
     CONSTRAINT pk_ydsz_rule_scorecard PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -425,11 +425,11 @@ CREATE TABLE ydsz_rule_chain_graph (
     CONSTRAINT uk_ydsz_rule_chain_graph_rule_code UNIQUE (rule_code, tenant_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -464,11 +464,11 @@ CREATE TABLE ydsz_rule_dependency (
     CONSTRAINT uk_ydsz_rule_dependency_rule_dep UNIQUE (rule_code, depends_on_rule_code),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -512,11 +512,11 @@ CREATE TABLE ydsz_rule_pack (
     CONSTRAINT uk_ydsz_rule_pack_pack_code UNIQUE (pack_code, pack_version),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -558,11 +558,11 @@ CREATE TABLE ydsz_rule_pack_install (
     CONSTRAINT pk_ydsz_rule_pack_install PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -601,11 +601,11 @@ CREATE TABLE ydsz_rule_ab_policy (
     CONSTRAINT uk_ydsz_rule_ab_policy_rule_code UNIQUE (rule_code, tenant_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -643,11 +643,11 @@ CREATE TABLE ydsz_rule_canary_bucket (
     CONSTRAINT uk_ydsz_rule_canary_bucket_rule_bucket_date UNIQUE (rule_code, bucket_type, stat_date),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -682,11 +682,11 @@ CREATE TABLE ydsz_rule_ab_rollback (
     CONSTRAINT pk_ydsz_rule_ab_rollback PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -723,11 +723,11 @@ CREATE TABLE ydsz_rule_version_history (
     sort NUMBER DEFAULT 0,
     status NUMBER DEFAULT 1,
     revision NUMBER DEFAULT 0,
-    tenant_id VARCHAR2(64) DEFAULT '1',
+    tenant_id VARCHAR2(36 CHAR) DEFAULT '1',
     is_deleted NUMBER(1) DEFAULT 0,
-    created_by VARCHAR2(64),
+    created_by VARCHAR2(36 CHAR),
     created_at DATE DEFAULT SYSDATE,
-    updated_by VARCHAR2(64),
+    updated_by VARCHAR2(36 CHAR),
     updated_at DATE DEFAULT SYSDATE
 );
 
@@ -758,11 +758,11 @@ CREATE TABLE ydsz_rule_execution_trace (
     sort NUMBER DEFAULT 0,
     status NUMBER DEFAULT 1,
     revision NUMBER DEFAULT 0,
-    tenant_id VARCHAR2(64) DEFAULT '1',
+    tenant_id VARCHAR2(36 CHAR) DEFAULT '1',
     is_deleted NUMBER(1) DEFAULT 0,
-    created_by VARCHAR2(64),
+    created_by VARCHAR2(36 CHAR),
     created_at DATE DEFAULT SYSDATE,
-    updated_by VARCHAR2(64),
+    updated_by VARCHAR2(36 CHAR),
     updated_at DATE DEFAULT SYSDATE
 );
 

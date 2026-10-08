@@ -36,11 +36,11 @@ CREATE TABLE ydsz_agt_prompt_template (
     CONSTRAINT uk_ydsz_agt_prompt_template_template_code UNIQUE (template_code, tenant_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -75,11 +75,11 @@ CREATE TABLE ydsz_agt_prompt_version (
     CONSTRAINT uk_ydsz_agt_prompt_version_template_version UNIQUE (template_code, version, tenant_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -116,11 +116,11 @@ CREATE TABLE ydsz_agt_definition (
     CONSTRAINT uk_ydsz_agt_definition_agent_code UNIQUE (agent_code, tenant_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -156,11 +156,11 @@ CREATE TABLE ydsz_agt_trace (
     CONSTRAINT pk_ydsz_agt_trace PRIMARY KEY (trace_id),
     sort NUMBER DEFAULT 0,
     revision NUMBER DEFAULT 0,
-    tenant_id VARCHAR2(64) DEFAULT '1',
+    tenant_id VARCHAR2(36 CHAR) DEFAULT '1',
     is_deleted NUMBER(1) DEFAULT 0,
-    created_by VARCHAR2(64),
+    created_by VARCHAR2(36 CHAR),
     created_at DATE DEFAULT SYSDATE,
-    updated_by VARCHAR2(64),
+    updated_by VARCHAR2(36 CHAR),
     updated_at DATE DEFAULT SYSDATE
 );
 
@@ -188,11 +188,11 @@ CREATE TABLE ydsz_agt_trace_step (
     sort NUMBER DEFAULT 0,
     status NUMBER DEFAULT 1,
     revision NUMBER DEFAULT 0,
-    tenant_id VARCHAR2(64) DEFAULT '1',
+    tenant_id VARCHAR2(36 CHAR) DEFAULT '1',
     is_deleted NUMBER(1) DEFAULT 0,
-    created_by VARCHAR2(64),
+    created_by VARCHAR2(36 CHAR),
     created_at DATE DEFAULT SYSDATE,
-    updated_by VARCHAR2(64),
+    updated_by VARCHAR2(36 CHAR),
     updated_at DATE DEFAULT SYSDATE
 );
 
@@ -221,11 +221,11 @@ CREATE TABLE ydsz_agt_approval (
     CONSTRAINT pk_ydsz_agt_approval PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER DEFAULT 0,
-    tenant_id VARCHAR2(64 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1) DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -262,11 +262,11 @@ CREATE TABLE ydsz_agt_token_usage (
     CONSTRAINT pk_ydsz_agt_token_usage PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
     revision NUMBER(10)               NOT NULL DEFAULT 0,
-    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    tenant_id VARCHAR2(36 CHAR)        NOT NULL DEFAULT '0',
     is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
-    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by VARCHAR2(36 CHAR)        DEFAULT NULL,
     updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

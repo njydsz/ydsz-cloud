@@ -16,6 +16,7 @@ import com.njydsz.agent.domain.dto.TokenUsageRecordDTO;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.repository.TokenUsageRecordRepository;
 import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
@@ -84,20 +85,37 @@ public class CostAnalysisService {
   }
 
   /**
-   * 记录 Token 用量
+   * 记录 Token 用量（自动从 {@link RequestContext} 提取 botId）。
    *
-   * <p>用量数据异步写入数据库（P1 修复：原实现注释声称异步，实际同步阻塞主流程）， 写入失败仅记录日志不阻塞主流程。
+   * <p>用量数据异步写入数据库，写入失败仅记录日志不阻塞主流程。
+   * botId 从当前请求上下文自动获取，无需调用方显式传入。
    *
    * @param conversationId 对话 ID
    * @param modelName 模型名称
    * @param usage Token 用量
    */
   public void recordUsage(String conversationId, String modelName, TokenUsage usage) {
+    recordUsage(conversationId, modelName, usage, RequestContext.getBotId());
+  }
+
+  /**
+   * 记录 Token 用量（显式指定 botId）。
+   *
+   * <p>当调用方已知 botId 时（如跨线程场景已从 TTL 传播），可直接传入，
+   * 避免重复读取 RequestContext。botId 允许为 null（历史数据兼容）。
+   *
+   * @param conversationId 对话 ID
+   * @param modelName 模型名称
+   * @param usage Token 用量
+   * @param botId 关联的 Agent 定义 ID（可为 null）
+   */
+  public void recordUsage(String conversationId, String modelName, TokenUsage usage, String botId) {
     if (usage == null) {
       return;
     }
     try {
       TokenUsageRecordDTO record = new TokenUsageRecordDTO();
+      record.setBotId(botId);
       record.setConversationId(conversationId);
       record.setModelName(modelName);
       record.setPromptTokens((long) usage.getPromptTokens());
@@ -111,15 +129,16 @@ public class CostAnalysisService {
             } catch (Exception e) {
               // 用量记录失败不应影响主流程，仅记录日志
               log.warn(
-                  "[CostAnalysis] 用量记录失败: convId={}, model={}",
+                  "[CostAnalysis] 用量记录失败: convId={}, model={}, botId={}",
                   conversationId,
                   modelName,
+                  botId,
                   e);
             }
           });
     } catch (Exception e) {
       // 记录构造失败同样不阻塞主流程
-      log.warn("[CostAnalysis] 用量记录构造失败: convId={}, model={}", conversationId, modelName, e);
+      log.warn("[CostAnalysis] 用量记录构造失败: convId={}, model={}, botId={}", conversationId, modelName, botId, e);
     }
   }
 
@@ -241,6 +260,74 @@ public class CostAnalysisService {
     private BigDecimal totalCostUsd = BigDecimal.ZERO;
     private long callCount;
   }
+
+  /**
+   * 按 botId 聚合统计指定时间窗口内的用量与成本。
+   *
+   * <p>数据来源：本地持久化 audit 日志表（{@code ydsz_agt_token_usage}），
+   * 按 botId 过滤后逐行累加。成本采用各模型配置的计费单价计算。
+   *
+   * @param botId Agent 定义 ID
+   * @param start 开始时间（含）
+   * @param end 结束时间（含）
+   * @return 聚合后的 Bot 指标 DTO；无数据时返回零值 DTO
+   */
+  public BotMetricsDTO getStatsByBotId(String botId, LocalDateTime start, LocalDateTime end) {
+    if (botId == null || botId.isBlank()) {
+      return new BotMetricsDTO(0L, 0L, 0L, BigDecimal.ZERO, 0L, BigDecimal.ZERO);
+    }
+    List<TokenUsageRecordVO> records =
+        tokenUsageRecordRepository.findByBotIdAndCreatedAtRange(botId, start, end);
+
+    long totalPrompt = 0L;
+    long totalCompletion = 0L;
+    long totalTokens = 0L;
+    BigDecimal totalCost = BigDecimal.ZERO;
+    long totalCalls = 0L;
+
+    for (TokenUsageRecordVO r : records) {
+      totalPrompt += zeroIfNull(r.getPromptTokens());
+      totalCompletion += zeroIfNull(r.getCompletionTokens());
+      totalTokens += zeroIfNull(r.getTotalTokens());
+      totalCalls++;
+
+      BigDecimal price = priceConfig.getPrice(r.getModelName());
+      BigDecimal stepCost =
+          BigDecimal.valueOf(zeroIfNull(r.getTotalTokens()))
+              .multiply(price)
+              .divide(DIVISOR_PER_THOUSAND, PRICE_SCALE, RoundingMode.HALF_UP);
+      totalCost = totalCost.add(stepCost);
+    }
+
+    BigDecimal avgTokensPerCall = totalCalls > 0
+        ? BigDecimal.valueOf(totalTokens).divide(BigDecimal.valueOf(totalCalls), 2, RoundingMode.HALF_UP)
+        : BigDecimal.ZERO;
+
+    return new BotMetricsDTO(totalPrompt, totalCompletion, totalTokens, totalCost, totalCalls, avgTokensPerCall);
+  }
+
+  /** 安全转换：null 视为 0。 */
+  private static long zeroIfNull(Long value) {
+    return value != null ? value : 0L;
+  }
+
+  /**
+   * Bot 维度聚合指标 DTO
+   *
+   * @param totalPromptTokens 提示词 Token 累计数
+   * @param totalCompletionTokens 补全 Token 累计数
+   * @param totalTokens 总 Token 累计数
+   * @param totalCostUsd 总成本（USD）
+   * @param totalCalls LLM 调用次数
+   * @param avgTokensPerCall 单次调用平均 Token 数（2 位小数）
+   */
+  public record BotMetricsDTO(
+      long totalPromptTokens,
+      long totalCompletionTokens,
+      long totalTokens,
+      BigDecimal totalCostUsd,
+      long totalCalls,
+      BigDecimal avgTokensPerCall) {}
 
   /**
    * 按模型用量与成本汇总（所有金额单位均为 USD）。

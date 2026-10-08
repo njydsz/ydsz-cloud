@@ -1,6 +1,7 @@
 package com.njydsz.agent.infra.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -43,6 +44,21 @@ public class TokenUsageRecordRepositoryImpl implements TokenUsageRecordRepositor
   public List<TokenUsageRecordVO> findByCreatedAtRange(LocalDateTime startTime, LocalDateTime endTime) {
     List<TokenUsageRecord> entityList = tokenUsageRecordMapper.selectList(
         new LambdaQueryWrapper<TokenUsageRecord>()
+            .ge(TokenUsageRecord::getCreatedAt, startTime)
+            .le(TokenUsageRecord::getCreatedAt, endTime)
+            .orderByAsc(TokenUsageRecord::getCreatedAt));
+    return converter.tokenUsageRecordListToVO(entityList);
+  }
+
+  @Override
+  public List<TokenUsageRecordVO> findByBotIdAndCreatedAtRange(
+      String botId, LocalDateTime startTime, LocalDateTime endTime) {
+    if (botId == null || botId.isBlank()) {
+      return Collections.emptyList();
+    }
+    List<TokenUsageRecord> entityList = tokenUsageRecordMapper.selectList(
+        new LambdaQueryWrapper<TokenUsageRecord>()
+            .eq(TokenUsageRecord::getBotId, botId)
             .ge(TokenUsageRecord::getCreatedAt, startTime)
             .le(TokenUsageRecord::getCreatedAt, endTime)
             .orderByAsc(TokenUsageRecord::getCreatedAt));

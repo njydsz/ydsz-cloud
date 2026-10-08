@@ -44,4 +44,18 @@ public interface TokenUsageRecordRepository {
    * @return Token 用量记录 VO 列表
    */
   List<TokenUsageRecordVO> findByCreatedAtRange(LocalDateTime startTime, LocalDateTime endTime);
+
+  /**
+   * 按 botId 和时间范围查询 Token 用量记录（按创建时间升序）
+   *
+   * <p>过滤条件：botId 精确匹配 + 创建时间落在 [startTime, endTime] 闭区间内。
+   * botId 为 null 时返回空列表（不允许全量按时间查询，防止误用全表扫描）。
+   *
+   * @param botId Agent 定义 ID（不可为 null）
+   * @param startTime 开始时间（含）
+   * @param endTime 结束时间（含）
+   * @return Token 用量记录 VO 列表（无匹配返回空列表）
+   */
+  List<TokenUsageRecordVO> findByBotIdAndCreatedAtRange(
+      String botId, LocalDateTime startTime, LocalDateTime endTime);
 }

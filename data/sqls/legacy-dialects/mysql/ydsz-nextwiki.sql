@@ -45,10 +45,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
     INDEX idx_ydsz_file_file_node_storage_class (node_type, is_deleted, storage_class, updated_at),
     sort INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='网盘文件节点（统一表示文件和目录，构成目录树的核心节点）';
 
@@ -73,10 +73,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_version (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件版本历史（每次文件更新生成一条版本记录，支持版本回溯）';
 
@@ -96,10 +96,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_tag (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标签（对文件/文件夹打标签，用于知识库分类和检索）';
 
@@ -118,10 +118,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_tag (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件-标签关联（多对多）';
 
@@ -145,9 +145,9 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_comment (
     sort INT NOT NULL DEFAULT 0,
     revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件评论（支持文件级别的评论和回复，用于知识库协作讨论）';
 
@@ -170,10 +170,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_acl (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件级 ACL 权限（文件/文件夹级别的细粒度权限控制）';
 
@@ -203,9 +203,9 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_link (
     sort INT NOT NULL DEFAULT 0,
     revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件分享链接（带密码和过期时间的文件级临时授权机制）';
 
@@ -228,10 +228,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_recipient (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享目标用户（定向分享，记录分享链接的目标接收者）';
 
@@ -261,10 +261,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享链接访问日志（记录每次分享链接被访问的详细信息，用于安全审计和访问统计）';
 
@@ -293,10 +293,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log_archive (
     sort INT NOT NULL DEFAULT 0,
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64),
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36),
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享访问日志归档表（归档 90 天前访问日志，防止主表无限膨胀）';
 
@@ -325,10 +325,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库空间（空间管理聚合根，文件节点的顶级容器）';
 
@@ -350,10 +350,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space_member (
     sort INT NOT NULL DEFAULT 0,
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间成员（记录用户与空间的归属关系及角色）';
 
@@ -379,9 +379,9 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space_template (
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
     tenant_id VARCHAR(32)     DEFAULT NULL COMMENT '租户 ID（系统模板为 NULL）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间模板（预定义可复用的空间结构模板）';
 
@@ -408,9 +408,9 @@ CREATE TABLE IF NOT EXISTS ydsz_file_trash_item (
     sort INT NOT NULL DEFAULT 0,
     revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='回收站条目（记录被逻辑删除的文件/文件夹，支持恢复和自动清理）';
 
@@ -435,10 +435,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_search_index (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件搜索索引（数据库 fallback 搜索，ES 不可用时提供文件名/路径/内容搜索）';
 
@@ -458,10 +458,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_user_favorite (
     sort INT             NOT NULL DEFAULT 0 COMMENT '排序序号（值越小越靠前）',
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户收藏夹（记录用户收藏的文件/目录节点，支持排序与软删除）';
 
@@ -483,10 +483,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_user_recent (
     sort INT NOT NULL DEFAULT 0,
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64),
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36),
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户最近访问记录（同一节点只保留一条，支持按访问时间倒序查询）';
 
@@ -508,9 +508,9 @@ CREATE TABLE IF NOT EXISTS ydsz_file_storage_quota (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='存储配额（按用户/租户/项目维度设置存储上限，上传时校验配额）';

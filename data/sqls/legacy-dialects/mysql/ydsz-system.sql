@@ -29,10 +29,10 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='租户主表';
 
@@ -50,10 +50,10 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT             NOT NULL DEFAULT 0 COMMENT '排序号（升序，影响前端套餐选择器顺序）',
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='租户套餐表';
 
@@ -68,10 +68,10 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan_menu (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='租户套餐菜单关联表';
 
@@ -91,10 +91,10 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_dict_type (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典类型表';
 
@@ -114,10 +114,10 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT             NOT NULL DEFAULT 0 COMMENT '展示排序序号（升序）',
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典项表';
 
@@ -141,10 +141,10 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_config (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统配置表';
 
@@ -161,10 +161,10 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_variable (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统变量表';
 
@@ -190,10 +190,10 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_app_info (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='应用信息表';
 
@@ -213,9 +213,9 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_entity_version (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='统一实体版本表';

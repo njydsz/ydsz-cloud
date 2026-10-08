@@ -500,7 +500,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_tenant_config (
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
     created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_by VARCHAR,
+    updated_by VARCHAR(36)              DEFAULT NULL
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -832,7 +832,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_trace (
     CONSTRAINT pk_ydsz_msg_trace PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR DEFAULT '1',
+    tenant_id VARCHAR(36)              DEFAULT '1',
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
     created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW(),

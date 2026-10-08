@@ -73,8 +73,7 @@ public class GatewayRouteConfig {
   /**
    * 注册 Nacos 动态路由仓库。
    *
-   * <p>标记为 {@code @Primary}，覆盖 Spring Cloud Gateway 默认的 {@code
-   * PropertiesRouteDefinitionRepository}。
+   * <p>Spring Cloud Gateway 的 CompositeRouteDefinitionLocator 会自动聚合所有 RouteDefinitionRepository。
    *
    * @param nacosConfigManager Nacos 配置管理器
    * @param dataId 路由配置 DataId
@@ -84,7 +83,6 @@ public class GatewayRouteConfig {
    * @return Nacos 路由定义仓库
    */
   @Bean
-  @Primary
   public RouteDefinitionRepository nacosRouteDefinitionRepository(
       NacosConfigManager nacosConfigManager,
       @Value("${ydsz.gateway.dynamic-routes.data-id:gateway-routes.json}") String dataId,

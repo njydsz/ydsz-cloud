@@ -20,6 +20,9 @@ public class TokenUsageRecordDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
+  /** 关联的 Agent 定义 ID（botId），由 RequestContext 在记录时注入，支持按 Agent 维度聚合 */
+  private String botId;
+
   /** 所属对话 ID（关联 ydsz_agt_conversation） */
   private String conversationId;
 

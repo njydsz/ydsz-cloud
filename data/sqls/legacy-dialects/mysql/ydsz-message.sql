@@ -50,10 +50,10 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_template (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息模板主表';
 
@@ -75,10 +75,10 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_template_version (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息模板版本历史表';
 
@@ -118,10 +118,10 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_notification (
     sort INT NOT NULL DEFAULT 0,
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='站内通知表';
 
@@ -144,9 +144,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel (
     sort INT NOT NULL DEFAULT 0,
     revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户通道绑定表';
 
@@ -169,9 +169,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_subscription (
     sort INT NOT NULL DEFAULT 0,
     revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订阅关系表';
 
@@ -200,9 +200,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_preference (
     sort INT NOT NULL DEFAULT 0,
     revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户消息偏好表';
 
@@ -228,9 +228,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_route_rule (
     sort INT           DEFAULT NULL COMMENT '排序序号',
     revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息路由规则表';
 
@@ -252,9 +252,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_variable_source (
     sort INT NOT NULL DEFAULT 0,
     revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息变量数据源绑定表';
 
@@ -280,9 +280,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_canary (
     sort INT NOT NULL DEFAULT 0,
     revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='灰度实验表';
 
@@ -302,9 +302,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_tenant_config (
     revision INT NOT NULL DEFAULT 0,
     tenant_id VARCHAR(32) NOT NULL COMMENT '租户 ID',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='多租户消息配置表';
 
@@ -337,9 +337,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_batch (
     sort INT NOT NULL DEFAULT 0,
     revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息发送批次表';
 
@@ -367,9 +367,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_aggregate (
     sort INT NOT NULL DEFAULT 0,
     revision INT          NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)  NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)  DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)  DEFAULT NULL COMMENT '创建人',
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)  DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)  DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聚合批次表';
 
@@ -391,10 +391,10 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_offline (
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
     sort INT NOT NULL DEFAULT 0,
     revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(36)     DEFAULT NULL COMMENT '创建人',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)     DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='离线消息持久化表';
 
@@ -450,9 +450,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_log (
     sort INT NOT NULL DEFAULT 0,
     revision INT NOT NULL DEFAULT 0,
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息发送日志表';
 
@@ -477,9 +477,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_receipt (
     sort INT NOT NULL DEFAULT 0,
     revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息回执表';
 
@@ -507,11 +507,11 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_trace (
     INDEX idx_event_at (event_at),
     sort INT NOT NULL DEFAULT 0,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    tenant_id VARCHAR(36) NOT NULL DEFAULT '1',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息轨迹表';
 
@@ -536,9 +536,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_feedback (
     sort INT NOT NULL DEFAULT 0,
     revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
-    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_by VARCHAR(36)   DEFAULT NULL COMMENT '创建人',
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_by VARCHAR(36)   DEFAULT NULL COMMENT '最后更新人',
     updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息用户反馈表';
 
@@ -563,8 +563,8 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_outbox (
     revision INT NOT NULL DEFAULT 0,
     tenant_id VARCHAR(32)   DEFAULT NULL COMMENT '租户 ID（多租户隔离）',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Outbox 事件表（事务性 Outbox 模式）';

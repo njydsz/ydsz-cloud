@@ -494,9 +494,9 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log (
     sort INT NOT NULL DEFAULT 0,
     revision INT NOT NULL DEFAULT 0,
     tenant_id VARCHAR(36) NOT NULL DEFAULT '1',
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务执行日志表';
 
@@ -615,9 +615,9 @@ CREATE TABLE IF NOT EXISTS ydsz_job_outbox (
     revision INT NOT NULL DEFAULT 0,
     tenant_id VARCHAR(36) NOT NULL DEFAULT '1',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Outbox 事务性事件表：存储待发布的领域事件，保障业务写操作与事件投递的事务一致性';
 
@@ -638,9 +638,9 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
     revision INT NOT NULL DEFAULT 0,
     tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='DAG 实例节点上下文表：节点级结果存储，避免 CAS 更新整行 context_json';
 
@@ -675,9 +675,9 @@ CREATE TABLE IF NOT EXISTS ydsz_job_webhook_retry (
     revision INT NOT NULL DEFAULT 0,
     tenant_id VARCHAR(36)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Webhook 重试补偿表（P1-3 Webhook 投递保障）';
 

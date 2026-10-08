@@ -14,7 +14,7 @@
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_gen_datasource (
-    id                  BIGINT          NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
+    id                  VARCHAR(36)    NOT NULL COMMENT '主键 ID（Snowflake）',
     name                VARCHAR(64)     NOT NULL COMMENT '数据源名称（唯一标识）',
     jdbc_url            VARCHAR(512)    NOT NULL COMMENT 'JDBC URL',
     username            VARCHAR(128)    NOT NULL COMMENT '数据库用户名',
@@ -27,11 +27,11 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_datasource (
     sort INT NOT NULL DEFAULT 0,
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    tenant_id VARCHAR(36) NOT NULL DEFAULT '1',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='代码生成器数据源配置';
 
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_datasource (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_gen_template_group (
-    id                  BIGINT          NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
+    id                  VARCHAR(36)    NOT NULL COMMENT '主键 ID（Snowflake）',
     name                VARCHAR(64)     NOT NULL COMMENT '分组名（唯一标识，如 default、mybatis-plus）',
     description         VARCHAR(255)    DEFAULT NULL COMMENT '分组描述',
     is_system          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为系统分组（0=否 1=是，系统分组不可删除）',
@@ -51,11 +51,11 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template_group (
     sort INT             NOT NULL DEFAULT 0 COMMENT '排序序号（升序）',
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    tenant_id VARCHAR(36) NOT NULL DEFAULT '1',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='代码生成器模板分组';
 
@@ -65,8 +65,8 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template_group (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_gen_template (
-    id                  BIGINT          NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
-    group_id            BIGINT          NOT NULL COMMENT '关联模板分组 ID',
+    id                  VARCHAR(36)    NOT NULL COMMENT '主键 ID（Snowflake）',
+    group_id            VARCHAR(36)    NOT NULL COMMENT '关联模板分组 ID',
     file_name           VARCHAR(128)    NOT NULL COMMENT '文件名（如 entity.vm、vue/api.vm）',
     description         VARCHAR(255)    DEFAULT NULL COMMENT '模板用途描述',
     content             MEDIUMTEXT      NOT NULL COMMENT '模板内容（Velocity 语法）',
@@ -83,11 +83,11 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template (
     sort INT NOT NULL DEFAULT 0,
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    tenant_id VARCHAR(36) NOT NULL DEFAULT '1',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='代码生成器模板';
 
@@ -97,10 +97,10 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_gen_history (
-    id                  BIGINT          NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
+    id                  VARCHAR(36)    NOT NULL COMMENT '主键 ID（Snowflake）',
     module_name         VARCHAR(64)     NOT NULL COMMENT '模块名称',
-    datasource_id       BIGINT          NOT NULL COMMENT '使用的数据源 ID',
-    template_group_id   BIGINT          NOT NULL COMMENT '使用的模板分组 ID',
+    datasource_id       VARCHAR(36)    NOT NULL COMMENT '使用的数据源 ID',
+    template_group_id   VARCHAR(36)    NOT NULL COMMENT '使用的模板分组 ID',
     table_count         INT             NOT NULL DEFAULT 0 COMMENT '涉及表数量',
     file_count          INT             NOT NULL DEFAULT 0 COMMENT '生成文件总数',
     status              VARCHAR(16)     NOT NULL DEFAULT 'RUNNING' COMMENT '执行状态（RUNNING/SUCCESS/PARTIAL/FAILED）',
@@ -116,11 +116,11 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_history (
     CONSTRAINT fk_ydsz_gen_history_template_group FOREIGN KEY (template_group_id) REFERENCES ydsz_gen_template_group (id),
     sort INT NOT NULL DEFAULT 0,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    tenant_id VARCHAR(36) NOT NULL DEFAULT '1',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='代码生成任务历史';
 
@@ -130,8 +130,8 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_history (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_gen_history_file (
-    id                  BIGINT          NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
-    history_id          BIGINT          NOT NULL COMMENT '所属任务 ID',
+    id                  VARCHAR(36)    NOT NULL COMMENT '主键 ID（Snowflake）',
+    history_id          VARCHAR(36)    NOT NULL COMMENT '所属任务 ID',
     file_path           VARCHAR(512)    NOT NULL COMMENT '生成文件路径',
     original_backup_path VARCHAR(512)   DEFAULT NULL COMMENT '原文件备份路径（用于回滚）',
     file_hash           CHAR(32)        DEFAULT NULL COMMENT '文件内容 MD5 哈希',
@@ -142,11 +142,11 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_history_file (
     sort INT NOT NULL DEFAULT 0,
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    tenant_id VARCHAR(36) NOT NULL DEFAULT '1',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生成历史文件明细';
 
@@ -156,8 +156,8 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_history_file (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_gen_table_meta (
-    id                  BIGINT          NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
-    datasource_id       BIGINT          NOT NULL COMMENT '关联数据源 ID',
+    id                  VARCHAR(36)    NOT NULL COMMENT '主键 ID（Snowflake）',
+    datasource_id       VARCHAR(36)    NOT NULL COMMENT '关联数据源 ID',
     table_name          VARCHAR(128)    NOT NULL COMMENT '物理表名',
     comment             VARCHAR(255)    DEFAULT NULL COMMENT '表注释',
     alias_name          VARCHAR(64)     DEFAULT NULL COMMENT '用户自定义别名（用于类名生成）',
@@ -170,11 +170,11 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_table_meta (
     sort INT NOT NULL DEFAULT 0,
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    tenant_id VARCHAR(36) NOT NULL DEFAULT '1',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='表元数据缓存';
 
@@ -184,8 +184,8 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_table_meta (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydzs_gen_column_meta (
-    id                  BIGINT          NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
-    table_meta_id       BIGINT          NOT NULL COMMENT '所属表元数据 ID',
+    id                  VARCHAR(36)    NOT NULL COMMENT '主键 ID（Snowflake）',
+    table_meta_id       VARCHAR(36)    NOT NULL COMMENT '所属表元数据 ID',
     column_name         VARCHAR(128)    NOT NULL COMMENT '物理列名',
     data_type           VARCHAR(64)     NOT NULL COMMENT '物理数据类型',
     column_size         INT             DEFAULT NULL COMMENT '字段长度',
@@ -205,11 +205,11 @@ CREATE TABLE IF NOT EXISTS ydzs_gen_column_meta (
     sort INT NOT NULL DEFAULT 0,
     status INT NOT NULL DEFAULT 1,
     revision INT NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    tenant_id VARCHAR(36) NOT NULL DEFAULT '1',
     is_deleted TINYINT(1) NOT NULL DEFAULT 0,
-    created_by VARCHAR(64),
+    created_by VARCHAR(36),
     created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    updated_by VARCHAR(64),
+    updated_by VARCHAR(36),
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='列元数据缓存（含人工覆盖配置）';
 
