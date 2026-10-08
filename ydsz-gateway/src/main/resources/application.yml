@@ -89,6 +89,8 @@ ydsz:
   i18n:
     # 启用元数据 REST API（/api/internal/i18n/languages）前端可动态获取可用语言列表
     metadata-api-enabled: true
+    # 网关不维护完整 i18n key 集（各业务模块各自维护），关闭启动期校验
+    validate-on-startup: false
 
 # =====================================================================
 #  Actuator 运维端点配置
