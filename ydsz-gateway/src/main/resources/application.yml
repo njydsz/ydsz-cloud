@@ -22,6 +22,8 @@ spring:
       - com.njydsz.common.web.config.TenantWebAutoConfiguration
       # Redis 自动配置（网关手动创建 Lettuce ConnectionFactory 以避免 Jedis/Lettuce 冲突）
       - com.njydsz.common.redis.config.RedisConfiguration
+      # 分布式锁自动配置（ObjectProvider 自引用循环，且网关不使用分布式锁）
+      - com.njydsz.common.lock.config.DistributedLockAutoConfiguration
       # JDBC 自动配置（网关不依赖数据库，排除避免 DataSource 初始化失败）
       - com.njydsz.common.jdbc.datasource.DynamicDataSourceAutoConfiguration
       - com.njydsz.common.jdbc.config.MybatisPlusConfiguration
