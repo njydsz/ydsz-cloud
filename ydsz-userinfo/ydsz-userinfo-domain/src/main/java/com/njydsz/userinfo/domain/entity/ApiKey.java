@@ -35,7 +35,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_idm_auth_apikey")
 @SuppressWarnings("unchecked")
-public class ApiKey extends MpBaseEntity<Long> {
+public class ApiKey extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
 

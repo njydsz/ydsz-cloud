@@ -10,8 +10,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
-
 /**
  * WebAuthn 凭证持久化实体
  *
@@ -27,7 +25,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_idm_auth_credential")
-public class WebAuthnCredential extends MpBaseEntity<Long> {
+public class WebAuthnCredential extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
 
