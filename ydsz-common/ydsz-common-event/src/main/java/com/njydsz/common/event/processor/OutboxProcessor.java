@@ -107,6 +107,15 @@ public class OutboxProcessor {
   /** 连续空转轮询次数（用于自适应降频） */
   private final AtomicLong consecutiveEmptyPolls = new AtomicLong(0);
 
+  /** 当前调度使用的轮询间隔（秒），用于检测 Nacos 配置变更后触发重调度 */
+  private volatile long currentScheduledInterval = -1;
+
+  /** 递归调度同步锁：确保同一时刻只有一个调度任务在执行和重调度 */
+  private final Object scheduleLock = new Object();
+
+  /** 已启动标志位（递归调度期间用于阻止重复调度） */
+  private volatile boolean isScheduling = false;
+
   /**
    * 创建 Outbox 处理器（使用默认自创建线程池）。
    *
@@ -250,10 +259,10 @@ public class OutboxProcessor {
     isRunning = true;
 
     long pollInterval = getCurrentPollInterval();
+    this.currentScheduledInterval = pollInterval;
 
-    // 主轮询任务
-    scheduler.scheduleWithFixedDelay(this::processBatchSchedule, pollInterval, pollInterval,
-        TimeUnit.SECONDS);
+    // 主轮询任务（采用递归单次调度，每次执行后读取最新配置间隔重新调度，支持 Nacos 热更新）
+    scheduleNextPoll(false);
 
     // 超时回收任务（每 2 倍轮询间隔执行一次）
     int staleThreshold = properties.getStaleProcessingThresholdMinutes();
@@ -308,12 +317,65 @@ public class OutboxProcessor {
   }
 
   /**
-   * 定时轮询任务（包装器，处理自适应间隔的重调度）
+   * 定时轮询任务（包装器：执行本轮 + 读取最新配置间隔递归调度下一轮）。
+   *
+   * <p>每次执行后从 {@link EventProperties} 重新读取轮询间隔：
+   *
+   * <ul>
+   *   <li>自适应空降频（{@link #getCurrentPollInterval()}）
+   *   <li>Nacos 配置热更新：间隔变更在下一轮自动生效（无需重启）
+   * </ul>
+   *
+   * <p><b>总开关检查：</b>当 {@link EventProperties#isEnabled()} 为 {@code false} 时跳过本轮 {@link #processBatch()}，
+   * 但仍调度下一轮，以便配置重新开启后自动恢复。
    */
   private void processBatchSchedule() {
-    processBatch();
-    // 自适应间隔调整：此处简化处理，下一轮 scheduleWithFixedDelay 会保持同一间隔
-    // 完整的动态重调度需要取消当前 future 重新 schedule；本版本通过 afterEventTrigger 即时响应补偿
+    // 重置调度标志：当前轮已开始执行，允许后续重调度
+    isScheduling = false;
+    try {
+      if (properties.isEnabled()) {
+        processBatch();
+      } else {
+        LOG.debug("OutboxProcessor currently disabled, skip this poll and wait for re-enable");
+      }
+    } finally {
+      scheduleNextPoll(false);
+    }
+  }
+
+  /**
+   * 递归调度下一轮主轮询任务，支持动态间隔。
+   *
+   * <p>从 {@link EventProperties#getPollIntervalSeconds()} 读取当前配置（结合自适应降频），
+   * {@link ScheduledExecutorService#schedule} 一次性提交，执行完后再调用本方法形成闭环。
+   * 与 {@code scheduleWithFixedDelay} 相比，递归调度允许每轮使用不同的间隔值——Nacos 推送新值后，
+   * Spring Cloud 自动 rebind {@link EventProperties} Bean，下一轮 {@link #getCurrentPollInterval()} 即返回新值。
+   *
+   * @param isStartup true 表示首次启动调度（允许与 event-push 触发并发）；
+   *     false 表示递归重调度（需防重入）
+   */
+  private void scheduleNextPoll(boolean isStartup) {
+    if (!isRunning) {
+      return;
+    }
+    synchronized (scheduleLock) {
+      if (!isRunning) {
+        return;
+      }
+      if (!isStartup && isScheduling) {
+        // 递归重调度期间已有调度任务在执行，避免重复调度
+        return;
+      }
+      isScheduling = true;
+      long interval = getCurrentPollInterval();
+      this.currentScheduledInterval = interval;
+      try {
+        scheduler.schedule(this::processBatchSchedule, interval, TimeUnit.SECONDS);
+      } catch (Exception e) {
+        isScheduling = false;
+        LOG.warn("[OutboxProcessor] schedule next poll failed: {}", e.getMessage());
+      }
+    }
   }
 
   /**
@@ -405,6 +467,10 @@ public class OutboxProcessor {
   @EventListener
   public void onOutboxNewMessage(OutboxNewMessageEvent event) {
     if (!isRunning) {
+      return;
+    }
+    if (!properties.isEnabled()) {
+      LOG.debug("OutboxProcessor disabled, ignore OutboxNewMessageEvent: messageId={}", event.getMessageId());
       return;
     }
     LOG.debug("Received OutboxNewMessageEvent: messageId={}, trigger push poll", event.getMessageId());

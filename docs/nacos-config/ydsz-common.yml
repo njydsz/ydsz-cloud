@@ -280,6 +280,22 @@ ydsz:
   thread:
     enabled: true
     virtual-by-default: false
+    # 虚拟线程 pinning 排查说明（详见 docs/virtual-thread-safety.md）：
+    #
+    #   JVM 参数 -Djdk.tracePinnedThreads 用于排查 synchronized 块内阻塞操作
+    #   导致的载体线程（carrier thread）pinning 问题。
+    #
+    #   取值：
+    #     full  - 输出完整堆栈 + 线程名 + 阻塞时长（性能开销中等，仅压测/调优阶段启用）
+    #     short - 输出简短信息（性能开销较低，可用于开发/测试环境）
+    #     （不设置）- 生产环境不启用，避免性能开销
+    #
+    #   建议在 Dockerfile 的 JAVA_OPTS 或 K8s deployment 的 JAVA_TOOL_OPTIONS 中配置，
+    #   不要硬编码在此 yml 文件中（启动参数而非 Spring 应用配置）。
+    #
+    #   排查 VirtualThread pinning 的核心原则：
+    #     1. 禁止在 synchronized 块内执行 BlockingQueue.take()/Thread.sleep()/IO
+    #     2. 使用 ReentrantLock 替代 synchronized 进行互斥
     pools: {}
 
   # ============================================================
@@ -369,6 +385,52 @@ ydsz:
       allowed-headers: "*"
       allow-credentials: true
       max-age: 3600
+
+  # ============================================================
+  #  Outbox 事件模块（ydsz-common-event）
+  # ============================================================
+  #  配置前缀：ydsz.event.outbox
+  #  说明：Outbox 模式保障领域事件（Domain Event）的可靠投递。事件先写入库表，
+  #        后台轮询线程扫描 PENDING 消息并投递到 MQ（RocketMQ / Kafka / Redis Stream）。
+  #        修改 poll-interval-seconds / batch-size / enabled 等参数后，
+  #        Nacos 推送刷新即生效（无需重启）。自适应机制：连续空转 >= 3 次轻微降频，
+  #        >= 10 次大幅降频（最长 60s），有新消息时自动恢复基础间隔。
+  # ============================================================
+  event:
+    outbox:
+      # 是否启用 Outbox 模式（总开关，默认 true；置 false 后轮询和推模式投递均跳过，
+      # 仍保持调度循环以便配置重新开启后自动恢复）
+      enabled: true
+      # Outbox 主表表名
+      table-name: ydsz_comm_outbox
+      # 轮询间隔（秒），后台扫描 PENDING 消息的频率，默认 5（即 5000ms）
+      # 调小：投递延迟降低但 DB 压力增大；调大：DB 压力降低但投递延迟增加
+      poll-interval-seconds: 5
+      # 每批最大处理数量，每次轮询从 DB 捞取的最大 PENDING 消息数，默认 100
+      batch-size: 100
+      # 默认最大重试次数，超过后消息进入死信状态，默认 5
+      max-retries: 5
+      # 指数退避基准秒数：实际退避 = base-backoff-seconds * 2^min(retryCount, 30)，默认 10
+      base-backoff-seconds: 10
+      # 最大退避秒数（退避上限），默认 3600（1 小时）
+      max-backoff-seconds: 3600
+      # 已投递（SENT）消息保留天数，到期后被自动归档/删除，默认 7
+      sent-retention-days: 7
+      # 是否自动清理已投递消息，默认 true
+      auto-cleanup: true
+      # 自动清理任务执行间隔（小时），默认 6
+      cleanup-interval-hours: 6
+      # PROCESSING 状态超时阈值（分钟），超时消息被回收为 PENDING 重新投递，默认 5
+      stale-processing-threshold-minutes: 5
+      # 投递工作线程数（1=单线程，>1=多线程并行投递，通过 SynchronizationQueue 天然背压）
+      worker-threads: 1
+      # 优雅关闭等待超时（秒），默认 10
+      await-termination-seconds: 10
+      # 当无实际 MQ 网关（NoopEventPublishGateway）时是否启动失败，
+      # 生产环境应设为 true 避免消息静默丢失
+      fail-on-noop: true
+      # Outbox 队列深度统计缓存时间（秒），减少 countByStatus 全表扫描频率，默认 5
+      status-count-cache-seconds: 5
 
 # =====================================================================
 #  SkyWalking 链路追踪（基础配置，各模块可覆盖 service_name）

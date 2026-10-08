@@ -95,6 +95,13 @@
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>
+    <!-- Spring Data Redis（@MultiLevelCacheable 多级缓存切面 L2 读写，可选） -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
     <!-- ydsz-common-thread（P0-1: CacheThreadPoolManager 委托替代自建线程池注册表，纳入 ThreadPoolRegistry 统一监控） -->
     <dependency>
       <groupId>com.njydsz</groupId>

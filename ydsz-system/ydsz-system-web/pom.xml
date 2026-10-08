@@ -63,6 +63,10 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-file</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-audit</artifactId>
         </dependency>
         <!-- ydsz-common-search: GlobalSearchController 使用 UnifiedSearchService/SearchProperties 等 -->
@@ -100,6 +104,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Spring Boot 4.1.0 将 WebMvcTest 拆分至独立 artifact（@WebMvcTest 必需） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- Testcontainers：集成测试数据库/缓存真实环境（Docker required） -->

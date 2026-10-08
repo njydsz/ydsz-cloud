@@ -22,7 +22,7 @@ import com.njydsz.common.exception.handler.BaseExceptionHandler;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class SystemExceptionHandler extends BaseExceptionHandler {
 
-  protected SystemExceptionHandler(Environment environment) {
+  public SystemExceptionHandler(Environment environment) {
     super(environment);
   }
 

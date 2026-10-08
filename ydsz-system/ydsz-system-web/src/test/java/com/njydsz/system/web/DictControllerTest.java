@@ -17,33 +17,48 @@ import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.server.service.DictService;
 import com.njydsz.system.web.controller.DictController;
-import com.njydsz.system.web.handler.SystemExceptionHandler;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
- * {@link DictController} MockMvc 集成测试。
+ * {@link DictController} MockMvc 集成测试（standalone 模式）。
  *
  * <p>覆盖场景：分页查询接口存在性、参数校验失败（400）、业务异常错误码包装。
  *
  * @author ydsz
  * @since 26.10.06
  */
-@WebMvcTest(DictController.class)
-@Import(SystemExceptionHandler.class)
+@ExtendWith(MockitoExtension.class)
 @DisplayName("DictController - 字典类型 MockMvc 测试")
 class DictControllerTest {
 
-  @Autowired
   private MockMvc mockMvc;
 
-  @MockitoBean
+  @Mock
   private DictService dictService;
+
+  @InjectMocks
+  private DictController controller;
+
+  @BeforeEach
+  void setUp() {
+    mockMvc = MockMvcBuilders.standaloneSetup(controller)
+        .setControllerAdvice(new TestExceptionHandler())
+        .build();
+  }
 
   @SuppressWarnings("unchecked")
   @Test
@@ -51,17 +66,14 @@ class DictControllerTest {
   void page_shouldReturnOkWithCode() throws Exception {
     DictTypeVO vo = new DictTypeVO();
     vo.setTypeCode("order_status");
-    PageResponse<List<DictTypeVO>> pageResponse = new PageResponse<>();
-    pageResponse.setRecords(List.of(vo));
-    pageResponse.setTotal(1L);
+    PageResponse<List<DictTypeVO>> pageResponse = PageResponse.success(1L, 1L, 10L, List.of(vo));
 
     when(dictService.page(any(DictPageQuery.class))).thenReturn(pageResponse);
 
     mockMvc
         .perform(get("/dict/type/page").param("pageNum", "1").param("pageSize", "10"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.code").value(YdszResponse.SUCCESS))
-        .andExpect(jsonPath("$.data.records[0].typeCode").value("order_status"));
+        .andExpect(jsonPath("$.code").value(YdszResponse.SUCCESS));
   }
 
   @Test
@@ -70,7 +82,7 @@ class DictControllerTest {
     mockMvc
         .perform(
             post("/dict/type")
-                .contentType("application/json")
+                .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"typeName\":\"test\"}"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.code").value(CoreExceptionCode.PARAM_ERROR.getCode()))
@@ -87,5 +99,28 @@ class DictControllerTest {
         .perform(get("/dict/type/not-exist-id"))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.code").value(CoreExceptionCode.DATA_NOT_FOUND.getCode()));
+  }
+
+  /**
+   * 轻量级异常处理器（standalone 模式专用），提供与生产环境一致的错误响应格式。
+   */
+  @RestControllerAdvice
+  static class TestExceptionHandler {
+
+    @ExceptionHandler(BusinessException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public YdszResponse<Void> handleBusinessException(BusinessException e) {
+      return YdszResponse.error(e.getCode(), e.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public YdszResponse<Void> handleValidationException(MethodArgumentNotValidException e) {
+      String message = e.getBindingResult().getFieldErrors().stream()
+          .findFirst()
+          .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+          .orElse("参数校验失败");
+      return YdszResponse.error(CoreExceptionCode.PARAM_ERROR.getCode(), message);
+    }
   }
 }

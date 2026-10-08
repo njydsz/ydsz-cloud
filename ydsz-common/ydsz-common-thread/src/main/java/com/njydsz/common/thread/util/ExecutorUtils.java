@@ -387,6 +387,22 @@ public final class ExecutorUtils {
    * ThreadLocal}）的高频修改， 且不支持 {@code synchronized} 块中的无限阻塞（可能导致 carrier thread pinning）。 如无明确需求，建议使用
    * {@link #newPlatformThreadExecutor()}。
    *
+   * <p><b>Carrier Thread Pinning 安全警示：</b>
+   *
+   * <p>VirtualThread 在 {@code synchronized} 块内执行阻塞操作（如 {@code BlockingQueue.take()}、
+   * {@code Thread.sleep()}、IO 等待）时会被"钉"（pin）在载体线程（carrier thread）上无法让出，导致吞吐量急剧下降。
+   *
+   * <p><b>规则：</b>
+   *
+   * <ul>
+   *   <li>禁止在 {@code synchronized} 块内调用任何可能阻塞的操作</li>
+   *   <li>如需互斥保护 + 阻塞操作，使用 {@link java.util.concurrent.locks.ReentrantLock} 替代 {@code synchronized}</li>
+   *   <li>保持同步块极短，仅保护内存级原子操作</li>
+   * </ul>
+   *
+   * <p>排查 pinning 问题：启动时添加 JVM 参数 {@code -Djdk.tracePinnedThreads=short}（开发/测试环境）或
+   * {@code -Djdk.tracePinnedThreads=full}（压测调优），详见 {@code docs/virtual-thread-safety.md}。
+   *
    * @return VirtualThread 每任务一线程执行器
    * @throws UnsupportedOperationException 当前 JVM 不支持 VirtualThread 时抛出
    */
@@ -398,6 +414,19 @@ public final class ExecutorUtils {
    * 创建 VirtualThread 线程池（Java 21+，IO 密集型场景）。
    *
    * <p><b>显式 API（无静默回退）：</b>若当前 JVM 不支持 VirtualThread 将直接抛出异常， 避免运行时才发现性能特征与预期不符。
+   *
+   * <p><b>Carrier Thread Pinning 安全警示：</b>
+   *
+   * <p>VirtualThread 在 {@code synchronized} 块内执行阻塞操作（如 {@code BlockingQueue.take()}、
+   * {@code Thread.sleep()}、IO 等待）时会被"钉"（pin）在载体线程（carrier thread）上无法让出，导致吞吐量急剧下降。
+   *
+   * <p><b>规则：</b>
+   *
+   * <ul>
+   *   <li>禁止在 {@code synchronized} 块内调用任何可能阻塞的操作</li>
+   *   <li>如需互斥保护 + 阻塞操作，使用 {@link java.util.concurrent.locks.ReentrantLock} 替代 {@code synchronized}</li>
+   *   <li>保持同步块极短，仅保护内存级原子操作</li>
+   * </ul>
    *
    * @param threadNamePrefix 线程名前缀（不含序号）
    * @return VirtualThread 每任务一线程执行器

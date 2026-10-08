@@ -65,11 +65,14 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
 # JVM 参数：容器感知 + 生产调优
+# 注意：-Djdk.tracePinnedThreads=short 仅开发/测试环境启用，用于排查虚拟线程 carrier pinning 问题
+# 生产环境请移除此参数（有性能开销），详见 docs/virtual-thread-safety.md
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
   -XX:MaxRAMPercentage=75.0 \
   -XX:+UseG1GC \
   -Djava.security.egd=file:/dev/./urandom \
-  -Dfile.encoding=UTF-8"
+  -Dfile.encoding=UTF-8 \
+  -Djdk.tracePinnedThreads=short"
 
 # 启动入口
 ENTRYPOINT ["sh", "-c", "exec java ${JAVA_OPTS} -jar /app/app.jar"]

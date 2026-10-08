@@ -1,15 +1,18 @@
 package com.njydsz.common.file.storage;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;
+import com.njydsz.common.file.domain.ChunkedUploadResult;
 import com.njydsz.common.file.config.FileUploadProperties;
 import com.njydsz.common.file.exception.FileExceptionCode;
 import com.njydsz.common.file.metrics.FileMetrics;
@@ -446,5 +449,130 @@ public class DefaultStorageFactory implements IFileStorageProvider {
       }
     }
     return storage;
+  }
+
+  // ==================== 分片上传（Multipart Upload） ====================
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>委托给底层存储实例的 {@link IFileStorage#initiateChunkedUpload} 完成初始化， 返回 {@link
+   * ChunkedUploadResult#getUploadId()}。 存储类型未配置或初始化失败时抛出 {@link FileExceptionCode#CONFIG_INVALID} 或 {@link
+   * FileExceptionCode#MULTIPART_UPLOAD_FAILED}。
+   */
+  @Override
+  public String initiateMultipartUpload(String bucket, String key, String contentType) {
+    if (key == null || key.isBlank()) {
+      throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
+    }
+    try {
+      IFileStorage storage = getStorage();
+      ChunkedUploadResult result = storage.initiateChunkedUpload(bucket, key);
+      log.info(
+          "[DefaultStorageFactory] initiateMultipartUpload: bucket={}, key={}, uploadId={}",
+          bucket,
+          key,
+          result.getUploadId());
+      return result.getUploadId();
+    } catch (BusinessException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error(
+          "[DefaultStorageFactory] initiateMultipartUpload failed: bucket={}, key={}, message={}",
+          bucket,
+          key,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>将字节数组包装为 {@link AdaptiveMultipartFile} 后委托给底层 {@link IFileStorage#uploadChunk} 完成分片上传。
+   * 分片编号非法时抛出 {@link FileExceptionCode#MULTIPART_UPLOAD_FAILED}。
+   */
+  @Override
+  public void uploadPart(
+      String bucket, String key, String uploadId, int partNumber, byte[] data) {
+    if (key == null || key.isBlank()) {
+      throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
+    }
+    if (uploadId == null || uploadId.isBlank()) {
+      throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+    }
+    if (partNumber < 1) {
+      throw BusinessException.of(FileExceptionCode.MULTIPART_UPLOAD_FAILED)
+          .data("reason", "partNumber must be >= 1");
+    }
+    if (data == null) {
+      data = new byte[0];
+    }
+    try {
+      IFileStorage storage = getStorage();
+      AdaptiveMultipartFile multipartFile =
+          new AdaptiveMultipartFile(
+              "part", "part-" + partNumber, "application/octet-stream", data);
+      storage.uploadChunk(bucket, key, uploadId, partNumber, multipartFile);
+      log.debug(
+          "[DefaultStorageFactory] uploadPart: uploadId={}, part={}, size={}",
+          uploadId,
+          partNumber,
+          data.length);
+    } catch (BusinessException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error(
+          "[DefaultStorageFactory] uploadPart failed: uploadId={}, part={}, message={}",
+          uploadId,
+          partNumber,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>自动列举该 {@code uploadId} 下所有已上传的分片，按编号升序合并。 通过 {@link AbstractFileStorage#listParts} 获取已上传分片信息。
+   */
+  @Override
+  public void completeMultipartUpload(String bucket, String key, String uploadId) {
+    if (key == null || key.isBlank()) {
+      throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
+    }
+    if (uploadId == null || uploadId.isBlank()) {
+      throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+    }
+    try {
+      IFileStorage storage = getStorage();
+      if (!(storage instanceof AbstractFileStorage afs)) {
+        throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+      }
+      List<IFileStorage.PartInfo> uploadedParts = afs.listParts(bucket, key, uploadId);
+      if (uploadedParts == null || uploadedParts.isEmpty()) {
+        throw BusinessException.of(FileExceptionCode.MULTIPART_UPLOAD_FAILED)
+            .data("reason", "no parts uploaded")
+            .data("uploadId", uploadId);
+      }
+      List<Integer> partNumbers =
+          uploadedParts.stream()
+              .map(IFileStorage.PartInfo::partNumber)
+              .sorted()
+              .collect(Collectors.toList());
+      storage.completeChunkedUpload(bucket, key, uploadId, partNumbers);
+      log.info(
+          "[DefaultStorageFactory] completeMultipartUpload: uploadId={}, parts={}",
+          uploadId,
+          partNumbers.size());
+    } catch (BusinessException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error(
+          "[DefaultStorageFactory] completeMultipartUpload failed: uploadId={}, message={}",
+          uploadId,
+          e.getMessage());
+      throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+    }
   }
 }

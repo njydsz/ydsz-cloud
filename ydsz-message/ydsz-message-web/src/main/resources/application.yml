@@ -39,3 +39,10 @@ skywalking:
   agent:
     service_name: ${spring.application.name}
     collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}
+
+# 错误码元信息端点无需认证（前端代码生成器 / CI 流水线直接访问）
+ydsz:
+  auth:
+    filter:
+      common-ignore-url:
+        - /message/error-codes

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.workflow.infra.mapper.FlowJoinTokenMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.workflow.infra.entity.FlowJoinTokenEntity">
+        <id column="id" property="id"/>
+        <result column="instance_id" property="instanceId"/>
+        <result column="join_node_code" property="joinNodeCode"/>
+        <result column="total_branches" property="totalBranches"/>
+        <result column="required_branches" property="requiredBranches"/>
+        <result column="arrived_count" property="arrivedCount"/>
+        <result column="join_status" property="joinStatus"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="revision" property="revision"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, instance_id, join_node_code, total_branches, required_branches,
+        arrived_count, join_status, tenant_id, is_deleted, created_by, created_at,
+        updated_by, updated_at, revision, status
+    </sql>
+
+    <!-- 原子递增到达计数 -->
+    <update id="incrementArrivedCount">
+        UPDATE ydsz_flow_join_token
+        SET arrived_count = arrived_count + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND is_deleted = 0
+          AND join_status = 'PENDING'
+    </update>
+
+    <!-- 条件递增到达计数（同 incrementArrivedCount，为语义清晰保留别名） -->
+    <update id="incrementArrivedCountIfPending">
+        UPDATE ydsz_flow_join_token
+        SET arrived_count = arrived_count + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND is_deleted = 0
+          AND join_status = 'PENDING'
+    </update>
+
+    <!-- 按实例ID + join节点编码精确查找 -->
+    <select id="selectByInstanceAndNode" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ydsz_flow_join_token
+        WHERE instance_id = #{instanceId}
+          AND join_node_code = #{joinNodeCode}
+          AND is_deleted = 0
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <!-- 按实例ID批量查询 -->
+    <select id="selectByInstanceId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ydsz_flow_join_token
+        WHERE instance_id = #{instanceId}
+          AND is_deleted = 0
+    </select>
+
+    <!-- 条件更新状态（CAS 语义） -->
+    <update id="updateStatus">
+        UPDATE ydsz_flow_join_token
+        SET join_status = #{targetStatus},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND join_status = #{expectedStatus}
+          AND is_deleted = 0
+    </update>
+
+    <!-- 批量取消实例下所有 PENDING 状态的 token -->
+    <update id="cancelPendingByInstanceId">
+        UPDATE ydsz_flow_join_token
+        SET join_status = 'CANCELLED',
+            updated_at = CURRENT_TIMESTAMP
+        WHERE instance_id = #{instanceId}
+          AND join_status = 'PENDING'
+          AND is_deleted = 0
+    </update>
+
+    <!-- 逻辑删除已完成的历史记录 -->
+    <update id="deleteCompletedBefore">
+        UPDATE ydsz_flow_join_token
+        SET is_deleted = 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE join_status IN
+        <foreach collection="statusList" item="status" open="(" separator="," close=")">
+            #{status}
+        </foreach>
+          AND updated_at &lt; #{updatedAtThreshold}
+          AND is_deleted = 0
+        LIMIT #{limit}
+    </update>
+
+</mapper>

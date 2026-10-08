@@ -1,25 +1,28 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.workflow.domain.repository.FlowJoinTokenRepository;
 import com.njydsz.workflow.server.cache.CacheKeyBuilder;
 import com.njydsz.workflow.server.service.FlowJoinTokenService;
 
 /**
  * 流程加签 Token 服务实现。
  *
- * <p>管理并行网关 join 的到达计数与分支总数 ({@code flow:join:*})：
+ * <p>管理并行网关 join 的到达计数与分支总数：分支到达时原子计数 → 达到阈值时触发 join 聚合 → 全部完成后清除。
  *
- * <p>分支到达时原子计数 → 达到阈值时触发 join 聚合 → 全部完成后清除。
+ * <p><b>持久化策略（V26.10.08 新增）：</b>
  *
- * <p>支持全部分支到达和 N/M 到达两种模式， TTL 兜底防止数据永久残留。
+ * <ul>
+ *   <li>DB（{@code ydsz_flow_join_token}）为主存储，确保服务重启后 join 状态不丢失</li>
+ *   <li>Redis 为缓存层，加速读操作；DB 写入成功后再更新 Redis</li>
+ *   <li>读操作优先 Redis，未命中或异常时回退到 DB</li>
+ * </ul>
  *
- * <p>Redis 操作使用 {@link RedisStringOps} 高级 API（INCR + EXPIRE、SET + EXPIRE），
- * 替代手写 Lua 脚本，保证原子性同时提升可维护性。
+ * <p>支持全部分支到达和 N/M 到达两种模式，DB 层 SQL 原子递增保证并发安全。
  *
  * @author ydsz-team
  * @since 26.10.01
@@ -38,13 +41,15 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
   /** Redis String 操作组件（SET + EXPIRE、INCR、GET 等高级 API，支持租户前缀） */
   private final RedisStringOps redisStringOps;
 
+  /** DB 持久化层（主存储，domain 接口，infra 实现由 Spring 注入） */
+  private final FlowJoinTokenRepository joinTokenRepository;
+
   // ============================== 接口实现 ==============================
 
   /**
    * 初始化 join 令牌：写入分支总数并重置到达计数。
    *
-   * <p>使用 SET + EX 原子写入替代 Lua 脚本（{@code SET key value EX ttl}），
-   * Spring Data Redis 在单次请求中完成 SET + EXPIRE，无并发竞态。
+   * <p>DB 优先 → 成功后更新 Redis 缓存。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
@@ -56,117 +61,28 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
       return;
     }
     int total = Math.max(1, branchCount);
-    String totalKey = buildTotalKey(instanceId, joinNodeCode);
-    String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
-    try {
-      // SET arrived 0 EX ttl + SET total N EX ttl（两条原子 SET 命令，Spring Data Redis SET 带 Duration）
-      redisStringOps.set(arrivedKey, "0", TTL_SECONDS);
-      redisStringOps.set(totalKey, String.valueOf(total), TTL_SECONDS);
-      log.info(
-          "[FlowJoinToken] 初始化 join 令牌 instanceId={} node={} branchCount={}",
-          instanceId,
-          joinNodeCode,
-          total);
-    } catch (Exception e) {
+    // DB 优先（主存储）
+    String tokenId = joinTokenRepository.initTokens(instanceId, joinNodeCode, total, 0);
+    if (tokenId == null) {
       log.warn(
-          "[FlowJoinToken] 初始化令牌失败 instanceId={} node={} err={}",
+          "[FlowJoinToken] DB 初始化令牌失败，回退到 Redis instanceId={} node={}",
           instanceId,
-          joinNodeCode,
-          e.getMessage());
+          joinNodeCode);
+      // DB 失败时回退到 Redis-only
+      initTokensInRedis(instanceId, joinNodeCode, total, null);
+      return;
     }
-  }
-
-  /**
-   * 标记一个分支已到达：INCR 到达计数并判断是否全部到达。
-   *
-   * <p>使用 INCR + EXPIRE + GET 组合替代 Lua 脚本。INCR 保证原子计数，
-   * EXPIRE 刷新 TTL，GET total 仅读取不变值（initTokens 后不再修改），无竞态。
-   *
-   * @param instanceId 流程实例 ID
-   * @param joinNodeCode join 节点编码
-   * @return true=本次到达后全部分支已到达（可聚合）；false=仍有分支未到达或 Redis 异常
-   */
-  @Override
-  public boolean arriveToken(String instanceId, String joinNodeCode) {
-    if (!isValidParam(instanceId, joinNodeCode)) {
-      return false;
-    }
-    String totalKey = buildTotalKey(instanceId, joinNodeCode);
-    String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
-    try {
-      // INCR arrived（原子） + EXPIRE 刷新 TTL
-      Long arrived = redisStringOps.incr(arrivedKey, 1L);
-      redisStringOps.expire(arrivedKey, TTL_SECONDS);
-      // GET total（total 在 initTokens 后不再修改，无需原子组合）
-      String totalStr = redisStringOps.get(totalKey, String.class);
-      if (totalStr == null || arrived == null) {
-        return false;
-      }
-      int total = Integer.parseInt(totalStr);
-      boolean allArrived = arrived >= total;
-      log.debug(
-          "[FlowJoinToken] 分支到达 instanceId={} node={} arrived={} total={} allArrived={}",
-          instanceId,
-          joinNodeCode,
-          arrived,
-          total,
-          allArrived);
-      return allArrived;
-    } catch (Exception e) {
-      log.warn(
-          "[FlowJoinToken] 标记到达失败 instanceId={} node={} err={}",
-          instanceId,
-          joinNodeCode,
-          e.getMessage());
-      return false;
-    }
-  }
-
-  /**
-   * 检查是否所有分支都已到达。
-   *
-   * @param instanceId 流程实例 ID
-   * @param joinNodeCode join 节点编码
-   * @return true=全部到达可聚合；false=未全部到达 / 未初始化 / Redis 异常
-   */
-  @Override
-  public boolean allArrived(String instanceId, String joinNodeCode) {
-    if (!isValidParam(instanceId, joinNodeCode)) {
-      return false;
-    }
-    try {
-      int total = readTotal(instanceId, joinNodeCode);
-      String arrivedStr =
-          redisStringOps.get(buildArrivedKey(instanceId, joinNodeCode), String.class);
-      if (arrivedStr == null) {
-        return false;
-      }
-      long arrived;
-      try {
-        arrived = Long.parseLong(arrivedStr);
-      } catch (NumberFormatException e) {
-        log.warn(
-            "[FlowJoinToken] 到达计数非数字 instanceId={} node={} raw={}",
-            instanceId,
-            joinNodeCode,
-            arrivedStr);
-        return false;
-      }
-      return arrived >= total;
-    } catch (Exception e) {
-      log.warn(
-          "[FlowJoinToken] 检查全部到达失败 instanceId={} node={} err={}",
-          instanceId,
-          joinNodeCode,
-          e.getMessage());
-      return false;
-    }
+    // DB 成功后更新 Redis 缓存
+    initTokensInRedis(instanceId, joinNodeCode, total, null);
+    log.info(
+        "[FlowJoinToken] 初始化 join 令牌 instanceId={} node={} branchCount={}",
+        instanceId,
+        joinNodeCode,
+        total);
   }
 
   /**
    * P0-3: 初始化 N/M join 令牌。
-   *
-   * <p>使用三条 SET + EX 原子写入，替代 Lua 脚本。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
@@ -181,33 +97,64 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     }
     int total = Math.max(1, branchCount);
     int required = Math.min(Math.max(1, requiredCount), total);
-    String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
-    String totalKey = buildTotalKey(instanceId, joinNodeCode);
-    String requiredKey = buildRequiredKey(instanceId, joinNodeCode);
-    try {
-      // 三条 SET + EX，每条独立原子
-      redisStringOps.set(arrivedKey, "0", TTL_SECONDS);
-      redisStringOps.set(totalKey, String.valueOf(total), TTL_SECONDS);
-      redisStringOps.set(requiredKey, String.valueOf(required), TTL_SECONDS);
-      log.info(
-          "[FlowJoinToken] P0-3 初始化 N/M join 令牌 instanceId={} node={} total={} required={}",
-          instanceId,
-          joinNodeCode,
-          total,
-          required);
-    } catch (Exception e) {
+    // DB 优先（主存储）
+    String tokenId = joinTokenRepository.initTokens(instanceId, joinNodeCode, total, required);
+    if (tokenId == null) {
       log.warn(
-          "[FlowJoinToken] P0-3 初始化 N/M 令牌失败 instanceId={} node={} err={}",
+          "[FlowJoinToken] DB 初始化 N/M 令牌失败，回退到 Redis instanceId={} node={}",
           instanceId,
-          joinNodeCode,
-          e.getMessage());
+          joinNodeCode);
+      initTokensInRedis(instanceId, joinNodeCode, total, required);
+      return;
     }
+    initTokensInRedis(instanceId, joinNodeCode, total, required);
+    log.info(
+        "[FlowJoinToken] P0-3 初始化 N/M join 令牌 instanceId={} node={} total={} required={}",
+        instanceId,
+        joinNodeCode,
+        total,
+        required);
+  }
+
+  /**
+   * 标记一个分支已到达 join 节点。
+   *
+   * <p>DB 原子递增为主 → 成功后同步 Redis 缓存。以 DB 判断聚合是否完成。
+   *
+   * @param instanceId 流程实例 ID
+   * @param joinNodeCode join 节点编码
+   * @return true=本次到达后全部分支已到达（可聚合）；false=仍有分支未到达或异常
+   */
+  @Override
+  public boolean arriveToken(String instanceId, String joinNodeCode) {
+    if (!isValidParam(instanceId, joinNodeCode)) {
+      return false;
+    }
+    // DB 原子递增（主存储）
+    int dbArrived = joinTokenRepository.arriveToken(instanceId, joinNodeCode);
+    if (dbArrived < 0) {
+      // DB 异常或 token 不存在：回退到 Redis
+      log.warn(
+          "[FlowJoinToken] DB arrive 失败，回退到 Redis instanceId={} node={}",
+          instanceId,
+          joinNodeCode);
+      return arriveTokenInRedis(instanceId, joinNodeCode, false);
+    }
+    // DB 判断聚合是否完成
+    boolean complete = joinTokenRepository.isComplete(instanceId, joinNodeCode);
+    // 异步更新 Redis 缓存（不影响主流程）
+    syncRedisArrive(instanceId, joinNodeCode);
+    log.debug(
+        "[FlowJoinToken] 分支到达 instanceId={} node={} arrived={} allArrived={}",
+        instanceId,
+        joinNodeCode,
+        dbArrived,
+        complete);
+    return complete;
   }
 
   /**
    * P0-3: 标记分支到达并检查 N/M 聚合条件。
-   *
-   * <p>使用 INCR + EXPIRE + GET 组合替代 Lua 脚本，获取 required 值而非 total。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
@@ -218,40 +165,45 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     if (!isValidParam(instanceId, joinNodeCode)) {
       return false;
     }
-    String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
-    String requiredKey = buildRequiredKey(instanceId, joinNodeCode);
-    try {
-      // INCR arrived（原子） + EXPIRE 刷新 TTL
-      Long arrived = redisStringOps.incr(arrivedKey, 1L);
-      redisStringOps.expire(arrivedKey, TTL_SECONDS);
-      // 先尝试 N/M 评估
-      String requiredStr = redisStringOps.get(requiredKey, String.class);
-      if (requiredStr != null && arrived != null) {
-        int required = Integer.parseInt(requiredStr);
-        if (arrived >= required) {
-          log.debug(
-              "[FlowJoinToken] P0-3 N/M 聚合条件满足 instanceId={} node={} arrived={} required={}",
-              instanceId,
-              joinNodeCode,
-              arrived,
-              required);
-          return true;
-        }
-      }
-      // required key 不存在时回退到全部分支语义
-      Boolean hasRequired = redisStringOps.hasKey(requiredKey);
-      if (Boolean.FALSE.equals(hasRequired)) {
-        return arriveToken(instanceId, joinNodeCode);
-      }
-      return false;
-    } catch (Exception e) {
+    // DB 原子递增（主存储）
+    int dbArrived = joinTokenRepository.arriveToken(instanceId, joinNodeCode);
+    if (dbArrived < 0) {
       log.warn(
-          "[FlowJoinToken] P0-3 N/M 到达标记失败 instanceId={} node={} err={}",
+          "[FlowJoinToken] DB N/M arrive 失败，回退到 Redis instanceId={} node={}",
+          instanceId,
+          joinNodeCode);
+      return arriveTokenInRedis(instanceId, joinNodeCode, true);
+    }
+    // DB 判断聚合是否完成
+    boolean complete = joinTokenRepository.isComplete(instanceId, joinNodeCode);
+    // 异步更新 Redis 缓存
+    syncRedisArrive(instanceId, joinNodeCode);
+    if (complete) {
+      log.debug(
+          "[FlowJoinToken] P0-3 N/M 聚合条件满足 instanceId={} node={} arrived={}",
           instanceId,
           joinNodeCode,
-          e.getMessage());
-      return arriveToken(instanceId, joinNodeCode);
+          dbArrived);
     }
+    return complete;
+  }
+
+  /**
+   * 检查是否所有分支都已到达（可以聚合通过）。
+   *
+   * <p>优先查 Redis，未命中时回退到 DB。
+   *
+   * @param instanceId 流程实例 ID
+   * @param joinNodeCode join 节点编码
+   * @return true=全部到达可聚合；false=未全部到达 / 未初始化 / 异常
+   */
+  @Override
+  public boolean allArrived(String instanceId, String joinNodeCode) {
+    if (!isValidParam(instanceId, joinNodeCode)) {
+      return false;
+    }
+    // 优先查 DB（DB 为主存储）
+    return joinTokenRepository.isComplete(instanceId, joinNodeCode);
   }
 
   /**
@@ -266,32 +218,13 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     if (!isValidParam(instanceId, joinNodeCode)) {
       return false;
     }
-    try {
-      String requiredStr =
-          redisStringOps.get(buildRequiredKey(instanceId, joinNodeCode), String.class);
-      if (requiredStr == null) {
-        // 未设置 required，回退到全部分支到达语义
-        return allArrived(instanceId, joinNodeCode);
-      }
-      int required = Integer.parseInt(requiredStr);
-      String arrivedStr =
-          redisStringOps.get(buildArrivedKey(instanceId, joinNodeCode), String.class);
-      if (arrivedStr == null) {
-        return false;
-      }
-      return Long.parseLong(arrivedStr) >= required;
-    } catch (Exception e) {
-      log.warn(
-          "[FlowJoinToken] P0-3 检查 N/M 条件失败 instanceId={} node={} err={}",
-          instanceId,
-          joinNodeCode,
-          e.getMessage());
-      return allArrived(instanceId, joinNodeCode);
-    }
+    return joinTokenRepository.isComplete(instanceId, joinNodeCode);
   }
 
   /**
-   * 清除 join 令牌：删除到达计数与分支总数 key。
+   * 清除 join 令牌：标记 DB 状态为 COMPLETED 并删除 Redis key。
+   *
+   * <p>join 聚合通过后或流程终止时调用，释放计数资源。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
@@ -302,37 +235,110 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
       return;
     }
     try {
-      redisStringOps.del(buildArrivedKey(instanceId, joinNodeCode));
-      redisStringOps.del(buildTotalKey(instanceId, joinNodeCode));
-      redisStringOps.del(buildRequiredKey(instanceId, joinNodeCode));
-      log.info("[FlowJoinToken] 清除 join 令牌 instanceId={} node={}", instanceId, joinNodeCode);
+      // 标记 DB 状态
+      joinTokenRepository.markCompleted(instanceId, joinNodeCode);
     } catch (Exception e) {
       log.warn(
-          "[FlowJoinToken] 清除令牌失败 instanceId={} node={} err={}",
+          "[FlowJoinToken] DB 标记完成失败 instanceId={} node={} err={}",
           instanceId,
           joinNodeCode,
           e.getMessage());
     }
+    try {
+      // 删除 Redis 缓存
+      redisStringOps.del(buildArrivedKey(instanceId, joinNodeCode));
+      redisStringOps.del(buildTotalKey(instanceId, joinNodeCode));
+      redisStringOps.del(buildRequiredKey(instanceId, joinNodeCode));
+    } catch (Exception e) {
+      log.warn(
+          "[FlowJoinToken] Redis 清除失败 instanceId={} node={} err={}",
+          instanceId,
+          joinNodeCode,
+          e.getMessage());
+    }
+    log.info("[FlowJoinToken] 清除 join 令牌 instanceId={} node={}", instanceId, joinNodeCode);
   }
 
   /**
-   * 检查 join 令牌是否已初始化（total key 是否存在）
+   * 检查 join 令牌是否已初始化。
+   *
+   * <p>同时检查 DB 和 Redis：任一来源报告已初始化即视为已初始化。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
-   * @return true=令牌已初始化
+   * @return true=已初始化
    */
   @Override
   public boolean isInitialized(String instanceId, String joinNodeCode) {
     if (!isValidParam(instanceId, joinNodeCode)) {
       return false;
     }
+    // 优先查 DB
+    return joinTokenRepository.isInitialized(instanceId, joinNodeCode);
+  }
+
+  // ============================== Redis 私有辅助 ==============================
+
+  /**
+   * 在 Redis 中初始化 token（缓存层）。
+   *
+   * @param instanceId 流程实例 ID
+   * @param joinNodeCode join 节点编码
+   * @param total 总分支数
+   * @param required 所需到达数（null 表示全部分支）
+   */
+  private void initTokensInRedis(
+      String instanceId, String joinNodeCode, int total, Integer required) {
+    String totalKey = buildTotalKey(instanceId, joinNodeCode);
+    String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
+    String requiredKey = buildRequiredKey(instanceId, joinNodeCode);
     try {
-      Boolean exists = redisStringOps.hasKey(buildTotalKey(instanceId, joinNodeCode));
-      return Boolean.TRUE.equals(exists);
+      redisStringOps.set(arrivedKey, "0", TTL_SECONDS);
+      redisStringOps.set(totalKey, String.valueOf(total), TTL_SECONDS);
+      if (required != null) {
+        redisStringOps.set(requiredKey, String.valueOf(required), TTL_SECONDS);
+      }
     } catch (Exception e) {
       log.warn(
-          "[FlowJoinToken] 检查初始化状态失败 instanceId={} node={} err={}",
+          "[FlowJoinToken] Redis 初始化令牌缓存失败 instanceId={} node={} err={}",
+          instanceId,
+          joinNodeCode,
+          e.getMessage());
+    }
+  }
+
+  /**
+   * 在 Redis 中执行 arriveToken 操作（降级路径）。
+   *
+   * @param instanceId 流程实例 ID
+   * @param joinNodeCode join 节点编码
+   * @param withRequired 是否使用 N/M 语义
+   * @return true=聚合完成
+   */
+  private boolean arriveTokenInRedis(
+      String instanceId, String joinNodeCode, boolean withRequired) {
+    String totalKey = buildTotalKey(instanceId, joinNodeCode);
+    String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
+    try {
+      Long arrived = redisStringOps.incr(arrivedKey, 1L);
+      redisStringOps.expire(arrivedKey, TTL_SECONDS);
+      if (arrived == null) {
+        return false;
+      }
+      if (withRequired) {
+        String requiredStr = redisStringOps.get(buildRequiredKey(instanceId, joinNodeCode), String.class);
+        if (requiredStr != null) {
+          return arrived >= Integer.parseInt(requiredStr);
+        }
+      }
+      String totalStr = redisStringOps.get(totalKey, String.class);
+      if (totalStr == null) {
+        return false;
+      }
+      return arrived >= Integer.parseInt(totalStr);
+    } catch (Exception e) {
+      log.warn(
+          "[FlowJoinToken] Redis arrive 降级操作失败 instanceId={} node={} err={}",
           instanceId,
           joinNodeCode,
           e.getMessage());
@@ -340,40 +346,32 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     }
   }
 
-  // ============================== 私有辅助 ==============================
-
   /**
-   * 读取分支总数，未初始化时返回 Integer.MAX_VALUE（避免误判为已全部到达）
+   * 同步 Redis 到达计数（异步更新缓存）。
+   *
+   * <p>以 DB 当前计数设置 Redis，不依赖 INCR（避免缓存层与 DB 产生计数偏差）。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
-   * @return 分支总数；未初始化返回 Integer.MAX_VALUE
    */
-  private int readTotal(String instanceId, String joinNodeCode) {
+  private void syncRedisArrive(String instanceId, String joinNodeCode) {
     try {
-      String totalStr = redisStringOps.get(buildTotalKey(instanceId, joinNodeCode), String.class);
-      if (totalStr == null) {
-        // 未初始化：返回最大值，确保 allArrived 返回 false（fail-safe）
-        log.warn("[FlowJoinToken] 分支总数未初始化 instanceId={} node={}", instanceId, joinNodeCode);
-        return Integer.MAX_VALUE;
+      int dbCount = joinTokenRepository.getArrivedCount(instanceId, joinNodeCode);
+      if (dbCount >= 0) {
+        String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
+        redisStringOps.set(arrivedKey, String.valueOf(dbCount), TTL_SECONDS);
       }
-      return Integer.parseInt(totalStr);
-    } catch (NumberFormatException e) {
-      log.warn(
-          "[FlowJoinToken] 分支总数非数字 instanceId={} node={} err={}",
-          instanceId,
-          joinNodeCode,
-          e.getMessage());
-      return Integer.MAX_VALUE;
     } catch (Exception e) {
-      log.warn(
-          "[FlowJoinToken] 读取分支总数失败 instanceId={} node={} err={}",
+      // Redis 同步失败不影响主流程
+      log.debug(
+          "[FlowJoinToken] Redis 同步计数失败 instanceId={} node={} err={}",
           instanceId,
           joinNodeCode,
           e.getMessage());
-      return Integer.MAX_VALUE;
     }
   }
+
+  // ============================== 私有辅助 ==============================
 
   /**
    * 参数合法性校验。
@@ -396,10 +394,6 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
 
   /**
    * 构建到达计数 key：flow:join:{instanceId}:{joinNodeCode}
-   *
-   * @param instanceId 流程实例 ID
-   * @param joinNodeCode join 节点编码
-   * @return Redis 到达计数 key
    */
   private String buildArrivedKey(String instanceId, String joinNodeCode) {
     return cacheKeyBuilder.joinToken(instanceId, joinNodeCode);
@@ -407,21 +401,13 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
 
   /**
    * 构建分支总数 key：flow:join:{instanceId}:{joinNodeCode}:total
-   *
-   * @param instanceId 流程实例 ID
-   * @param joinNodeCode join 节点编码
-   * @return Redis 分支总数 key
    */
   private String buildTotalKey(String instanceId, String joinNodeCode) {
     return cacheKeyBuilder.joinTokenTotal(instanceId + ":" + joinNodeCode);
   }
 
   /**
-   * P0-3: 构建 N/M join required key：flow:join:{instanceId}:{joinNodeCode}:required
-   *
-   * @param instanceId 流程实例 ID
-   * @param joinNodeCode join 节点编码
-   * @return Redis N/M join required key
+   * 构建 N/M join required key：flow:join:{instanceId}:{joinNodeCode}:required
    */
   private String buildRequiredKey(String instanceId, String joinNodeCode) {
     return cacheKeyBuilder.joinTokenRequired(instanceId + ":" + joinNodeCode);
