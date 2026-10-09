@@ -1,6 +1,5 @@
 package com.njydsz.agent.web.controller;
 
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
