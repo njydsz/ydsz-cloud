@@ -3,6 +3,7 @@ package com.njydsz.literule.domain.converter;
 import java.util.List;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.literule.domain.entity.DecisionTable;
@@ -24,7 +25,7 @@ import com.njydsz.literule.domain.vo.RuleTemplateVO;
  * @author ydsz-team
  * @since 26.10.01
  */
-@Mapper
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface RuleComponentConverter {
 
   /** MapStruct 单例实例 */

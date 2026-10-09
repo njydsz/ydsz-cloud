@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.agent.domain.dto.AgentApprovalDTO;
@@ -51,7 +52,7 @@ import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
  * @author ydsz-team
  * @since 26.10.01
  */
-@Mapper
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface AgentConverter {
 
   /** MapStruct 实例 */

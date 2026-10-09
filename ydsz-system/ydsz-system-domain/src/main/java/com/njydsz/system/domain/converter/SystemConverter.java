@@ -5,6 +5,7 @@ import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.system.domain.approval.ConfigApproval;
@@ -90,7 +91,7 @@ import com.njydsz.system.domain.vo.VariableVO;
  * @see com.njydsz.system.domain.vo AppInfoVO / ConfigVO / DictItemVO / DictTypeVO / EntityVersionVO /
  *     VariableVO
  */
-@Mapper
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface SystemConverter {
 
   /** 单例实例 */

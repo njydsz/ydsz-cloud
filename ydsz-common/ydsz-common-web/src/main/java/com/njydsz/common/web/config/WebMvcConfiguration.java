@@ -14,6 +14,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
@@ -24,7 +25,6 @@ import com.njydsz.common.base.config.YdszAutoConfiguration;
 import com.njydsz.common.base.constant.FilterOrder;
 import com.njydsz.common.base.constant.InterceptorOrder;
 import com.njydsz.common.safe.config.SafeConfiguration;
-import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.common.web.advice.GlobalResponseAdvice;
 import com.njydsz.common.web.auth.AuthHandlerFactory;
 import com.njydsz.common.web.constant.WebFilterOrder;
@@ -51,7 +51,7 @@ import com.njydsz.common.web.metrics.WebMetrics;
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnPlatform(PlatformMode.WEB)
 @AutoConfigureBefore({YdszAutoConfiguration.class, SafeConfiguration.class})
-@EnableConfigurationProperties({WebContentCacheProperties.class})
+@EnableConfigurationProperties({WebContentCacheProperties.class, WebCorsProperties.class, WebTraceProperties.class})
 public class WebMvcConfiguration extends BaseMvcConfiguration {
 
   private final AuthFilterConfiguration authFilterConfiguration;
@@ -65,11 +65,11 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
 
   public WebMvcConfiguration(
       WebCorsProperties webCorsProperties,
-      AuthFilterConfiguration authFilterConfiguration,
-      AuthHandlerFactory authHandlerFactory,
+      @Lazy AuthFilterConfiguration authFilterConfiguration,
+      @Lazy AuthHandlerFactory authHandlerFactory,
       WebTraceProperties webTraceProperties,
       WebContentCacheProperties contentCacheProperties,
-      RequestLogInterceptor requestLogInterceptor,
+      @Lazy RequestLogInterceptor requestLogInterceptor,
       ApplicationContext applicationContext) {
     super(webCorsProperties);
     this.webCorsProperties = webCorsProperties;
@@ -188,33 +188,8 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
     return authFilterBean;
   }
 
-  /**
-   * 注册安全响应头过滤器（依赖 safe 模块配置）。
-   *
-   * <p>仅当 {@code SecurityHeaderProperties} 存在（safe 模块启用）且安全头开关开启时装配； 为响应追加 CSP/HSTS/X-Frame-Options
-   * 等防护头。{@code @ConditionalOnMissingBean(name)} 允许覆盖。
-   *
-   * @param securityHeaderProperties 安全响应头配置
-   * @return 安全头过滤器注册 Bean
-   */
-  @Bean
-  @ConditionalOnMissingBean(name = "securityHeaderFilter")
-  @ConditionalOnBean(SecurityHeaderProperties.class)
-  @ConditionalOnProperty(
-      prefix = "ydsz.safe.security-headers",
-      name = "enabled",
-      havingValue = "true",
-      matchIfMissing = true)
-  public FilterRegistrationBean<SecurityHeaderFilter> securityHeaderFilter(
-      SecurityHeaderProperties securityHeaderProperties) {
-    SecurityHeaderFilter securityHeaderFilter = new SecurityHeaderFilter(securityHeaderProperties);
-    FilterRegistrationBean<SecurityHeaderFilter> bean =
-        new FilterRegistrationBean<>(securityHeaderFilter);
-    bean.addUrlPatterns("/*");
-    bean.setName("securityHeaderFilter");
-    bean.setOrder(FilterOrder.SECURITY_HEADER_FILTER);
-    return bean;
-  }
+  // NOTE: securityHeaderFilter bean 已迁移至 ydzz-common-safe 的 SafeConfiguration。
+  // WebMvcConfiguration 不再注册，避免与 SafeConfiguration 同名 bean 冲突导致启动失败。
 
   /**
    * 注册 TraceId 响应过滤器。

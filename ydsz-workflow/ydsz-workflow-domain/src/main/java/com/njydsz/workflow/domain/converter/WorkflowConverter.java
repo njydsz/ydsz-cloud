@@ -86,7 +86,7 @@ import com.njydsz.workflow.domain.vo.StringVO;
  * @author ydsz-team
  * @since 26.10.01
  */
-@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface WorkflowConverter {
 
   /** MapStruct 单例实例 */
