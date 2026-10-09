@@ -137,7 +137,7 @@ public class DagWorkflowController {
   @GetMapping("/export")
   public void exportDagWorkflows(
       HttpServletResponse response,
-      @RequestParam(required = false) String category) throws IOException {
+      @RequestParam(required = false) String category) throws Exception {
     String fileName = "dag_workflows_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType(CONTENT_TYPE_OOXML);
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, buildRfc5987ContentDisposition(fileName));

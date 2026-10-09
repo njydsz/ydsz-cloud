@@ -228,7 +228,7 @@ public class AgentDefinitionController {
    */
   @Operation(summary = "导出 Agent 定义列表（Excel）")
   @GetMapping("/export")
-  public void exportAgentDefinitions(HttpServletResponse response) throws IOException {
+  public void exportAgentDefinitions(HttpServletResponse response) throws Exception {
     String fileName = "agent_definitions_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType(CONTENT_TYPE_OOXML);
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, buildRfc5987ContentDisposition(fileName));

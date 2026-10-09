@@ -294,7 +294,7 @@ public class TriggerController {
    */
   @Operation(summary = "导出触发器列表（Excel）")
   @GetMapping("/export")
-  public void exportTriggers(HttpServletResponse response) throws IOException {
+  public void exportTriggers(HttpServletResponse response) throws Exception {
     String fileName = "triggers_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType(CONTENT_TYPE_OOXML);
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, buildRfc5987ContentDisposition(fileName));
