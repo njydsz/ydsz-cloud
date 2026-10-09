@@ -3,6 +3,7 @@ package com.njydsz.literule.web;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -100,6 +101,7 @@ public class RuleLifecycleController {
       action = AuditAction.UPDATE,
       content = "'规则状态变更: ' + #ruleCode + ', 目标状态: ' + #dto.targetStatus")
   @RateLimit(resource = "literule.rule_lifecycle.changeStatus", threshold = 50)
+  @Operation(summary = "规则状态变更")
   @PutMapping("/{ruleCode}/status")
   @AuthApiPermission(apiCodes = "execution:rule:status")
   public YdszResponse<RuleDefinitionVO> changeStatus(
@@ -160,6 +162,7 @@ public class RuleLifecycleController {
       action = AuditAction.CREATE,
       content = "'规则审批通过: ' + #ruleCode + ', 审批人: ' + #operator")
   @RateLimit(resource = "literule.rule_lifecycle.approve", threshold = 50)
+  @Operation(summary = "审批通过")
   @PostMapping("/{ruleCode}/approve")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
   public YdszResponse<RuleDefinitionVO> approve(
@@ -217,6 +220,7 @@ public class RuleLifecycleController {
       action = AuditAction.CREATE,
       content = "'规则审批驳回: ' + #ruleCode + ', 审批人: ' + #operator + ', 理由: ' + #dto.reason")
   @RateLimit(resource = "literule.rule_lifecycle.reject", threshold = 50)
+  @Operation(summary = "审批驳回")
   @PostMapping("/{ruleCode}/reject")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
   public YdszResponse<RuleDefinitionVO> reject(
@@ -292,6 +296,7 @@ public class RuleLifecycleController {
       action = AuditAction.CREATE,
       content = "'提交规则审核: ' + #ruleCode + ', 操作人: ' + #operator")
   @RateLimit(resource = "literule.rule_lifecycle.submitReview", threshold = 50)
+  @Operation(summary = "提交审核")
   @PostMapping("/{ruleCode}/submit-review")
   @AuthApiPermission(apiCodes = "execution:rule:save")
   public YdszResponse<ApprovalRecordVO> submitReview(
@@ -324,6 +329,7 @@ public class RuleLifecycleController {
       action = AuditAction.CREATE,
       content = "'多级审批通过: ' + #ruleCode + ', 审批人: ' + #operator")
   @RateLimit(resource = "literule.rule_lifecycle.approveLevel", threshold = 50)
+  @Operation(summary = "多级审批通过")
   @PostMapping("/{ruleCode}/approve-level")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
   public YdszResponse<ApprovalRecordVO> approveLevel(
@@ -356,6 +362,7 @@ public class RuleLifecycleController {
       action = AuditAction.CREATE,
       content = "'多级审批驳回: ' + #ruleCode + ', 驳回人: ' + #operator + ', 理由: ' + #dto.reason")
   @RateLimit(resource = "literule.rule_lifecycle.rejectLevel", threshold = 50)
+  @Operation(summary = "多级审批驳回")
   @PostMapping("/{ruleCode}/reject-level")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
   public YdszResponse<ApprovalRecordVO> rejectLevel(
@@ -387,6 +394,7 @@ public class RuleLifecycleController {
       action = AuditAction.CREATE,
       content = "'审批委托: ' + #ruleCode + ', 委托人: ' + #operator + ', 被委托人: ' + #dto.delegatedTo")
   @RateLimit(resource = "literule.rule_lifecycle.delegate", threshold = 50)
+  @Operation(summary = "委托审批")
   @PostMapping("/{ruleCode}/delegate")
   @AuthApiPermission(apiCodes = "execution:rule:approve")
   public YdszResponse<ApprovalRecordVO> delegate(
@@ -409,6 +417,7 @@ public class RuleLifecycleController {
    * @param ruleCode 规则编码
    * @return 审批记录；无审批记录时返回 null
    */
+  @Operation(summary = "查询审批状态")
   @GetMapping("/{ruleCode}/approval-status")
   public YdszResponse<ApprovalRecordVO> approvalStatus(@PathVariable String ruleCode) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
@@ -425,6 +434,7 @@ public class RuleLifecycleController {
    * @param approver 审批人工号
    * @return 待审批记录列表
    */
+  @Operation(summary = "查询待审批列表")
   @GetMapping("/pending-approvals")
   public YdszResponse<List<ApprovalRecordVO>> pendingApprovals(@RequestParam String approver) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
@@ -453,6 +463,7 @@ public class RuleLifecycleController {
       action = AuditAction.CREATE,
       content = "'撤审: ' + #ruleCode + ', 操作人: ' + #operator")
   @RateLimit(resource = "literule.rule_lifecycle.cancelReview", threshold = 50)
+  @Operation(summary = "撤回审核")
   @PostMapping("/{ruleCode}/cancel-review")
   @AuthApiPermission(apiCodes = "execution:rule:save")
   public YdszResponse<ApprovalRecordVO> cancelReview(
@@ -471,6 +482,7 @@ public class RuleLifecycleController {
    *
    * @return 审批流配置列表
    */
+  @Operation(summary = "查询可用审批流配置")
   @GetMapping("/approval-flows")
   public YdszResponse<List<ApprovalFlowVO>> approvalFlows() {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();

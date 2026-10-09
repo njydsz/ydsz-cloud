@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -88,6 +89,7 @@ public class RuleTraceController {
    * @param traceId 追踪记录唯一标识
    * @return 执行链路列表
    */
+  @Operation(summary = "按traceId查询执行链路")
   @GetMapping("/traces/{traceId}")
   public YdszResponse<List<RuleExecutionTraceVO>> getTrace(@PathVariable String traceId) {
     return YdszResponse.success(ruleTraceQueryService.findByTraceId(traceId));
@@ -102,6 +104,7 @@ public class RuleTraceController {
    * @param limit 返回条数上限（默认 20，最大 100）
    * @return 执行链路列表
    */
+  @Operation(summary = "按规则编码查询最近链路")
   @GetMapping("/traces/rule/{ruleCode}")
   public YdszResponse<List<RuleExecutionTraceVO>> getTracesByRule(
       @PathVariable String ruleCode,
@@ -124,6 +127,7 @@ public class RuleTraceController {
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_trace.replayTrace", threshold = 50)
+  @Operation(summary = "执行回放")
   @PostMapping("/traces/{traceId}/replay")
   public YdszResponse<Map<String, Object>> replayTrace(@PathVariable String traceId) {
     List<RuleExecutionTraceVO> traces = ruleTraceQueryService.findByTraceId(traceId);
@@ -216,6 +220,7 @@ public class RuleTraceController {
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_trace.batchReplayTraces", threshold = 50)
+  @Operation(summary = "批量历史数据回放")
   @PostMapping("/traces/batch-replay")
   public YdszResponse<Map<String, Object>> batchReplayTraces(
       @RequestBody Map<String, Object> request) {
@@ -334,6 +339,7 @@ boolean historicalTriggered = Boolean.TRUE.equals(trace.isTriggered());
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_trace.impactPreview", threshold = 50)
+  @Operation(summary = "规则变更影响分析")
   @PostMapping("/{ruleCode}/impact-preview")
   public YdszResponse<Map<String, Object>> impactPreview(
       @PathVariable String ruleCode, @RequestBody Map<String, Object> request) {
@@ -494,6 +500,7 @@ boolean historicalTriggered = Boolean.TRUE.equals(trace.isTriggered());
    * @param limit 返回条数（默认 50）
    * @return 最近的执行链路列表
    */
+  @Operation(summary = "查询最近执行链路")
   @GetMapping("/traces")
   public YdszResponse<List<RuleExecutionTraceVO>> listRecentTraces(
       @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {

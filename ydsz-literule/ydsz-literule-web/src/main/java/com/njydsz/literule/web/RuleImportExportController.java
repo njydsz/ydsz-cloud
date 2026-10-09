@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -69,6 +70,7 @@ public class RuleImportExportController {
    *
    * @return 全部规则定义的 JSON 格式数据（不含内部字段）
    */
+  @Operation(summary = "导出全部规则为JSON")
   @GetMapping("/export")
   public YdszResponse<Map<String, Object>> exportRules() {
     List<RuleDefinitionDTO> rules = ruleAdminService.listAll();
@@ -111,6 +113,7 @@ public class RuleImportExportController {
    *
    * @return YAML 文本（Content-Type: text/plain）
    */
+  @Operation(summary = "导出全部规则为YAML")
   @GetMapping(value = "/export.yaml", produces = "text/plain;charset=UTF-8")
   public String exportRulesAsYaml() {
     List<RuleDefinitionDTO> rules = ruleAdminService.listAll();
@@ -193,6 +196,7 @@ public class RuleImportExportController {
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_import_export.importRules", threshold = 50)
+  @Operation(summary = "导入规则JSON")
   @PostMapping("/import")
   public YdszResponse<Map<String, Object>> importRules(
       @Valid @RequestBody RuleImportDTO dto,

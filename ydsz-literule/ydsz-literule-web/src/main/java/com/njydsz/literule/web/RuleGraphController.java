@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -95,6 +96,7 @@ public class RuleGraphController {
    * @param ruleCode 规则编码
    * @return 画布对象
    */
+  @Operation(summary = "查询规则的画布")
   @GetMapping("/{ruleCode}/graph")
   public YdszResponse<RuleChainGraphVO> getChainGraph(@PathVariable String ruleCode) {
     return YdszResponse.success(
@@ -118,6 +120,7 @@ public class RuleGraphController {
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_graph.saveChainGraph", threshold = 50)
+  @Operation(summary = "保存或更新画布")
   @PostMapping("/{ruleCode}/graph")
   public YdszResponse<Map<String, Object>> saveChainGraph(
       @PathVariable String ruleCode,
@@ -151,6 +154,7 @@ public class RuleGraphController {
       action = AuditAction.DELETE,
       content = "'deleteChainGraph'")
   @RateLimit(resource = "literule.rule_graph.deleteChainGraph", threshold = 50)
+  @Operation(summary = "删除画布")
   @DeleteMapping("/{ruleCode}/graph")
   public YdszResponse<Void> deleteChainGraph(@PathVariable String ruleCode) {
     ruleChainGraphProvider.delete(ruleCode);
@@ -171,6 +175,7 @@ public class RuleGraphController {
       action = AuditAction.CREATE,
       content = "'validateChainGraph'")
   @RateLimit(resource = "literule.rule_graph.validateChainGraph", threshold = 50)
+  @Operation(summary = "校验画布结构")
   @PostMapping("/{ruleCode}/graph/validate")
   public YdszResponse<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(
       @Valid @RequestBody RuleChainGraph graph) {
@@ -192,6 +197,7 @@ public class RuleGraphController {
       action = AuditAction.CREATE,
       content = "'previewExpression'")
   @RateLimit(resource = "literule.rule_graph.previewExpression", threshold = 50)
+  @Operation(summary = "表达式求值预览")
   @PostMapping("/expression-preview")
   public YdszResponse<ExpressionPreviewResultVO> previewExpression(
       @RequestParam String expression, @RequestBody Map<String, Object> facts) {
@@ -216,6 +222,7 @@ public class RuleGraphController {
       action = AuditAction.CREATE,
       content = "'dryRunGraph'")
   @RateLimit(resource = "literule.rule_graph.dryRunGraph", threshold = 50)
+  @Operation(summary = "画布Dry-run仿真")
   @PostMapping("/{ruleCode}/graph/dry-run")
   public YdszResponse<List<RuleResultVO>> dryRunGraph(
       @PathVariable String ruleCode, @RequestBody Map<String, Object> facts) {
@@ -232,6 +239,7 @@ public class RuleGraphController {
    * @param ruleCode 规则编码
    * @return 失效规则编码列表
    */
+  @Operation(summary = "检查画布失效规则引用")
   @GetMapping("/{ruleCode}/graph/invalid-refs")
   public YdszResponse<List<StringVO>> invalidGraphRefs(@PathVariable String ruleCode) {
     return YdszResponse.success(
@@ -249,6 +257,7 @@ public class RuleGraphController {
    * @param engine 引擎类型（liteexpr/all），默认 all
    * @return 函数定义列表
    */
+  @Operation(summary = "获取已注册表达式函数列表")
   @GetMapping("/expression-functions")
   public YdszResponse<List<ExpressionFunctionDefVO>> expressionFunctions(
       @RequestParam(value = "engine", defaultValue = "all") String engine) {

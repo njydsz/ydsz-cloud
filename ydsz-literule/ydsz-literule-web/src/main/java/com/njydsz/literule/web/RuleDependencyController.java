@@ -2,6 +2,7 @@ package com.njydsz.literule.web;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -76,6 +77,7 @@ public class RuleDependencyController {
       action = AuditAction.CREATE,
       content = "'addDependency'")
   @RateLimit(resource = "literule.rule_dependency.addDependency", threshold = 50)
+  @Operation(summary = "添加规则依赖")
   @PostMapping("/{ruleCode}/dependencies")
   public YdszResponse<RuleDependencyVO> addDependency(
       @PathVariable String ruleCode,
@@ -106,6 +108,7 @@ public class RuleDependencyController {
       action = AuditAction.DELETE,
       content = "'removeDependency'")
   @RateLimit(resource = "literule.rule_dependency.removeDependency", threshold = 50)
+  @Operation(summary = "删除规则依赖")
   @DeleteMapping("/{ruleCode}/dependencies/{dependsOnRuleCode}")
   public YdszResponse<Void> removeDependency(
       @PathVariable String ruleCode, @PathVariable String dependsOnRuleCode) {
@@ -119,6 +122,7 @@ public class RuleDependencyController {
    * @param ruleCode 规则唯一编码
    * @return 正向依赖列表
    */
+  @Operation(summary = "查询规则正向依赖")
   @GetMapping("/{ruleCode}/dependencies")
   public YdszResponse<List<RuleDependencyVO>> listDependencies(@PathVariable String ruleCode) {
     return YdszResponse.success(ruleDependencyProvider.listDependencies(ruleCode));
@@ -130,6 +134,7 @@ public class RuleDependencyController {
    * @param ruleCode 规则唯一编码
    * @return 反向依赖列表
    */
+  @Operation(summary = "查询规则反向依赖")
   @GetMapping("/{ruleCode}/dependents")
   public YdszResponse<List<RuleDependencyVO>> listDependents(@PathVariable String ruleCode) {
     return YdszResponse.success(ruleDependencyProvider.listDependents(ruleCode));
@@ -143,6 +148,7 @@ public class RuleDependencyController {
    * @param ruleCode 规则唯一编码
    * @return 需要级联禁用的规则编码列表
    */
+  @Operation(summary = "查询级联禁用影响")
   @GetMapping("/{ruleCode}/cascading-disable")
   public YdszResponse<List<StringVO>> cascadingDisable(@PathVariable String ruleCode) {
     return YdszResponse.success(

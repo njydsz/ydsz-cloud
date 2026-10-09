@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
@@ -97,6 +98,7 @@ public class RuleDecisionTableController {
    *
    * @return 决策表列表
    */
+  @Operation(summary = "查询全部决策表")
   @GetMapping("/decision-tables")
   public YdszResponse<List<DecisionTableVO>> listDecisionTables() {
     return YdszResponse.success(decisionTableQueryService.findAll());
@@ -108,6 +110,7 @@ public class RuleDecisionTableController {
    * @param tableCode 决策表唯一编码
    * @return 决策表信息，不存在返回 null
    */
+  @Operation(summary = "按编码查询决策表")
   @GetMapping("/decision-tables/{tableCode}")
   public YdszResponse<DecisionTableVO> getDecisionTable(@PathVariable String tableCode) {
     Optional<DecisionTableVO> result = decisionTableQueryService.findByTableCode(tableCode);
@@ -129,6 +132,7 @@ public class RuleDecisionTableController {
       action = AuditAction.CREATE,
       content = "'saveDecisionTable'")
   @RateLimit(resource = "literule.rule_decision_table.saveDecisionTable", threshold = 50)
+  @Operation(summary = "保存决策表（新增或更新）")
   @PostMapping("/decision-tables")
   public YdszResponse<DecisionTableVO> saveDecisionTable(
       @Valid @RequestBody DecisionTableDTO dto) {
@@ -150,6 +154,7 @@ public class RuleDecisionTableController {
       action = AuditAction.DELETE,
       content = "'deleteDecisionTable'")
   @RateLimit(resource = "literule.rule_decision_table.deleteDecisionTable", threshold = 50)
+  @Operation(summary = "删除决策表")
   @DeleteMapping("/decision-tables/{id}")
   public YdszResponse<Void> deleteDecisionTable(@PathVariable String id) {
     decisionTableQueryService.deleteById(id);
@@ -172,6 +177,7 @@ public class RuleDecisionTableController {
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_decision_table.evaluateDecisionTable", threshold = 50)
+  @Operation(summary = "评估决策表")
   @PostMapping("/decision-tables/{tableCode}/evaluate")
   public YdszResponse<List<Map<String, Object>>> evaluateDecisionTable(
       @PathVariable String tableCode, @RequestBody Map<String, Object> facts) {
@@ -186,6 +192,7 @@ public class RuleDecisionTableController {
    * @param tableCode 决策表编码
    * @param response HTTP 响应（写出 Excel 文件流）
    */
+  @Operation(summary = "导出决策表为Excel")
   @GetMapping("/decision-tables/{tableCode}/export-excel")
   @AuthApiPermission(apiCodes = "execution:rule:view")
   public void exportDecisionTableExcel(
@@ -219,6 +226,7 @@ public class RuleDecisionTableController {
       action = AuditAction.CREATE,
       content = "'importDecisionTableExcel'")
   @RateLimit(resource = "literule.rule_decision_table.importDecisionTableExcel", threshold = 50)
+  @Operation(summary = "导入决策表Excel")
   @PostMapping(value = "/decision-tables/import-excel", consumes = "multipart/form-data")
   @AuthApiPermission(apiCodes = "execution:rule:save")
   public YdszResponse<DecisionTableDefinitionVO> importDecisionTableExcel(
@@ -251,6 +259,7 @@ public class RuleDecisionTableController {
    *
    * @param response HTTP 响应（写出模板文件流）
    */
+  @Operation(summary = "下载决策表Excel模板")
   @GetMapping("/decision-tables/excel-template")
   @AuthApiPermission(apiCodes = "execution:rule:view")
   public void downloadDecisionTableExcelTemplate(HttpServletResponse response) {

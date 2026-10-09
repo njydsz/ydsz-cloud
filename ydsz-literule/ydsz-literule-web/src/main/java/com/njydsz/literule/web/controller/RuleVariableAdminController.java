@@ -3,6 +3,7 @@ package com.njydsz.literule.web.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +62,7 @@ public class RuleVariableAdminController {
    * @param category 变量类别（可选，如 EVM / PROJECT / FINANCE）
    * @return 变量定义列表
    */
+  @Operation(summary = "列出全部已启用变量")
   @GetMapping
   public YdszResponse<List<VariableDefinitionVO>> list(
       @RequestParam(required = false) String category) {
@@ -81,6 +83,7 @@ public class RuleVariableAdminController {
    * @param varName 变量名
    * @return 变量定义
    */
+  @Operation(summary = "查询单个变量定义")
   @GetMapping("/{varName}")
   public YdszResponse<VariableDefinitionVO> get(@PathVariable String varName) {
     VariableDefinition def = variableRegistry.lookup(varName);
@@ -103,6 +106,7 @@ public class RuleVariableAdminController {
       action = AuditAction.CREATE,
       content = "'save'")
   @RateLimit(resource = "literule.rule_variable_admin.save", threshold = 50)
+  @Operation(summary = "新增或更新变量定义")
   @PostMapping
   public YdszResponse<VariableDefinitionVO> save(@Valid @RequestBody VariableDefinition definition) {
     if (definition == null || definition.getName() == null || definition.getName().isBlank()) {
@@ -125,6 +129,7 @@ public class RuleVariableAdminController {
       action = AuditAction.DELETE,
       content = "'delete'")
   @RateLimit(resource = "literule.rule_variable_admin.delete", threshold = 50)
+  @Operation(summary = "删除变量定义")
   @DeleteMapping("/{varName}")
   public YdszResponse<Void> delete(@PathVariable String varName) {
     variableRegistry.unregister(varName);
@@ -143,6 +148,7 @@ public class RuleVariableAdminController {
       action = AuditAction.CREATE,
       content = "'refresh'")
   @RateLimit(resource = "literule.rule_variable_admin.refresh", threshold = 50)
+  @Operation(summary = "手动刷新变量缓存")
   @PostMapping("/refresh")
   public YdszResponse<Void> refresh() {
     variableRegistry.refresh();
@@ -157,6 +163,7 @@ public class RuleVariableAdminController {
    *
    * @return 可用变量定义列表
    */
+  @Operation(summary = "列出表达式校验服务可用变量")
   @GetMapping("/available")
   public YdszResponse<List<VariableDefinitionVO>> listAvailable() {
     return YdszResponse.success(

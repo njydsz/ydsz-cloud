@@ -2,6 +2,7 @@ package com.njydsz.literule.web;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +68,7 @@ public class RuleTemplateController {
    *
    * @return 模板列表
    */
+  @Operation(summary = "查询全部规则模板")
   @GetMapping("/templates")
   public YdszResponse<List<RuleTemplateVO>> listTemplates() {
     return YdszResponse.success(ruleTemplateProvider.listAll());
@@ -78,6 +80,7 @@ public class RuleTemplateController {
    * @param category 模板类别
    * @return 模板列表
    */
+  @Operation(summary = "按类别查询规则模板")
   @GetMapping("/templates/category/{category}")
   public YdszResponse<List<RuleTemplateVO>> listTemplatesByCategory(@PathVariable String category) {
     return YdszResponse.success(ruleTemplateProvider.listByCategory(category));
@@ -91,6 +94,7 @@ public class RuleTemplateController {
    * @param industry 行业编码
    * @return 模板列表
    */
+  @Operation(summary = "按行业查询规则模板")
   @GetMapping("/templates/industry/{industry}")
   public YdszResponse<List<RuleTemplateVO>> listTemplatesByIndustry(@PathVariable String industry) {
     return YdszResponse.success(ruleTemplateProvider.listByIndustry(industry));
@@ -112,6 +116,7 @@ public class RuleTemplateController {
       action = AuditAction.CREATE,
       content = "'importTemplate'")
   @RateLimit(resource = "literule.rule_template.importTemplate", threshold = 50)
+  @Operation(summary = "一键导入模板为规则定义")
   @PostMapping("/templates/{templateCode}/import")
   public YdszResponse<RuleDefinitionVO> importTemplate(
       @PathVariable String templateCode,
