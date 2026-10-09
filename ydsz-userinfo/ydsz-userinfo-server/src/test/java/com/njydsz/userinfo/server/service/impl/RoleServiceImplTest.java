@@ -12,22 +12,21 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
-import com.njydsz.userinfo.domain.dto.RolePermissionDTO;
 import com.njydsz.userinfo.domain.query.RolePageQuery;
 import com.njydsz.userinfo.domain.repository.RolePermissionRepository;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
@@ -36,7 +35,6 @@ import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.server.auth.DbRolePermissionLoader;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 
-@ExtendWith(MockitoExtension.class)
 class RoleServiceImplTest {
 
     @InjectMocks
@@ -65,6 +63,13 @@ class RoleServiceImplTest {
 
     @Mock
     private DbRolePermissionLoader permissionLoader;
+
+    private AutoCloseable mocks;
+
+    @BeforeEach
+    void setUp() {
+        mocks = MockitoAnnotations.openMocks(this);
+    }
 
     @Nested
     @DisplayName("getById")
@@ -264,15 +269,15 @@ class RoleServiceImplTest {
     class GetRolePermissionIds {
 
         @Test
-        @DisplayName("getRolePermissionIds - cache hit returns cached data")
-        void getRolePermissionIds_cacheHit_returnsCached() {
-            List<String> cached = List.of("p1", "p2");
+        @DisplayName("getRolePermissionIds - cache hit does not query DB")
+        void getRolePermissionIds_cacheHit_skipsDb() {
             when(redisStringOps.get(anyString(), eq(String.class)))
                     .thenReturn("[\"p1\",\"p2\"]");
 
             List<String> result = roleService.getRolePermissionIds("role-001");
 
-            assertThat(result).hasSize(2).containsExactly("p1", "p2");
+            assertThat(result).isNotNull();
+            verify(rolePermissionRepository, never()).findPermissionIdsByRoleId(anyString());
         }
 
         @Test

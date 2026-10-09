@@ -9,20 +9,16 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
-@ExtendWith(MockitoExtension.class)
 class StorageReferenceServiceImplTest {
 
     @InjectMocks
@@ -30,6 +26,13 @@ class StorageReferenceServiceImplTest {
 
     @Mock
     private RedisStringOps redisStringOps;
+
+    private AutoCloseable mocks;
+
+    @BeforeEach
+    void setUp() {
+        mocks = MockitoAnnotations.openMocks(this);
+    }
 
     @Nested
     @DisplayName("increment")

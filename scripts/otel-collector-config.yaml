@@ -1,0 +1,69 @@
+# =============================================================
+# OpenTelemetry Collector Contrib 配置
+# 用途：接收业务模块 OTLP 遥测数据，输出到 Elasticsearch + 自身调试
+#
+# 协议入口：
+#   - OTLP gRPC :4317
+#   - OTLP HTTP :4318
+#
+# 导出目标：
+#   - Elasticsearch 8.x (traces / logs / metrics)
+#   - debug (collector 自身日志，可调级别)
+# =============================================================
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+  resource:
+    attributes:
+      - key: service.namespace
+        value: ydsz-cloud
+        action: upsert
+
+exporters:
+  elasticsearch:
+    hosts:
+      - http://elasticsearch:9200
+    logs_index: ydsz-logs
+    traces_index: ydsz-traces
+    metrics_index: ydsz-metrics
+    flush:
+      interval: 5s
+  debug:
+    verbosity: detailed
+    sampling_initial: 5
+    sampling_thereafter: 20
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [elasticsearch, debug]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [elasticsearch, debug]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [elasticsearch, debug]
+  health_check:
+    endpoint: 0.0.0.0:13133
+  telemetry:
+    metrics:
+      address: 0.0.0.0:8888
+    logs:
+      level: info

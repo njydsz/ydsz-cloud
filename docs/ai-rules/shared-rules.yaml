@@ -6689,15 +6689,76 @@ stats:
     source: "ydsz-common-socket 全局引用分析（P1 Presence 服务规范，26.10.01）"
 
   # ============================================
-  # 版本标记：shared-rules.yaml v26.10.01-v22
+  # Web 层结构规范
+  # ============================================
+  - id: "YDIZ-WEB-001"
+    category: "web"
+    severity: "P2"
+    title: "【建议】web 层禁止出现 vo/ 包，所有 VO 必须定义在 domain/vo/ 下"
+    description: |
+      ydzs-*-web 模块是组合根（Composition Root），仅承载 Controller / ExceptionHandler / Filter / AOP 切面 / Bean 装配职责。
+      禁止在 web 层定义 VO（Value Object）、DTO 或 ExportVO 等数据载体类。
+
+      原因：
+      1. VO 是领域数据投影，属于 domain 层职责（DDD 分层规范 DDD-004）
+      2. web 层对 domain 的依赖是单向的（web → domain），web 层定义的 VO 被其他模块引用时会绕过 domain 层
+      3. Excel 导出 VO（XxxExportVO）本质是数据载体而非 web 专属逻辑，应与 domain/vo/ 中其他 VO 同级管理
+
+      例外：
+      - web/ 根目录下允许存在 package-info.java
+      - web/util/ 下允许存在纯工具类（如 ExcelExportUtil），前提是仅被本模块 Controller 使用
+    pattern: |
+      以下情形构成违规：
+      1. 在 com.njydsz.{module}.web.vo 包下定义任何类
+      2. 在 com.njydsz.{module}.web.dto 包下定义任何类
+      3. Controller import com.njydsz.{module}.web.vo.* 或 web.dto.* 中的类型
+      4. web 层新建的 XxxExportVO / XxxVO 类（包括 Excel 导出场景）
+    fix: |
+      // 反例：web 层定义 VO
+      package com.njydsz.agent.web.vo;
+      public class AgentDefinitionExportVO { ... }
+
+      // 正例：domain 层定义 VO
+      package com.njydsz.agent.domain.vo;
+      public class AgentDefinitionExportVO { ... }
+      // Controller import: com.njydsz.agent.domain.vo.AgentDefinitionExportVO
+
+      // 反例：web 层直接定义 web/vo 子目录（即使是空占位）
+      // 正例：web 层目录结构仅包含 controller/ handler/ config/ filter/ aspect/ 等功能性子包
+    source: "ydsz-*-web 目录结构统一整改（P2 web 层结构规范，26.10.09）"
+
+  # ============================================
+  # 标准 web 层目录结构模板
+  #
+  # {module}-web/src/main/java/com/njydsz/{module}/web/
+  # ├── {Module}Application.java
+  # ├── package-info.java          (可选)
+  # ├── controller/                ← 所有 Controller 唯一出入口
+  # │   ├── XxxController.java
+  # │   └── internal/              ← 内部 API 端点
+  # ├── handler/                   ← 全局异常处理（唯一，命名 {Module}ExceptionHandler）
+  # │   └── {Module}ExceptionHandler.java
+  # ├── config/                    ← WebMvc/Filter 注册配置（按需）
+  # │   └── {Module}WebConfig.java
+  # ├── filter/                    ← 认证/限流/追踪过滤器（按需）
+  # ├── aspect/                    ← AOP 切面 + 自定义注解（按需）
+  # └── openapi/                   ← OpenAPI 文档定制器（按需）
+  #
+  # 禁止出现 vo/ / dto/ / assembler/ / security/ / util/（工具类除外）子包
+  # ============================================
+
+  # ============================================
+  # 版本标记：shared-rules.yaml v26.10.01-v23
   # 变更摘要：
+  #   - v23: +1 web 层结构规范（YDIZ-WEB-001 P2 web 层禁止出现 vo/ 包）
+  #          来自 ydzs-*-web 目录结构统一整改
   #   - v22: +3 SSE/websocket 规范（YDIZ-SOCKET-001 P0 / YDIZ-SOCKET-002 P1 / YDIZ-SOCKET-003 P1）
-  #         来自 ydsz-common-socket 全局引用分析整改
+  #          来自 ydsz-common-socket 全局引用分析整改
   #   - v21: YDIZ-DOCS-001 文档处理必须通过 ydzsz-common-docs（P0，文档统一处理入口）
   #   - v20: YDIZ-NETTY-002 认证后必须更新 Session bizId 激活 Session 管理
   #   - v19: YDIZ-CONFIG-002 手动 Jasypt 解密必须使用 ConfigCliTool
   #   - v18: YDIZ-NETTY-001 TCP 推送 Handler 必须使用 AbstractJsonTcpHandler 基类
   #          IMPORT-005 规则新增 reactor-netty 豁免条款
   #   - v17: YDIZ-CONFIG-001 多层 JSON 配置合并必须使用 ConfigMergeUtils + 两 ConfigChangeListener 命名消歧
-  # 更新 total：P0=59 P1=90 P2=24 → total=183
+  # 更新 total：P0=59 P1=90 P2=25 → total=184
   # ============================================

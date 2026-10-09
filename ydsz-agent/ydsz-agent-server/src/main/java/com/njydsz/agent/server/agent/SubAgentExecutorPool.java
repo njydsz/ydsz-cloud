@@ -1,6 +1,7 @@
 package com.njydsz.agent.server.agent;
 
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -13,15 +14,19 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  * <p>管理用于子 Agent 并行异步执行的专用线程池。特性：
  *
  * <ul>
- *   <li>核心线程数 = {@code min(4, availableProcessors)}，避免子 Agent 过度占用 CPU
- *   <li>最大线程数 = 核心线程数 × 2，应对突发子任务峰值
- *   <li>有界队列容量 200，防止任务堆积时内存溢出
- *   <li>拒绝策略：CallerRunsPolicy — 调用方线程执行，提供背压而非直接丢弃
- *   <li>线程名前缀 "sub-agent-"，便于排查子 Agent 相关线程问题
+ *   <li>基于 JDK 21 虚拟线程，IO 密集型（LLM HTTP 调用）场景下每任务一线程，零平台线程占用</li>
+ *   <li>并发度限制 = {@code min(4, availableProcessors)} × 2，通过 {@link Semaphore} 实现背压</li>
+ *   <li>线程名前缀 "sub-agent-"，便于排查子 Agent 相关线程问题</li>
+ *   <li>守护线程池，JVM 退出时自动回收</li>
  * </ul>
  *
- * <p>通过 {@link com.njydsz.common.thread.util.ExecutorUtils} Builder 创建，
- * 禁止业务代码直接 new ThreadPoolExecutor（统一使用 ydsz-common-thread 管理能力）。
+ * <p>P1 迁移：原实现使用 {@code ExecutorUtils.builder()} 创建平台线程池
+ * （{@code ThreadPoolExecutor}），改为 {@link ExecutorUtils#newVirtualThreadExecutor(String)} 虚拟线程池。
+ * IO 密集型子 Agent 并行场景下，虚拟线程在等待 LLM HTTP 响应时自动卸载，
+ * 不占用平台线程资源，可支撑更高并发度。
+ *
+ * <p>通过 {@link com.njydsz.common.thread.util.ExecutorUtils} 创建，
+ * 禁止业务代码直接 {@code new ThreadPoolExecutor}（统一使用 ydzs-common-thread 管理能力）。
  *
  * @author ydsz-team
  * @since 26.09.17
@@ -29,64 +34,64 @@ import com.njydsz.common.thread.util.ExecutorUtils;
 @Slf4j
 public final class SubAgentExecutorPool {
 
-  /** 核心线程数上限 */
-  private static final int MAX_CORE_THREADS = 4;
+  /** 并发度上限因子：核心并发 = min(4, availableProcessors) */
+  private static final int MAX_CORE_CONCURRENCY = 4;
+
+  /** 并发度 = 核心并发 × 2（应对突发子任务峰值） */
+  private static final int MAX_CONCURRENCY =
+      Math.min(MAX_CORE_CONCURRENCY, Runtime.getRuntime().availableProcessors()) * 2;
+
+  /** 并发度信号量（正数=可用许可，0=满负荷） */
+  private static final Semaphore CONCURRENCY_SEMAPHORE = new Semaphore(MAX_CONCURRENCY);
 
   /** 线程空闲存活时间（秒） */
   private static final long KEEP_ALIVE_TIME = 60L;
 
-  /** 任务队列容量 */
-  private static final int QUEUE_CAPACITY = 200;
-
-  /** 计算核心线程数：min(4, availableProcessors) */
-  private static final int CORE_POOL_SIZE =
-      Math.min(MAX_CORE_THREADS, Runtime.getRuntime().availableProcessors());
-
-  /** 最大线程数 = 核心线程数 × 2 */
-  private static final int MAXIMUM_POOL_SIZE = CORE_POOL_SIZE * 2;
-
-  /** 子 Agent 专用线程池 */
-  private static final ThreadPoolExecutor EXECUTOR =
-      ExecutorUtils.builder()
-          .corePoolSize(CORE_POOL_SIZE)
-          .maxPoolSize(MAXIMUM_POOL_SIZE)
-          .keepAliveTime(KEEP_ALIVE_TIME, TimeUnit.SECONDS)
-          .queueType(ExecutorUtils.BlockingQueueType.ARRAY)
-          .queueCapacity(QUEUE_CAPACITY)
-          .threadNamePrefix("sub-agent-")
-          .daemon(true)
-          .rejectedHandler(new ThreadPoolExecutor.CallerRunsPolicy())
-          .build();
+  /** 子 Agent 专用虚拟线程池 */
+  private static final ExecutorService EXECUTOR =
+      ExecutorUtils.newVirtualThreadExecutor("sub-agent-");
 
   private SubAgentExecutorPool() {
     throw new UnsupportedOperationException("agent.error.util_class_instantiation");
   }
 
   /**
-   * 获取子 Agent 异步执行的线程池。
+   * 获取子 Agent 异步执行的线程池（虚拟线程池，带并发度限制）。
    *
-   * @return 子 Agent 专用 {@link ThreadPoolExecutor}
+   * <p>返回的 ExecutorService 使用虚拟线程，每个 submit 的任务在独立虚拟线程中执行。
+   * 并发度由 {@link #CONCURRENCY_SEMAPHORE} 控制，超出限制时任务在虚拟线程内等待许可。
+   *
+   * @return 子 Agent 专用 {@link ExecutorService}
    */
-  public static ThreadPoolExecutor getExecutor() {
+  public static ExecutorService getExecutor() {
     return EXECUTOR;
   }
 
   /**
-   * 获取当前活跃线程数（用于监控）。
+   * 获取并发度信号量，供调用方在提交任务前获取许可（防溢出）。
    *
-   * @return 活跃线程数
+   * @return 当前并发度 {@link Semaphore}
    */
-  public static int getActiveCount() {
-    return EXECUTOR.getActiveCount();
+  public static Semaphore getConcurrencySemaphore() {
+    return CONCURRENCY_SEMAPHORE;
   }
 
   /**
-   * 获取当前队列大小（用于监控）。
+   * 获取当前活跃任务数（用于监控）。
    *
-   * @return 队列中等待执行的任务数
+   * @return 活跃任务数（已获取许可数）
+   */
+  public static int getActiveCount() {
+    return MAX_CONCURRENCY - CONCURRENCY_SEMAPHORE.availablePermits();
+  }
+
+  /**
+   * 获取当前排队等待许可的任务数（用于监控）。
+   *
+   * @return 排队等待的任务数
    */
   public static int getQueueSize() {
-    return EXECUTOR.getQueue().size();
+    return CONCURRENCY_SEMAPHORE.getQueueLength();
   }
 
   /**

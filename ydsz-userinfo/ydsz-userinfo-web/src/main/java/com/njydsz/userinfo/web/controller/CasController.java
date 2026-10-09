@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.vo.LoginVO;
@@ -90,6 +91,7 @@ public class CasController {
    * @param response HTTP 响应
    * @return 重定向到服务 URL（含 ST）或登录页面
    */
+  @Operation(summary = "CAS登录页面")
   @GetMapping(value = "/login", produces = MediaType.TEXT_HTML_VALUE)
   public ResponseEntity<String> login(
       @RequestParam("service") String service,
@@ -125,6 +127,7 @@ public class CasController {
    * @param response HTTP 响应
    * @return 重定向到服务 URL（含 ST）
    */
+  @Operation(summary = "CAS登录提交")
   @PostMapping(value = "/login", produces = MediaType.TEXT_HTML_VALUE)
   public ResponseEntity<String> loginPost(
       @RequestParam("service") String service,
@@ -152,6 +155,7 @@ public class CasController {
    * @param service 服务 URL
    * @return CAS 2.0 XML 响应
    */
+  @Operation(summary = "CAS服务验证")
   @GetMapping(value = "/serviceValidate", produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity<String> serviceValidate(
       @RequestParam("ticket") String ticket,
@@ -195,6 +199,7 @@ public class CasController {
    * @param service 服务 URL
    * @return JSON 响应
    */
+  @Operation(summary = "CAS P3服务验证")
   @GetMapping(value = "/p3/serviceValidate", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<YdszResponse<CasValidateResponse>> serviceValidateJson(
       @RequestParam("ticket") String ticket,
@@ -230,6 +235,7 @@ public class CasController {
    * @param response HTTP 响应
    * @return 重定向到服务 URL 或登出成功页面
    */
+  @Operation(summary = "CAS登出")
   @GetMapping("/logout")
   public ResponseEntity<Void> logout(
       @RequestParam(required = false) String service,

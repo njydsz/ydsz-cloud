@@ -13,6 +13,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * SSO 指标控制器。
@@ -64,6 +65,7 @@ public class SsoMetricsController {
    *
    * @return SSO 指标数据
    */
+  @Operation(summary = "获取SSO指标概览")
   @GetMapping("/overview")
   public YdszResponse<SsoMetricsVO> getOverview() {
     SsoMetricsVO metrics = new SsoMetricsVO();

@@ -34,7 +34,7 @@ public class SlowSqlProperties {
   private long alertThresholdMillis = 3000L;
 
   public boolean isEnabled() { return isEnabled; }
-  public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+  public void setEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
 
   public long getThresholdMillis() { return thresholdMillis; }
   public void setThresholdMillis(long thresholdMillis) { this.thresholdMillis = thresholdMillis; }

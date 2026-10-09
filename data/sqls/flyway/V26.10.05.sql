@@ -19,63 +19,48 @@
 -- 一、Common 模块（7 个字段，3 张表）
 -- ============================================================================
 
--- 1. ydsz_comm_outbox: compressed, is_deleted
+-- 1. ydsz_comm_outbox: compressed（boolean → smallint）
+-- 注意：TYPE 变更和 SET DEFAULT 必须分两步，否则 PG 会用旧类型(boolean)校验默认值
 ALTER TABLE ydsz_comm_outbox
   ALTER COLUMN compressed TYPE SMALLINT
-    USING CASE WHEN compressed = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN compressed SET DEFAULT 0,
-  ALTER COLUMN compressed SET NOT NULL,
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+    USING CASE WHEN compressed = TRUE THEN 1 ELSE 0 END;
 
 ALTER TABLE ydsz_comm_outbox
-  ADD CONSTRAINT chk_comm_outbox_compressed CHECK (compressed IN (0, 1)),
-  ADD CONSTRAINT chk_comm_outbox_is_deleted CHECK (is_deleted IN (0, 1));
+  ALTER COLUMN compressed SET DEFAULT 0,
+  ALTER COLUMN compressed SET NOT NULL;
+
+ALTER TABLE ydsz_comm_outbox
+  ADD CONSTRAINT chk_comm_outbox_compressed CHECK (compressed IN (0, 1));
 
 COMMENT ON COLUMN ydsz_comm_outbox.compressed IS '是否压缩（smallint: 0=未压缩, 1=已压缩）';
-COMMENT ON COLUMN ydsz_comm_outbox.is_deleted IS '逻辑删除（smallint: 0=未删, 1=已删）';
 
--- 2. ydsz_comm_outbox_archive: compressed, is_deleted
+-- 2. ydzs_comm_outbox_archive: compressed（boolean → smallint）
+-- 注意：TYPE 变更和 SET DEFAULT 必须分两步，否则 PG 会用旧类型(boolean)校验默认值
 ALTER TABLE ydsz_comm_outbox_archive
   ALTER COLUMN compressed TYPE SMALLINT
-    USING CASE WHEN compressed = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN compressed SET DEFAULT 0,
-  ALTER COLUMN compressed SET NOT NULL,
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+    USING CASE WHEN compressed = TRUE THEN 1 ELSE 0 END;
 
 ALTER TABLE ydsz_comm_outbox_archive
-  ADD CONSTRAINT chk_comm_outbox_archive_compressed CHECK (compressed IN (0, 1)),
-  ADD CONSTRAINT chk_comm_outbox_archive_is_deleted CHECK (is_deleted IN (0, 1));
+  ALTER COLUMN compressed SET DEFAULT 0,
+  ALTER COLUMN compressed SET NOT NULL;
 
--- 3. ydsz_comm_search_dead_letter: is_deleted
-ALTER TABLE ydsz_comm_search_dead_letter
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+ALTER TABLE ydsz_comm_outbox_archive
+  ADD CONSTRAINT chk_comm_outbox_archive_compressed CHECK (compressed IN (0, 1));
 
-ALTER TABLE ydsz_comm_search_dead_letter
-  ADD CONSTRAINT chk_comm_search_dl_is_deleted CHECK (is_deleted IN (0, 1));
+-- 3. ydsz_comm_search_dead_letter: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
--- 4. ydsz_comm_search_index_partitioned: active_flag, is_deleted
+-- 4. ydsz_comm_search_index_partitioned: active_flag（boolean → smallint）
+-- 注意：TYPE 变更和 SET DEFAULT 必须分两步，否则 PG 会用旧类型(boolean)校验默认值
 ALTER TABLE ydsz_comm_search_index_partitioned
   ALTER COLUMN active_flag TYPE SMALLINT
-    USING CASE WHEN active_flag = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN active_flag SET DEFAULT 1,
-  ALTER COLUMN active_flag SET NOT NULL,
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+    USING CASE WHEN active_flag = TRUE THEN 1 ELSE 0 END;
 
 ALTER TABLE ydsz_comm_search_index_partitioned
-  ADD CONSTRAINT chk_comm_search_ip_active_flag CHECK (active_flag IN (0, 1)),
-  ADD CONSTRAINT chk_comm_search_ip_is_deleted CHECK (is_deleted IN (0, 1));
+  ALTER COLUMN active_flag SET DEFAULT 1,
+  ALTER COLUMN active_flag SET NOT NULL;
+
+ALTER TABLE ydsz_comm_search_index_partitioned
+  ADD CONSTRAINT chk_comm_search_ip_active_flag CHECK (active_flag IN (0, 1));
 
 COMMENT ON COLUMN ydsz_comm_search_index_partitioned.active_flag IS '是否激活（smallint: 0=未激活, 1=激活）';
 
@@ -83,41 +68,34 @@ COMMENT ON COLUMN ydsz_comm_search_index_partitioned.active_flag IS '是否激�
 -- 二、Agent 模块（2 个字段，1 张表，不含 V26.10.03 已修复）
 -- ============================================================================
 
--- 5. ydsz_agt_prompt_template: is_ab_test_enabled
+-- 5. ydzs_agt_prompt_template: is_ab_test_enabled（boolean → smallint）
+-- 注意：TYPE 变更和 SET DEFAULT 必须分两步，否则 PG 会用旧类型(boolean)校验默认值
 ALTER TABLE ydsz_agt_prompt_template
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL,
   ALTER COLUMN is_ab_test_enabled TYPE SMALLINT
-    USING CASE WHEN is_ab_test_enabled = TRUE THEN 1 ELSE 0 END,
+    USING CASE WHEN is_ab_test_enabled = TRUE THEN 1 ELSE 0 END;
+
+ALTER TABLE ydsz_agt_prompt_template
   ALTER COLUMN is_ab_test_enabled SET DEFAULT 0,
   ALTER COLUMN is_ab_test_enabled SET NOT NULL;
 
 ALTER TABLE ydsz_agt_prompt_template
-  ADD CONSTRAINT chk_agt_prompt_is_deleted CHECK (is_deleted IN (0, 1)),
   ADD CONSTRAINT chk_agt_prompt_is_ab_test_enabled CHECK (is_ab_test_enabled IN (0, 1));
 
-COMMENT ON COLUMN ydsz_agt_prompt_template.is_ab_test_enabled IS '是否启用 AB 测试（smallint: 0=禁用, 1=启用）';
+COMMENT ON COLUMN ydzs_agt_prompt_template.is_ab_test_enabled IS '是否启用 AB 测试（smallint: 0=禁用, 1=启用）';
 
 -- ============================================================================
 -- 三、Userinfo / Identity 模块（6 个字段，3 张表）
 -- ============================================================================
 
--- 6. ydsz_idm_account_login_history: is_deleted
-ALTER TABLE ydsz_idm_account_login_history
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+-- 6. ydzs_idm_account_login_history: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
-ALTER TABLE ydsz_idm_account_login_history
-  ADD CONSTRAINT chk_idm_login_history_is_deleted CHECK (is_deleted IN (0, 1));
-
--- 7. ydsz_idm_auth_apikey: is_enabled
+-- 7. ydsz_idm_auth_apikey: is_enabled（boolean → smallint）
+-- 注意：TYPE 变更和 SET DEFAULT 必须分两步，否则 PG 会用旧类型(boolean)校验默认值
 ALTER TABLE ydsz_idm_auth_apikey
   ALTER COLUMN is_enabled TYPE SMALLINT
-    USING CASE WHEN is_enabled = TRUE THEN 1 ELSE 0 END,
+    USING CASE WHEN is_enabled = TRUE THEN 1 ELSE 0 END;
+
+ALTER TABLE ydsz_idm_auth_apikey
   ALTER COLUMN is_enabled SET DEFAULT 1,
   ALTER COLUMN is_enabled SET NOT NULL;
 
@@ -126,35 +104,33 @@ ALTER TABLE ydsz_idm_auth_apikey
 
 COMMENT ON COLUMN ydsz_idm_auth_apikey.is_enabled IS '是否启用（smallint: 0=禁用, 1=启用）';
 
--- 8. ydsz_idm_auth_policy: 4 个布尔字段 + is_deleted
+-- 8. ydsz_idm_auth_policy: 4 个布尔字段（boolean → smallint）
+-- 注意：TYPE 变更和 SET DEFAULT 必须分两步，否则 PG 会用旧类型(boolean)校验默认值
 ALTER TABLE ydsz_idm_auth_policy
   ALTER COLUMN is_password_require_uppercase TYPE SMALLINT
     USING CASE WHEN is_password_require_uppercase = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_password_require_uppercase SET DEFAULT 1,
-  ALTER COLUMN is_password_require_uppercase SET NOT NULL,
   ALTER COLUMN is_password_require_digit TYPE SMALLINT
     USING CASE WHEN is_password_require_digit = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_password_require_digit SET DEFAULT 1,
-  ALTER COLUMN is_password_require_digit SET NOT NULL,
   ALTER COLUMN is_mfa_enabled TYPE SMALLINT
     USING CASE WHEN is_mfa_enabled = TRUE THEN 1 ELSE 0 END,
+  ALTER COLUMN is_captcha_enabled TYPE SMALLINT
+    USING CASE WHEN is_captcha_enabled = TRUE THEN 1 ELSE 0 END;
+
+ALTER TABLE ydsz_idm_auth_policy
+  ALTER COLUMN is_password_require_uppercase SET DEFAULT 1,
+  ALTER COLUMN is_password_require_uppercase SET NOT NULL,
+  ALTER COLUMN is_password_require_digit SET DEFAULT 1,
+  ALTER COLUMN is_password_require_digit SET NOT NULL,
   ALTER COLUMN is_mfa_enabled SET DEFAULT 0,
   ALTER COLUMN is_mfa_enabled SET NOT NULL,
-  ALTER COLUMN is_captcha_enabled TYPE SMALLINT
-    USING CASE WHEN is_captcha_enabled = TRUE THEN 1 ELSE 0 END,
   ALTER COLUMN is_captcha_enabled SET DEFAULT 1,
-  ALTER COLUMN is_captcha_enabled SET NOT NULL,
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+  ALTER COLUMN is_captcha_enabled SET NOT NULL;
 
 ALTER TABLE ydsz_idm_auth_policy
   ADD CONSTRAINT chk_idm_policy_pw_uppercase CHECK (is_password_require_uppercase IN (0, 1)),
   ADD CONSTRAINT chk_idm_policy_pw_digit CHECK (is_password_require_digit IN (0, 1)),
   ADD CONSTRAINT chk_idm_policy_mfa_enabled CHECK (is_mfa_enabled IN (0, 1)),
-  ADD CONSTRAINT chk_idm_policy_captcha_enabled CHECK (is_captcha_enabled IN (0, 1)),
-  ADD CONSTRAINT chk_idm_policy_is_deleted CHECK (is_deleted IN (0, 1));
+  ADD CONSTRAINT chk_idm_policy_captcha_enabled CHECK (is_captcha_enabled IN (0, 1));
 
 COMMENT ON COLUMN ydsz_idm_auth_policy.is_password_require_uppercase IS '密码要求大写字母（smallint: 0=不要求, 1=要求）';
 COMMENT ON COLUMN ydsz_idm_auth_policy.is_password_require_digit IS '密码要求数字（smallint: 0=不要求, 1=要求）';
@@ -165,201 +141,57 @@ COMMENT ON COLUMN ydsz_idm_auth_policy.is_captcha_enabled IS '是否启用验证
 -- 四、Workflow / Flow 模块（2 个字段，2 张表）
 -- ============================================================================
 
--- 9. ydsz_flow_archive_cursor: is_deleted
-ALTER TABLE ydsz_flow_archive_cursor
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+-- 9. ydzs_flow_archive_cursor: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
-ALTER TABLE ydsz_flow_archive_cursor
-  ADD CONSTRAINT chk_flow_archive_cursor_is_deleted CHECK (is_deleted IN (0, 1));
-
--- 10. ydsz_flow_idempotent: is_deleted
-ALTER TABLE ydsz_flow_idempotent
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
-
-ALTER TABLE ydsz_flow_idempotent
-  ADD CONSTRAINT chk_flow_idempotent_is_deleted CHECK (is_deleted IN (0, 1));
+-- 10. ydzs_flow_idempotent: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
 -- ============================================================================
 -- 五、Message 模块（4 个字段，4 张表）
 -- ============================================================================
 
--- 11. ydsz_msg_outbox: is_deleted
-ALTER TABLE ydsz_msg_outbox
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+-- 11. ydzs_msg_outbox: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
-ALTER TABLE ydsz_msg_outbox
-  ADD CONSTRAINT chk_msg_outbox_is_deleted CHECK (is_deleted IN (0, 1));
+-- 12. ydzs_msg_tenant_config: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
--- 12. ydsz_msg_tenant_config: is_deleted
-ALTER TABLE ydsz_msg_tenant_config
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
-
-ALTER TABLE ydsz_msg_tenant_config
-  ADD CONSTRAINT chk_msg_tenant_config_is_deleted CHECK (is_deleted IN (0, 1));
-
--- 13. ydsz_msg_trace: is_deleted
-ALTER TABLE ydsz_msg_trace
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
-
-ALTER TABLE ydsz_msg_trace
-  ADD CONSTRAINT chk_msg_trace_is_deleted CHECK (is_deleted IN (0, 1));
+-- 13. ydzs_msg_trace: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
 -- ============================================================================
 -- 六、Job / Cronjob 模块（5 个字段，4 张表，不含 V26.10.03 已修复）
 -- ============================================================================
 
--- 14. ydsz_job_daily_stats: is_deleted
-ALTER TABLE ydsz_job_daily_stats
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+-- 14. ydzs_job_daily_stats: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
-ALTER TABLE ydsz_job_daily_stats
-  ADD CONSTRAINT chk_job_daily_stats_is_deleted CHECK (is_deleted IN (0, 1));
+-- 15. ydzs_job_event_store: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
--- 15. ydsz_job_event_store: is_deleted
-ALTER TABLE ydsz_job_event_store
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+-- 16. ydzs_job_log_content: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
-ALTER TABLE ydsz_job_event_store
-  ADD CONSTRAINT chk_job_event_store_is_deleted CHECK (is_deleted IN (0, 1));
-
--- 16. ydsz_job_log_content: is_deleted
-ALTER TABLE ydsz_job_log_content
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
-
-ALTER TABLE ydsz_job_log_content
-  ADD CONSTRAINT chk_job_log_content_is_deleted CHECK (is_deleted IN (0, 1));
-
--- 17. ydsz_job_outbox: is_deleted
-ALTER TABLE ydsz_job_outbox
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
-
-ALTER TABLE ydsz_job_outbox
-  ADD CONSTRAINT chk_job_outbox_is_deleted CHECK (is_deleted IN (0, 1));
+-- 17. ydzs_job_outbox: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
 -- ============================================================================
 -- 七、Rule / Literule 模块（2 个字段，2 张表）
 -- ============================================================================
 
--- 18. ydsz_rule_execution_trace: is_deleted
-ALTER TABLE ydsz_rule_execution_trace
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+-- 18. ydzs_rule_execution_trace: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
-ALTER TABLE ydsz_rule_execution_trace
-  ADD CONSTRAINT chk_rule_exec_trace_is_deleted CHECK (is_deleted IN (0, 1));
-
--- 19. ydsz_rule_version_history: is_deleted
-ALTER TABLE ydsz_rule_version_history
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
-
-ALTER TABLE ydsz_rule_version_history
-  ADD CONSTRAINT chk_rule_ver_history_is_deleted CHECK (is_deleted IN (0, 1));
+-- 19. ydzs_rule_version_history: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
 -- ============================================================================
 -- 八、Generator 模块（7 个字段，6 张表）
 -- ============================================================================
 
--- 20. ydsz_gen_column_meta: is_deleted
-ALTER TABLE ydsz_gen_column_meta
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+-- 20. ydzs_gen_column_meta: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
-ALTER TABLE ydsz_gen_column_meta
-  ADD CONSTRAINT chk_gen_column_meta_is_deleted CHECK (is_deleted IN (0, 1));
+-- 21. ydzs_gen_datasource: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
--- 21. ydsz_gen_datasource: is_deleted
-ALTER TABLE ydsz_gen_datasource
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+-- 22. ydzs_gen_history: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
-ALTER TABLE ydsz_gen_datasource
-  ADD CONSTRAINT chk_gen_datasource_is_deleted CHECK (is_deleted IN (0, 1));
+-- 23. ydzs_gen_history_file: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
--- 22. ydsz_gen_history: is_deleted
-ALTER TABLE ydsz_gen_history
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
+-- 24. ydzs_gen_table_meta: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
-ALTER TABLE ydsz_gen_history
-  ADD CONSTRAINT chk_gen_history_is_deleted CHECK (is_deleted IN (0, 1));
+-- 25. ydzs_gen_template: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
--- 23. ydsz_gen_history_file: is_deleted
-ALTER TABLE ydsz_gen_history_file
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
-
-ALTER TABLE ydsz_gen_history_file
-  ADD CONSTRAINT chk_gen_history_file_is_deleted CHECK (is_deleted IN (0, 1));
-
--- 24. ydsz_gen_table_meta: is_deleted
-ALTER TABLE ydsz_gen_table_meta
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
-
-ALTER TABLE ydsz_gen_table_meta
-  ADD CONSTRAINT chk_gen_table_meta_is_deleted CHECK (is_deleted IN (0, 1));
-
--- 25. ydsz_gen_template: is_deleted
-ALTER TABLE ydsz_gen_template
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
-
-ALTER TABLE ydsz_gen_template
-  ADD CONSTRAINT chk_gen_template_is_deleted CHECK (is_deleted IN (0, 1));
-
--- 26. ydsz_gen_template_group: is_deleted
-ALTER TABLE ydsz_gen_template_group
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
-
-ALTER TABLE ydsz_gen_template_group
-  ADD CONSTRAINT chk_gen_template_group_is_deleted CHECK (is_deleted IN (0, 1));
+-- 26. ydzs_gen_template_group: is_deleted 已在 V26.10.01 基线中为 smallint，跳过转换
 
 -- ============================================================================
 -- 九、特殊字段修正（命名遗漏）

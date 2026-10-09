@@ -1,0 +1,65 @@
+package com.njydsz.literule.web.controller;
+
+import java.util.List;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.literule.domain.vo.RuleConflictInfoVO;
+import com.njydsz.literule.server.converter.LiteruleWebConverter;
+import com.njydsz.literule.server.spi.RuleConflictDetectorProvider;
+
+/**
+ * 规则冲突检测 Controller
+ *
+ * <p>业务背景：随着规则数量增长，多条规则之间可能出现条件重叠、严重度矛盾、 优先级倒挂等冲突，影响规则引擎的判定准确性。冲突检测器通过 SPI 由 project
+ * 模块提供实现，对当前生效规则集做静态分析并返回冲突对列表。
+ *
+ * <p>核心能力：检测当前规则集中的冲突规则对。
+ *
+ * <p>从 {@link RuleAdminController} 拆分而来，与原文件共享基路径 {@code /ruleEngine/rules}，所有端点 URL 保持不变。
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ */
+@ApiVersion("26.10.01")
+@Slf4j
+@RestController
+@RequestMapping("/literule/rules")
+@RequiredArgsConstructor
+@Validated
+@Tag(name = "规则冲突检测", description = "规则冲突检测")
+public class RuleConflictController {
+
+  /** 规则冲突检测器（SPI，由 project 模块提供实现） */
+  private final RuleConflictDetectorProvider ruleConflictDetectorProvider;
+
+  /** Web 层转换器（Spring 单例注入） */
+  @Resource
+  private LiteruleWebConverter literuleWebConverter;
+
+  /**
+   * 检测规则冲突
+   *
+   * @return 冲突规则对列表
+   */
+  @Operation(summary = "检测规则冲突", description = "对当前生效规则集做静态分析，返回条件重叠、严重度矛盾、优先级倒挂等冲突对列表")
+  @ApiResponse(responseCode = "200", description = "成功")
+  @GetMapping("/conflicts")
+  public YdszResponse<List<RuleConflictInfoVO>> detectConflicts() {
+    return YdszResponse.success(
+        ruleConflictDetectorProvider.detectConflicts().stream()
+            .map(literuleWebConverter::entityToVO)
+            .toList());
+  }
+}

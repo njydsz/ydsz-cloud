@@ -1,0 +1,195 @@
+# =============================================================
+# ydsz-cloud 本地开发 / 可观测性编排
+#
+# 默认启动（不含可观测性后端）：
+#   docker compose up -d
+#
+# 启用可观测性后端（ES + Kibana + OTEL + SkyWalking）：
+#   docker compose --profile observability up -d
+#
+# 网关端口映射：
+#   gateway     -> 9000
+#   system      -> 9001
+#   userinfo    -> 9002
+#   nextwiki    -> 9003
+#   message     -> 9004
+#   workflow    -> 9005
+#   cronjob     -> 9006
+#   literule    -> 9007
+#   agent       -> 9008
+#   generator   -> 9090
+#
+# 可观测性端口映射（--profile observability）：
+#   elasticsearch     -> 9200 (HTTP) / 9300 (transport)
+#   kibana            -> 5601
+#   otel-collector    -> 4317 (OTLP gRPC) / 4318 (OTLP HTTP) / 8888 (metrics)
+#   skywalking-oap    -> 11800 (gRPC) / 12800 (REST)
+#   skywalking-ui     -> 8080 (Web UI)
+# =============================================================
+
+services:
+  # ----------------------------------------------------------
+  # 业务服务占位（实际构建需补充 build args 与环境变量）
+  # 取消注释后即可本地编排；生产环境建议用 K8s
+  # ----------------------------------------------------------
+  # gateway:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #     args:
+  #       MODULE_DIR: ydsz-gateway
+  #       JAR_FILE: ydsz-gateway.jar
+  #   ports:
+  #     - "9000:8080"
+  #   networks:
+  #     - ydsz-net
+
+  # ----------------------------------------------------------
+  # 可观测性后端（仅 --profile observability 时启动）
+  # ----------------------------------------------------------
+
+  # --- Elasticsearch 8 (单节点开发模式，同时服务 Kibana + SkyWalking OAP) ---
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: ydsz-elasticsearch
+    profiles:
+      - observability
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - cluster.name=ydsz-observability
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start-period: 30s
+    networks:
+      - ydsz-net
+
+  # --- Kibana 8 (对接上述 ES) ---
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    container_name: ydsz-kibana
+    profiles:
+      - observability
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=""
+      - SERVER_PUBLICBASEURL=http://localhost:5601
+    ports:
+      - "5601:5601"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:5601/api/status || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start-period: 60s
+    networks:
+      - ydsz-net
+
+  # --- OpenTelemetry Collector (OTLP 接收端，contrib 版本含丰富 processor/exporter) ---
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.111.0
+    container_name: ydsz-otel-collector
+    profiles:
+      - observability
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./scripts/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+      - "8888:8888"     # Collector 自身 metrics
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8888/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start-period: 10s
+    networks:
+      - ydsz-net
+
+  # --- SkyWalking OAP Server (Elasticsearch 作为存储后端) ---
+  skywalking-oap:
+    image: apache/skywalking-oap-server:9.7.0
+    container_name: ydsz-skywalking-oap
+    profiles:
+      - observability
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      SW_STORAGE: elasticsearch
+      SW_ES_USER: ""
+      SW_ES_PASSWORD: ""
+      SW_NAMESPACE: ""
+      ES_HOST: elasticsearch
+      ES_PORT: "9200"
+      SW_HEALTH_CHECKER: default
+      JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "11800:11800"   # gRPC 采集
+      - "12800:12800"   # REST API
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:12800/ || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start-period: 60s
+    networks:
+      - ydsz-net
+
+  # --- SkyWalking Web UI ---
+  skywalking-ui:
+    image: apache/skywalking-ui:9.7.0
+    container_name: ydsz-skywalking-ui
+    profiles:
+      - observability
+    depends_on:
+      skywalking-oap:
+        condition: service_healthy
+    environment:
+      SW_OAP_ADDRESS: http://skywalking-oap:12800
+    ports:
+      - "8090:8080"     # UI (宿主机 8090 映射，避免与业务 8080 冲突)
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080 || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start-period: 30s
+    networks:
+      - ydsz-net
+
+# ----------------------------------------------------------
+# 共享网络
+# ----------------------------------------------------------
+networks:
+  ydsz-net:
+    name: ydsz-cloud-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# ----------------------------------------------------------
+# 持久化卷
+# ----------------------------------------------------------
+volumes:
+  es-data:
+    name: ydsz-es-data
+    driver: local

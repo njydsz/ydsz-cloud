@@ -326,12 +326,12 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_gen_column_meta_table ON ydsz_gen_column_met
 -- 8. 初始化数据（模板分组）
 -- ============================================================================
 
-INSERT INTO ydsz_gen_template_group (name, description, is_system, sort, active_flag)
-VALUES ('default', '标准 DDD 分层模板（entity/service/controller/repository...）', 1, 1, 1)
+INSERT INTO ydsz_gen_template_group (id, name, description, is_system, sort, active_flag)
+VALUES (gen_random_uuid(), 'default', '标准 DDD 分层模板（entity/service/controller/repository...）', 1, 1, 1)
 ON CONFLICT (name) DO NOTHING;
 
-INSERT INTO ydsz_gen_template_group (name, description, is_system, sort, active_flag)
-VALUES ('mybatis-plus', 'Mybatis-Plus 增强版模板（含 Wrapper/通用 Service）', 1, 2, 0)
+INSERT INTO ydsz_gen_template_group (id, name, description, is_system, sort, active_flag)
+VALUES (gen_random_uuid(), 'mybatis-plus', 'Mybatis-Plus 增强版模板（含 Wrapper/通用 Service）', 1, 2, 0)
 ON CONFLICT (name) DO NOTHING;
 
 

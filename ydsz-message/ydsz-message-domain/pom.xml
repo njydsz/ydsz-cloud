@@ -55,6 +55,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-feign</artifactId>
         </dependency>
+        <!-- ydsz-common-excel（MsgLogExportVO 使用 @ExcelProperty 注解） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-excel</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!-- MapStruct（Domain 层 Converter 使用 @Mapper 注解） -->
         <dependency>
             <groupId>org.mapstruct</groupId>

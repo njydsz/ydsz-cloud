@@ -4,6 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.njydsz.common.base.api.ApiVersion;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * GLUE 编辑器页面视图 Controller（P2-1）。
@@ -25,6 +26,7 @@ public class GlueEditorViewController {
    *
    * @return 页面转发路径
    */
+  @Operation(summary = "GLUE编辑器页面")
   @GetMapping("/cronjob/glue-editor.html")
   public String index() {
     return GLUE_EDITOR_PAGE;

@@ -74,7 +74,54 @@ jobs:
             --backend-root . \
             --min-coverage 15 \
             --verbose
-# Step 4c: DDL 三方言同步检查（观察模式，门禁逐步推进）
+      # Step 4c: Performance Budget Gate（性能预算存在性检查 — baseline 模式）
+      - name: Performance Budget Gate
+        working-directory: ydsz-cloud
+        run: |
+          # 基线检查：性能预算文件存在且包含 LCP/INP/CLS 三个核心指标
+          BUDGET_FILE="../ydsz-micro/.perf-budget.json"
+          if [ ! -f "$BUDGET_FILE" ]; then
+            echo "[BUDGET-WARN] .perf-budget.json not found at ydzs-micro/.perf-budget.json — skipping budget gate (observe mode)"
+            exit 0
+          fi
+
+          echo "[BUDGET-CHECK] Validating performance budget file: $BUDGET_FILE"
+
+          # 检查 JSON 有效性
+          if ! python3 -c "import json; json.load(open('$BUDGET_FILE'))" 2>/dev/null; then
+            echo "[BUDGET-FAIL] .perf-budget.json is not valid JSON"
+            exit 1
+          fi
+
+          # 检查 LCP / INP / CLS 是否定义
+          for metric in LCP INP CLS; do
+            if python3 -c "
+          import json,sys
+          data=json.load(open('$BUDGET_FILE'))
+          metrics=data.get('metrics',{})
+          if '$metric' not in metrics:
+              sys.exit(1)
+          " 2>/dev/null; then
+              echo "[BUDGET-OK] $metric is defined in performance budget"
+            else
+              echo "[BUDGET-FAIL] $metric is missing from performance budget (.perf-budget.json)"
+              echo "  Required: metrics.LCP, metrics.INP, metrics.CLS"
+              exit 1
+            fi
+          done
+
+          # 如果存在 lighthouse 或 puppeteer 脚本，报告可用性（baseline 模式不强制执行）
+          echo "[BUDGET-INFO] Checking for audit scripts..."
+          if ls ../ydsz-micro/lighthouse*.js ../ydsz-micro/lighthouse*.json ../ydsz-micro/puppeteer*.js 2>/dev/null | head -1 | grep -q .; then
+            echo "[BUDGET-INFO] Lighthouse/Puppeteer audit scripts detected — available for numerical comparison"
+            echo "[BUDGET-INFO] Run: npx lighthouse <url> --config-path=../.perf-budget.json to validate performance"
+          else
+            echo "[BUDGET-INFO] No lighthouse/puppeteer scripts found — budget gate in baseline (existence-only) mode"
+          fi
+
+          echo "[BUDGET-PASS] Performance budget baseline validated successfully"
+
+      # Step 4d: DDL 三方言同步检查（观察模式，门禁逐步推进）
       - name: DDL 三方言同步检查
         working-directory: ydsz-cloud
         run: |

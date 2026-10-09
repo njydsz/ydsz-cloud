@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.type.JdbcType;
+import org.apache.ibatis.type.TypeHandlerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,8 +18,10 @@ import com.baomidou.mybatisplus.core.toolkit.GlobalConfigUtils;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.njydsz.common.jdbc.handler.BooleanSmallintTypeHandler;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -127,6 +132,37 @@ public class MybatisPlusConfiguration {
     this.meterBindersProvider = meterBindersProvider;
     applyGlobalIdType();
     registerJdbcMetrics();
+  }
+
+  /**
+   * 程序化注册全局 Boolean ↔ SMALLINT TypeHandler（兜底）。
+   *
+   * <p>V26.10.05.sql 将所有 BOOLEAN 列转为 SMALLINT（0/1）后，MyBatis-Plus 默认的 BooleanTypeHandler
+   * 会使用 {@code setBoolean} 写入 PostgreSQL BOOLEAN 类型参数，与 SMALLINT 列产生 {@code smallint = boolean}
+   * 操作符不匹配错误。通过 {@link SmartInitializingSingleton} 在 SqlSessionFactory 初始化后注册自定义
+   * Handler，使所有 Boolean 字段（包括 @TableLogic 的条件和 insert/update/set 操作）均走 SMALLINT 路径。
+   *
+   * <p><b>注：</b>ydsz-common.yml 中已配置 {@code type-handlers-package} 自动扫描，
+   * 此处 SmartInitializingSingleton 作为兜底，确保即使未通过 nacos 加载共享配置也能生效。
+   *
+   * @param sqlSessionFactoryProvider SqlSessionFactory 延迟注入（由 Spring Boot 自动装配）
+   */
+  @Bean
+  public SmartInitializingSingleton booleanSmallintTypeHandlerRegistrar(
+      ObjectProvider<SqlSessionFactory> sqlSessionFactoryProvider) {
+    return () -> {
+      SqlSessionFactory factory = sqlSessionFactoryProvider.getIfAvailable();
+      if (factory != null && factory.getConfiguration() != null) {
+        TypeHandlerRegistry registry = factory.getConfiguration().getTypeHandlerRegistry();
+        BooleanSmallintTypeHandler handler = new BooleanSmallintTypeHandler();
+        // Boolean.class + SMALLINT → setInt(1/0)
+        registry.register(Boolean.class, JdbcType.SMALLINT, handler);
+        // Boolean.class 默认 handler（覆盖 MyBatis 内置 BooleanTypeHandler）
+        registry.register(Boolean.class, handler);
+        log.info(
+            "[ydsz-common-jdbc] BooleanSmallintTypeHandler registered globally for SMALLINT columns (YDIZ-DB-007)");
+      }
+    };
   }
 
   /**

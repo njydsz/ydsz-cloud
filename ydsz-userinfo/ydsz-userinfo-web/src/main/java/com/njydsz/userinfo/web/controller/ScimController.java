@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.scim.ScimConverter;
@@ -88,6 +89,7 @@ public class ScimController {
    * @param filter SCIM 过滤表达式（可选，如 {@code userName eq "john"}）
    * @return SCIM 标准列表响应
    */
+  @Operation(summary = "查询SCIM用户列表")
   @GetMapping("/Users")
   public ResponseEntity<String> listUsers(
       @RequestParam(defaultValue = "1") int startIndex,
@@ -135,6 +137,7 @@ public class ScimController {
    * @param id 用户 ID
    * @return SCIM User 资源
    */
+  @Operation(summary = "查询单个SCIM用户")
   @GetMapping("/Users/{id}")
   public ResponseEntity<String> getUser(@PathVariable String id) {
     UserAccountVO user = userAccountService.getById(id);
@@ -158,6 +161,7 @@ public class ScimController {
    * @param scimUser SCIM User 资源
    * @return 创建的 SCIM User 资源（含分配的 ID）
    */
+  @Operation(summary = "创建SCIM用户")
   @PostMapping("/Users")
   public ResponseEntity<String> createUser(@Valid @RequestBody ScimUser scimUser) {
     if (!scimProperties.isAllowCreate()) {
@@ -191,6 +195,7 @@ public class ScimController {
    * @param scimUser SCIM User 资源
    * @return 更新后的 SCIM User 资源
    */
+  @Operation(summary = "更新SCIM用户")
   @PutMapping("/Users/{id}")
   public ResponseEntity<String> updateUser(
       @PathVariable String id, @Valid @RequestBody ScimUser scimUser) {
@@ -282,6 +287,7 @@ public class ScimController {
    * @param id 用户 ID
    * @return 204 No Content
    */
+  @Operation(summary = "删除SCIM用户")
   @DeleteMapping("/Users/{id}")
   public ResponseEntity<Void> deleteUser(@PathVariable String id) {
     if (!scimProperties.isAllowDelete()) {
@@ -299,6 +305,7 @@ public class ScimController {
    * @param count 每页条数
    * @return SCIM 标准列表响应
    */
+  @Operation(summary = "查询SCIM组列表")
   @GetMapping("/Groups")
   public ResponseEntity<String> listGroups(
       @RequestParam(defaultValue = "1") int startIndex,
@@ -322,6 +329,7 @@ public class ScimController {
    *
    * @return ServiceProviderConfig
    */
+  @Operation(summary = "查询服务提供商配置")
   @GetMapping("/ServiceProviderConfig")
   public ResponseEntity<String> getServiceProviderConfig() {
     // 简化实现：返回基本配置
@@ -353,6 +361,7 @@ public class ScimController {
    *
    * @return ResourceType 列表
    */
+  @Operation(summary = "查询资源类型")
   @GetMapping("/ResourceTypes")
   public ResponseEntity<String> getResourceTypes() {
     String result = """
@@ -388,6 +397,7 @@ public class ScimController {
    *
    * @return Schema 列表
    */
+  @Operation(summary = "查询Schema定义")
   @GetMapping("/Schemas")
   public ResponseEntity<String> getSchemas() {
     String result = """

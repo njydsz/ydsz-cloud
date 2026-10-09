@@ -4,6 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.njydsz.common.base.api.ApiVersion;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * 任务全局拓扑页面视图 Controller（P2-3）。
@@ -25,6 +26,7 @@ public class TopologyViewController {
    *
    * @return 页面转发路径
    */
+  @Operation(summary = "任务拓扑页面")
   @GetMapping("/cronjob/topology.html")
   public String index() {
     return TOPOLOGY_PAGE;

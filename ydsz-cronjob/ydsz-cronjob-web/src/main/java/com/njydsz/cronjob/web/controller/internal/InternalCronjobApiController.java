@@ -14,6 +14,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
 
@@ -61,6 +62,7 @@ public class InternalCronjobApiController {
   @Idempotent(
       key = "'ydsz:cronjob:internal-api:trigger:' + #jobId",
       ttlSeconds = 5)
+  @Operation(summary = "立即触发定时任务")
   @PostMapping("/cronjob/{id}/trigger")
   public YdszResponse<String> trigger(@PathVariable("id") String jobId) {
     return YdszResponse.success(jobService.trigger(jobId));
@@ -79,6 +81,7 @@ public class InternalCronjobApiController {
   @Idempotent(
       key = "'ydsz:cronjob:internal-api:trigger-lock:' + #jobId + ':' + #holdLock",
       ttlSeconds = 5)
+  @Operation(summary = "立即触发定时任务带锁")
   @PostMapping(value = "/cronjob/{id}/trigger", params = "holdLock")
   public YdszResponse<String> triggerWithLock(
       @PathVariable("id") String jobId, @RequestParam("holdLock") boolean holdLock) {
@@ -97,6 +100,7 @@ public class InternalCronjobApiController {
   @Idempotent(
       key = "'ydsz:cronjob:internal-api:get-job-info:' + #jobId",
       ttlSeconds = 5)
+  @Operation(summary = "查询任务详情")
   @GetMapping("/cronjob/{id}")
   public YdszResponse<JobVO> getJobInfo(@PathVariable("id") String jobId) {
     return YdszResponse.success(jobService.getById(jobId));
@@ -114,6 +118,7 @@ public class InternalCronjobApiController {
   @Idempotent(
       key = "'ydsz:cronjob:internal-api:pause-job:' + #jobId",
       ttlSeconds = 5)
+  @Operation(summary = "暂停任务")
   @PostMapping("/cronjob/{id}/pause")
   public YdszResponse<Void> pauseJob(@PathVariable("id") String jobId) {
     jobService.pause(jobId);
@@ -132,6 +137,7 @@ public class InternalCronjobApiController {
   @Idempotent(
       key = "'ydsz:cronjob:internal-api:resume-job:' + #jobId",
       ttlSeconds = 5)
+  @Operation(summary = "恢复任务")
   @PostMapping("/cronjob/{id}/resume")
   public YdszResponse<Void> resumeJob(@PathVariable("id") String jobId) {
     jobService.resume(jobId);

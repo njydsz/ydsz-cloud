@@ -34,6 +34,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * RAG 知识库管理 REST API Controller。
@@ -123,6 +124,7 @@ public class RagController {
       action = AuditAction.CREATE,
       content = "'ingest'")
   @Idempotent(key = "ydsz:agent:RagController:ingest:lock", ttlSeconds = 5)
+  @Operation(summary = "摄入文档到知识库")
   @PostMapping("/ingest")
   public YdszResponse<Map<String, Object>> ingest(@Valid @RequestBody DocumentIngestDTO request) {
     log.info(
@@ -159,6 +161,7 @@ public class RagController {
       type = AuditType.OPERATION,
       action = AuditAction.QUERY,
       content = "'search'")
+  @Operation(summary = "向量相似度检索")
   @PostMapping("/search")
   public YdszResponse<Map<String, Object>> search(@Valid @RequestBody RagQueryDTO request) {
     // 参数默认值兜底：topK=5 / minScore=0.7 / includeContext=true
@@ -203,6 +206,7 @@ public class RagController {
       content = "'deleteDocument'")
   @Idempotent(key = "ydsz:agent:RagController:deleteDocument:lock", ttlSeconds = 5)
   @RateLimit(resource = "agent.rag.deleteDocument", threshold = 50)
+  @Operation(summary = "删除文档索引")
   @DeleteMapping("/documents/{documentId}")
   public YdszResponse<Void> deleteDocument(@PathVariable String documentId) {
     log.info("[RAG-API] 删除文档索引: documentId={}", documentId);
@@ -223,6 +227,7 @@ public class RagController {
       type = AuditType.OPERATION,
       action = AuditAction.QUERY,
       content = "'stats'")
+  @Operation(summary = "获取向量存储统计")
   @GetMapping("/stats")
   public YdszResponse<DocumentIngestionService.VectorStoreStats> stats() {
     return YdszResponse.success(ingestionService.getStats());
@@ -252,6 +257,7 @@ public class RagController {
       action = AuditAction.CREATE,
       content = "'ingestScannedPdf'")
   @Idempotent(key = "ydsz:agent:RagController:ingestScannedPdf:lock", ttlSeconds = 10)
+  @Operation(summary = "摄入扫描版PDF")
   @PostMapping("/ingest-scanned-pdf")
   public YdszResponse<Map<String, Object>> ingestScannedPdf(
       @Valid @RequestBody ScannedPdfIngestDTO request) {
@@ -296,6 +302,7 @@ public class RagController {
       action = AuditAction.CREATE,
       content = "'ingestImage'")
   @Idempotent(key = "ydsz:agent:RagController:ingestImage:lock", ttlSeconds = 5)
+  @Operation(summary = "摄入图片OCR")
   @PostMapping("/ingest-image")
   public YdszResponse<Map<String, Object>> ingestImage(
       @Valid @RequestBody ImageIngestDTO request) {
@@ -342,6 +349,7 @@ public class RagController {
       type = AuditType.OPERATION,
       action = AuditAction.QUERY,
       content = "'hybridSearch'")
+  @Operation(summary = "混合搜索")
   @PostMapping("/hybrid-search")
   public YdszResponse<Map<String, Object>> hybridSearch(
       @Valid @RequestBody HybridSearchDTO request) {

@@ -16,6 +16,7 @@ import com.njydsz.agent.server.runtime.RuntimeManagementService;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Agent 运行时管理控制器。
@@ -55,6 +56,7 @@ public class RuntimeController {
      * @param tenantId 可选的租户 ID 过滤
      * @return 活跃会话列表
      */
+    @Operation(summary = "获取活跃会话列表")
     @GetMapping("/sessions/active")
     public YdszResponse<List<RuntimeSession>> getActiveSessions(
             @RequestParam(required = false) String tenantId) {
@@ -73,6 +75,7 @@ public class RuntimeController {
      * @param limit 返回数量上限，默认 50，最大 200
      * @return 最近会话列表
      */
+    @Operation(summary = "获取最近会话列表")
     @GetMapping("/sessions/recent")
     public YdszResponse<List<RuntimeSession>> getRecentSessions(
             @RequestParam(defaultValue = "50") int limit) {
@@ -86,6 +89,7 @@ public class RuntimeController {
      * @param executionId 执行 ID
      * @return 会话详情
      */
+    @Operation(summary = "获取单个会话详情")
     @GetMapping("/sessions/{executionId}")
     public YdszResponse<RuntimeSession> getSession(@PathVariable String executionId) {
         return runtimeManagementService.getSession(executionId)
@@ -100,6 +104,7 @@ public class RuntimeController {
      *
      * @return 统计信息
      */
+    @Operation(summary = "获取运行时概览统计")
     @GetMapping("/overview")
     public YdszResponse<Map<String, Object>> getOverview() {
         return YdszResponse.success(runtimeManagementService.getOverviewStats());
@@ -114,6 +119,7 @@ public class RuntimeController {
      * @param executionId 执行 ID
      * @return 操作结果
      */
+    @Operation(summary = "强制回收执行会话")
     @DeleteMapping("/sessions/{executionId}")
     public YdszResponse<Boolean> forceRecycle(@PathVariable String executionId) {
         log.info("收到强制回收请求: executionId={}", executionId);

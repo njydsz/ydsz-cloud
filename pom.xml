@@ -93,10 +93,10 @@
         <sentinel.version>1.8.8</sentinel.version>
         <!-- JaCoCo + 测试基础设施（§14 测试管理规范 v1.0.8 落地，2026-09-16） -->
         <jacoco.version>0.8.12</jacoco.version>
-        <!-- JaCoCo 渐进式覆盖率门禁阈值（26.09-26 初始基线：行覆盖 5%、分支 2%。随测试破零进度分批上调） -->
-        <jacoco.line.threshold>0.05</jacoco.line.threshold>
-        <jacoco.branch.threshold>0.02</jacoco.branch.threshold>
-        <jacoco.check.skip>true</jacoco.check.skip>
+        <!-- JaCoCo 渐进式覆盖率门禁阈值（26.10-08 上调基线：行覆盖 10%、分支 5%。后续路线：Q4 2026 ≥ 30%/20%，Q1 2027 ≥ 50%/35%） -->
+        <jacoco.line.threshold>0.10</jacoco.line.threshold>
+        <jacoco.branch.threshold>0.05</jacoco.branch.threshold>
+        <jacoco.check.skip>false</jacoco.check.skip>
         <skipITs>false</skipITs>
         <junit-jupiter.version>5.10.3</junit-jupiter.version>
         <assertj.version>3.26.3</assertj.version>
@@ -1424,8 +1424,8 @@
                         <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
                     </configuration>
                 </execution>
-                <!-- check：覆盖率门禁（渐进式基线 — 26.09-26 初始值：行覆盖 ≥ 5%，分支 ≥ 2%；
-                     目标 Q4 2026 上调至行覆盖 ≥ 30% / 分支 ≥ 20%，Q1 2027 ≥ 50% / 35%，
+                <!-- check：覆盖率门禁（渐进式基线 — 26.10-08 当前值：行覆盖 ≥ 10%，分支 ≥ 5%；
+                     后续路线：Q4 2026 上调至行覆盖 ≥ 30% / 分支 ≥ 20%，Q1 2027 ≥ 50% / 35%，
                      与《云顶编码规范》§14.7 测试门禁路线图对齐）。
                      紧急跳过：-Djacoco.check.skip=true -->
                 <execution>

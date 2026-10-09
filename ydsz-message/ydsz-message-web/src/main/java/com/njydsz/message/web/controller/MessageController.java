@@ -49,7 +49,7 @@ import com.njydsz.message.domain.enums.core.SendStrategyEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.vo.MsgLogViews;
 import com.njydsz.message.server.service.core.MessageService;
-import com.njydsz.message.web.vo.MsgLogExportVO;
+import com.njydsz.message.domain.vo.MsgLogExportVO;
 
 /**
  * 消息发送 Controller。

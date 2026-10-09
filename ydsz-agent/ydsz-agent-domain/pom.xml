@@ -60,6 +60,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!-- ydzs-common-excel（ExportVO 使用 @ExcelProperty 注解） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-excel</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!-- swagger-annotations-jakarta（Jakarta 命名空间的 @Schema/@Parameter 注解） -->
         <dependency>
             <groupId>io.swagger.core.v3</groupId>

@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,10 +18,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.vo.FlowBatchStartResultVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
-import com.njydsz.workflow.server.manager.FlowInstanceBatchOperator;
-import com.njydsz.workflow.server.manager.FlowInstanceLifecycleManager;
-import com.njydsz.workflow.server.manager.FlowInstanceQueryService;
-import com.njydsz.workflow.server.manager.FlowInstanceVariableManager;
+import com.njydsz.workflow.server.service.impl.instance.FlowInstanceBatchOperator;
+import com.njydsz.workflow.server.service.impl.instance.FlowInstanceLifecycleManager;
+import com.njydsz.workflow.server.service.impl.instance.FlowInstanceQueryService;
+import com.njydsz.workflow.server.service.impl.instance.FlowInstanceVariableManager;
 
 @ExtendWith(MockitoExtension.class)
 class FlowInstanceServiceImplTest {
@@ -171,11 +170,10 @@ class FlowInstanceServiceImplTest {
         @DisplayName("batchStartInstances - delegates to batchOperator and returns result VO")
         void batchStartInstances_delegatesToBatchOperator() {
             List<FlowStartProcessDTO> dtos = List.of(new FlowStartProcessDTO());
-            FlowBatchStartResultVO expected = FlowBatchStartResultVO.builder()
-                    .successCount(1)
-                    .failedCount(0)
-                    .instanceIds(List.of("inst-new"))
-                    .build();
+            FlowBatchStartResultVO expected = new FlowBatchStartResultVO();
+            expected.setSuccessCount(1);
+            expected.setFailedCount(0);
+            expected.setInstanceIds(List.of("inst-new"));
             when(batchOperator.batchStartInstances(dtos)).thenReturn(expected);
 
             FlowBatchStartResultVO result = flowInstanceService.batchStartInstances(dtos);

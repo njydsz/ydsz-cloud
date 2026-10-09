@@ -4,6 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.njydsz.common.base.api.ApiVersion;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * DAG 设计器页面视图 Controller（P2-2）。
@@ -25,6 +26,7 @@ public class DagDesignerViewController {
    *
    * @return 页面转发路径
    */
+  @Operation(summary = "DAG设计器页面")
   @GetMapping("/cronjob/dag-designer.html")
   public String index() {
     return DAG_DESIGNER_PAGE;

@@ -54,3 +54,8 @@ skywalking:
 #       header-app-id: X-App-Id
 #       excludes:
 #         - /api/internal/health
+
+# i18n 消息源 basename（规范 YDIZ-I18N-001：{module}-messages*.properties）
+spring:
+  messages:
+    basename: userinfo-message

@@ -500,7 +500,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_tenant_config (
     is_deleted SMALLINT                 NOT NULL DEFAULT 0,
     created_by VARCHAR(36)              DEFAULT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_by VARCHAR(36)              DEFAULT NULL
+    updated_by VARCHAR(36)              DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT NOW()
 );
 

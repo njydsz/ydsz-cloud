@@ -24,7 +24,7 @@ import com.njydsz.agent.domain.teamrun.TeamRun;
 import com.njydsz.agent.domain.teamrun.TeamRunPattern;
 import com.njydsz.agent.server.teamrun.TeamRunOrchestrationService;
 import com.njydsz.agent.web.util.ExcelExportUtil;
-import com.njydsz.agent.web.vo.TeamRunExportVO;
+import com.njydsz.agent.domain.vo.TeamRunExportVO;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;

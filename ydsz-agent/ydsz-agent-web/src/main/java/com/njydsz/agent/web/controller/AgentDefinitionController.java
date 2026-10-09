@@ -21,7 +21,7 @@ import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.server.agent.AgentDefinitionService;
-import com.njydsz.agent.web.vo.AgentDefinitionExportVO;
+import com.njydsz.agent.domain.vo.AgentDefinitionExportVO;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;

@@ -20,7 +20,7 @@ import com.njydsz.agent.domain.dto.DagWorkflowDTO;
 import com.njydsz.agent.domain.service.DagWorkflowService;
 import com.njydsz.agent.domain.vo.DagWorkflowVO;
 import com.njydsz.agent.web.util.ExcelExportUtil;
-import com.njydsz.agent.web.vo.DagWorkflowExportVO;
+import com.njydsz.agent.domain.vo.DagWorkflowExportVO;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 

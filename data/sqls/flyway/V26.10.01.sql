@@ -96,7 +96,7 @@ COMMENT ON COLUMN "ydsz_agt_async_task"."completed_at" IS '任务完成时间';
 COMMENT ON COLUMN "ydsz_agt_async_task"."expire_at" IS '任务过期时间（超时未完成则自动释放）';
 COMMENT ON COLUMN "ydsz_agt_async_task"."revision" IS '乐观锁版本号';
 COMMENT ON COLUMN "ydsz_agt_async_task"."tenant_id" IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN "ydsz_agt_async_task"."is_deleted" IS '逻辑删除标识（TRUE=已删除，FALSE=未删除）';
+COMMENT ON COLUMN "ydsz_agt_async_task"."is_deleted" IS '逻辑删除标识（smallint: 0=未删除, 1=已删除）';
 COMMENT ON COLUMN "ydsz_agt_async_task"."created_by" IS '创建人';
 COMMENT ON COLUMN "ydsz_agt_async_task"."created_at" IS '创建时间';
 COMMENT ON COLUMN "ydsz_agt_async_task"."updated_by" IS '最后更新人';
@@ -270,7 +270,7 @@ COMMENT ON COLUMN "ydsz_agt_insight_report"."error_message" IS '生成失败时�
 COMMENT ON COLUMN "ydsz_agt_insight_report"."duration_ms" IS '生成耗时（毫秒）';
 COMMENT ON COLUMN "ydsz_agt_insight_report"."revision" IS '乐观锁版本号';
 COMMENT ON COLUMN "ydsz_agt_insight_report"."tenant_id" IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN "ydsz_agt_insight_report"."is_deleted" IS '逻辑删除标识（FALSE=未删除，TRUE=已删除）';
+COMMENT ON COLUMN "ydsz_agt_insight_report"."is_deleted" IS '逻辑删除标识（smallint: 0=未删除, 1=已删除）';
 COMMENT ON COLUMN "ydsz_agt_insight_report"."created_by" IS '创建人 ID（CombinedFieldFillInterceptor 自动填充）';
 COMMENT ON COLUMN "ydsz_agt_insight_report"."created_at" IS '创建时间';
 COMMENT ON COLUMN "ydsz_agt_insight_report"."updated_by" IS '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）';
@@ -435,7 +435,7 @@ COMMENT ON COLUMN "ydsz_agt_trace"."status" IS '执行状态（RUNNING/SUCCESS/F
 COMMENT ON COLUMN "ydsz_agt_trace"."total_duration_ms" IS '总耗时（毫秒）';
 COMMENT ON COLUMN "ydsz_agt_trace"."revision" IS '乐观锁版本号';
 COMMENT ON COLUMN "ydsz_agt_trace"."tenant_id" IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN "ydsz_agt_trace"."is_deleted" IS '逻辑删除标识（FALSE=未删除，TRUE=已删除）';
+COMMENT ON COLUMN "ydsz_agt_trace"."is_deleted" IS '逻辑删除标识（smallint: 0=未删除, 1=已删除）';
 COMMENT ON COLUMN "ydsz_agt_trace"."updated_by" IS '最后更新人';
 COMMENT ON COLUMN "ydsz_agt_trace"."updated_at" IS '最后更新时间';
 CREATE INDEX "idx_ydsz_agt_trace_tenant_is_deleted" ON "ydsz_agt_trace" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST);
@@ -477,7 +477,7 @@ COMMENT ON COLUMN "ydsz_agt_trace_step"."cost" IS 'Token 成本（USD，精确�
 COMMENT ON COLUMN "ydsz_agt_trace_step"."status" IS '状态标识';
 COMMENT ON COLUMN "ydsz_agt_trace_step"."revision" IS '乐观锁版本号';
 COMMENT ON COLUMN "ydsz_agt_trace_step"."tenant_id" IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN "ydsz_agt_trace_step"."is_deleted" IS '逻辑删除标识（FALSE=未删除，TRUE=已删除）';
+COMMENT ON COLUMN "ydsz_agt_trace_step"."is_deleted" IS '逻辑删除标识（smallint: 0=未删除, 1=已删除）';
 COMMENT ON COLUMN "ydsz_agt_trace_step"."created_by" IS '创建人';
 COMMENT ON COLUMN "ydsz_agt_trace_step"."created_at" IS '创建时间';
 COMMENT ON COLUMN "ydsz_agt_trace_step"."updated_by" IS '最后更新人';
@@ -519,7 +519,7 @@ COMMENT ON COLUMN "ydsz_agt_user_profile"."last_interaction_at" IS '最近交互
 COMMENT ON COLUMN "ydsz_agt_user_profile"."status" IS '状态标识';
 COMMENT ON COLUMN "ydsz_agt_user_profile"."revision" IS '乐观锁版本号';
 COMMENT ON COLUMN "ydsz_agt_user_profile"."tenant_id" IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN "ydsz_agt_user_profile"."is_deleted" IS '逻辑删除标识（FALSE=未删除，TRUE=已删除）';
+COMMENT ON COLUMN "ydsz_agt_user_profile"."is_deleted" IS '逻辑删除标识（smallint: 0=未删除, 1=已删除）';
 COMMENT ON COLUMN "ydsz_agt_user_profile"."created_by" IS '创建人 ID（CombinedFieldFillInterceptor 自动填充）';
 COMMENT ON COLUMN "ydsz_agt_user_profile"."created_at" IS '创建时间';
 COMMENT ON COLUMN "ydsz_agt_user_profile"."updated_by" IS '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）';

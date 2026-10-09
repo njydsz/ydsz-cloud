@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -645,6 +647,21 @@ public class AgentAutoConfiguration {
         .maxRetryOnOverflow(maxRetryOnOverflow)
         .contextTokenBudget(contextTokenBudget)
         .build();
+  }
+
+  /**
+   * 创建 DAG 编排执行器使用的虚拟线程池。
+   *
+   * <p>DAG 节点执行是 IO 密集型（LLM HTTP 调用），使用虚拟线程可在等待响应时自动卸载，
+   * 不占用平台线程，支撑更高并发度。
+   *
+   * @return 虚拟线程 ExecutorService，Bean 名 {@code agentDagExecutor}
+   */
+  @Bean(name = "agentDagExecutor")
+  @ConditionalOnMissingBean(name = "agentDagExecutor")
+  public ExecutorService agentDagExecutor() {
+    log.info("[Agent-AutoConfig] 注册 DAG 虚拟线程池 agentDagExecutor");
+    return ExecutorUtils.newVirtualThreadExecutor("agent-dag-");
   }
 
   /**

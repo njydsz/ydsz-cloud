@@ -1,0 +1,77 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GoogleChrome/lighthouse/main/types/lhr.d.ts",
+  "description": "ydsz-micro 前端性能预算基线（LCP / INP / CLS）",
+  "version": "26.10.01",
+  "budgets": [
+    {
+      "path": "/*",
+      "resourceCounts": [
+        {
+          "resourceType": "total",
+          "budget": 50
+        },
+        {
+          "resourceType": "script",
+          "budget": 15
+        },
+        {
+          "resourceType": "image",
+          "budget": 20
+        }
+      ],
+      "resourceSizes": [
+        {
+          "resourceType": "total",
+          "budget": 3000
+        },
+        {
+          "resourceType": "script",
+          "budget": 800
+        },
+        {
+          "resourceType": "image",
+          "budget": 1500
+        }
+      ],
+      "timings": [
+        {
+          "metric": "interactive",
+          "budget": 3500
+        },
+        {
+          "metric": "first-contentful-paint",
+          "budget": 1800
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "LCP": {
+      "description": "Largest Contentful Paint",
+      "thresholds": {
+        "good": 2500,
+        "needsImprovement": 4000,
+        "poor": 6000
+      },
+      "unit": "ms"
+    },
+    "INP": {
+      "description": "Interaction to Next Paint",
+      "thresholds": {
+        "good": 200,
+        "needsImprovement": 500,
+        "poor": 1000
+      },
+      "unit": "ms"
+    },
+    "CLS": {
+      "description": "Cumulative Layout Shift",
+      "thresholds": {
+        "good": 0.1,
+        "needsImprovement": 0.25,
+        "poor": 0.5
+      },
+      "unit": "unitless"
+    }
+  }
+}

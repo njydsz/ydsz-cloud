@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.nextwiki.domain.vo.UserFavoriteVO;
@@ -54,6 +55,7 @@ public class UserFavoriteController {
    * @param limit 返回数量限制（默认 50，最大 200）
    * @return 统一响应结果，data 为 {@link UserFavoriteVO} 列表
    */
+  @Operation(summary = "查询收藏列表")
   @GetMapping
   public YdszResponse<List<UserFavoriteVO>> listFavorites(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
@@ -73,6 +75,7 @@ public class UserFavoriteController {
    * @param userId 当前用户 ID
    * @return 统一响应结果，data 为收藏记录 ID（新增或已存在）
    */
+  @Operation(summary = "添加收藏")
   @PostMapping("/{nodeId}")
   public YdszResponse<String> addFavorite(
       @PathVariable String nodeId,
@@ -91,6 +94,7 @@ public class UserFavoriteController {
    * @param userId 当前用户 ID
    * @return 统一响应结果，data 为 true 表示成功移除，false 表示节点未被收藏
    */
+  @Operation(summary = "取消收藏")
   @DeleteMapping("/{nodeId}")
   public YdszResponse<Boolean> removeFavorite(
       @PathVariable String nodeId,
@@ -109,6 +113,7 @@ public class UserFavoriteController {
    * @param userId 当前用户 ID
    * @return 统一响应结果，data 为 true 表示已收藏，false 表示未收藏
    */
+  @Operation(summary = "检查是否已收藏")
   @GetMapping("/{nodeId}/is-favorited")
   public YdszResponse<Boolean> isFavorited(
       @PathVariable String nodeId,
@@ -129,6 +134,7 @@ public class UserFavoriteController {
    * @param userId 当前用户 ID
    * @return 统一响应结果，data 为 true 表示更新成功
    */
+  @Operation(summary = "更新收藏排序")
   @PostMapping("/{nodeId}/sort")
   public YdszResponse<Boolean> updatesort(
       @PathVariable String nodeId,
@@ -147,6 +153,7 @@ public class UserFavoriteController {
    * @param userId 当前用户 ID
    * @return 统一响应结果，data 为收藏数量
    */
+  @Operation(summary = "查询收藏数量")
   @GetMapping("/count")
   public YdszResponse<Integer> getFavoriteCount(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {

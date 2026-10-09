@@ -101,215 +101,100 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_ydsi_rule_def_owner_trgm
 
 
 -- ===========================================================================
--- Section 2: Boolean → SMALLINT 净唯一变更
+-- Section 2: Boolean → SMALLINT 净唯一变更（动态扫描，幂等可重入）
 --         （来自 V26.10.09 第二个脚本，已排除4项重复）
+--
+-- 修复: 不再硬编码 ALTER + USING CASE WHEN col IS TRUE，
+--       而是动态检测列的当前类型，仅当 atttypid = 'boolean' 时才转换。
+--       避免在已迁移列（V26.10.03/V26.10.05 中已转为 SMALLINT）上报
+--       "IS TRUE 的参数必需是类型boolean, 而不是类型smallint"。
 -- ===========================================================================
-
--- 模块: sys
-ALTER TABLE ydsz_sys_config
-  ALTER COLUMN is_public SET DATA TYPE SMALLINT USING CASE WHEN is_public IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_public SET NOT NULL,
-  ALTER COLUMN is_public SET DEFAULT 0;
-
--- 模块: idm（排除已重复的 auth_apikey.is_enabled 和 auth_policy 4项）
-ALTER TABLE ydsz_idm_role
-  ALTER COLUMN is_built_in SET DATA TYPE SMALLINT USING CASE WHEN is_built_in IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_built_in SET NOT NULL,
-  ALTER COLUMN is_built_in SET DEFAULT 0;
-
--- 模块: job
-ALTER TABLE ydsz_job_tenant_quota
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0;
-
-ALTER TABLE ydsz_job_alert_rule
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0;
-
-ALTER TABLE ydsz_job_history
-  ALTER COLUMN is_deleted SET DATA TYPE SMALLINT USING CASE WHEN is_deleted IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET NOT NULL,
-  ALTER COLUMN is_deleted SET DEFAULT 0;
-
--- 模块: rule
-ALTER TABLE ydsz_rule_decision_table
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0;
-
-ALTER TABLE ydsz_rule_ab_policy
-  ALTER COLUMN is_auto_rollback_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_auto_rollback_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_auto_rollback_enabled SET NOT NULL,
-  ALTER COLUMN is_auto_rollback_enabled SET DEFAULT 0;
-
-ALTER TABLE ydsz_rule_ab_rollback
-  ALTER COLUMN is_from_canary SET DATA TYPE SMALLINT USING CASE WHEN is_from_canary IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_from_canary SET NOT NULL,
-  ALTER COLUMN is_from_canary SET DEFAULT 0;
-
-ALTER TABLE ydsz_rule_decision_tree
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0;
-
-ALTER TABLE ydsz_rule_def
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0,
-  ALTER COLUMN is_drilldown_available SET DATA TYPE SMALLINT USING CASE WHEN is_drilldown_available IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_drilldown_available SET NOT NULL,
-  ALTER COLUMN is_drilldown_available SET DEFAULT 0;
-
-ALTER TABLE ydsz_rule_dependency
-  ALTER COLUMN is_cascade_on_disable SET DATA TYPE SMALLINT USING CASE WHEN is_cascade_on_disable IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_cascade_on_disable SET NOT NULL,
-  ALTER COLUMN is_cascade_on_disable SET DEFAULT 0;
-
-ALTER TABLE ydsz_rule_execution_trace
-  ALTER COLUMN is_triggered SET DATA TYPE SMALLINT USING CASE WHEN is_triggered IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_triggered SET NOT NULL,
-  ALTER COLUMN is_triggered SET DEFAULT 0;
-
-ALTER TABLE ydsz_rule_pack
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0,
-  ALTER COLUMN is_official SET DATA TYPE SMALLINT USING CASE WHEN is_official IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_official SET NOT NULL,
-  ALTER COLUMN is_official SET DEFAULT 0;
-
-ALTER TABLE ydsz_rule_scorecard
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0;
-
-ALTER TABLE ydsz_rule_script
-  ALTER COLUMN is_sandbox_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_sandbox_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_sandbox_enabled SET NOT NULL,
-  ALTER COLUMN is_sandbox_enabled SET DEFAULT 0,
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0;
-
-ALTER TABLE ydsz_rule_variable_def
-  ALTER COLUMN is_required SET DATA TYPE SMALLINT USING CASE WHEN is_required IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_required SET NOT NULL,
-  ALTER COLUMN is_required SET DEFAULT 0,
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0;
-
--- 模块: msg
-ALTER TABLE ydsz_msg_preference
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0,
-  ALTER COLUMN is_dnd_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_dnd_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_dnd_enabled SET NOT NULL,
-  ALTER COLUMN is_dnd_enabled SET DEFAULT 0,
-  ALTER COLUMN is_digest_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_digest_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_digest_enabled SET NOT NULL,
-  ALTER COLUMN is_digest_enabled SET DEFAULT 0;
-
--- 模块: wiki（文件引擎）
-ALTER TABLE ydsz_file_file_acl
-  ALTER COLUMN is_inherited SET DATA TYPE SMALLINT USING CASE WHEN is_inherited IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_inherited SET NOT NULL,
-  ALTER COLUMN is_inherited SET DEFAULT 0,
-  ALTER COLUMN is_owner SET DATA TYPE SMALLINT USING CASE WHEN is_owner IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_owner SET NOT NULL,
-  ALTER COLUMN is_owner SET DEFAULT 0;
-
-ALTER TABLE ydsz_file_file_comment
-  ALTER COLUMN is_resolved SET DATA TYPE SMALLINT USING CASE WHEN is_resolved IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_resolved SET NOT NULL,
-  ALTER COLUMN is_resolved SET DEFAULT 0,
-  ALTER COLUMN is_edited SET DATA TYPE SMALLINT USING CASE WHEN is_edited IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_edited SET NOT NULL,
-  ALTER COLUMN is_edited SET DEFAULT 0;
-
-ALTER TABLE ydsz_file_file_node
-  ALTER COLUMN is_preview_ready SET DATA TYPE SMALLINT USING CASE WHEN is_preview_ready IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_preview_ready SET NOT NULL,
-  ALTER COLUMN is_preview_ready SET DEFAULT 0,
-  ALTER COLUMN is_starred SET DATA TYPE SMALLINT USING CASE WHEN is_starred IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_starred SET NOT NULL,
-  ALTER COLUMN is_starred SET DEFAULT 0;
-
-ALTER TABLE ydsz_file_file_version
-  ALTER COLUMN is_active SET DATA TYPE SMALLINT USING CASE WHEN is_active IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_active SET NOT NULL,
-  ALTER COLUMN is_active SET DEFAULT 0;
-
-ALTER TABLE ydsz_file_share_link
-  ALTER COLUMN is_reminder_sent SET DATA TYPE SMALLINT USING CASE WHEN is_reminder_sent IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_reminder_sent SET NOT NULL,
-  ALTER COLUMN is_reminder_sent SET DEFAULT 0;
-
-ALTER TABLE ydsz_file_space_template
-  ALTER COLUMN is_system SET DATA TYPE SMALLINT USING CASE WHEN is_system IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_system SET NOT NULL,
-  ALTER COLUMN is_system SET DEFAULT 0,
-  ALTER COLUMN is_public_access SET DATA TYPE SMALLINT USING CASE WHEN is_public_access IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_public_access SET NOT NULL,
-  ALTER COLUMN is_public_access SET DEFAULT 0;
-
--- 模块: flow（流程引擎）
-ALTER TABLE ydsz_flow_admin_role
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0;
-
-ALTER TABLE ydsz_flow_auto_trigger
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0;
-
-ALTER TABLE ydsz_flow_cc_rule
-  ALTER COLUMN is_enabled SET DATA TYPE SMALLINT USING CASE WHEN is_enabled IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_enabled SET NOT NULL,
-  ALTER COLUMN is_enabled SET DEFAULT 0;
-
--- 模块: gen（代码生成器 -- V05 只做了 is_deleted，本次补充其他布尔列）
-ALTER TABLE ydsz_gen_datasource
-  ALTER COLUMN is_default SET DATA TYPE SMALLINT USING CASE WHEN is_default IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_default SET NOT NULL,
-  ALTER COLUMN is_default SET DEFAULT 0;
-
-ALTER TABLE ydsz_gen_column_meta
-  ALTER COLUMN is_nullable SET DATA TYPE SMALLINT USING CASE WHEN is_nullable IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_nullable SET NOT NULL,
-  ALTER COLUMN is_nullable SET DEFAULT 0,
-  ALTER COLUMN is_pk SET DATA TYPE SMALLINT USING CASE WHEN is_pk IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_pk SET NOT NULL,
-  ALTER COLUMN is_pk SET DEFAULT 0,
-  ALTER COLUMN is_dto_skipped SET DATA TYPE SMALLINT USING CASE WHEN is_dto_skipped IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_dto_skipped SET NOT NULL,
-  ALTER COLUMN is_dto_skipped SET DEFAULT 0,
-  ALTER COLUMN is_vo_skipped SET DATA TYPE SMALLINT USING CASE WHEN is_vo_skipped IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_vo_skipped SET NOT NULL,
-  ALTER COLUMN is_vo_skipped SET DEFAULT 0,
-  ALTER COLUMN is_query_skipped SET DATA TYPE SMALLINT USING CASE WHEN is_query_skipped IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_query_skipped SET NOT NULL,
-  ALTER COLUMN is_query_skipped SET DEFAULT 0;
-
-ALTER TABLE ydsz_gen_template
-  ALTER COLUMN is_folder SET DATA TYPE SMALLINT USING CASE WHEN is_folder IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_folder SET NOT NULL,
-  ALTER COLUMN is_folder SET DEFAULT 0,
-  ALTER COLUMN is_active SET DATA TYPE SMALLINT USING CASE WHEN is_active IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_active SET NOT NULL,
-  ALTER COLUMN is_active SET DEFAULT 0;
-
-ALTER TABLE ydsz_gen_template_group
-  ALTER COLUMN is_system SET DATA TYPE SMALLINT USING CASE WHEN is_system IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_system SET NOT NULL,
-  ALTER COLUMN is_system SET DEFAULT 0,
-  ALTER COLUMN is_active SET DATA TYPE SMALLINT USING CASE WHEN is_active IS TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_active SET NOT NULL,
-  ALTER COLUMN is_active SET DEFAULT 0;
+DO $$
+DECLARE
+    col_record  RECORD;
+    v_count     integer := 0;
+BEGIN
+    FOR col_record IN
+        -- 所有待转换的 (表名, 列名) 对（仅选取当前仍为 boolean 类型的列）
+        SELECT t.table_name, t.column_name
+          FROM (
+              VALUES
+                ('ydsz_sys_config',           'is_public'),
+                ('ydsz_idm_role',             'is_built_in'),
+                ('ydsz_job_tenant_quota',     'is_enabled'),
+                ('ydsz_job_alert_rule',       'is_enabled'),
+                ('ydsz_job_history',          'is_deleted'),
+                ('ydsz_rule_decision_table',  'is_enabled'),
+                ('ydsz_rule_ab_policy',       'is_auto_rollback_enabled'),
+                ('ydsz_rule_ab_rollback',     'is_from_canary'),
+                ('ydsz_rule_decision_tree',   'is_enabled'),
+                ('ydsz_rule_def',             'is_enabled'),
+                ('ydsz_rule_def',             'is_drilldown_available'),
+                ('ydsz_rule_dependency',      'is_cascade_on_disable'),
+                ('ydsz_rule_execution_trace', 'is_triggered'),
+                ('ydsz_rule_pack',            'is_enabled'),
+                ('ydsz_rule_pack',            'is_official'),
+                ('ydsz_rule_scorecard',       'is_enabled'),
+                ('ydsz_rule_script',          'is_sandbox_enabled'),
+                ('ydsz_rule_script',          'is_enabled'),
+                ('ydsz_rule_variable_def',    'is_required'),
+                ('ydsz_rule_variable_def',    'is_enabled'),
+                ('ydsz_msg_preference',       'is_enabled'),
+                ('ydsz_msg_preference',       'is_dnd_enabled'),
+                ('ydsz_msg_preference',       'is_digest_enabled'),
+                ('ydsz_file_file_acl',        'is_inherited'),
+                ('ydsz_file_file_acl',        'is_owner'),
+                ('ydsz_file_file_comment',    'is_resolved'),
+                ('ydsz_file_file_comment',    'is_edited'),
+                ('ydsz_file_file_node',       'is_preview_ready'),
+                ('ydsz_file_file_node',       'is_starred'),
+                ('ydsz_file_file_version',    'is_active'),
+                ('ydsz_file_share_link',      'is_reminder_sent'),
+                ('ydsz_file_space_template',  'is_system'),
+                ('ydsz_file_space_template',  'is_public_access'),
+                ('ydsz_flow_admin_role',      'is_enabled'),
+                ('ydsz_flow_auto_trigger',    'is_enabled'),
+                ('ydsz_flow_cc_rule',         'is_enabled'),
+                ('ydsz_gen_datasource',       'is_default'),
+                ('ydsz_gen_column_meta',      'is_nullable'),
+                ('ydsz_gen_column_meta',      'is_pk'),
+                ('ydsz_gen_column_meta',      'is_dto_skipped'),
+                ('ydsz_gen_column_meta',      'is_vo_skipped'),
+                ('ydsz_gen_column_meta',      'is_query_skipped'),
+                ('ydsz_gen_template',         'is_folder'),
+                ('ydsz_gen_template',         'is_active'),
+                ('ydsz_gen_template_group',   'is_system'),
+                ('ydsz_gen_template_group',   'is_active')
+          ) AS t(table_name, column_name)
+          -- 仅处理当前仍为 boolean 类型的列（已迁移的 SMALLINT 列自动跳过）
+          JOIN pg_catalog.pg_class c
+            ON c.relname = t.table_name
+          JOIN pg_catalog.pg_namespace n
+            ON n.oid = c.relnamespace AND n.nspname = 'public'
+          JOIN pg_catalog.pg_attribute a
+            ON a.attrelid = c.oid AND a.attname = t.column_name
+         WHERE a.atttypid = 'boolean'::regtype
+           AND a.attnum > 0
+           AND NOT a.attisdropped
+    LOOP
+        EXECUTE format(
+            'ALTER TABLE %I ALTER COLUMN %I SET DATA TYPE SMALLINT USING CASE WHEN %I IS TRUE THEN 1 ELSE 0 END',
+            col_record.table_name,
+            col_record.column_name,
+            col_record.column_name
+        );
+        EXECUTE format(
+            'ALTER TABLE %I ALTER COLUMN %I SET NOT NULL, ALTER COLUMN %I SET DEFAULT 0',
+            col_record.table_name,
+            col_record.column_name,
+            col_record.column_name
+        );
+        v_count := v_count + 1;
+        RAISE NOTICE '[Section2] 已转换 %.% → SMALLINT NOT NULL DEFAULT 0',
+            col_record.table_name, col_record.column_name;
+    END LOOP;
+    RAISE NOTICE '[Section2] 完成, 本次转换 % 个列 (其余列已为 SMALLINT, 自动跳过)', v_count;
+END$$;
 
 
 -- ===========================================================================
@@ -621,10 +506,14 @@ BEGIN
         RAISE NOTICE '发现残留 BOOLEAN 字段: %.%，正在修复...',
             boolean_column.table_name, boolean_column.column_name;
         EXECUTE format(
-            'ALTER TABLE %I ALTER COLUMN %I SET DATA TYPE SMALLINT USING CASE WHEN %I IS TRUE THEN 1 ELSE 0 END, ALTER COLUMN %I SET NOT NULL, ALTER COLUMN %I SET DEFAULT 0',
+            'ALTER TABLE %I ALTER COLUMN %I SET DATA TYPE SMALLINT USING CASE WHEN %I IS TRUE THEN 1 ELSE 0 END',
             boolean_column.table_name,
             boolean_column.column_name,
-            boolean_column.column_name,
+            boolean_column.column_name
+        );
+        EXECUTE format(
+            'ALTER TABLE %I ALTER COLUMN %I SET NOT NULL, ALTER COLUMN %I SET DEFAULT 0',
+            boolean_column.table_name,
             boolean_column.column_name,
             boolean_column.column_name
         );

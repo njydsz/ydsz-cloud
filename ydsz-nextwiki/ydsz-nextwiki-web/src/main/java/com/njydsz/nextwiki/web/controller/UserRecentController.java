@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.YdszResponse;
@@ -55,6 +56,7 @@ public class UserRecentController {
    * @param limit 返回数量限制（默认 20）
    * @return 最近访问视图列表
    */
+  @Operation(summary = "查询用户最近访问列表")
   @GetMapping
   public YdszResponse<List<UserRecentVO>> listRecent(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
@@ -74,6 +76,7 @@ public class UserRecentController {
    * @param accessType 访问类型（view / edit / download，默认 view）
    * @return 操作结果
    */
+  @Operation(summary = "记录文件访问")
   @PostMapping("/{nodeId}")
   public YdszResponse<Boolean> recordAccess(
       @PathVariable String nodeId,
@@ -90,6 +93,7 @@ public class UserRecentController {
    * @param userId 当前用户 ID
    * @return 是否成功
    */
+  @Operation(summary = "清空所有最近访问记录")
   @DeleteMapping
   public YdszResponse<Boolean> clearAll(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
@@ -105,6 +109,7 @@ public class UserRecentController {
    * @param userId 当前用户 ID
    * @return 是否成功
    */
+  @Operation(summary = "删除单条最近访问记录")
   @DeleteMapping("/{nodeId}")
   public YdszResponse<Boolean> removeRecent(
       @PathVariable String nodeId,
@@ -121,6 +126,7 @@ public class UserRecentController {
    * @param userId 当前用户 ID
    * @return 记录数量
    */
+  @Operation(summary = "获取最近访问记录数量")
   @GetMapping("/count")
   public YdszResponse<Integer> getRecentCount(
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {

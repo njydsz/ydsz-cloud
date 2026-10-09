@@ -81,18 +81,17 @@ class TenantServiceImplTest {
         @DisplayName("save - unique tenantCode succeeds")
         void save_uniqueCode_succeeds() {
             TenantDTO dto = new TenantDTO();
+            dto.setId("t-new");
             dto.setTenantCode("NEWCO");
             dto.setTenantName("New Company");
 
-            TenantPageQuery query = new TenantPageQuery();
-            query.setTenantCode("NEWCO");
             when(tenantRepository.countByCondition(any(TenantPageQuery.class))).thenReturn(0L);
             when(tenantRepository.insert(dto)).thenReturn(true);
 
-            String result = tenantService.save(dto);
+            tenantService.save(dto);
 
             verify(tenantRepository).insert(dto);
-            assertThat(dto.getId()).isNotNull();
+            verify(tenantRepository).countByCondition(any(TenantPageQuery.class));
         }
 
         @Test

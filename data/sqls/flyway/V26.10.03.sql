@@ -54,22 +54,19 @@ COMMENT ON COLUMN ydsz_agt_document_chunk.created_at IS '创建时间（timestam
 -- ============================================================================
 
 -- 4.1 ydsz_agt_dag_workflow.is_published: boolean → smallint
+-- 注意：TYPE 变更 + 默认值必须分两步，否则 PG 会用旧类型(boolean)校验默认值导致报错
 ALTER TABLE ydsz_agt_dag_workflow
   ALTER COLUMN is_published TYPE SMALLINT
-    USING CASE WHEN is_published = TRUE THEN 1 ELSE 0 END,
+    USING CASE WHEN is_published = TRUE THEN 1 ELSE 0 END;
+
+ALTER TABLE ydsz_agt_dag_workflow
   ALTER COLUMN is_published SET DEFAULT 0,
   ALTER COLUMN is_published SET NOT NULL;
 
 COMMENT ON COLUMN ydsz_agt_dag_workflow.is_published IS '是否已发布（smallint: 0=未发布, 1=已发布，统一 boolean 存储约定）';
 
--- 4.2 ydsz_job_dag_context.is_deleted: boolean → smallint
-ALTER TABLE ydsz_job_dag_context
-  ALTER COLUMN is_deleted TYPE SMALLINT
-    USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END,
-  ALTER COLUMN is_deleted SET DEFAULT 0,
-  ALTER COLUMN is_deleted SET NOT NULL;
-
-COMMENT ON COLUMN ydsz_job_dag_context.is_deleted IS '逻辑删除（smallint: 0=未删, 1=已删，统一 boolean 存储约定）';
+-- 4.2 ydzz_job_dag_context.is_deleted：已在 V26.10.01 基线中定义为 smallint，跳过转换
+-- （V26.10.01 基线已统一 is_deleted 为 smallint NOT NULL DEFAULT 0）
 
 -- ============================================================================
 -- 验证查询（执行后手动确认）
