@@ -33,8 +33,6 @@ import com.njydsz.common.tenant.datasource.SchemaInitializer;
 import com.njydsz.common.tenant.datasource.SchemaSearchPathExecutor;
 import com.njydsz.common.tenant.datasource.TenantDataSourceFilter;
 import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
-import com.njydsz.common.tenant.feign.TenantContextFeignInterceptor;
-import com.njydsz.common.tenant.feign.TenantContextPropagationStrategy;
 import com.njydsz.common.tenant.health.TenantHealthIndicator;
 import com.njydsz.common.tenant.interceptor.TenantInterceptorProvider;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
@@ -52,7 +50,6 @@ import com.njydsz.common.tenant.web.TenantContextWebFilter;
  * <ul>
  *   <li>{@link TenantInterceptorProvider} — SPI 注册 SQL 拦截器到 MybatisPlusInterceptor 链
  *   <li>{@link TenantContextWebFilter} — Web 入口上下文设置 + MDC 日志注入
- *   <li>{@link TenantContextFeignInterceptor} — Feign 跨服务透传
  *   <li>{@link TenantContextTaskDecorator} — 异步传播
  *   <li>{@link TenantDataSourceRouter} — ISOLATE_DB 数据源路由
  *   <li>{@link TenantDataSourceFilter} — ISOLATE_DB Web 过滤器
@@ -207,68 +204,6 @@ public class TenantAutoConfiguration {
     registration.addUrlPatterns("/*");
     registration.setName("tenantContextWebFilter");
     return registration;
-  }
-
-  /**
-   * Feign 跨服务透传拦截器（可选，common-feign 在 classpath 时）。
-   *
-   * <p>注入 {@link TenantProperties#getActiveTenantFields()}，使拦截器 通过 {@link
-   * com.njydsz.common.tenant.feign.TenantHeaderContract} 计算与 WebFilter 端一致的 header 名称。
-   *
-   * @param properties 租户配置
-   * @return Feign 拦截器
-   */
-  @Bean
-  @ConditionalOnClass(name = "feign.RequestInterceptor")
-  @ConditionalOnMissingBean
-  public TenantContextFeignInterceptor tenantContextFeignInterceptor(TenantProperties properties) {
-    log.info("多租户 Feign 跨服务透传已启用");
-    return new TenantContextFeignInterceptor(properties.getActiveTenantFields());
-  }
-
-  /**
-   * 注册一个默认的 Feign 传播策略 Bean（实现 {@link TenantContextPropagationStrategy}）。
-   *
-   * <p>基于 Feign Header 的传播策略实现，作为内置默认实现；业务模块可通过 {@code @Primary} 覆盖以支持自定义协议。
-   *
-   * @return Feign 传播策略 Bean
-   */
-  @Bean
-  @ConditionalOnBean(TenantContextFeignInterceptor.class)
-  @ConditionalOnMissingBean
-  public TenantContextPropagationStrategy feignTenantContextPropagationStrategy(
-      TenantContextFeignInterceptor feignInterceptor) {
-    return new TenantContextPropagationStrategy() {
-      @Override
-      public void propagate(Map<String, String> transportCarrier) {
-        // Feign 拦截器的传播由它自己在 RequestTemplate 中完成
-        // 此处作为适配，当业务代码需要手动往 GraphQL/gRPC 等载体注入时，
-        // 回退到 Feign 拦截器的 header 映射逻辑
-        var ctx = com.njydsz.common.core.context.TenantContextHolder.get();
-        if (ctx == null) {
-          return;
-        }
-        var fields = ctx.getFields();
-        if (fields == null) {
-          return;
-        }
-        for (var entry : fields.entrySet()) {
-          if (entry.getValue() instanceof String value) {
-            transportCarrier.put("x-" + entry.getKey().toLowerCase(), value);
-          }
-        }
-      }
-
-      @Override
-      public int order() {
-        return 100;
-      }
-
-      @Override
-      public boolean supports(String transportType) {
-        return "feign".equalsIgnoreCase(transportType) || "http".equalsIgnoreCase(transportType);
-      }
-    };
   }
 
   /**

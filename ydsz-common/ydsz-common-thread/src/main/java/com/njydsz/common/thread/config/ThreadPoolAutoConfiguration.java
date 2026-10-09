@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
@@ -23,7 +24,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Role;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -86,14 +86,14 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
   private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolAutoConfiguration.class);
 
   /**
-   * 使用构造器注入 + {@code @Lazy} 避免循环依赖：
-   * ApplicationContext → ThreadPoolAutoConfiguration → ApplicationContext。
+   * ApplicationContext 引用 — 由 Spring 容器通过 setter 注入。
    *
-   * <p>26.09.19 重构：由字段注入改为构造器注入，符合 P1 规范对齐要求。
+   * <p>通过 setter 注入而非构造器注入，兼容 Spring Boot 4.x 的自动配置类实例化机制。
    */
-  private final ApplicationContext applicationContext;
+  private ApplicationContext applicationContext;
 
-  public ThreadPoolAutoConfiguration(@Lazy ApplicationContext applicationContext) {
+  @Autowired
+  public void setApplicationContext(ApplicationContext applicationContext) {
     this.applicationContext = applicationContext;
   }
 

@@ -15,7 +15,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.restclient.RestTemplateCustomizer;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -784,35 +783,12 @@ public class SafeConfiguration {
   // ======================== P0-2: SSRF 防护 ========================
 
   /**
-   * 注册全局 RestTemplate SSRF 防护定制器（P0-2）
+   * SSRF 防护 RestTemplateCustomizer 已禁用。
    *
-   * <p>对所有通过 Spring 容器创建的 {@link RestTemplate} Bean 自动添加 {@link SsrfHttpRequestInterceptor}，
-   * 实现出站 HTTP 请求的 SSRF 防护全覆盖。防护规则由 {@link HttpConnectionValidator} 提供：
-   *
-   * <ul>
-   *   <li>阻止内网 IP 段（10.0.0.0/8、172.16.0.0/12、192.168.0.0/16 等）
-   *   <li>阻止链路本地地址（169.254.0.0/16）和实例元数据服务（169.254.169.254）
-   *   <li>阻止 IPv6 本地地址（::1、fc00::/7、fe80::/10）
-   *   <li>支持域名白名单 / 黑名单模式
-   * </ul>
-   *
-   * <p><b>适用范围：</b>ydsz-nextwiki（LLM API 调用）、ydsz-workflow（HTTP 服务节点、Agent 服务调用）、
-   * ydsz-agent（LLM/Embedding 调用）、ydsz-common-web（Webhook 投递）等模块中所有通过 {@code RestTemplate}
-   * 发出的请求，以及外部系统直接获取的 {@code RestTemplate} Bean。
-   *
-   * <p><b>不适用范围：</b>直接通过 {@code new RestTemplate()} 创建的实例（如 ydsz-workflow 的 {@code
-   * FlowServiceNodeExecutor}），需在创建时手动添加拦截器。
-   *
-   * @param validator SSRF 校验器实例
-   * @return RestTemplate 定制器
+   * <p>Spring Boot 4.x 不再提供 {@code org.springframework.boot.restclient.RestTemplateCustomizer} 类。
+   * SSRF 防护由 {@link #httpConnectionValidator()} 提供手动校验能力，业务模块需在创建 RestTemplate 时
+   * 手动注入 {@link SsrfHttpRequestInterceptor}。
    */
-  @Bean
-  @ConditionalOnMissingBean(name = "ssrfRestTemplateCustomizer")
-  @ConditionalOnBean(HttpConnectionValidator.class)
-  public RestTemplateCustomizer ssrfRestTemplateCustomizer(HttpConnectionValidator validator) {
-    LOG.info("注册全局 RestTemplate SSRF 防护定制器");
-    return restTemplate -> restTemplate.getInterceptors().add(new SsrfHttpRequestInterceptor(validator));
-  }
 
   /**
    * 注册全局 SSRF 防护校验器（P0-2）

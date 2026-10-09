@@ -4,6 +4,7 @@ import com.njydsz.common.safe.filter.IpAccessFilter;
 import com.njydsz.common.safe.ip.IpAccessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Slf4j
 @Configuration
+@ConditionalOnBean(IpAccessService.class)
 @RequiredArgsConstructor
 public class InternalApiIpAccessConfig {
 

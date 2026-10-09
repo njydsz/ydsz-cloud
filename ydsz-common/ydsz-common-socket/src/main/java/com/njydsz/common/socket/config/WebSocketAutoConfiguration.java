@@ -22,6 +22,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.socket.admin.WebSocketAdminController;
@@ -97,6 +99,7 @@ import com.njydsz.common.socket.session.WebSocketSessionEventListener;
  */
 @Slf4j
 @AutoConfiguration
+@EnableWebSocketMessageBroker
 @EnableScheduling
 @EnableConfigurationProperties(WebSocketProperties.class)
 @ConditionalOnClass(SimpMessagingTemplate.class)
@@ -106,6 +109,23 @@ import com.njydsz.common.socket.session.WebSocketSessionEventListener;
     havingValue = "true",
     matchIfMissing = true)
 public class WebSocketAutoConfiguration {
+
+  /**
+   * 注册 STOMP WebSocket 配置器（端点 /stomp、消息代理 /topic+queue、入站拦截器）。
+   *
+   * <p>替代原 WebSocketConfigurer（已移除 @Configuration 注解、不再被 component-scan 扫描）， 由本统一自动配置加载，
+   * 避免因 scanBasePackages 包含 common 导致业务模块未引入 spring-websocket 时启动失败。
+   *
+   * @param properties WebSocket 配置属性
+   * @param sessionRegistry 本地会话注册表
+   * @return WebSocket 配置器
+   * @since 26.10.09
+   */
+  @Bean
+  @ConditionalOnMissingBean(WebSocketMessageBrokerConfigurer.class)
+  public WebSocketConfigurer webSocketConfigurer(WebSocketProperties properties, LocalSessionRegistry sessionRegistry) {
+    return new WebSocketConfigurer(properties, sessionRegistry);
+  }
 
   // ==================== P0-2: 熔断降级 ====================
 
