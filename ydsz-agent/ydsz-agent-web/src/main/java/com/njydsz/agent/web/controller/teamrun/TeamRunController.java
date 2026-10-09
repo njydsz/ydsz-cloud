@@ -1,6 +1,8 @@
 package com.njydsz.agent.web.controller.teamrun;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.agent.domain.teamrun.TeamRun;
 import com.njydsz.agent.domain.teamrun.TeamRunPattern;
 import com.njydsz.agent.server.teamrun.TeamRunOrchestrationService;
-import com.njydsz.agent.web.util.ExcelExportUtil;
+import com.njydsz.agent.server.util.ExcelExportUtil;
 import com.njydsz.agent.domain.vo.TeamRunExportVO;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -33,6 +36,7 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
@@ -61,6 +65,10 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @RequiredArgsConstructor
 @Tag(name = "Team Run 管理", description = "多 Agent 协作编排 / 查询 / 控制")
 public class TeamRunController {
+
+  /** OOXML Content-Type 常量 */
+  private static final String CONTENT_TYPE_OOXML =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
   /** Team Run 编排服务 */
   private final TeamRunOrchestrationService orchestrationService;
@@ -259,14 +267,17 @@ public class TeamRunController {
    */
   @Operation(summary = "导出 Team Run 列表（Excel）")
   @GetMapping("/export")
-  public void exportTeamRuns(jakarta.servlet.http.HttpServletResponse response) throws IOException {
+  public void exportTeamRuns(HttpServletResponse response) throws IOException {
+    String fileName = "teamruns_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
+    response.setContentType(CONTENT_TYPE_OOXML);
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, buildRfc5987ContentDisposition(fileName));
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<TeamRun> all = orchestrationService.listActiveTeamRuns(tenantId);
     List<TeamRunExportVO> rows = new ArrayList<>(all.size());
     for (TeamRun teamRun : all) {
       rows.add(toExportVO(teamRun));
     }
-    ExcelExportUtil.write(response, rows, TeamRunExportVO.class, "teamruns", "TeamRuns");
+    ExcelExportUtil.write(response.getOutputStream(), rows, TeamRunExportVO.class, "TeamRuns");
   }
 
   // ==================== 私有转换方法 ====================
@@ -324,5 +335,19 @@ public class TeamRunController {
       String role,
       int executionOrder,
       String inputContext) {
+  }
+
+  /**
+   * 构建 RFC 6266 / RFC 5987 双编码 Content-Disposition 值。
+   *
+   * @param fileName 原始文件名
+   * @return 符合 RFC 6266 的 Content-Disposition 值
+   */
+  private static String buildRfc5987ContentDisposition(String fileName) {
+    String asciiFallback = fileName.replaceAll("[^\\x20-\\x7E]", "_");
+    String utf8Encoded =
+        URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
+    return String.format(
+        "attachment; filename=\"%s\"; filename*=UTF-8''%s", asciiFallback, utf8Encoded);
   }
 }

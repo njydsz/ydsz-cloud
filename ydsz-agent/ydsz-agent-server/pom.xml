@@ -51,6 +51,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
+        <!-- ydsz-common-excel: ExcelExportUtil 使用 ExcelFacade/ExcelWriter（直接使用，避免隐式传递） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-excel</artifactId>
+        </dependency>
         <!-- P2-CONFIG: 配置热重载桥接（AgentConfigChangeListener 使用 ConfigChangeListener） -->
         <dependency>
             <groupId>com.njydsz</groupId>

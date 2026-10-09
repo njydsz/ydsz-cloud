@@ -1,12 +1,17 @@
 package com.njydsz.agent.web.controller;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,10 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.agent.domain.dto.DagWorkflowDTO;
 import com.njydsz.agent.domain.service.DagWorkflowService;
 import com.njydsz.agent.domain.vo.DagWorkflowVO;
-import com.njydsz.agent.web.util.ExcelExportUtil;
+import com.njydsz.agent.server.util.ExcelExportUtil;
 import com.njydsz.agent.domain.vo.DagWorkflowExportVO;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * DAG 工作流持久化管理 Controller。
@@ -42,6 +48,10 @@ import com.njydsz.common.core.response.YdszResponse;
 @RequiredArgsConstructor
 @RequestMapping("/agent/dag-workflow")
 public class DagWorkflowController {
+
+  /** OOXML Content-Type 常量 */
+  private static final String CONTENT_TYPE_OOXML =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
   private final DagWorkflowService dagWorkflowService;
 
@@ -126,14 +136,17 @@ public class DagWorkflowController {
   @Operation(summary = "导出 DAG 工作流列表（Excel）")
   @GetMapping("/export")
   public void exportDagWorkflows(
-      jakarta.servlet.http.HttpServletResponse response,
-      @RequestParam(required = false) String category) throws java.io.IOException {
+      HttpServletResponse response,
+      @RequestParam(required = false) String category) throws IOException {
+    String fileName = "dag_workflows_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
+    response.setContentType(CONTENT_TYPE_OOXML);
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, buildRfc5987ContentDisposition(fileName));
     List<DagWorkflowVO> all = dagWorkflowService.listByCategory(category);
     List<DagWorkflowExportVO> rows = new ArrayList<>(all.size());
     for (DagWorkflowVO vo : all) {
       rows.add(toExportVO(vo));
     }
-    ExcelExportUtil.write(response, rows, DagWorkflowExportVO.class, "dag_workflows", "DagWorkflows");
+    ExcelExportUtil.write(response.getOutputStream(), rows, DagWorkflowExportVO.class, "DagWorkflows");
   }
 
   // ==================== 私有转换方法 ====================
@@ -154,5 +167,19 @@ public class DagWorkflowController {
     export.setCreatedBy(vo.getCreatedBy());
     export.setCreatedAt(vo.getCreatedAt() != null ? vo.getCreatedAt().toString() : null);
     return export;
+  }
+
+  /**
+   * 构建 RFC 6266 / RFC 5987 双编码 Content-Disposition 值。
+   *
+   * @param fileName 原始文件名
+   * @return 符合 RFC 6266 的 Content-Disposition 值
+   */
+  private static String buildRfc5987ContentDisposition(String fileName) {
+    String asciiFallback = fileName.replaceAll("[^\\x20-\\x7E]", "_");
+    String utf8Encoded =
+        URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
+    return String.format(
+        "attachment; filename=\"%s\"; filename*=UTF-8''%s", asciiFallback, utf8Encoded);
   }
 }

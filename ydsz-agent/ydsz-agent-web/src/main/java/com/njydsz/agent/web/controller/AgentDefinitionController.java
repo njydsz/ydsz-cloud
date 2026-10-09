@@ -1,5 +1,8 @@
 package com.njydsz.agent.web.controller;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,7 +33,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.agent.web.util.ExcelExportUtil;
+import com.njydsz.agent.server.util.ExcelExportUtil;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.date.DateUtils;
@@ -74,6 +78,10 @@ import com.njydsz.common.util.date.DateUtils;
 @RequestMapping("/agent/definitions")
 @RequiredArgsConstructor
 public class AgentDefinitionController {
+
+  /** OOXML Content-Type 常量 */
+  private static final String CONTENT_TYPE_OOXML =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
@@ -220,14 +228,16 @@ public class AgentDefinitionController {
    */
   @Operation(summary = "导出 Agent 定义列表（Excel）")
   @GetMapping("/export")
-  public void exportAgentDefinitions(jakarta.servlet.http.HttpServletResponse response)
-      throws java.io.IOException {
+  public void exportAgentDefinitions(HttpServletResponse response) throws IOException {
+    String fileName = "agent_definitions_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
+    response.setContentType(CONTENT_TYPE_OOXML);
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, buildRfc5987ContentDisposition(fileName));
     List<AgentDefinitionVO> all = agentDefinitionService.listActive();
     List<AgentDefinitionExportVO> rows = new ArrayList<>(all.size());
     for (AgentDefinitionVO vo : all) {
       rows.add(toExportVO(vo));
     }
-    ExcelExportUtil.write(response, rows, AgentDefinitionExportVO.class, "agent_definitions", "AgentDefinitions");
+    ExcelExportUtil.write(response.getOutputStream(), rows, AgentDefinitionExportVO.class, "AgentDefinitions");
   }
 
   // ==================== 私有转换方法 ====================
@@ -253,5 +263,19 @@ public class AgentDefinitionController {
     export.setUpdatedBy(vo.getUpdatedBy());
     export.setUpdatedAt(vo.getUpdatedAt() != null ? vo.getUpdatedAt().toString() : null);
     return export;
+  }
+
+  /**
+   * 构建 RFC 6266 / RFC 5987 双编码 Content-Disposition 值。
+   *
+   * @param fileName 原始文件名
+   * @return 符合 RFC 6266 的 Content-Disposition 值
+   */
+  private static String buildRfc5987ContentDisposition(String fileName) {
+    String asciiFallback = fileName.replaceAll("[^\\x20-\\x7E]", "_");
+    String utf8Encoded =
+        URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
+    return String.format(
+        "attachment; filename=\"%s\"; filename*=UTF-8''%s", asciiFallback, utf8Encoded);
   }
 }

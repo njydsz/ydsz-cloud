@@ -19,7 +19,6 @@ import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * Prompt Playground 交互评估服务
@@ -35,8 +34,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p>与 {@link PromptEvaluationService} 的区别：本类接受原始 prompt text（不经模板渲染），
  * 且支持自定义 temperature / maxTokens 等参数，面向 Prompt 开发者实时调试场景。
  *
- * <p>IO 密集型（LLM HTTP 调用），使用 {@link LlmClient} 传递到 Controller 后由 Controller 层
- * 在 {@code SsePushChannel} 包裹的虚拟线程中执行。
+ * <p>IO 密集型（LLM HTTP 调用），由 Controller 层在 {@code SsePushChannel} 包裹的虚拟线程中执行。
  *
  * @author ydsz-team
  * @since 26.10.01
@@ -56,9 +54,6 @@ public class PromptPlaygroundService {
 
   /** 成本估算小数精度 */
   private static final int COST_SCALE = 6;
-
-  /** 流式响应中超过此字节数时截断响应内容 */
-  private static final int MAX_RESPONSE_CONTENT_LENGTH = 10000;
 
   /** 缺省温度 */
   private static final double DEFAULT_TEMPERATURE = 0.7;
@@ -85,9 +80,6 @@ public class PromptPlaygroundService {
    * <p>将 prompt 作为 system message、userMessage 作为 user message 发送到 LLM，
    * 收集延迟、Token 用量、成本等指标，返回 {@link PromptInvokeResult}。
    *
-   * <p>如果指定了多个模型名（{@code models} 列表），以第一个模型为准执行；
-   * 如需多模型对比请使用 {@link #compare}。
-   *
    * @param prompt Prompt 原文（作为 system message）
    * @param userMessage 用户消息（作为 user message；为空时发送默认占位）
    * @param model 模型名称（为空时使用默认模型）
@@ -106,7 +98,8 @@ public class PromptPlaygroundService {
     }
     String evalUserMessage =
         (userMessage != null && !userMessage.isBlank()) ? userMessage : "请根据系统提示进行回复。";
-    String evalModel = (model != null && !model.isBlank()) ? model : properties.getLlm().getDefaultModel();
+    String evalModel =
+        (model != null && !model.isBlank()) ? model : properties.getLlm().getDefaultModel();
     double evalTemperature = temperature != null ? temperature : DEFAULT_TEMPERATURE;
     int evalMaxTokens = maxTokens != null ? maxTokens : DEFAULT_MAX_TOKENS;
 
@@ -130,7 +123,7 @@ public class PromptPlaygroundService {
       response = llmClient.chat(request);
     } catch (Exception e) {
       log.warn("[PromptPlayground] LLM 调用失败: model={}, error={}", evalModel, e.getMessage());
-      throw new BusinessException(AgentExceptionCode.LLM_CALL_FAILED, evalModel);
+      throw BusinessException.of(AgentExceptionCode.LLM_CALL_FAILED).params(evalModel);
     }
     long durationMs = System.currentTimeMillis() - startTime;
 
@@ -140,10 +133,11 @@ public class PromptPlaygroundService {
     int totalTokens = usage != null ? usage.getTotalTokens() : 0;
     String content = response.getContent() != null ? response.getContent() : "";
 
-    BigDecimal estimatedCostUsd = BigDecimal.valueOf(promptTokens)
-        .multiply(COST_PER_1K_PROMPT_TOKENS)
-        .add(BigDecimal.valueOf(completionTokens).multiply(COST_PER_1K_COMPLETION_TOKENS))
-        .divide(BigDecimal.valueOf(TOKENS_PER_KILO), COST_SCALE, RoundingMode.HALF_UP);
+    BigDecimal estimatedCostUsd =
+        BigDecimal.valueOf(promptTokens)
+            .multiply(COST_PER_1K_PROMPT_TOKENS)
+            .add(BigDecimal.valueOf(completionTokens).multiply(COST_PER_1K_COMPLETION_TOKENS))
+            .divide(BigDecimal.valueOf(TOKENS_PER_KILO), COST_SCALE, RoundingMode.HALF_UP);
 
     log.info(
         "[PromptPlayground] invoke 完成: model={}, duration={}ms, tokens={}, cost={}",
@@ -175,7 +169,7 @@ public class PromptPlaygroundService {
    * @param model 模型名称（为空时使用默认模型）
    * @param temperature 采样温度（为空时使用默认值 0.7）
    * @param maxTokens 最大生成 Token 数（为空时使用默认值 2048）
-   * @param chunkConsumer 流式块消费者（不为 null 时以流式模式调用，否则同步收集）
+   * @param chunkConsumer 流式块消费者
    */
   public void invokeStream(
       String prompt,
@@ -187,9 +181,13 @@ public class PromptPlaygroundService {
     if (prompt == null || prompt.isBlank()) {
       throw new BusinessException(AgentExceptionCode.PARAM_ERROR);
     }
+    if (chunkConsumer == null) {
+      throw new BusinessException(AgentExceptionCode.PARAM_ERROR);
+    }
     String evalUserMessage =
         (userMessage != null && !userMessage.isBlank()) ? userMessage : "请根据系统提示进行回复。";
-    String evalModel = (model != null && !model.isBlank()) ? model : properties.getLlm().getDefaultModel();
+    String evalModel =
+        (model != null && !model.isBlank()) ? model : properties.getLlm().getDefaultModel();
     double evalTemperature = temperature != null ? temperature : DEFAULT_TEMPERATURE;
     int evalMaxTokens = maxTokens != null ? maxTokens : DEFAULT_MAX_TOKENS;
 
@@ -205,28 +203,17 @@ public class PromptPlaygroundService {
                     ChatMessage.user(evalUserMessage, null)))
             .temperature(evalTemperature)
             .maxTokens(evalMaxTokens)
-            .isStream(chunkConsumer != null)
+            .isStream(true)
             .build();
 
     long startTime = System.currentTimeMillis();
     try {
-      if (chunkConsumer != null) {
-        llmClient.stream(request, chunkConsumer);
-      } else {
-        // 无消费者时退化为同步收集
-        ChatResponse response = llmClient.chat(request);
-        long durationMs = System.currentTimeMillis() - startTime;
-        TokenUsage usage = response.getUsage();
-        int promptTokens = usage != null ? usage.getPromptTokens() : 0;
-        int completionTokens = usage != null ? usage.getCompletionTokens() : 0;
-        chunkConsumer.accept(
-            ChunkCollectHelper.buildFinishChunk(response, durationMs, promptTokens, completionTokens));
-      }
+      llmClient.stream(request, chunkConsumer);
     } catch (Exception e) {
       long durationMs = System.currentTimeMillis() - startTime;
       log.warn("[PromptPlayground] 流式 LLM 调用失败: model={}, duration={}ms, error={}",
           evalModel, durationMs, e.getMessage());
-      throw new BusinessException(AgentExceptionCode.LLM_CALL_FAILED, evalModel);
+      throw BusinessException.of(AgentExceptionCode.LLM_CALL_FAILED).params(evalModel);
     }
 
     long durationMs = System.currentTimeMillis() - startTime;
@@ -309,20 +296,4 @@ public class PromptPlaygroundService {
       int responseLength,
       String responseContent,
       LocalDateTime invokedAt) {}
-
-  /**
-   * 流式块收集辅助类（用于非流式消费者场景的退化处理）。
-   *
-   * <p>将同步 LLM 响应包装为流式 finish chunk，供下游统一处理。
-   */
-  private static final class ChunkCollectHelper {
-    private ChunkCollectHelper() {}
-
-    static ChatChunk buildFinishChunk(
-        ChatResponse response, long durationMs, int promptTokens, int completionTokens) {
-      TokenUsage usage = response.getUsage();
-      return ChatChunk.finish(
-          IdGenerator.nextIdStr(), response.getModel(), response.getFinishReason(), usage);
-    }
-  }
 }
