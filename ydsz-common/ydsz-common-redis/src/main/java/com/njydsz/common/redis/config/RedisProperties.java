@@ -355,8 +355,12 @@ public class RedisProperties {
   @Data
   public static class Client {
 
-    /** 客户端类型（默认 JEDIS） */
-    private RedisClientType type = RedisClientType.JEDIS;
+    /**
+     * 客户端类型（默认 LETTUCE — 与 spring-boot-starter-data-redis 默认一致）。
+     *
+     * <p>如需使用 Jedis，需同时满足：(1) pom 显式引入 jedis 依赖；(2) 设置 ydzz.redis.client.type=JEDIS。
+     */
+    private RedisClientType type = RedisClientType.LETTUCE;
 
     /** 连接池配置 */
     private Pool pool = new Pool();

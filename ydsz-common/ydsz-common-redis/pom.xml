@@ -25,12 +25,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
-        <!--redis-->
+        <!--redis: 默认 Lettuce 客户端（spring-boot-starter-data-redis 默认）；如需 Jedis 请在业务模块 pom 显式引入并设置 ydzz.redis.client.type=JEDIS-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
-        <!--commons-pool2 for Redis connection pool-->
+        <!--commons-pool2 for Lettuce 连接池（spring-data-redis 强制依赖）-->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>

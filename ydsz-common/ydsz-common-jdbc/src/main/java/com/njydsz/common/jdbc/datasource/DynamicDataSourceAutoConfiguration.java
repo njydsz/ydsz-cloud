@@ -19,6 +19,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 
 import com.njydsz.common.jdbc.annotation.DS;
 import com.njydsz.common.jdbc.config.MultiDataSourcePoolCustomizer;
@@ -79,6 +80,7 @@ public class DynamicDataSourceAutoConfiguration {
    * @return DynamicRoutingDataSource 实例
    */
   @Bean
+  @Primary
   @ConditionalOnMissingBean(
       value = {DynamicRoutingDataSource.class},
       name = "com.baomidou.dynamic.datasource.DynamicRoutingDataSource")

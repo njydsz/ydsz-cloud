@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.exception.custom.BusinessException;
@@ -42,7 +41,6 @@ import com.njydsz.common.file.exception.FileExceptionCode;
  * @since 26.10.01
  */
 @Slf4j
-@Component
 public class FileTypeValidator {
 
   /** 是否启用 Magic Number 校验（由配置文件 ydsz.file.check-magic-number 控制） */

@@ -1,3 +1,10 @@
+# === 本地配置（绕过 Nacos） ===
+spring:
+  config:
+    import:
+      - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-common.yml"
+      - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-literule-web.yml"
+
 datasource:
   hikari:
     connection-timeout: 5000

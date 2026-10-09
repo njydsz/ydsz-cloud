@@ -16,6 +16,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -267,38 +268,41 @@ public class AuditAutoConfiguration {
    * @param properties 审计配置属性
    * @return 默认审计查询服务
    */
-  @Bean
-  @ConditionalOnMissingBean(AuditQueryService.class)
-  @ConditionalOnBean(JdbcTemplate.class)
-  public AuditQueryService auditQueryService(JdbcTemplate jdbcTemplate, AuditProperties properties) {
-    String shardingType = properties.isShardingEnabled()
-        ? properties.getShardingType().getCode() : null;
-    String baseTableName = properties.getShardingBaseTableName();
-    LOG.info("初始化默认审计查询服务: DefaultAuditQueryService(复用容器模板), 分表类型={}",
-        shardingType != null ? shardingType : "DISABLED");
-    return new DefaultAuditQueryService(jdbcTemplate, shardingType, baseTableName);
-  }
+  // — AuditQueryService —
 
   /**
-   * 创建默认审计查询服务 Bean（兜底：使用 DataSource 自行创建 JdbcTemplate）
+   * 创建默认审计查询服务 Bean（使用 JdbcTemplate 或 DataSource，依赖 ObjectProvider 延迟解析）。
    *
-   * <p>当容器中不存在 JdbcTemplate Bean 时使用。
+   * <p>使用 {@link ObjectProvider} 避免因 JdbcTemplate / DataSource 在自动配置阶段尚未创建而导致 Bean 无法注册。
    *
-   * @param dataSource 数据源
-   * @param properties 审计配置属性
-   * @return 默认审计查询服务
+   * @param jdbcTemplateProvider JdbcTemplate provider（可选）
+   * @param dataSourceProvider   DataSource provider（可选）
+   * @param properties          审计配置属性
+   * @return 默认审计查询服务，若两个 provider 都为空则返回 null（跳过注册）
    */
   @Bean
   @ConditionalOnMissingBean(AuditQueryService.class)
-  @ConditionalOnBean(DataSource.class)
-  public AuditQueryService auditQueryServiceFallback(
-      DataSource dataSource, AuditProperties properties) {
+  public AuditQueryService auditQueryService(
+      ObjectProvider<JdbcTemplate> jdbcTemplateProvider,
+      ObjectProvider<DataSource> dataSourceProvider,
+      AuditProperties properties) {
+    JdbcTemplate jdbcTemplate = jdbcTemplateProvider.getIfAvailable();
     String shardingType = properties.isShardingEnabled()
         ? properties.getShardingType().getCode() : null;
     String baseTableName = properties.getShardingBaseTableName();
-    LOG.info("初始化默认审计查询服务: DefaultAuditQueryService(数据源模式), 分表类型={}",
-        shardingType != null ? shardingType : "DISABLED");
-    return new DefaultAuditQueryService(dataSource, shardingType, baseTableName);
+    if (jdbcTemplate != null) {
+      LOG.info("初始化默认审计查询服务: DefaultAuditQueryService(JdbcTemplate模式), 分表类型={}",
+          shardingType != null ? shardingType : "DISABLED");
+      return new DefaultAuditQueryService(jdbcTemplate, shardingType, baseTableName);
+    }
+    DataSource dataSource = dataSourceProvider.getIfAvailable();
+    if (dataSource != null) {
+      LOG.info("初始化默认审计查询服务: DefaultAuditQueryService(DataSource模式), 分表类型={}",
+          shardingType != null ? shardingType : "DISABLED");
+      return new DefaultAuditQueryService(dataSource, shardingType, baseTableName);
+    }
+    LOG.warn("初始化默认审计查询服务失败: 容器中不存在 JdbcTemplate 或 DataSource Bean，跳过注册");
+    return null;
   }
 
   /**

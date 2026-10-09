@@ -68,8 +68,9 @@ public class JdbcProperties {
   /** HikariCP 连接池指标采集配置 */
   private HikariMetricsProperties metrics = new HikariMetricsProperties();
 
-  public boolean isEnabled() { return isEnabled; }
-  public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+public boolean isEnabled() { return isEnabled; }
+public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+public void setEnabled(boolean enabled) { this.isEnabled = enabled; }
 
   public IdType getIdType() { return idType; }
   public void setIdType(IdType idType) { this.idType = idType; }

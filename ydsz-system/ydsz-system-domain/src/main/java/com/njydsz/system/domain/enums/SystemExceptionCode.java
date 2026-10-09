@@ -111,6 +111,16 @@ public enum SystemExceptionCode implements ExceptionCode {
   /** MONITOR_SOURCE_STORE_FAILED */
   MONITOR_SOURCE_STORE_FAILED("B97001", "system.monitor.source.store.failed", 500), // sourcemap 存储失败（对象存储未配置或上传异常）
 
+  // ==================== B99001-B99099 特性开关管理 ====================
+  /** FEATURE_FLAG_NOT_FOUND */
+  FEATURE_FLAG_NOT_FOUND("B99001", "system.feature.flag.not.found", 404) {
+    @Override public String actionHintKey() { return "action.refresh_and_retry"; }
+  }, // 特性开关不存在（资源未找到，HTTP 404）
+  /** FEATURE_FLAG_KEY_DUPLICATE */
+  FEATURE_FLAG_KEY_DUPLICATE("B99002", "system.feature.flag.key.duplicate") {
+    @Override public String actionHintKey() { return "action.modify_and_retry"; }
+  }, // 特性开关键在租户内重复，违反唯一约束
+
   // ==================== B98001-B98099 二次身份验证 ====================
   /** SECONDARY_AUTH_PASSWORD_INCORRECT */
   SECONDARY_AUTH_PASSWORD_INCORRECT("B98001", "system.secondary.auth.password.incorrect"), // 二次认证密码错误

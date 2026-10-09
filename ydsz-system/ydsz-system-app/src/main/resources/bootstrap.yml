@@ -16,8 +16,9 @@ spring:
     allow-bean-definition-overriding: true
   cloud:
     nacos:
+      fail-fast: false
       config:
-        enabled: true
+        enabled: false
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:ydsz}
         group: ${NACOS_GROUP:${spring.profiles.active}}

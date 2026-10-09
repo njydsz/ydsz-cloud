@@ -42,6 +42,8 @@ public class SqlFirewallProperties {
 
   public boolean isEnabled() { return isEnabled; }
   public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+  // Spring Boot 4.x relaxed binding
+  public void setEnabled(boolean enabled) { this.isEnabled = enabled; }
 
   public boolean isBlockDropTable() { return isBlockDropTable; }
   public void setBlockDropTable(boolean isBlockDropTable) { this.isBlockDropTable = isBlockDropTable; }

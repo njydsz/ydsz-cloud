@@ -25,6 +25,7 @@ spring:
     allow-bean-definition-overriding: true
   cloud:
     nacos:
+      fail-fast: false
       discovery:
         server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
         namespace: ${NACOS_NAMESPACE:}

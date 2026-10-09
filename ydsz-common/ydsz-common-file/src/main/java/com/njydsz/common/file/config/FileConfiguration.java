@@ -5,8 +5,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.context.annotation.Primary;
 
@@ -80,14 +81,16 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
     name = "enabled",
     havingValue = "true",
     matchIfMissing = true)
-@RequiredArgsConstructor
 public class FileConfiguration {
 
-  /** 分片上传上下文存储 */
-  private final MultipartContextStore multipartContextStore;
+  /** 分片上传上下文存储（@Lazy 字段注入以打破循环依赖） */
+  @Autowired
+  @Lazy
+  private MultipartContextStore multipartContextStore;
 
   /** 分布式锁提供者（可选，ydsz-common-lock 在 classpath 时可用） */
-  private final ObjectProvider<DistributedLocker> lockerProvider;
+  @Autowired
+  private ObjectProvider<DistributedLocker> lockerProvider;
 
   /**
    * 注册分片上传上下文存储

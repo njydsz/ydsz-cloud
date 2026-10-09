@@ -40,7 +40,7 @@ server:
 # ---------------------------------------------------------------------
 spring:
   main:
-    web-application-type: servlet
+    # web-application-type: servlet — REMOVED: let Spring Boot auto-detect (gateway=reactive by classpath)
     allow-bean-definition-overriding: true
   servlet:
     multipart:
@@ -200,8 +200,9 @@ ydsz:
   # ============================================================
   json:
     enabled: true
+    # Spring Boot 4.1 config.import 无法绑定枚举 — 使用代码默认值
     date-format: yyyy-MM-dd HH:mm:ss
-    naming-strategy: LOWER_CAMEL_CASE
+    # naming-strategy: LOWER_CAMEL_CASE   # 默认 LOWER_CAMEL_CASE，此处注释避免 ConverterNotFoundException
     write-nulls: false
     monitoring-enabled: true
     safe-mode: true

@@ -15,6 +15,11 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -129,6 +134,33 @@ public class LocalesAutoConfiguration {
   @ConditionalOnMissingBean(I18nMessages.class)
   public I18nMessages i18nMessages(MessageSource messageSource) {
     return new I18nMessages(messageSource);
+  }
+
+  /**
+   * 注册 BeanDefinitionRegistryPostProcessor，将 ydszMessageSource 标记为 Primary。
+   *
+   * <p>Spring Boot 的 MessageSourceAutoConfiguration 会自动创建 messageSource Bean，
+   * 与本模块的 ydszMessageSource 形成歧义（两个 MessageSource Bean）。
+   * 此 PostProcessor 在 Bean 定义阶段将 ydszMessageSource 设为 Primary，消除注入歧义。
+   */
+  @Bean
+  public static BeanDefinitionRegistryPostProcessor ydszMessageSourcePrimaryPostProcessor() {
+    return new BeanDefinitionRegistryPostProcessor() {
+      @Override
+      public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+        String beanName = LocalesAutoConfiguration.MESSAGE_SOURCE_BEAN_NAME;
+        if (registry.containsBeanDefinition(beanName)) {
+          BeanDefinition bd = registry.getBeanDefinition(beanName);
+          bd.setPrimary(true);
+          log.info("[ydsz-i18n] ydszMessageSource 已标记为 Primary，避免与 Spring Boot 默认 messageSource 冲突");
+        }
+      }
+
+      @Override
+      public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+        // no-op
+      }
+    };
   }
 
   /** JSR-303 校验器关联 i18n MessageSource。 */

@@ -9,6 +9,73 @@ spring:
   main:
     # 允许循环引用（DistributedLockAutoConfiguration 内部存在自引用）
     allow-circular-references: true
+  config:
+    import:
+      - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-common.yml"
+      - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-gateway.yml"
+  cloud:
+    gateway:
+      # 本地开发环境静态路由定义（无 Nacos 动态路由时的替代方案）
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        # Userinfo 模块 - RBAC 身份认证
+        - id: ydsz-userinfo
+          uri: http://localhost:9002
+          predicates:
+            - Path=/api/auth/**,/api/role/**,/api/permission/**
+          filters:
+            - StripPrefix=1
+        # System 模块 - 系统引擎
+        - id: ydsz-system
+          uri: http://localhost:9001
+          predicates:
+            - Path=/api/system/**
+          filters:
+            - StripPrefix=1
+        # Message 模块 - 消息引擎
+        - id: ydsz-message
+          uri: http://localhost:9004
+          predicates:
+            - Path=/api/message/**,/api/notify/**
+          filters:
+            - StripPrefix=1
+        # CronJob 模块 - 任务引擎
+        - id: ydsz-cronjob
+          uri: http://localhost:9006
+          predicates:
+            - Path=/api/cronjob/**,/api/job/**
+          filters:
+            - StripPrefix=1
+        # Workflow 模块 - 流程引擎
+        - id: ydsz-workflow
+          uri: http://localhost:9005
+          predicates:
+            - Path=/api/workflow/**,/api/process/**
+          filters:
+            - StripPrefix=1
+        # Agent 模块 - 智能引擎
+        - id: ydsz-agent
+          uri: http://localhost:9008
+          predicates:
+            - Path=/api/agent/**
+          filters:
+            - StripPrefix=1
+        # NextWiki 模块 - 文件/知识库引擎
+        - id: ydsz-nextwiki
+          uri: http://localhost:9003
+          predicates:
+            - Path=/api/wiki/**,/api/file/**,/api/nextwiki/**
+          filters:
+            - StripPrefix=1
+        # Literule 模块 - 规则引擎
+        - id: ydsz-literule
+          uri: http://localhost:9007
+          predicates:
+            - Path=/api/literule/**,/api/rule/**
+          filters:
+            - StripPrefix=1
   autoconfigure:
     exclude:
       # 线程池 / 文档 / Sentry / WebMVC 自动配置（网关为 WebFlux reactive 栈）

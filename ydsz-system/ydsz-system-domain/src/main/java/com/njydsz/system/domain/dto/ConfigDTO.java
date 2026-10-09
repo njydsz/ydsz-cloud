@@ -1,5 +1,6 @@
 package com.njydsz.system.domain.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -8,66 +9,49 @@ import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.safe.annotation.Xss;
 
-/**
- * 系统配置创建/更新 DTO
- *
- * <p>对应 {@code ydsz_sys_config} 表的写入参数，是「系统配置中心」创建 / 更新接口的入参载体。 创建时 {@code id} 为空（由雪花算法自动生成），更新时
- * {@code id} 必填。
- *
- * <p><b>P1-5 字段重叠处理：</b>本类与 {@link ConfigVO} 字段完全一致，遵循《云顶编码规范》"VO 兼 DTO"模式（字段无差异时不作三分离）。 作为
- * Repository 层的写入契约存在，避免 infra 层直接依赖 {@link ConfigVO}（保持分层边界清晰）。
- *
- * <p><b>维护约定：</b>新增字段时需同步 {@link ConfigVO}，确保两者结构一致。
- *
- * <p><b>字段语义：</b>
- *
- * <ul>
- *   <li>{@code configGroup} — 配置分组，按业务域分类管理
- *   <li>{@code configKey} — 配置键，同组内唯一标识
- *   <li>{@code configValue} — 配置值
- *   <li>{@code valueType} — 值类型: STRING/NUMBER/BOOLEAN/JSON
- *   <li>{@code defaultValue} — 默认值（配置未设置时使用）
- *   <li>{@code public} — 是否对前端公开: true 公开 / false 仅后端
- *   <li>{@code sort} — 排序序号
- *   <li>{@code status} — 启用状态: ENABLED/DISABLED
- * </ul>
- *
- * @author ydsz-team
- * @since 26.10.01
- * @see ConfigVO 字段完全一致的视图对象（"VO 兼 DTO"模式）
- */
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@Schema(name = "ConfigDTO", description = "系统配置创建/更新请求体")
 public class ConfigDTO {
 
+  @Schema(description = "主键 ID（更新时必填）")
   private String id;
 
   @NotBlank(message = "配置分组不能为空")
   @Size(max = 64, message = "配置分组长度不能超过64")
   @Xss(message = "配置分组包含非法内容")
+  @Schema(description = "配置分组，按业务域分类管理", example = "SYSTEM", requiredMode = Schema.RequiredMode.REQUIRED)
   private String configGroup;
 
   @NotBlank(message = "配置键不能为空")
   @Size(max = 128, message = "配置键长度不能超过128")
   @Xss(message = "配置键包含非法内容")
+  @Schema(description = "配置键，同组内唯一标识", example = "max-upload-size", requiredMode = Schema.RequiredMode.REQUIRED)
   private String configKey;
 
   @Xss(message = "配置值包含非法内容")
+  @Schema(description = "配置值", example = "10485760")
   private String configValue;
 
   @NotBlank(message = "值类型不能为空")
+  @Schema(description = "值类型: STRING/NUMBER/BOOLEAN/JSON", example = "NUMBER", requiredMode = Schema.RequiredMode.REQUIRED)
   private String valueType;
 
   @Xss(message = "默认值包含非法内容")
+  @Schema(description = "默认值（配置未设置时使用）", example = "10485760")
   private String defaultValue;
 
   @Xss(message = "配置项说明包含非法内容")
+  @Schema(description = "配置项业务说明", example = "最大上传文件大小（字节）")
   private String description;
 
+  @Schema(description = "是否对前端公开", example = "true")
   private Boolean isPublic;
 
+  @Schema(description = "排序序号", example = "0")
   private Integer sort;
 
+  @Schema(description = "启用状态", example = "ENABLED", allowableValues = {"ENABLED", "DISABLED"})
   private String status;
 }

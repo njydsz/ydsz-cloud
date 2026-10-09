@@ -383,6 +383,12 @@ public final class PermissionCodes {
   /** SYSTEM_SEARCH_DASHBOARD — 搜索运维看板（分析数据 + 质量指标） */
   public static final String SYSTEM_SEARCH_DASHBOARD = "system:search:dashboard";
 
+  /** SYSTEM_CONFIG_VIEW — 系统配置/功能开关查看权限 */
+  public static final String SYSTEM_CONFIG_VIEW = "system:config:view";
+
+  /** SYSTEM_CONFIG_EDIT — 系统配置/功能开关编辑权限 */
+  public static final String SYSTEM_CONFIG_EDIT = "system:config:edit";
+
   // ==================== Agent 模块权限码 ====================
 
   /** AGENT_CREATE */

@@ -25,8 +25,9 @@ spring:
     allow-bean-definition-overriding: true
   cloud:
     nacos:
+      fail-fast: false
       discovery:
-        enabled: true
+        enabled: false
         register-enabled: true
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:ydsz}
@@ -39,7 +40,7 @@ spring:
           platform: app
         ip-type: IPv4
       config:
-        enabled: true
+        enabled: false
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:ydsz}
         group: ${NACOS_GROUP:${spring.profiles.active}}

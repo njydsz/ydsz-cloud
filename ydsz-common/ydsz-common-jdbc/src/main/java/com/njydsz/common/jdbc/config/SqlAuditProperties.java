@@ -46,6 +46,8 @@ public class SqlAuditProperties {
 
   public boolean isEnabled() { return isEnabled; }
   public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+  // Spring Boot 4.x relaxed binding: Java bean property "enabled" → setter setEnabled()
+  public void setEnabled(boolean enabled) { this.isEnabled = enabled; }
 
   public boolean isAuditSelect() { return isAuditSelect; }
   public void setAuditSelect(boolean isAuditSelect) { this.isAuditSelect = isAuditSelect; }

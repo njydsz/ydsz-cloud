@@ -36,13 +36,9 @@ public class HikariMetricsProperties {
   /** 采集间隔秒数（默认 60） */
   private int intervalSeconds = 60;
 
-  public boolean isEnabled() {
-    return isEnabled;
-  }
-
-  public void setIsEnabled(boolean isEnabled) {
-    this.isEnabled = isEnabled;
-  }
+  public boolean isEnabled() { return isEnabled; }
+  public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+  public void setEnabled(boolean enabled) { this.isEnabled = enabled; }
 
   public int getIntervalSeconds() {
     return intervalSeconds;
