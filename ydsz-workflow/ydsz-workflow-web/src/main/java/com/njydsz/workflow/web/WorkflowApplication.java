@@ -4,6 +4,8 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.audit.annotation.EnableYdszAudit;
@@ -30,8 +32,8 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  * @author ydsz-team
  * @since 26.10.01
  */
-@SpringBootApplication(
-    scanBasePackages = {"com.njydsz.workflow", "com.njydsz.common", "com.njydsz.message.api"})
+@ComponentScan(basePackages = {"com.njydsz.workflow", "com.njydsz.common", "com.njydsz.message.api"}, excludeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = org.springframework.boot.autoconfigure.AutoConfiguration.class))
+@SpringBootApplication
 @EnableDiscoveryClient
 @EnableYdszAudit
 @EnableYdszAuth

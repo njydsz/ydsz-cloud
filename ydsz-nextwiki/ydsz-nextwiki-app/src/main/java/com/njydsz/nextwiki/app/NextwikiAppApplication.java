@@ -4,6 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 
 /**
  * NextWiki 移动端应用启动入口。
@@ -20,7 +22,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * @author ydsz-team
  * @since 26.10.01
  */
-@SpringBootApplication(scanBasePackages = {"com.njydsz.nextwiki", "com.njydsz.common"})
+@ComponentScan(basePackages = {"com.njydsz.nextwiki", "com.njydsz.common"}, excludeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = org.springframework.boot.autoconfigure.AutoConfiguration.class))
+@SpringBootApplication
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.njydsz.nextwiki.api.client")
 public class NextwikiAppApplication {
