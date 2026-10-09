@@ -29,6 +29,14 @@ public class PlatformCondition implements Condition {
 
   private final PlatformMode targetMode;
 
+  /**
+   * 默认构造函数（Spring @Conditional 反射实例化使用）。
+   * 默认目标模式为 WEB（大多数业务服务为 Web 模式）。
+   */
+  public PlatformCondition() {
+    this(PlatformMode.WEB);
+  }
+
   public PlatformCondition(PlatformMode targetMode) {
     this.targetMode = targetMode;
   }
