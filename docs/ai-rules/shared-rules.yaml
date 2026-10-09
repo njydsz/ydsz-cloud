@@ -4032,25 +4032,53 @@ rules:
     fix: "在对应模块的 db/migration/ 目录下新建 V{YYMMDD}__{description}.sql，确保幂等并包含回滚说明"
     source: "全维度深度分析（YDIZ-TEST-005，P0，26.09.27）"
 
-  - id: "YDIZ-FE-001"
-    level: "P1"
-    category: "engineering"
-    title: "gen-contract.py 更新后必须重新生成全部子应用 API 文件并提交"
-    description: |
-      前端 API 层封装由 gen-contract.py 自动生成。当生成器逻辑发生变更（如新增 FormData 文件上传支持、
-      路径前缀修正、返回类型推导优化等）后，必须对所有子应用重新生成并提交，确保实际文件与生成器逻辑一致。
+- id: "YDIZ-FLYWAY-001"
+  level: "P1"
+  category: "database"
+  title: "Flyway 脚本版本号日期不得超过当前日期，同一字段/对象的变更只能在唯一脚本中出现"
+  description: |
+    Flyway 脚本版本号（V{YY.MM.DD} 或 V{YY.MM.DD.N}）的日期部分不得超过脚本提交当天的日期，
+    禁止预写未来日期的占位脚本。同一数据库字段或对象的 DDL 变更只能在唯一脚本中出现，
+    禁止在多个脚本中重复执行相同的 ALTER COLUMN / ADD COLUMN 操作。
 
-      **为什么**：
-      - 曾出现 gen-contract.py 已支持 MultipartFile → FormData 转换，但 nextwiki-web/src/api/file.ts
-        的 upload 函数仍发送 JSON 而非 FormData（实际文件为旧版生成）
-      - 生成器修复与实际文件脱节会导致 P0 阻断级 Bug 遗留在线上
+    **为什么**：
+    - 未来日期脚本会破坏 Flyway 校验机制，可能导致 checksum 冲突或校验失败
+    - 同一变更重复执行会触发 PG 类型转换报错或冗余 DDL 锁表
+    - 多人协作时预占未来日期容易造成版本号冲突（如两人同日提交 V26.10.09）
 
-      **违反判据**：
-      - git log 显示 bash/gen-contract.py 有变更但 apps/*/src/api/ 下文件未同步更新
-      - 前端 API 请求参数与后端 Controller 实际 @RequestParam / @RequestBody 声明不一致
-    rule: "gen-contract.py 变更后必须重新运行 python bash/gen-contract.py <module> 并提交全部受影响文件"
-    fix: "执行统一生成脚本，提交所有 apps/*/src/api/ 目录下变更的自动生成文件"
-    source: "全维度深度分析（YDIZ-FE-001，P1，26.09.27）"
+    **强制要求**：
+    - 脚本版本号日期必须 ≤ 当前日期
+    - 同一天多个脚本使用 V{date}.1 / V{date}.2 子版本号区分
+    - 同一字段/对象的变更在同一版本周期内只出现一次
+    - 合并去重时保留净唯一变更，删除冗余脚本
+
+    **违反判据**：
+    - 脚本文件名中的日期超过 git commit 日期
+    - 同一 ALTER TABLE ... ALTER COLUMN 在 2 个或以上脚本中出现
+    - 同一版本号对应多个不同内容的脚本文件
+  rule: "Flyway 脚本版本号日期不得超过当前日期，同一变更只能出现在唯一脚本中"
+  fix: "合并去重：提取净唯一变更到同一日期脚本，删除冗余文件；同一天多脚本使用 V{date}.N 子版本号"
+  source: "Flyway 脚本专项整改（YDIZ-FLYWAY-001，P1，26.10.08）"
+
+- id: "YDIZ-FE-001"
+  level: "P1"
+  category: "engineering"
+  title: "gen-contract.py 更新后必须重新生成全部子应用 API 文件并提交"
+  description: |
+    前端 API 层封装由 gen-contract.py 自动生成。当生成器逻辑发生变更（如新增 FormData 文件上传支持、
+    路径前缀修正、返回类型推导优化等）后，必须对所有子应用重新生成并提交，确保实际文件与生成器逻辑一致。
+
+    **为什么**：
+    - 曾出现 gen-contract.py 已支持 MultipartFile → FormData 转换，但 nextwiki-web/src/api/file.ts
+      的 upload 函数仍发送 JSON 而非 FormData（实际文件为旧版生成）
+    - 生成器修复与实际文件脱节会导致 P0 阻断级 Bug 遗留在线上
+
+    **违反判据**：
+    - git log 显示 bash/gen-contract.py 有变更但 apps/*/src/api/ 下文件未同步更新
+    - 前端 API 请求参数与后端 Controller 实际 @RequestParam / @RequestBody 声明不一致
+  rule: "gen-contract.py 变更后必须重新运行 python bash/gen-contract.py <module> 并提交全部受影响文件"
+  fix: "执行统一生成脚本，提交所有 apps/*/src/api/ 目录下变更的自动生成文件"
+  source: "全维度深度分析（YDIZ-FE-001，P1，26.09.27）"
 
   - id: "YDIZ-FE-002"
     level: "P1"

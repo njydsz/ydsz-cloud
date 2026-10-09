@@ -79,6 +79,12 @@ logging:
 #              message: "请使用 /api/message/send（Header: X-Api-Version: v2）替代"
 # ---------------------------------------------------------------------
 ydsz:
+  auth:
+    token:
+      secret-key: "ydsz-cloud-local-dev-secret-key-20261009-at-least-32-bytes-long"
+      access-token-expire-seconds: 7200
+      refresh-token-expire-seconds: 604800
+      issuer: "ydsz-cloud"
   gateway:
     deprecation:
       enabled: true

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.cache.spring.SpringYdszCache;
@@ -60,7 +61,8 @@ public class CacheMetricsAutoConfiguration {
    * @return 缓存指标注册器实例，交给 Spring 托管为单例
    */
   @Bean
-  public CacheMetricsRegistrar cacheMetricsRegistrar(
+  @ConditionalOnMissingBean(name = {"cacheMetricsRegistrar", "ydszCacheMetricsRegistrar"})
+  public CacheMetricsRegistrar ydszCacheMetricsRegistrar(
       YdszCacheManager cacheManager, MeterRegistry meterRegistry) {
     return new CacheMetricsRegistrar(cacheManager, meterRegistry);
   }
