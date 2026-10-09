@@ -288,7 +288,7 @@ spring:
         register-enabled: true
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:ydsz}
-        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        group: ${NACOS_GROUP:${spring.profiles.active}}
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}
         metadata:

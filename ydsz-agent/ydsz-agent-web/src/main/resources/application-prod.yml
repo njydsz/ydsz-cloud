@@ -22,11 +22,11 @@ spring:
       discovery:
         server-addr: ${NACOS_SERVER:localhost:8848}
         namespace: ${NACOS_NAMESPACE:prod}
-        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        group: ${NACOS_GROUP:${spring.profiles.active}}
       config:
         server-addr: ${NACOS_SERVER:localhost:8848}
         namespace: ${NACOS_NAMESPACE:prod}
-        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        group: ${NACOS_GROUP:${spring.profiles.active}}
         file-extension: yaml
 
 ydsz:
