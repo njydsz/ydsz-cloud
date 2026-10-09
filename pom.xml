@@ -97,7 +97,7 @@
         <jacoco.line.threshold>0.05</jacoco.line.threshold>
         <jacoco.branch.threshold>0.02</jacoco.branch.threshold>
         <jacoco.check.skip>true</jacoco.check.skip>
-        <skipITs>true</skipITs>
+        <skipITs>false</skipITs>
         <junit-jupiter.version>5.10.3</junit-jupiter.version>
         <assertj.version>3.26.3</assertj.version>
         <mockito.version>5.12.0</mockito.version>
@@ -1477,7 +1477,7 @@
                 </execution>
             </executions>
             <configuration>
-                <skipITs>${skipITs}</skipITs>
+                <skipITs>false</skipITs>
                 <includes>
                     <include>**/*IT.java</include>
                 </includes>

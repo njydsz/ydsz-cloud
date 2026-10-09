@@ -7,6 +7,11 @@
 
 # P2-2: 搜索引擎 PG 索引表名（各模块独立表，避免共用默认 ydsz_file_search_index）
 ydsz:
+  jdbc:
+    slow-sql:
+      enabled: true
+      threshold-millis: 500
+      alert-threshold-millis: 2000
   search:
     pg:
       index-table: ydsz_userinfo_search_index

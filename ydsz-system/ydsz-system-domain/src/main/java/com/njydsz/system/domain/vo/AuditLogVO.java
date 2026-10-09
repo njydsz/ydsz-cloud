@@ -1,4 +1,4 @@
-package com.njydsz.system.web.vo;
+package com.njydsz.system.domain.vo;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

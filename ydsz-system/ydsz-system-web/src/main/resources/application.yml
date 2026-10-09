@@ -34,6 +34,11 @@ management:
 
 # Sentry 监控配置
 ydsz:
+  jdbc:
+    slow-sql:
+      enabled: true
+      threshold-millis: 500
+      alert-threshold-millis: 2000
   sentry:
     app-name: ydzsz-system
     metrics:

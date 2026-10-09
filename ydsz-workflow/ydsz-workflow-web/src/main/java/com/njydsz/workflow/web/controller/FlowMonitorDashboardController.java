@@ -3,9 +3,12 @@ package com.njydsz.workflow.web.controller;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -155,9 +158,11 @@ public class FlowMonitorDashboardController {
       List<FlowAnomalyVO> detected =
           efficiencyService.detectAnomalies(
               tenantId, 100, STUCK_HOURS_THRESHOLD, LONG_RUNNING_DAYS);
+      // 收集 instanceId，批量查询消除 N+1
+      Map<String, FlowInstanceVO> instanceMap = batchResolveInstances(detected);
       if (detected != null) {
         for (FlowAnomalyVO a : detected) {
-          Map<String, Object> item = mapAnomaly(a);
+          Map<String, Object> item = mapAnomaly(a, instanceMap);
           if (item == null) {
             continue;
           }
@@ -493,9 +498,10 @@ public class FlowMonitorDashboardController {
    * 将 efficiencyService 返回的异常 Map 映射为前端 AnomalyInstanceDTO 字段。
    *
    * @param a 原始异常数据
+   * @param instanceMap 预加载的流程实例 ID → VO 映射（用于消除逐条 getById N+1 查询）
    * @return 映射后的前端 DTO 结构
    */
-  private Map<String, Object> mapAnomaly(FlowAnomalyVO a) {
+  private Map<String, Object> mapAnomaly(FlowAnomalyVO a, Map<String, FlowInstanceVO> instanceMap) {
     String type = a.getType() != null ? a.getType() : "UNKNOWN";
     Map<String, Object> item = new LinkedHashMap<>(COLLECTION_CAPACITY);
     String anomalyType;
@@ -514,21 +520,16 @@ public class FlowMonitorDashboardController {
     item.put("id", instanceId == null ? 0 : toLong(instanceId));
 
     if (instanceId != null) {
-      try {
-        long idLong = Long.parseLong(instanceId);
-        FlowInstanceVO inst = instanceService.getById(String.valueOf(idLong));
-        if (inst != null) {
-          item.put("flowCode", inst.getFlowCode());
-          item.put("flowName", inst.getFlowName());
-          item.put("title", inst.getTitle());
-          item.put("initiatorName", inst.getInitiatorName());
-          item.put("status", inst.getFlowStatus());
-          item.put("currentNodeName", inst.getCurrentNodeName());
-          item.put("startTime", inst.getStartAt() == null ? null : inst.getStartAt().toString());
-        }
-      } catch (NumberFormatException e) {
-        // 实例查询失败不阻塞，降级使用 detectAnomalies 返回的字段
-        log.warn("[FlowMonitor] 实例查询失败，降级使用异常检测字段: {}", e.getMessage());
+      // 从预加载 Map 中获取，避免逐条 getById N+1 查询
+      FlowInstanceVO inst = instanceMap.get(instanceId);
+      if (inst != null) {
+        item.put("flowCode", inst.getFlowCode());
+        item.put("flowName", inst.getFlowName());
+        item.put("title", inst.getTitle());
+        item.put("initiatorName", inst.getInitiatorName());
+        item.put("status", inst.getFlowStatus());
+        item.put("currentNodeName", inst.getCurrentNodeName());
+        item.put("startTime", inst.getStartAt() == null ? null : inst.getStartAt().toString());
       }
     }
     item.putIfAbsent("currentNodeName", a.getNodeName());
@@ -555,6 +556,45 @@ public class FlowMonitorDashboardController {
 
     item.put("description", a.getDescription());
     return item;
+  }
+
+  /**
+   * 批量解析异常检测到的流程实例 ID → VO 映射，消除逐条 getById 的 N+1 查询。
+   *
+   * @param detected 异常检测 VO 列表（可为 null）
+   * @return 实例 ID → FlowInstanceVO 映射（永不返回 null）
+   */
+  private Map<String, FlowInstanceVO> batchResolveInstances(List<FlowAnomalyVO> detected) {
+    Map<String, FlowInstanceVO> result = new HashMap<>(LIST_INIT_CAPACITY_32);
+    if (detected == null || detected.isEmpty()) {
+      return result;
+    }
+    Set<String> ids = new HashSet<>(LIST_INIT_CAPACITY_32);
+    for (FlowAnomalyVO a : detected) {
+      String iid = a.getInstanceId();
+      if (iid == null || iid.isBlank()) {
+        iid = a.getTaskId();
+      }
+      if (iid != null && !iid.isBlank()) {
+        ids.add(iid);
+      }
+    }
+    if (ids.isEmpty()) {
+      return result;
+    }
+    try {
+      List<FlowInstanceVO> instances = instanceService.listByIds(ids);
+      if (instances != null) {
+        for (FlowInstanceVO vo : instances) {
+          if (vo != null && vo.getId() != null) {
+            result.put(vo.getId(), vo);
+          }
+        }
+      }
+    } catch (Exception e) {
+      log.warn("[Monitor] 批量查询实例失败，降级为空映射: {}", e.getMessage());
+    }
+    return result;
   }
 
   /**

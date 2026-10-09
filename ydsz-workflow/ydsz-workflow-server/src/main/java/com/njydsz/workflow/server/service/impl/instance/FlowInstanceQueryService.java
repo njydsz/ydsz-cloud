@@ -2,10 +2,13 @@ package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -105,6 +108,44 @@ public class FlowInstanceQueryService {
           instance, FlowInstanceVO::getInitiatorId, FlowInstanceVO::setInitiatorName, NameType.USER);
     }
     return instance;
+  }
+
+  /**
+   * 按 ID 集合批量查询流程实例（消除 N+1 查询）。
+   *
+   * <p>内部通过 {@code SELECT ... WHERE id IN (...)} 一次性加载，并对 initiatorName 进行批量富化。
+   * 调用方应在循环前收集 ID 集合并构建内存 Map。
+   *
+   * @param ids 流程实例 ID 集合（不允许为 null 或空集合）
+   * @return 流程实例 VO 列表；无匹配返回空列表
+   */
+  @Transactional(readOnly = true)
+  public List<FlowInstanceVO> listByIds(Collection<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return Collections.emptyList();
+    }
+    Set<String> idSet = ids instanceof Set<String> s ? s : new HashSet<>(ids);
+    List<FlowInstanceVO> list = instanceRepository.findAllById(idSet);
+    if (list == null || list.isEmpty()) {
+      return Collections.emptyList();
+    }
+    // P0-4: 批量富化 initiatorName
+    try {
+      nameAssembler.enrich(
+          list, FlowInstanceVO::getInitiatorId, FlowInstanceVO::setInitiatorName, NameType.USER);
+    } catch (Exception e) {
+      log.warn("[FlowInstanceQuery] 批量富化 initiatorName 失败，降级为单条: {}", e.getMessage());
+      // 降级：单条富化
+      for (FlowInstanceVO inst : list) {
+        if (inst != null
+            && !StringUtils.hasText(inst.getInitiatorName())
+            && StringUtils.hasText(inst.getInitiatorId())) {
+          nameAssembler.enrichOne(
+              inst, FlowInstanceVO::getInitiatorId, FlowInstanceVO::setInitiatorName, NameType.USER);
+        }
+      }
+    }
+    return list;
   }
 
   /**

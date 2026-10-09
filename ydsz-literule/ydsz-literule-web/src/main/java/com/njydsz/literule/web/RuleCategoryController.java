@@ -2,6 +2,8 @@ package com.njydsz.literule.web;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
@@ -71,6 +73,8 @@ public class RuleCategoryController {
    * <p>树根为虚拟 ROOT，children 为一级分类。叶子节点或中间节点都包含该路径下的规则数与 Owner 列表。
    * @return 规则目录树根节点
    */
+  @Operation(summary = "获取规则目录树", description = "返回规则分类的树状结构，含每节点规则数与责任人列表")
+  @ApiResponse(responseCode = "200", description = "成功")
   @GetMapping("/category-tree")
   public YdszResponse<CategoryNodeVO> categoryTree() {
     return YdszResponse.success(
@@ -83,6 +87,8 @@ public class RuleCategoryController {
    * @param path 分类路径前缀，例如 "finance" / "finance/credit"
    * @return 规则定义列表
    */
+  @Operation(summary = "按分类路径查询规则", description = "按分类路径前缀查询规则定义列表")
+  @ApiResponse(responseCode = "200", description = "成功")
   @GetMapping("/by-category-path")
   public YdszResponse<List<RuleDefinitionVO>> listByCategoryPath(
       @RequestParam(value = "path", required = false) String path) {
@@ -100,6 +106,8 @@ public class RuleCategoryController {
    * @param owner 责任人用户名
    * @return 规则定义列表
    */
+  @Operation(summary = "按责任人查询规则", description = "查询指定责任人名下的全部规则定义")
+  @ApiResponse(responseCode = "200", description = "成功")
   @GetMapping("/by-owner")
   public YdszResponse<List<RuleDefinitionVO>> listByOwner(
       @RequestParam(value = "owner") String owner) {
@@ -126,6 +134,8 @@ public class RuleCategoryController {
       action = AuditAction.UPDATE,
       content = "'setOwner'")
   @RateLimit(resource = "literule.rule_category.setOwner", threshold = 50)
+  @Operation(summary = "设置规则责任人", description = "变更指定规则的责任人，原责任人自动失去管理权限")
+  @ApiResponse(responseCode = "200", description = "成功")
   @PutMapping("/{ruleCode}/owner")
   public YdszResponse<Void> setOwner(
       @PathVariable String ruleCode,
@@ -152,6 +162,8 @@ public class RuleCategoryController {
       action = AuditAction.UPDATE,
       content = "'setCategoryPath'")
   @RateLimit(resource = "literule.rule_category.setCategoryPath", threshold = 50)
+  @Operation(summary = "设置规则分类路径", description = "变更指定规则所属分类，路径采用斜杠分隔的树状结构")
+  @ApiResponse(responseCode = "200", description = "成功")
   @PutMapping("/{ruleCode}/category-path")
   public YdszResponse<Void> setCategoryPath(
       @PathVariable String ruleCode,

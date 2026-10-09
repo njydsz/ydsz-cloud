@@ -24,7 +24,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.system.web.vo.AuditLogVO;
+import com.njydsz.system.domain.vo.AuditLogVO;
 
 /**
  * 审计日志管理 Controller

@@ -2,6 +2,9 @@ package com.njydsz.literule.web;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -75,6 +78,8 @@ public class RuleABPolicyController {
    * @param ruleCode 规则唯一编码
    * @return AB Test 自动回滚策略信息
    */
+  @Operation(summary = "查询 AB Test 自动回滚策略", description = "查询指定规则的自动回滚策略配置，未配置时返回系统默认策略")
+  @ApiResponse(responseCode = "200", description = "成功")
   @GetMapping("/{ruleCode}/ab-policy")
   public YdszResponse<RuleABPolicyVO> getABPolicy(@PathVariable String ruleCode) {
     return YdszResponse.success(abTestAutoRollbackProvider.getPolicy(ruleCode));
@@ -97,6 +102,8 @@ public class RuleABPolicyController {
       action = AuditAction.UPDATE,
       content = "'updateABPolicy'")
   @RateLimit(resource = "literule.rule_a_b_policy.updateABPolicy", threshold = 50)
+  @Operation(summary = "更新 AB Test 自动回滚策略", description = "更新指定规则的自动回滚策略配置，变更后下一轮 AB Test 评估将使用新策略")
+  @ApiResponse(responseCode = "200", description = "成功")
   @PutMapping("/{ruleCode}/ab-policy")
   public YdszResponse<Void> updateABPolicy(
       @PathVariable String ruleCode,
@@ -116,6 +123,8 @@ public class RuleABPolicyController {
    * @param ruleCode 规则唯一编码
    * @return 回滚历史列表
    */
+  @Operation(summary = "查询回滚历史", description = "返回指定规则的历史自动回滚记录，包含回滚时间、触发原因与影响范围")
+  @ApiResponse(responseCode = "200", description = "成功")
   @GetMapping("/{ruleCode}/ab-rollbacks")
   public YdszResponse<List<RuleABRollbackVO>> listRollbackHistory(@PathVariable String ruleCode) {
     return YdszResponse.success(
@@ -137,6 +146,8 @@ public class RuleABPolicyController {
       action = AuditAction.CREATE,
       content = "'evaluateAB'")
   @RateLimit(resource = "literule.rule_a_b_policy.evaluateAB", threshold = 50)
+  @Operation(summary = "主动触发 AB Test 评估", description = "立即执行一次 AB Test 评估，检查指标是否超过回滚阈值，不影响定时评估流程")
+  @ApiResponse(responseCode = "200", description = "成功")
   @PostMapping("/{ruleCode}/ab-evaluate")
   public YdszResponse<Boolean> evaluateAB(@PathVariable String ruleCode) {
     return YdszResponse.success(abTestAutoRollbackProvider.evaluateOne(ruleCode));
@@ -157,6 +168,9 @@ public class RuleABPolicyController {
       action = AuditAction.CREATE,
       content = "'manualRollback'")
   @RateLimit(resource = "literule.rule_a_b_policy.manualRollback", threshold = 50)
+  @Operation(summary = "人工回滚", description = "Owner 主动请求将规则回滚到上一个稳定版本，用于紧急操作")
+  @ApiResponse(responseCode = "200", description = "成功")
+  @Parameter(name = "reason", description = "回滚原因", example = "MANUAL")
   @PostMapping("/{ruleCode}/ab-rollback")
   public YdszResponse<RuleABRollbackVO> manualRollback(
       @PathVariable String ruleCode,

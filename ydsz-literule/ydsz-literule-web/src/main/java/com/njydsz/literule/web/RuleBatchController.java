@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -91,6 +93,8 @@ public class RuleBatchController {
       action = AuditAction.DELETE,
       content = "'deleteRule'")
   @RateLimit(resource = "literule.rule_batch.deleteRule", threshold = 50)
+  @Operation(summary = "删除规则（软删除）", description = "将规则状态置为 ARCHIVED 并禁用，保留版本历史，同步清理画布")
+  @ApiResponse(responseCode = "200", description = "成功")
   @DeleteMapping("/{ruleCode}")
   @AuthApiPermission(apiCodes = "execution:rule:delete")
   public YdszResponse<Void> deleteRule(
@@ -152,6 +156,8 @@ public class RuleBatchController {
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_batch.batchToggle", threshold = 50)
+  @Operation(summary = "批量启停规则", description = "对多条规则执行启用或停用操作，启用时校验规则状态必须为 PUBLISHED")
+  @ApiResponse(responseCode = "200", description = "成功")
   @PostMapping("/batch-toggle")
   @AuthApiPermission(apiCodes = "execution:rule:toggle")
   public YdszResponse<Map<String, Object>> batchToggle(
@@ -200,6 +206,8 @@ public class RuleBatchController {
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_batch.batchPriority", threshold = 50)
+  @Operation(summary = "批量调整规则优先级", description = "对多条规则按偏移量调整优先级，结果钳制在 0-100 范围内")
+  @ApiResponse(responseCode = "200", description = "成功")
   @PostMapping("/batch-priority")
   public YdszResponse<Map<String, Object>> batchPriority(
       @Valid @RequestBody RuleBatchPriorityDTO dto,
@@ -249,6 +257,8 @@ public class RuleBatchController {
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_batch.batchCategory", threshold = 50)
+  @Operation(summary = "批量调整规则分类", description = "将多条规则批量移动到指定的分类路径下")
+  @ApiResponse(responseCode = "200", description = "成功")
   @PostMapping("/batch-category")
   public YdszResponse<Map<String, Object>> batchCategory(
       @Valid @RequestBody RuleBatchCategoryDTO dto,

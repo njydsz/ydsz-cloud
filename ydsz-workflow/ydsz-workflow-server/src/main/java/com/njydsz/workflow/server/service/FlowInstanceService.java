@@ -1,6 +1,7 @@
 package com.njydsz.workflow.server.service;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -99,6 +100,17 @@ public interface FlowInstanceService {
    * @return 流程实例 VO，不存在返回 null
    */
   FlowInstanceVO getById(String id);
+
+  /**
+   * 按 ID 集合批量查询流程实例（消除 N+1 查询）。
+   *
+   * <p>内部通过 {@code SELECT ... WHERE id IN (...)} 一次性加载，并对 initiatorName 进行批量富化。
+   * 调用方应在循环前收集 ID 集合并构建内存 Map。
+   *
+   * @param ids 流程实例 ID 集合
+   * @return 流程实例 VO 列表；无匹配返回空列表
+   */
+  List<FlowInstanceVO> listByIds(Collection<String> ids);
 
   /**
    * 业务关联查询（通过业务类型 + 业务 ID 查实例）

@@ -1,6 +1,7 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -114,6 +115,17 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
   @Override
   public FlowInstanceVO getById(String id) {
     return queryService.getById(id);
+  }
+
+  /**
+   * 按 ID 集合批量查询流程实例（消除 N+1 查询）。
+   *
+   * @param ids 流程实例 ID 集合
+   * @return 流程实例 VO 列表；无匹配返回空列表
+   */
+  @Override
+  public List<FlowInstanceVO> listByIds(Collection<String> ids) {
+    return queryService.listByIds(ids);
   }
 
   /**

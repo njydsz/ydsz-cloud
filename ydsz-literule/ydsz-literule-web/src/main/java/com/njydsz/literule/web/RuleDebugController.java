@@ -4,6 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -84,6 +86,8 @@ public class RuleDebugController {
    *
    * @return 断点列表
    */
+  @Operation(summary = "查询全部断点", description = "返回当前已配置的所有规则级与表达式节点级断点列表")
+  @ApiResponse(responseCode = "200", description = "成功")
   @GetMapping("/breakpoints")
   public YdszResponse<Object> listBreakpoints() {
     RuleDebugger debugger = debugger();
@@ -116,6 +120,8 @@ public class RuleDebugController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'addBreakpoint'")
+  @Operation(summary = "新增断点", description = "新增规则级或表达式节点级断点，支持条件断点")
+  @ApiResponse(responseCode = "200", description = "成功")
   @PostMapping("/breakpoints")
   public YdszResponse<Object> addBreakpoint(@RequestBody Map<String, String> request) {
     RuleDebugger debugger = debugger();
@@ -146,6 +152,8 @@ public class RuleDebugController {
    * @param breakpointId 断点唯一标识
    * @return 删除结果（true 表示成功）
    */
+  @Operation(summary = "删除断点", description = "按断点唯一标识移除断点")
+  @ApiResponse(responseCode = "200", description = "成功")
   @DeleteMapping("/breakpoints/{breakpointId}")
   public YdszResponse<Object> removeBreakpoint(@PathVariable String breakpointId) {
     RuleDebugger debugger = debugger();
@@ -171,6 +179,8 @@ public class RuleDebugController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'createSession'")
+  @Operation(summary = "创建调试会话", description = "创建绑定规则的调试会话，断点命中时挂起求值线程")
+  @ApiResponse(responseCode = "200", description = "成功")
   @PostMapping("/sessions")
   public YdszResponse<Object> createSession(@RequestBody Map<String, String> request) {
     RuleDebugger debugger = debugger();
@@ -192,6 +202,8 @@ public class RuleDebugController {
    * @param sessionId 调试会话唯一标识
    * @return 会话详情（含断点命中历史）
    */
+  @Operation(summary = "查询会话详情", description = "查询调试会话详情，包含断点命中历史")
+  @ApiResponse(responseCode = "200", description = "成功")
   @GetMapping("/sessions/{sessionId}")
   public YdszResponse<Object> getSession(@PathVariable String sessionId) {
     RuleDebugger debugger = debugger();
@@ -225,6 +237,8 @@ public class RuleDebugController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'submitCommand'")
+  @Operation(summary = "下发调试指令", description = "向调试会话下发 RESUME/STEP_OVER/STEP_INTO/STEP_OUT/TERMINATE 指令")
+  @ApiResponse(responseCode = "200", description = "成功")
   @PostMapping("/sessions/{sessionId}/command")
   public YdszResponse<Object> submitCommand(
       @PathVariable String sessionId, @RequestBody Map<String, String> request) {
@@ -258,6 +272,8 @@ public class RuleDebugController {
    * @param sessionId 调试会话唯一标识
    * @return 终止结果（true 表示成功）
    */
+  @Operation(summary = "终止调试会话", description = "强制终止调试会话，释放挂起的求值线程")
+  @ApiResponse(responseCode = "200", description = "成功")
   @DeleteMapping("/sessions/{sessionId}")
   public YdszResponse<Object> terminateSession(@PathVariable String sessionId) {
     RuleDebugger debugger = debugger();
@@ -275,6 +291,8 @@ public class RuleDebugController {
    *
    * @return 活跃调试会话列表
    */
+  @Operation(summary = "查询全部活跃会话", description = "返回当前所有未终止的调试会话简要信息列表")
+  @ApiResponse(responseCode = "200", description = "成功")
   @GetMapping("/sessions")
   public YdszResponse<Object> listSessions() {
     RuleDebugger debugger = debugger();

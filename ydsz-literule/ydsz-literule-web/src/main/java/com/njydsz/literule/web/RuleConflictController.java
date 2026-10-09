@@ -2,6 +2,8 @@ package com.njydsz.literule.web;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +53,8 @@ public class RuleConflictController {
    *
    * @return 冲突规则对列表
    */
+  @Operation(summary = "检测规则冲突", description = "对当前生效规则集做静态分析，返回条件重叠、严重度矛盾、优先级倒挂等冲突对列表")
+  @ApiResponse(responseCode = "200", description = "成功")
   @GetMapping("/conflicts")
   public YdszResponse<List<RuleConflictInfoVO>> detectConflicts() {
     return YdszResponse.success(
