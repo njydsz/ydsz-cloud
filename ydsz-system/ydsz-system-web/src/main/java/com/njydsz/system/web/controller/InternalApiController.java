@@ -17,6 +17,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.system.domain.dto.AppValidateRequest;
 import com.njydsz.system.domain.dto.ConfigGetRequest;
 import com.njydsz.system.domain.dto.DictItemGetRequest;
@@ -80,6 +81,7 @@ public class InternalApiController {
    */
   @RateLimit(resource = "system.internalapi.getConfig", threshold = 50)
   @Idempotent(key = "'ydsz:system:internal-api:get-config:' + #request.key", ttlSeconds = 5)
+  @Operation(summary = "按配置键查询配置值")
   @PostMapping("/config/get")
   public YdszResponse<String> getConfig(@Valid @RequestBody ConfigGetRequest request) {
     return YdszResponse.success(configService.getConfigValue(request.getKey()));
@@ -99,6 +101,7 @@ public class InternalApiController {
   @Idempotent(
       key = "'ydsz:system:internal-api:get-dict-item:' + #request.typeCode + ':' + #request.itemCode",
       ttlSeconds = 5)
+  @Operation(summary = "按类型和编码查询字典项展示值")
   @PostMapping("/dict/item")
   public YdszResponse<String> getDictItem(@Valid @RequestBody DictItemGetRequest request) {
     DictItemVO vo =
@@ -118,6 +121,7 @@ public class InternalApiController {
    */
   @RateLimit(resource = "system.internalapi.listDictItems", threshold = 50)
   @Idempotent(key = "'ydsz:system:internal-api:list-dict-items:' + #request.typeCode", ttlSeconds = 5)
+  @Operation(summary = "按类型编码查询启用的字典项列表")
   @PostMapping("/dict/list")
   public YdszResponse<List<String>> listDictItems(@Valid @RequestBody DictListRequest request) {
     List<DictItemVO> items = dictItemService.listEnabledByTypeCode(request.getTypeCode());
@@ -145,6 +149,7 @@ public class InternalApiController {
       key =
           "'ydsz:system:internal-api:validate-client:' + #request.appKey + ':' + #request.appSecret.hashCode()",
       ttlSeconds = 5)
+  @Operation(summary = "校验应用密钥")
   @PostMapping("/app/validate")
   public YdszResponse<Boolean> validateClient(@Valid @RequestBody AppValidateRequest request) {
     return YdszResponse.success(

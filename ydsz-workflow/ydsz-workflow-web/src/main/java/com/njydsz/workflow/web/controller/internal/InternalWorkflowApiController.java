@@ -17,6 +17,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
@@ -67,6 +68,7 @@ public class InternalWorkflowApiController {
   @Idempotent(
       key = "'ydsz:workflow:internal-api:start-process:' + #dto.flowCode + ':' + #dto.businessKey",
       ttlSeconds = 5)
+  @Operation(summary = "启动流程实例")
   @PostMapping("/engine/instance/start")
   public YdszResponse<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
     return YdszResponse.success(workflowFacade.startProcess(dto));
@@ -85,6 +87,7 @@ public class InternalWorkflowApiController {
   @Idempotent(
       key = "'ydsz:workflow:internal-api:get-by-business:' + #businessType + ':' + #businessId",
       ttlSeconds = 5)
+  @Operation(summary = "通过业务单据反查流程状态")
   @GetMapping("/engine/instance/byBusiness")
   public YdszResponse<FlowInstanceViewDTO> getByBusiness(
       @RequestParam("businessType") String businessType,
@@ -107,6 +110,7 @@ public class InternalWorkflowApiController {
       key =
           "'ydsz:workflow:internal-api:terminate:' + #processInstanceId + ':' + #reason.hashCode()",
       ttlSeconds = 5)
+  @Operation(summary = "终止流程实例")
   @PostMapping("/engine/instance/{id}/terminate")
   public YdszResponse<Void> terminate(
       @PathVariable("id") String processInstanceId,

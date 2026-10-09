@@ -17,6 +17,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.literule.domain.RuleEngine;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
@@ -77,6 +78,7 @@ public class InternalLiteruleApiController {
   @Idempotent(
       key = "'ydsz:literule:internal-api:dry-run:' + (#ruleCode ?: 'ALL')",
       ttlSeconds = 5)
+  @Operation(summary = "规则评估dry-run仿真")
   @PostMapping("/literule/rules/dry-run")
   public YdszResponse<List<RuleResultVO>> dryRun(
       @RequestParam(value = "ruleCode", required = false) String ruleCode,
@@ -99,6 +101,7 @@ public class InternalLiteruleApiController {
    * @return 触发的规则结果列表（按严重度倒序），未触发任何规则时返回空列表
    */
   @RateLimit(resource = "literule.internalapi.evaluate", threshold = 50)
+  @Operation(summary = "规则评估正式模式")
   @PostMapping("/literule/rules/evaluate")
   public YdszResponse<List<RuleResultVO>> evaluate(
       @RequestParam(value = "ruleCode", required = false) String ruleCode,

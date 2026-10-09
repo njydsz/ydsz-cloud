@@ -23,6 +23,7 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Human-in-the-Loop 人工审批 REST API Controller。
@@ -89,6 +90,7 @@ public class HumanApprovalController {
       type = AuditType.OPERATION,
       action = AuditAction.QUERY,
       content = "'listPending'")
+  @Operation(summary = "列出待审批请求")
   @GetMapping("/pending")
   public YdszResponse<List<ApprovalRequest>> listPending() {
     return YdszResponse.success(approvalService.listPending());
@@ -106,6 +108,7 @@ public class HumanApprovalController {
       type = AuditType.OPERATION,
       action = AuditAction.QUERY,
       content = "'getApproval: ' + #id")
+  @Operation(summary = "获取审批请求详情")
   @GetMapping("/{id}")
   public YdszResponse<ApprovalRequest> getApproval(@PathVariable String id) {
     ApprovalRequest request = approvalService.getApproval(id);
@@ -133,6 +136,7 @@ public class HumanApprovalController {
       action = AuditAction.APPROVE,
       content = "'approve'")
   @Idempotent(key = "ydsz:agent:HumanApprovalController:approve:lock", ttlSeconds = 5)
+  @Operation(summary = "审批通过")
   @PostMapping("/{id}/approve")
   public YdszResponse<Boolean> approve(
       @PathVariable String id,
@@ -167,6 +171,7 @@ public class HumanApprovalController {
       action = AuditAction.REJECT,
       content = "'reject'")
   @Idempotent(key = "ydsz:agent:HumanApprovalController:reject:lock", ttlSeconds = 5)
+  @Operation(summary = "审批拒绝")
   @PostMapping("/{id}/reject")
   public YdszResponse<Boolean> reject(
       @PathVariable String id,

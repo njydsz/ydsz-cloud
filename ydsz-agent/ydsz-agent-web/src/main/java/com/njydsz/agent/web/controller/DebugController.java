@@ -27,6 +27,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Agent 调试 REST API Controller。
@@ -91,6 +92,7 @@ public class DebugController {
       type = AuditType.OPERATION,
       action = AuditAction.QUERY,
       content = "'listTraces'")
+  @Operation(summary = "列出最近执行链路")
   @GetMapping("/traces")
   public YdszResponse<List<AgentTraceListDTO>> listTraces(
       @RequestParam(defaultValue = "20") int limit) {
@@ -125,6 +127,7 @@ public class DebugController {
       type = AuditType.OPERATION,
       action = AuditAction.QUERY,
       content = "'getTrace: ' + #traceId")
+  @Operation(summary = "查询链路详情")
   @GetMapping("/trace/{traceId}")
   public YdszResponse<AgentTraceDetailDTO> getTrace(@PathVariable String traceId) {
     TraceMeta meta = agentDebuggerService.getTraceMeta(traceId);
@@ -170,6 +173,7 @@ public class DebugController {
       content = "'replayTrace: ' + #traceId")
   @Idempotent(key = "ydsz:agent:DebugController:replayTrace:lock", ttlSeconds = 5)
   @RateLimit(resource = "agent.debug.replayTrace", threshold = 50)
+  @Operation(summary = "重放指定链路")
   @PostMapping("/trace/{traceId}/replay")
   public YdszResponse<String> replayTrace(@PathVariable String traceId) {
     log.info("[Debug-API] 重放链路: traceId={}", traceId);

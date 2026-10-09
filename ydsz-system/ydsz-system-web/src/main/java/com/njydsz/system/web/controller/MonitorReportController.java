@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.system.domain.dto.MonitorErrorBatchDTO;
@@ -64,6 +65,7 @@ public class MonitorReportController {
    * @param batch 错误批量上报体，条目数与非空由 {@code @Valid} 校验
    * @return 统一响应体，成功时 data 为空
    */
+  @Operation(summary = "接收前端错误批量上报")
   @PostMapping("/monitor/error")
   public YdszResponse<Void> reportErrors(@Valid @RequestBody MonitorErrorBatchDTO batch) {
     monitorReportService.recordErrors(batch);
@@ -80,6 +82,7 @@ public class MonitorReportController {
    * @param alert 是否为性能阈值告警上报，默认 false
    * @return 统一响应体，成功时 data 为空
    */
+  @Operation(summary = "接收前端Web Vitals批量上报")
   @PostMapping("/monitor/web-vitals")
   public YdszResponse<Void> reportWebVitals(
       @Valid @RequestBody MonitorWebVitalBatchDTO batch,
@@ -106,6 +109,7 @@ public class MonitorReportController {
    * @param content sourcemap 文件字节内容
    * @return 统一响应体，成功时 data 为对象存储返回的可访问 URL
    */
+  @Operation(summary = "接收sourcemap文件上传")
   @PostMapping({"/v1/monitor/sourcemaps", "/monitor/sourcemaps"})
   public YdszResponse<String> uploadSourcemap(
       @RequestParam("release") String release,

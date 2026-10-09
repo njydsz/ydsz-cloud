@@ -28,6 +28,7 @@ import com.njydsz.agent.domain.insight.InsightReportService;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * 洞察报告 REST 控制器。
@@ -80,6 +81,7 @@ public class InsightReportController {
    * @param request 报告生成请求（必填：dataSource / template / analysisDimensions；可选：title / filters / outputSections）
    * @return 统一响应结果，data 为 {@link InsightReportResult}（含 reportId / title / content / sections / generatedAt 等）
    */
+  @Operation(summary = "生成洞察报告")
   @PostMapping("/report")
   public YdszResponse<InsightReportResult> generateReport(
       @Valid @RequestBody InsightReportRequest request) {
@@ -96,6 +98,7 @@ public class InsightReportController {
    * @return 统一响应结果，data 为 {@link InsightReportResult}
    * @throws com.njydsz.common.exception.custom.BusinessException 报告不存在时抛 {@link AgentExceptionCode#INSIGHT_REPORT_NOT_FOUND}，经统一异常处理映射为 HTTP 404
    */
+  @Operation(summary = "查询报告元数据")
   @GetMapping("/report/{reportId}")
   public YdszResponse<InsightReportResult> getReport(@PathVariable String reportId) {
     InsightReportResult result = insightReportService.getReport(reportId);
@@ -116,6 +119,7 @@ public class InsightReportController {
    * @param reportId 报告 ID
    * @return HTML 字节流
    */
+  @Operation(summary = "导出报告HTML")
   @GetMapping(value = "/report/{reportId}/html", produces = MediaType.TEXT_HTML_VALUE)
   public ResponseEntity<byte[]> exportHtml(@PathVariable String reportId) {
     InsightReportResult result = insightReportService.getReport(reportId);
@@ -142,6 +146,7 @@ public class InsightReportController {
    * @param limit 返回条数上限（默认 10）
    * @return 报告列表
    */
+  @Operation(summary = "列出用户近期报告")
   @GetMapping("/reports")
   public YdszResponse<List<InsightReportResult>> listRecentReports(
       @RequestParam String userId,
@@ -155,6 +160,7 @@ public class InsightReportController {
    * @param reportId 报告 ID
    * @return 删除结果（status=deleted）
    */
+  @Operation(summary = "删除报告")
   @DeleteMapping("/report/{reportId}")
   public YdszResponse<Map<String, String>> deleteReport(@PathVariable String reportId) {
     insightReportService.deleteReport(reportId);

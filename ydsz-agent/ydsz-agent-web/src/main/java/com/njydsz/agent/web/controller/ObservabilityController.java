@@ -19,6 +19,7 @@ import com.njydsz.agent.server.observability.ObservabilityDashboardService.Dashb
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.ModelUsageDTO;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Agent 可观测性面板 REST API Controller
@@ -78,6 +79,7 @@ public class ObservabilityController {
    *
    * @return 统一响应结果，data 为 {@link DashboardOverviewDTO}（含 costToday / tokenUsageToday / activeSessionCount / avgResponseTimeMs 等字段）
    */
+  @Operation(summary = "获取面板概览数据")
   @GetMapping("/overview")
   public YdszResponse<DashboardOverviewDTO> getOverview() {
     log.info("[Observability-API] 查询面板概览");
@@ -96,6 +98,7 @@ public class ObservabilityController {
    * @param days 统计天数（默认 7，有效范围 1-30），超出范围自动截断到边界值
    * @return 统一响应结果，data 为 {@link ModelUsageDTO} 列表，按总 Token 消耗降序排列；无数据时返回空列表
    */
+  @Operation(summary = "获取模型使用分布")
   @GetMapping("/model-usage")
   public YdszResponse<List<ModelUsageDTO>> getModelUsage(
       @RequestParam(defaultValue = "7") int days) {
@@ -112,6 +115,7 @@ public class ObservabilityController {
    *
    * @return 统一响应结果，data 为链路上下文字典（含 botId、turnId、conversationId、accountId）
    */
+  @Operation(summary = "查询当前链路上下文")
   @PostMapping("/trace-context")
   public YdszResponse<Map<String, String>> getTraceContext() {
     log.info("[Observability-API] 查询当前链路上下文");
@@ -143,6 +147,7 @@ public class ObservabilityController {
    * @param days 统计天数（默认 7，最大 30）
    * @return 统一响应结果，data 为指标数据 Map（含 botId / days / metrics 三个键）
    */
+  @Operation(summary = "按botId聚合查询指标")
   @GetMapping("/metrics/bot/{botId}")
   public YdszResponse<Map<String, Object>> getMetricsByBotId(
       @PathVariable String botId,

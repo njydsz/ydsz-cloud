@@ -27,6 +27,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Agent DAG 编排 REST API Controller。
@@ -120,6 +121,7 @@ public class DagController {
       content = "'execute'")
   @Idempotent(key = "ydsz:agent:DagController:execute:lock", ttlSeconds = EXECUTE_IDEMPOTENT_TTL_SECONDS)
   @RateLimit(resource = "agent.dag.execute", threshold = 50)
+  @Operation(summary = "执行DAG编排")
   @PostMapping("/execute")
   public YdszResponse<DagOrchestrationExecutor.DagExecutionResult> execute(
       @Valid @RequestBody DagExecutionDTO request) {
@@ -148,6 +150,7 @@ public class DagController {
       type = AuditType.OPERATION,
       action = AuditAction.QUERY,
       content = "'query checkpoint'")
+  @Operation(summary = "查询执行检查点")
   @GetMapping("/checkpoint/{executionId}")
   public YdszResponse<DagCheckpoint> getCheckpoint(@PathVariable String executionId) {
     if (checkpointStore == null) {
@@ -172,6 +175,7 @@ public class DagController {
       action = AuditAction.QUERY,
       content = "'validate'")
   @Idempotent(key = "ydsz:agent:DagController:write:lock", ttlSeconds = 5)
+  @Operation(summary = "验证DSL不执行")
   @PostMapping("/validate")
   public YdszResponse<Map<String, Object>> validate(@Valid @RequestBody DagExecutionDTO request) {
     try {

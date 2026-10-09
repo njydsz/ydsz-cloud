@@ -18,6 +18,7 @@ import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.server.service.core.MessageService;
 
@@ -70,6 +71,7 @@ public class InternalMessageApiController {
       key =
           "'ydsz:message:internal-api:send-message:' + #dto.receiver + ':' + #dto.templateCode",
       ttlSeconds = 5)
+  @Operation(summary = "发送多通道消息")
   @PostMapping("/message/send")
   public YdszResponse<String> sendMessage(@Valid @RequestBody MessageSendDTO dto) {
     MessageItemRequestDTO request = new MessageItemRequestDTO();

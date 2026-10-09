@@ -29,6 +29,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * 知识图谱 REST API Controller。
@@ -115,6 +116,7 @@ public class KnowledgeGraphController {
       action = AuditAction.CREATE,
       content = "'ingest'")
   @Idempotent(key = "ydsz:agent:KnowledgeGraphController:ingest:lock", ttlSeconds = 10)
+  @Operation(summary = "摄入文档到知识图谱")
   @PostMapping("/ingest")
   public YdszResponse<Map<String, Object>> ingest(@RequestBody Map<String, String> request) {
     String docId = request.get("docId");
@@ -158,6 +160,7 @@ public class KnowledgeGraphController {
       type = AuditType.OPERATION,
       action = AuditAction.QUERY,
       content = "'searchEntities'")
+  @Operation(summary = "按名称搜索实体")
   @GetMapping("/entity/search")
   public YdszResponse<List<EntityVO>> searchEntities(
       @RequestParam("query") String query,
@@ -189,6 +192,7 @@ public class KnowledgeGraphController {
       type = AuditType.OPERATION,
       action = AuditAction.QUERY,
       content = "'querySubgraph'")
+  @Operation(summary = "查询实体N跳子图")
   @GetMapping("/entity/{entityId}/subgraph")
   public YdszResponse<SubGraphVO> querySubgraph(
       @PathVariable String entityId,
@@ -222,6 +226,7 @@ public class KnowledgeGraphController {
       type = AuditType.OPERATION,
       action = AuditAction.QUERY,
       content = "'queryRelations'")
+  @Operation(summary = "查询实体的关系边")
   @GetMapping("/entity/{entityId}/relations")
   public YdszResponse<List<RelationVO>> queryRelations(@PathVariable String entityId) {
     log.info("[KG-API] 查询关系: entityId={}", entityId);
@@ -247,6 +252,7 @@ public class KnowledgeGraphController {
       type = AuditType.OPERATION,
       action = AuditAction.QUERY,
       content = "'stats'")
+  @Operation(summary = "获取图谱统计信息")
   @GetMapping("/stats")
   public YdszResponse<Map<String, Long>> stats() {
     return YdszResponse.success(knowledgeGraphService.getStats());

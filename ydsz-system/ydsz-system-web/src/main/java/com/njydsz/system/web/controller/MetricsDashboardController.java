@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.system.server.metrics.RedisMetricsService;
@@ -84,6 +85,7 @@ public class MetricsDashboardController {
    *
    * @return 仪表盘数据
    */
+  @Operation(summary = "获取运维仪表盘完整数据")
   @GetMapping("/dashboard")
   public YdszResponse<Map<String, Object>> dashboard() {
     log.debug("[MetricsDashboard] 采集运维指标数据");

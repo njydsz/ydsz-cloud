@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 import com.njydsz.common.base.api.ApiVersion;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.message.server.reactive.ReactiveEvent;
@@ -71,6 +72,7 @@ public class ReactiveNotificationController {
      * @param userId 用户 ID（从 header X-User-Id 获取，可选）
      * @return SSE 事件流（心跳 events + 业务事件）
      */
+    @Operation(summary = "订阅实时响应式事件流")
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<ReactiveEvent>> streamEvents(
             @RequestHeader(value = "X-User-Id", required = false) String userId) {
@@ -118,6 +120,7 @@ public class ReactiveNotificationController {
      * @param event 事件数据（eventId 和 timestamp 将由服务端补充）
      * @return 推送结果
      */
+    @Operation(summary = "推送事件到响应式流")
     @PostMapping("/publish")
     public YdszResponse<String> publishEvent(@Valid @RequestBody ReactiveEvent event) {
         // 补充必要字段
@@ -146,6 +149,7 @@ public class ReactiveNotificationController {
      *
      * @return 注册表运行状态
      */
+    @Operation(summary = "响应式推送健康检测")
     @GetMapping("/health")
     public YdszResponse<Map<String, String>> health() {
         return YdszResponse.success(Map.of(

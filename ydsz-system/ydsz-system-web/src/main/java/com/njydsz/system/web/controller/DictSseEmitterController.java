@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.njydsz.common.base.api.ApiVersion;
+import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.system.server.config.DictSseEmitterRegistry;
 
 /**
@@ -51,6 +52,7 @@ public class DictSseEmitterController {
    *
    * @return SseEmitter 实例
    */
+  @Operation(summary = "建立字典变更SSE长连接")
   @GetMapping(value = "/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public SseEmitter dictSseStream() {
     SseEmitter emitter = new SseEmitter(0L);
