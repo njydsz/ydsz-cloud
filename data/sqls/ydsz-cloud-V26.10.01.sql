@@ -118,7 +118,7 @@ CREATE TABLE "public"."ydsz_agt_dag_workflow" (
   "dsl_content" text NOT NULL,
   "layout_json" text,
   "category" character varying(64),
-  "is_published" boolean NOT NULL DEFAULT false,
+  "is_published" smallint NOT NULL DEFAULT 0,
   "status" character varying(32) DEFAULT NULL::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
@@ -291,7 +291,7 @@ CREATE TABLE "public"."ydsz_agt_prompt_template" (
   "category" character varying(64) DEFAULT NULL::character varying,
   "current_version" integer NOT NULL DEFAULT 1,
   "status" character varying(32) DEFAULT NULL::character varying,
-  "is_ab_test_enabled" boolean NOT NULL DEFAULT false,
+  "is_ab_test_enabled" smallint NOT NULL DEFAULT 0,
   "ab_target_version" integer,
   "ab_traffic_percent" integer,
   "sort" integer DEFAULT 0,
@@ -329,8 +329,8 @@ CREATE INDEX "idx_ydsz_agt_prompt_template_category" ON "public"."ydsz_agt_promp
 CREATE INDEX "idx_ydsz_agt_prompt_template_tenant_is_deleted" ON "public"."ydsz_agt_prompt_template" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST);
 
 INSERT INTO "public"."ydsz_agt_prompt_template" ("id", "template_code", "template_name", "content", "description", "category", "current_version", "status", "is_ab_test_enabled", "ab_target_version", "ab_traffic_percent", "sort", "revision", "tenant_id", "is_deleted", "created_by", "created_at", "updated_by", "updated_at") VALUES
-('100000000000000001', 'DEFAULT_SYSTEM', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', '1', NULL, FALSE, NULL, NULL, '0', '0', '0', '0', NULL, '2026-10-09 16:53:48.96863', NULL, '2026-10-09 16:53:48.96863'),
-('100000000000000003', 'REACT_SYSTEM', 'ReAct Agent Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', 'ReAct 模式下的工具调用助手 Prompt', 'system', '1', NULL, FALSE, NULL, NULL, '0', '0', '0', '0', NULL, '2026-10-09 16:53:48.97419', NULL, '2026-10-09 16:53:48.97419');
+('100000000000000001', 'DEFAULT_SYSTEM', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', '1', NULL, 0, NULL, NULL, '0', '0', '0', '0', NULL, '2026-10-09 16:53:48.96863', NULL, '2026-10-09 16:53:48.96863'),
+('100000000000000003', 'REACT_SYSTEM', 'ReAct Agent Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', 'ReAct 模式下的工具调用助手 Prompt', 'system', '1', NULL, 0, NULL, NULL, '0', '0', '0', '0', NULL, '2026-10-09 16:53:48.97419', NULL, '2026-10-09 16:53:48.97419');
 
 DROP TABLE IF EXISTS "public"."ydsz_agt_prompt_version" CASCADE;
 
@@ -604,7 +604,7 @@ CREATE TABLE "public"."ydsz_comm_outbox" (
   "next_retry_at" timestamp(3) without time zone,
   "error_message" text,
   "schema_version" integer NOT NULL DEFAULT 1,
-  "compressed" boolean NOT NULL DEFAULT false,
+  "is_compressed" smallint NOT NULL DEFAULT 0,
   "trace_id" character varying(64),
   "idempotency_key" character varying(64),
   "sent_at" timestamp(3) without time zone,
@@ -660,7 +660,7 @@ CREATE TABLE "public"."ydsz_comm_outbox_archive" (
   "idempotency_key" character varying(128) DEFAULT NULL::character varying,
   "trace_id" character varying(64) DEFAULT NULL::character varying,
   "schema_version" integer NOT NULL DEFAULT 1,
-  "compressed" boolean NOT NULL DEFAULT false,
+  "is_compressed" smallint NOT NULL DEFAULT 0,
   "sent_at" timestamp without time zone,
   "archived_at" timestamp without time zone NOT NULL,
   "error_message" text,
@@ -727,7 +727,7 @@ CREATE TABLE "public"."ydsz_comm_search_index_partitioned" (
   "tags" text[],
   "locale" character varying(16) DEFAULT 'zh-CN'::character varying,
   "metadata" jsonb,
-  "active_flag" boolean DEFAULT true,
+  "active_flag" smallint NOT NULL DEFAULT 1,
   "created_at" timestamp with time zone DEFAULT now(),
   "updated_at" timestamp with time zone DEFAULT now(),
   "sort" integer DEFAULT 0,
@@ -3191,7 +3191,7 @@ CREATE TABLE "public"."ydsz_idm_auth_apikey" (
   "expire_at" timestamp without time zone,
   "last_used_at" timestamp without time zone,
   "rate_limit" integer NOT NULL DEFAULT 0,
-  "is_enabled" boolean NOT NULL DEFAULT true,
+  "is_enabled" smallint NOT NULL DEFAULT 1,
   "status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
   "sort" integer DEFAULT 0,
   "revision" integer NOT NULL DEFAULT 0,
@@ -3279,10 +3279,10 @@ CREATE TABLE "public"."ydsz_idm_auth_policy" (
   "id" character varying(64) NOT NULL,
   "name" character varying(64) NOT NULL,
   "password_min_length" integer DEFAULT 8,
-  "is_password_require_uppercase" boolean DEFAULT true,
-  "is_password_require_digit" boolean DEFAULT true,
-  "is_mfa_enabled" boolean DEFAULT false,
-  "is_captcha_enabled" boolean DEFAULT true,
+  "is_password_require_uppercase" smallint NOT NULL DEFAULT 1,
+  "is_password_require_digit" smallint NOT NULL DEFAULT 1,
+  "is_mfa_enabled" smallint NOT NULL DEFAULT 0,
+  "is_captcha_enabled" smallint NOT NULL DEFAULT 1,
   "allowed_identity_providers" character varying(256) DEFAULT 'LOCAL'::character varying,
   "max_sessions_per_user" integer DEFAULT 3,
   "session_timeout_seconds" integer DEFAULT 7200,
@@ -3320,7 +3320,7 @@ COMMENT ON COLUMN "public"."ydsz_idm_auth_policy"."created_at" IS '创建时间'
 COMMENT ON COLUMN "public"."ydsz_idm_auth_policy"."updated_by" IS '更新者用户 ID';
 COMMENT ON COLUMN "public"."ydsz_idm_auth_policy"."updated_at" IS '更新时间';
 
-INSERT INTO "public"."ydsz_idm_auth_policy" ("id", "name", "password_min_length", "is_password_require_uppercase", "is_password_require_digit", "is_mfa_enabled", "is_captcha_enabled", "allowed_identity_providers", "max_sessions_per_user", "session_timeout_seconds", "remark", "status", "sort", "revision", "tenant_id", "is_deleted", "created_by", "created_at", "updated_by", "updated_at") VALUES ('default-policy-001', '全局默认认证策略', '8', TRUE, TRUE, FALSE, TRUE, 'LOCAL', '3', '7200', '系统全局默认策略，租户未配置时继承', NULL, '0', '0', NULL, '0', NULL, '2026-10-09 17:02:38.13348', NULL, '2026-10-09 17:02:38.13348');
+INSERT INTO "public"."ydsz_idm_auth_policy" ("id", "name", "password_min_length", "is_password_require_uppercase", "is_password_require_digit", "is_mfa_enabled", "is_captcha_enabled", "allowed_identity_providers", "max_sessions_per_user", "session_timeout_seconds", "remark", "status", "sort", "revision", "tenant_id", "is_deleted", "created_by", "created_at", "updated_by", "updated_at") VALUES ('default-policy-001', '全局默认认证策略', '8', 1, 1, 0, 1, 'LOCAL', '3', '7200', '系统全局默认策略，租户未配置时继承', NULL, '0', '0', NULL, '0', NULL, '2026-10-09 17:02:38.13348', NULL, '2026-10-09 17:02:38.13348');
 
 DROP TABLE IF EXISTS "public"."ydsz_idm_auth_social_account" CASCADE;
 

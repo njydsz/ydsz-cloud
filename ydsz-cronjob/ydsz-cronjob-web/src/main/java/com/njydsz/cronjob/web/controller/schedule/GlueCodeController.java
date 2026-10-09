@@ -263,6 +263,34 @@ public class GlueCodeController {
     private Integer version;
   }
 
+  /**
+   * P0-3: 校验 GLUE 代码语法（不执行，仅检查语法合法性）。
+   *
+   * <p>复用 {@link GlueCodeService#testCode} 的编译检查能力，
+   * 标记 {@code dryRun=true} 以跳过实际执行（仅编译检查语法）。
+   *
+   * @param request 校验请求体
+   * @return 统一响应结果，包含校验结果（valid/message/errors）
+   */
+  @Operation(summary = "校验 GLUE 代码语法")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回校验结果"),
+      @ApiResponse(responseCode = "400", description = "参数校验失败"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限")})
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
+  @PostMapping("/validate")
+  public YdszResponse<Map<String, Object>> validate(@Valid @RequestBody GlueTestRequest request) {
+    Map<String, Object> result = glueCodeService.testCode(
+        request.getSourceCode(), request.getLanguage(), null);
+    boolean success = Boolean.TRUE.equals(result.get("success"));
+    Map<String, Object> validateResult = new java.util.HashMap<>();
+    validateResult.put("valid", success);
+    validateResult.put("message", success ? "语法校验通过" : (String) result.getOrDefault("error", "语法错误"));
+    validateResult.put("errors", success ? null : result.get("error"));
+    return YdszResponse.success(validateResult);
+  }
+
   /** P1-1: 在线测试请求体。 */
   @lombok.Data
   public static class GlueTestRequest {
