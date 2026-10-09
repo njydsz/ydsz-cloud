@@ -2,7 +2,6 @@ package com.njydsz.common.queue.trace;
 
 import org.slf4j.MDC;
 
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.util.id.TracerUtils;
 
 /**
@@ -57,7 +56,6 @@ public class MessageTracer {
   public static void injectTraceId(String traceId) {
     if (traceId != null && !traceId.isEmpty()) {
       MDC.put(TRACE_ID_KEY, traceId);
-      RequestContext.setTraceId(traceId);
     }
   }
 
@@ -69,12 +67,6 @@ public class MessageTracer {
    * @return 链路追踪ID，未设置时返回 null
    */
   public static String extractTraceId() {
-    // 优先从 RequestContext 获取（支持跨线程传递）
-    String traceId = RequestContext.getTraceId();
-    if (traceId != null && !traceId.isEmpty()) {
-      return traceId;
-    }
-    // 回退到 MDC
     return MDC.get(TRACE_ID_KEY);
   }
 
@@ -85,7 +77,6 @@ public class MessageTracer {
    */
   public static void clearTraceId() {
     MDC.remove(TRACE_ID_KEY);
-    RequestContext.remove(RequestContext.KEY_TRACE_ID);
   }
 
   // ==================== try-with-resources 模式 ====================

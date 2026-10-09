@@ -6694,25 +6694,27 @@ stats:
   - id: "YDIZ-WEB-001"
     category: "web"
     severity: "P2"
-    title: "【建议】web 层禁止出现 vo/ 包，所有 VO 必须定义在 domain/vo/ 下"
+    title: "【建议】web 层禁止出现 vo/ 和 util/ 包，VO 应归入 domain、util 应归入 server"
     description: |
       ydzs-*-web 模块是组合根（Composition Root），仅承载 Controller / ExceptionHandler / Filter / AOP 切面 / Bean 装配职责。
-      禁止在 web 层定义 VO（Value Object）、DTO 或 ExportVO 等数据载体类。
+      禁止在 web 层定义 VO（Value Object）、DTO、ExportVO 等数据载体类，也禁止定义工具类。
 
       原因：
       1. VO 是领域数据投影，属于 domain 层职责（DDD 分层规范 DDD-004）
       2. web 层对 domain 的依赖是单向的（web → domain），web 层定义的 VO 被其他模块引用时会绕过 domain 层
       3. Excel 导出 VO（XxxExportVO）本质是数据载体而非 web 专属逻辑，应与 domain/vo/ 中其他 VO 同级管理
+      4. 工具类（如 ExcelExportUtil）属于业务辅助能力，应放在 server/util/ 下供 Controller 调用，避免 web 层膨胀
 
       例外：
       - web/ 根目录下允许存在 package-info.java
-      - web/util/ 下允许存在纯工具类（如 ExcelExportUtil），前提是仅被本模块 Controller 使用
     pattern: |
       以下情形构成违规：
       1. 在 com.njydsz.{module}.web.vo 包下定义任何类
       2. 在 com.njydsz.{module}.web.dto 包下定义任何类
-      3. Controller import com.njydsz.{module}.web.vo.* 或 web.dto.* 中的类型
-      4. web 层新建的 XxxExportVO / XxxVO 类（包括 Excel 导出场景）
+      3. 在 com.njydsz.{module}.web.util 包下定义任何类
+      4. Controller import com.njydsz.{module}.web.vo.* 或 web.dto.* 或 web.util.* 中的类型
+      5. web 层新建的 XxxExportVO / XxxVO 类（包括 Excel 导出场景）
+      6. web 层新建的工具类（如 XxxExportUtil、XxxUtils）
     fix: |
       // 反例：web 层定义 VO
       package com.njydsz.agent.web.vo;
@@ -6722,6 +6724,15 @@ stats:
       package com.njydsz.agent.domain.vo;
       public class AgentDefinitionExportVO { ... }
       // Controller import: com.njydsz.agent.domain.vo.AgentDefinitionExportVO
+
+      // 反例：web 层定义工具类
+      package com.njydsz.agent.web.util;
+      public final class ExcelExportUtil { ... }
+
+      // 正例：server 层定义工具类
+      package com.njydsz.agent.server.util;
+      public final class ExcelExportUtil { ... }
+      // Controller import: com.njydsz.agent.server.util.ExcelExportUtil
 
       // 反例：web 层直接定义 web/vo 子目录（即使是空占位）
       // 正例：web 层目录结构仅包含 controller/ handler/ config/ filter/ aspect/ 等功能性子包
@@ -6744,7 +6755,7 @@ stats:
   # ├── aspect/                    ← AOP 切面 + 自定义注解（按需）
   # └── openapi/                   ← OpenAPI 文档定制器（按需）
   #
-  # 禁止出现 vo/ / dto/ / assembler/ / security/ / util/（工具类除外）子包
+  # 禁止出现 vo/ / dto/ / assembler/ / security/ / util/ 子包
   # ============================================
 
   # ============================================
