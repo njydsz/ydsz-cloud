@@ -7,10 +7,10 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.system.domain.approval.ConfigApproval;
 import com.njydsz.system.domain.approval.ConfigApprovalQuery;
 import com.njydsz.system.domain.approval.ConfigApprovalRepository;
 import com.njydsz.system.domain.approval.ConfigApprovalVO;
+import com.njydsz.system.domain.entity.ConfigApproval;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.infra.mapper.ConfigApprovalMapper;
 
@@ -42,8 +42,7 @@ public class ConfigApprovalRepositoryImpl implements ConfigApprovalRepository {
     wrapper.eq(ConfigApproval::getId, record.getId())
         .set(ConfigApproval::getStatus, record.getStatus())
         .set(ConfigApproval::getRejectionReason, record.getRejectionReason())
-        .set(ConfigApproval::getClosedAt, record.getClosedAt())
-        .set(ConfigApproval::getUpdatedAt, record.getUpdatedAt());
+        .set(ConfigApproval::getClosedAt, record.getClosedAt());
     return configApprovalMapper.update(null, wrapper) > 0;
   }
 
