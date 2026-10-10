@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.userinfo.server.config.GeoIpProperties;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * GeoIP 地理围栏服务（P3-3）。
@@ -75,7 +76,7 @@ public class GeoIpService {
         return Optional.of(location);
       }
     } catch (Exception e) {
-      log.debug("GeoIP 解析失败: ip={}, reason={}", ipAddress, e.getMessage());
+      log.debug(I18n.message("userinfo.GeoIP.解析失败.ip=.reason=", new Object[]{ipAddress, e.getMessage()}));
     }
 
     return Optional.empty();
@@ -187,7 +188,7 @@ public class GeoIpService {
    */
   public void clearCache() {
     locationCache.clear();
-    log.info("GeoIP 位置缓存已清除");
+    log.info(I18n.message("userinfo.GeoIP.位置缓存已清除"));
   }
 
   // ==================== 内部数据类 ====================

@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.locales.util.I18n;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -193,14 +194,14 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
       try {
         wrapper.ge("created_at", LocalDateTime.parse(query.getStartTime()));
       } catch (DateTimeParseException e) {
-        log.debug("日期格式不匹配，跳过", e);
+        log.debug(I18n.message("message.log.infra.mlogrepo.date.format.mismatch.skip"), e);
       }
     }
     if (query.getEndTime() != null && !query.getEndTime().isBlank()) {
       try {
         wrapper.le("created_at", LocalDateTime.parse(query.getEndTime()));
       } catch (DateTimeParseException e) {
-        log.debug("日期格式不匹配，跳过", e);
+        log.debug(I18n.message("message.log.infra.mlogrepo.date.format.mismatch.skip"), e);
       }
     }
     wrapper.eq("deleted", 0);

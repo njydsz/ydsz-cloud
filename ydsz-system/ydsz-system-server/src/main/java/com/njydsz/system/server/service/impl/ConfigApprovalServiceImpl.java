@@ -53,7 +53,7 @@ public class ConfigApprovalServiceImpl implements ConfigApprovalService {
     if (!success) {
       throw new ConfigApprovalException(I18n.message("system.approval.submit_failed"));
     }
-    log.info("用户 {} 提交配置变更审批，resourceKey={}", userName, dto.getResourceKey());
+    log.info(I18n.message("system.approval.submit.log", new Object[]{userName, dto.getResourceKey()}));
     return record.getId();
   }
 
@@ -67,7 +67,7 @@ public class ConfigApprovalServiceImpl implements ConfigApprovalService {
     if (!success) {
       throw new ConfigApprovalException(I18n.message("system.approval.approve_failed"));
     }
-    log.info("审批单 {} 已通过，审批人={}", id, approverId);
+    log.info(I18n.message("system.approval.approve.log", new Object[]{id, approverId}));
   }
 
   @Override
@@ -84,7 +84,7 @@ public class ConfigApprovalServiceImpl implements ConfigApprovalService {
     if (!success) {
       throw new ConfigApprovalException(I18n.message("system.approval.reject_failed"));
     }
-    log.info("审批单 {} 已拒绝，审批人={}，原因={}", id, approverId, reason);
+    log.info(I18n.message("system.approval.reject.log", new Object[]{id, approverId, reason}));
   }
 
   @Override
@@ -100,7 +100,7 @@ public class ConfigApprovalServiceImpl implements ConfigApprovalService {
     if (!success) {
       throw new ConfigApprovalException(I18n.message("system.approval.revoke_op_failed"));
     }
-    log.info("审批单 {} 已撤回，发起人={}", id, submitterId);
+    log.info(I18n.message("system.approval.withdraw.log", new Object[]{id, submitterId}));
   }
 
   @Override

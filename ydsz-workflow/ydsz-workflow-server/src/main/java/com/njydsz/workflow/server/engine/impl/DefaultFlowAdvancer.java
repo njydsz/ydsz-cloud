@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.engine.FlowAdvancer;
@@ -165,7 +166,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         advance(
             instance, startNode.getNodeCode(), "PASS", null, parseVariable(instance.getVariable()));
     if (nextNodes.isEmpty()) {
-      log.info("[Flow] 流程无下游节点，自动完成: instanceId={}", instanceId);
+      log.info(I18n.message("workflow.advancer.no.next.node", new Object[]{instanceId}));
       instanceService.complete(instanceId, startNode.getNodeCode());
       return instanceService.toView(
           instanceService.getById(instanceId), loadCurrentTasks(instanceId));
@@ -173,7 +174,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     // P0: BPMN 终止事件检查 — 如果下一节点是终止事件节点，立即终止实例
     if (terminateEventHandler.isTerminateEventNode(nextNodes.get(0))) {
       String nodeCode = nextNodes.get(0).getNodeCode();
-      log.info("[Flow] BPMN终止事件触发: instanceId={} nodeCode={}", instanceId, nodeCode);
+        log.info(I18n.message("workflow.advancer.terminate.event", new Object[]{instanceId, nodeCode}));
       lifecycleManager.doTerminateInstance(instanceId,
           terminateEventHandler.getDescription(nodeCode));
       return instanceService.toView(
@@ -344,7 +345,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
           flowDefinitionCacheService.getNodeByCode(
               currentInstance.getDefinitionId(), skip.getNextNodeCode());
       if (next == null) {
-        log.warn("[Flow] 跳转目标节点不存在: skipId={} nextNode={}", skip.getId(), skip.getNextNodeCode());
+          log.warn(I18n.message("workflow.advancer.skip.target.missing", new Object[]{skip.getId(), skip.getNextNodeCode()}));
         continue;
       }
       // P0-5 / GAP-P2 / P0-3: 网关 join 聚合 — 支持 N/M join 策略
@@ -751,7 +752,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     try {
       return YdszJson.parseMap(json);
     } catch (Exception e) {
-      log.warn("[Flow] 变量解析失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.advancer.variable.parse.failed", new Object[]{e.getMessage()}));
       return Collections.emptyMap();
     }
   }

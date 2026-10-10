@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -75,12 +76,12 @@ public class RedisAggregateCounterService {
         batchMeta.put("tenantId", tenantId);
         batchMeta.put("firstAt", LocalDateTime.now().toString());
         redisStringOps.set(batchKey, batchMeta, Duration.ofMinutes(DEFAULT_AGGREGATE_WINDOW_MINUTES + 1));
-        log.debug("[AggregateCounter] 首次创建聚合窗口: group={} receiver={}", group, receiver);
+        log.debug(I18n.message("message.log.other.AggregateCounter_group_{}_receiver_{}.bb23f0"), group, receiver);
       }
 
       return count != null ? count : -1L;
     } catch (Exception e) {
-      log.warn("[AggregateCounter] Redis INCR 异常，需降级: group={} err={}", group, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.AggregateCounter_Redis_INCR_group_{}_err_{}.67bc0d"), group, e.getMessage(), e);
       return -1L;
     }
   }
@@ -98,7 +99,7 @@ public class RedisAggregateCounterService {
       Long count = redisStringOps.get(counterKey, Long.class);
       return count != null ? count : 0L;
     } catch (Exception e) {
-      log.warn("[AggregateCounter] Redis GET 异常: group={} err={}", group, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.AggregateCounter_Redis_GET_group_{}_err_{}.56db36"), group, e.getMessage(), e);
       return -1L;
     }
   }
@@ -115,10 +116,10 @@ public class RedisAggregateCounterService {
     String batchKey = buildBatchKey(group, receiver);
     try {
       redisStringOps.del(counterKey, batchKey);
-      log.debug("[AggregateCounter] 重置计数: group={} receiver={}", group, receiver);
+      log.debug(I18n.message("message.log.other.AggregateCounter_group_{}_receiver_{}.886908"), group, receiver);
       return true;
     } catch (Exception e) {
-      log.warn("[AggregateCounter] Redis DEL 异常: group={} err={}", group, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.AggregateCounter_Redis_DEL_group_{}_err_{}.c5c1f8"), group, e.getMessage(), e);
       return false;
     }
   }

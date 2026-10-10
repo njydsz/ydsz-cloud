@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,9 +17,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "对话记忆视图对象")
-public class MemoryVO implements Serializable {
+public class MemoryVO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 消息唯一 ID */
   @Schema(description = "消息唯一 ID")

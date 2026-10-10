@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
@@ -17,9 +15,8 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class PromptVersionDTO implements Serializable {
+public class PromptVersionDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 所属模板编码（关联 ydsz_agt_prompt_template.template_code） */
   private String templateCode;

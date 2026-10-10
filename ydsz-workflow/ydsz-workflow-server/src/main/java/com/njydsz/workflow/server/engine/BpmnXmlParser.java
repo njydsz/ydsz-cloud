@@ -25,6 +25,7 @@ import org.xml.sax.SAXException;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
@@ -111,10 +112,7 @@ public class BpmnXmlParser {
     // P3-1: 解析 BPMN 2.0 BPMNDI 段，提取节点/边的可视化坐标
     parseDiagramCoordinates(root, model);
 
-    log.info("[BpmnParser] 解析完成: processId={} nodes={} skips={} withCoords={} edgeCoords={}",
-        model.getProcessId(), model.getNodes().size(), model.getSkips().size(),
-        model.getNodeCoordinates() != null ? model.getNodeCoordinates().size() : 0,
-        model.getSkipCoordinates() != null ? model.getSkipCoordinates().size() : 0);
+    log.info(I18n.message("workflow.bpmn.parser.complete", new Object[]{model.getProcessId(), model.getNodes().size(), model.getSkips().size(), model.getNodeCoordinates() != null ? model.getNodeCoordinates().size() : 0, model.getSkipCoordinates() != null ? model.getSkipCoordinates().size() : 0}));
     return model;
   }
 
@@ -227,7 +225,7 @@ public class BpmnXmlParser {
         // fail-fast：拒绝"具备流程语义但引擎不支持"的元素，防止静默丢弃
         String normalized = local.toLowerCase();
         if (UNSUPPORTED_SEMANTIC_ELEMENTS.contains(normalized)) {
-          log.warn("[BpmnParser] 流程定义包含不支持的 BPMN 元素，拒绝部署: <{}>", local);
+          log.warn(I18n.message("workflow.bpmn.parser.unsupported.element", new Object[]{local}));
           throw SysException.builder()
               .resultCode(YdszResultCode.BAD_REQUEST)
               .key("error.workflow.msg_unsupported_bpmn_element")
@@ -239,7 +237,7 @@ public class BpmnXmlParser {
           continue;
         }
         // 其他未知元素：记录 debug，不阻断（兼容工具导出的扩展元素）
-        log.debug("[BpmnParser] 忽略未知 process 子元素: <{}>", local);
+        log.debug(I18n.message("workflow.bpmn.parser.unknown.element", new Object[]{local}));
       }
     }
     fillSkipNextNodeType(nodes, skips);
@@ -324,7 +322,7 @@ public class BpmnXmlParser {
       throw e;
     } catch (SAXException e) {
       // XML 格式错误：不可重试（需修改 XML 内容）
-      log.error("[BpmnParser] XML 格式错误: {}", e.getMessage());
+      log.error(I18n.message("workflow.bpmn.parser.xml.format.error", new Object[]{e.getMessage()}));
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.bpmn.parse.failed")
@@ -332,7 +330,7 @@ public class BpmnXmlParser {
           .build();
     } catch (ParserConfigurationException e) {
       // 解析器配置错误：不可重试（JVM 环境问题）
-      log.error("[BpmnParser] 解析器配置异常: {}", e.getMessage(), e);
+      log.error(I18n.message("workflow.bpmn.parser.config.error", new Object[]{e.getMessage()}), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.bpmn.parse.failed")
@@ -340,7 +338,7 @@ public class BpmnXmlParser {
           .build();
     } catch (IOException e) {
       // IO 异常：理论上 StringReader 不会触发，作为兜底
-      log.error("[BpmnParser] IO 异常: {}", e.getMessage(), e);
+      log.error(I18n.message("workflow.bpmn.parser.io.error", new Object[]{e.getMessage()}), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .key("error.workflow.bpmn.parse.failed")
@@ -348,7 +346,7 @@ public class BpmnXmlParser {
           .build();
     } catch (Exception e) {
       // 兜底：未知异常
-      log.error("[BpmnParser] 解析失败(未知): {}", e.getMessage(), e);
+      log.error(I18n.message("workflow.bpmn.parser.unknown.error", new Object[]{e.getMessage()}), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
           .key("error.workflow.bpmn.parse.failed")

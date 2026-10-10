@@ -35,26 +35,26 @@ public class ApiPermissionDTO {
 
   private String id;
 
-  @NotBlank(message = "权限码不能为空")
-  @Size(max = 128, message = "权限码长度不能超过128")
+  @NotBlank(message = "{system.dto.apiPermission.apiCode.required}")
+  @Size(max = 128, message = "{system.dto.apiPermission.apiCode.max}")
   private String apiCode;
 
-  @Size(max = 256, message = "接口名称长度不能超过256")
+  @Size(max = 256, message = "{system.dto.apiPermission.apiName.max}")
   private String apiName;
 
-  @Size(max = 10, message = "HTTP 方法长度不能超过10")
+  @Size(max = 10, message = "{system.dto.apiPermission.httpMethod.max}")
   private String httpMethod;
 
-  @Size(max = 512, message = "URL 模式长度不能超过512")
+  @Size(max = 512, message = "{system.dto.apiPermission.urlPattern.max}")
   private String urlPattern;
 
-  @Size(max = 512, message = "Controller 类名长度不能超过512")
+  @Size(max = 512, message = "{system.dto.apiPermission.controllerClass.max}")
   private String controllerClass;
 
-  @Size(max = 128, message = "方法名长度不能超过128")
+  @Size(max = 128, message = "{system.dto.apiPermission.methodName.max}")
   private String methodName;
 
-  @Size(max = 512, message = "描述长度不能超过512")
+  @Size(max = 512, message = "{system.dto.apiPermission.description.max}")
   private String description;
 
   private String status;

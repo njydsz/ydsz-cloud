@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,9 +16,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "混合搜索请求")
-public class HybridSearchDTO implements Serializable {
+public class HybridSearchDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 查询文本（必填） */
   @NotBlank(message = "查询内容不能为空")

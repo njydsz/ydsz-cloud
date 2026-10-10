@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.config;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -216,7 +217,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       entity.setStatus(SubscriptionStatusEnum.UNSUBSCRIBED.name());
       entity.setUnsubscribedAt(LocalDateTime.now());
       msgSubscriptionRepository.save(entity);
-      log.info("[Subscription] 退订(新建记录): user={} topic={} channel={}", userId, topicCode, channel);
+      log.info(I18n.message("message.log.other.Subscription_user_{}_topic_{}_channel_{}.2c2f72"), userId, topicCode, channel);
       return entity;
     }
     existing.setStatus(SubscriptionStatusEnum.UNSUBSCRIBED.name());

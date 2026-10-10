@@ -45,7 +45,7 @@ public class NotificationClientFallbackFactory implements FallbackFactory<Notifi
 
   @Override
   public NotificationClient create(Throwable cause) {
-    log.warn("[NotificationClient] 降级触发: {}", cause.getMessage());
+    log.warn(I18n.message("message.log.server.notificationclient.warn.triggered.raw"), cause.getMessage());
     return new NotificationClient() {
       @Override
       public YdszResponse<MessageResult> sendMessage(MessageSendDTO request) {
@@ -60,14 +60,14 @@ public class NotificationClientFallbackFactory implements FallbackFactory<Notifi
       @Override
       public YdszResponse<MessageResult> broadcast(BroadcastRequestDTO request) {
         String topic = request == null ? null : request.getTopic();
-        log.warn("[NotificationClient] broadcast 降级: topic={}, reason={}", topic, MESSAGE_UNAVAILABLE);
+        log.warn(I18n.message("message.log.other.NotificationClient_broadcast_topic_{}_reason_{}.b6fcb1"), topic, MESSAGE_UNAVAILABLE);
         return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, MESSAGE_UNAVAILABLE);
       }
 
       @Override
       public YdszResponse<MessageResult> pushRealtime(PushRealtimeRequestDTO request) {
         String userId = request == null ? null : request.getUserId();
-        log.warn("[NotificationClient] pushRealtime 降级: userId={}, reason={}", userId, MESSAGE_UNAVAILABLE);
+        log.warn(I18n.message("message.log.other.NotificationClient_pushRealtime_userId_{}_reason_{}.25febc"), userId, MESSAGE_UNAVAILABLE);
         return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, MESSAGE_UNAVAILABLE);
       }
     };

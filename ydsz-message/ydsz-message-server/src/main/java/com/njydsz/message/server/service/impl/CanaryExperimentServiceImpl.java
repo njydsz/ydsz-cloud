@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.nio.charset.StandardCharsets;
+
+import com.njydsz.common.locales.util.I18n;import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 import lombok.RequiredArgsConstructor;
@@ -104,7 +105,7 @@ public class CanaryExperimentServiceImpl implements CanaryExperimentService {
 
     msgCanaryRepository.save(canary);
 
-    log.info("[CanaryExperiment] 创建实验成功: canaryKey={}, templateCode={}, percent={}",
+    log.info(I18n.message("message.log.other.CanaryExperiment_canaryKey_{}_templateCode_{}_percent_{}.5e7321"),
         canaryKey, templateCode, canaryPercent);
 
     return canaryKey;
@@ -127,14 +128,14 @@ public class CanaryExperimentServiceImpl implements CanaryExperimentService {
     MsgCanaryVO canary = selectByCanaryKey(experimentId);
 
     if (canary == null || !STATUS_ACTIVE.equals(canary.getStatus())) {
-      log.info("[CanaryExperiment] 实验不存在或非ACTIVE: experimentId={}, 返回 CONTROL", experimentId);
+      log.info(I18n.message("message.log.other.CanaryExperiment_ACTIVE_experimentId_{}_CONTROL.2a82ff"), experimentId);
       return GROUP_CONTROL;
     }
 
     int bucket = Math.floorMod(hashRequestKey(requestKey), canary.getBucketTotal());
     String assignedGroup = bucket < canary.getBucketSelected() ? GROUP_VARIANT : GROUP_CONTROL;
 
-    log.info("[CanaryExperiment] 分桶结果: experimentId={}, bucket={}, group={}",
+    log.info(I18n.message("message.log.other.CanaryExperiment_experimentId_{}_bucket_{}_group_{}.f0fc49"),
         experimentId, bucket, assignedGroup);
 
     return assignedGroup;

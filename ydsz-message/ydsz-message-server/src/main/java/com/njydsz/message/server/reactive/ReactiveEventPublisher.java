@@ -1,6 +1,7 @@
 package com.njydsz.message.server.reactive;
 
-import java.time.Instant;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Instant;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -63,11 +64,11 @@ public class ReactiveEventPublisher {
 
         Sinks.EmitResult result = reactiveSseRegistry.publish(event);
         if (result.isSuccess()) {
-            log.debug("[ReactiveSSE] 通知已发布到响应式流: eventId={} userId={}",
+            log.debug(I18n.message("message.log.other.ReactiveSSE_eventId_{}_userId_{}.757fbb"),
                     event.getEventId(), notification.getReceiverId());
             return YdszResponse.success("推送成功");
         } else {
-            log.warn("[ReactiveSSE] 通知推送失败: eventId={} result={}", event.getEventId(), result);
+            log.warn(I18n.message("message.log.other.ReactiveSSE_eventId_{}_result_{}.36026e"), event.getEventId(), result);
             return YdszResponse.error("推送失败: " + result);
         }
     }
@@ -126,7 +127,7 @@ public class ReactiveEventPublisher {
 
         Sinks.EmitResult result = reactiveSseRegistry.publish(event);
         if (result.isSuccess()) {
-            log.info("[ReactiveSSE] 系统事件已广播: eventId={} title={}", event.getEventId(), title);
+            log.info(I18n.message("message.log.other.ReactiveSSE_eventId_{}_title_{}.e1c40d"), event.getEventId(), title);
             return YdszResponse.success("广播成功");
         } else {
             return YdszResponse.error("广播失败: " + result);

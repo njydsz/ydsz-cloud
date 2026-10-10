@@ -17,12 +17,12 @@ import lombok.Data;
 public class VerifyPasswordRequest {
 
   /** 用户 ID */
-  @NotBlank(message = "用户 ID 不能为空")
+  @NotBlank(message = "{system.dto.verifyPassword.userId.required}")
   @Schema(description = "用户 ID", required = true)
   private String userId;
 
   /** 明文密码（HTTPS 传输） */
-  @NotBlank(message = "密码不能为空")
+  @NotBlank(message = "{system.dto.verifyPassword.password.required}")
   @Schema(description = "明文密码（HTTPS 传输）", required = true)
   private String password;
 }

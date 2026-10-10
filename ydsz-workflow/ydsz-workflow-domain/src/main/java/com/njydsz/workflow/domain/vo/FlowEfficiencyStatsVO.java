@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import lombok.Data;
 
@@ -14,9 +12,7 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class FlowEfficiencyStatsVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowEfficiencyStatsVO {
 
   /** 任务总数 */
   private long totalCount;

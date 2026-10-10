@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.server.cache.CacheKeyBuilder;
 
 /**
@@ -78,7 +79,7 @@ public class FlowTaskCountCacheService {
       redisStringOps.incr(localKeyBuilder.workflowTaskCountTotal(), 1);
       return count;
     } catch (Exception e) {
-      log.warn("[FlowTaskCountCache] INCR 失败 userId={}: {}", userId, e.getMessage());
+      log.warn(I18n.message("workflow.taskCount.cache.incr.failed", new Object[]{userId, e.getMessage()}));
       return 0;
     }
   }
@@ -106,7 +107,7 @@ public class FlowTaskCountCacheService {
       }
       return Math.max(0, count);
     } catch (Exception e) {
-      log.warn("[FlowTaskCountCache] DECR 失败 userId={}: {}", userId, e.getMessage());
+      log.warn(I18n.message("workflow.taskCount.cache.decr.failed", new Object[]{userId, e.getMessage()}));
       return 0;
     }
   }
@@ -125,7 +126,7 @@ public class FlowTaskCountCacheService {
       String value = redisStringOps.get(buildUserKey(userId), String.class);
       return value != null ? Long.parseLong(value) : 0;
     } catch (Exception e) {
-      log.warn("[FlowTaskCountCache] GET 失败 userId={}: {}", userId, e.getMessage());
+      log.warn(I18n.message("workflow.taskCount.cache.get.failed", new Object[]{userId, e.getMessage()}));
       return 0;
     }
   }
@@ -140,7 +141,7 @@ public class FlowTaskCountCacheService {
       String value = redisStringOps.get(localKeyBuilder.workflowTaskCountTotal(), String.class);
       return value != null ? Long.parseLong(value) : 0;
     } catch (Exception e) {
-      log.warn("[FlowTaskCountCache] GET total 失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.taskCount.cache.total.failed", new Object[]{e.getMessage()}));
       return 0;
     }
   }
@@ -162,7 +163,7 @@ public class FlowTaskCountCacheService {
         redisStringOps.set(buildUserKey(userId), String.valueOf(count));
       }
     } catch (Exception e) {
-      log.warn("[FlowTaskCountCache] SET 失败 userId={}: {}", userId, e.getMessage());
+      log.warn(I18n.message("workflow.taskCount.cache.set.failed", new Object[]{userId, e.getMessage()}));
     }
   }
 
@@ -178,7 +179,7 @@ public class FlowTaskCountCacheService {
     try {
       redisStringOps.del(buildUserKey(userId));
     } catch (Exception e) {
-      log.warn("[FlowTaskCountCache] DELETE 失败 userId={}: {}", userId, e.getMessage());
+      log.warn(I18n.message("workflow.taskCount.cache.delete.failed", new Object[]{userId, e.getMessage()}));
     }
   }
 }

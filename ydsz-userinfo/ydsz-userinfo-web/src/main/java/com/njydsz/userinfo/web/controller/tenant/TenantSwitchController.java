@@ -23,6 +23,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 租户切换 Controller（P1 多租户 JWT 切换）。
@@ -191,7 +192,7 @@ public class TenantSwitchController {
         }
       }
     } catch (Exception e) {
-      log.warn("吊销旧 token 失败: error={}", e.getMessage());
+      log.warn(I18n.message("userinfo.吊销旧.token.失败.error=", new Object[]{e.getMessage()}));
     }
   }
 
@@ -209,7 +210,7 @@ public class TenantSwitchController {
         return jti != null ? jti.toString() : null;
       }
     } catch (Exception e) {
-      log.warn("提取 jti 失败: error={}", e.getMessage());
+      log.warn(I18n.message("userinfo.提取.jti.失败.error=", new Object[]{e.getMessage()}));
     }
     return null;
   }

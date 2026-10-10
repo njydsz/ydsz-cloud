@@ -1,6 +1,7 @@
 package com.njydsz.message.server.channel.recall;
 
-import java.util.List;
+
+import com.njydsz.common.locales.util.I18n;import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -46,7 +47,7 @@ public class RecallChannelRouter implements InitializingBean {
             ch.getClass().getSimpleName());
       }
     }
-    log.info("[RecallRouter] 已注册 {} 个通道撤回实现: {}", channelMap.size(), channelMap.keySet());
+    log.info(I18n.message("message.log.other.RecallRouter_{}_{}.ae6fe4"), channelMap.size(), channelMap.keySet());
   }
 
   /**

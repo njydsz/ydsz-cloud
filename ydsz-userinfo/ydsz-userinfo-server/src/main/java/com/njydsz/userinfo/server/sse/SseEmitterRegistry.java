@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * SSE Emitter 注册表（P3-1）。
@@ -44,7 +45,7 @@ public class SseEmitterRegistry {
    */
   public void register(String userId, SseEmitter emitter) {
     userEmitters.computeIfAbsent(userId, k -> new CopyOnWriteArrayList<>()).add(emitter);
-    log.debug("SSE 连接注册: userId={}, 当前连接数={}", userId, userEmitters.get(userId).size());
+    log.debug(I18n.message("userinfo.SSE.连接注册.userId=.当前连接数=", new Object[]{userId, userEmitters.get(userId).size()}));
   }
 
   /**
@@ -61,7 +62,7 @@ public class SseEmitterRegistry {
         userEmitters.remove(userId);
       }
     }
-    log.debug("SSE 连接移除: userId={}", userId);
+    log.debug(I18n.message("userinfo.SSE.连接移除.userId=", new Object[]{userId}));
   }
 
   /**
@@ -83,10 +84,10 @@ public class SseEmitterRegistry {
       try {
         emitter.send(SseEmitter.event().name(eventName).data(data, MediaType.APPLICATION_JSON));
       } catch (IOException e) {
-        log.debug("SSE 推送失败[连接已断开]: userId={}, event={}", userId, eventName);
+        log.debug(I18n.message("userinfo.SSE.推送失败.连接已断开.userId=.event=", new Object[]{userId, eventName}));
         emitters.remove(emitter);
       } catch (IllegalStateException e) {
-        log.debug("SSE Emitter 已关闭: userId={}, event={}", userId, eventName);
+        log.debug(I18n.message("userinfo.SSE.Emitter.已关闭.userId=.event=", new Object[]{userId, eventName}));
         emitters.remove(emitter);
       }
     }

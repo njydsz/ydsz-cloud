@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.config;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -105,7 +106,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     MsgRouteRuleVO vo = toVO(dto);
     msgRouteRuleRepository.save(vo);
     evictCache();
-    log.info("[RouteRule] 创建规则: code={}", dto.getRuleCode());
+    log.info(I18n.message("message.log.other.RouteRule_code_{}.b97ece"), dto.getRuleCode());
     return vo;
   }
 
@@ -291,7 +292,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         }
       }
     } catch (Exception e) {
-      log.warn("[RouteRule] L2 缓存读取失败,回退 DB: {}", e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.RouteRule_L2_DB_{}.34f4fd"), e.getMessage(), e);
     }
     // DB 回源
     MsgRouteRuleQuery query = new MsgRouteRuleQuery();
@@ -302,7 +303,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     try {
       redisStringOps.set(cacheKey, YdszJson.toJson(result), Duration.ofMinutes(cacheTtlMinutes));
     } catch (Exception e) {
-      log.warn("[RouteRule] L2 缓存回填失败: {}", e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.RouteRule_L2_{}.e0ca0b"), e.getMessage(), e);
     }
     localCache.put(cacheKey, result);
     return result;
@@ -314,7 +315,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     try {
       redisStringOps.del(MessageConstants.ROUTE_RULE_CACHE_KEY);
     } catch (Exception e) {
-      log.warn("[RouteRule] L2 缓存失效失败: {}", e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.RouteRule_L2_{}.aeb931"), e.getMessage(), e);
     }
   }
 

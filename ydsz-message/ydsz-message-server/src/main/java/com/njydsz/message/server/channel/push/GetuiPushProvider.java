@@ -132,7 +132,7 @@ public class GetuiPushProvider implements PushProvider {
       String code = MapUtils.getString(json, "code");
       if ("10000".equals(code)) {
         String taskId = MapUtils.getString(json, "data");
-        log.info("[GetuiPush] 推送成功: cid={} taskId={}", cid, taskId);
+        log.info(I18n.message("message.log.server.getui.info.send.success"), cid, taskId);
         return MessageSendResultVO.ok("PUSH", "GETUI-" + taskId);
       }
       log.warn(
@@ -141,7 +141,7 @@ public class GetuiPushProvider implements PushProvider {
           "PUSH", null, code + ": " + MapUtils.getString(json, "msg"),
           code + ": " + MapUtils.getString(json, "msg"), null);
     } catch (Exception e) {
-      log.error("[GetuiPush] 推送异常: cid={} err={}", cid, e.getMessage(), e);
+      log.error(I18n.message("message.log.other.GetuiPush_cid_{}_err_{}.d12bed"), cid, e.getMessage(), e);
       return MessageSendResultVO.fail(
           "PUSH", null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);

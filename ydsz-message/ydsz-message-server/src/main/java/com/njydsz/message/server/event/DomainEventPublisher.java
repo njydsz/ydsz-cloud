@@ -1,6 +1,7 @@
 package com.njydsz.message.server.event;
 
-import lombok.RequiredArgsConstructor;
+
+import com.njydsz.common.locales.util.I18n;import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -35,9 +36,9 @@ public class DomainEventPublisher {
     }
     try {
       applicationEventPublisher.publishEvent(event);
-      log.debug("[DomainEvent] 已发布: type={} eventId={}", event.eventType(), event.getEventId());
+      log.debug(I18n.message("message.log.other.DomainEvent_type_{}_eventId_{}.ef3ea9"), event.eventType(), event.getEventId());
     } catch (Exception e) {
-      log.warn("[DomainEvent] 事件发布失败: type={} err={}", event.eventType(), e.getMessage());
+      log.warn(I18n.message("message.log.other.DomainEvent_type_{}_err_{}.1f2d1b"), event.eventType(), e.getMessage());
     }
   }
 }

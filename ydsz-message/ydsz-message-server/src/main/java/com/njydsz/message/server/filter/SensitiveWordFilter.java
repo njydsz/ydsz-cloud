@@ -1,6 +1,7 @@
 package com.njydsz.message.server.filter;
 
-import java.util.ArrayList;
+
+import com.njydsz.common.locales.util.I18n;import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -148,7 +149,7 @@ public class SensitiveWordFilter {
     }
     // 原子替换：构建完成后替换引用
     dfaRoot = newRoot;
-    log.info("[SensitiveWordFilter] DFA 词库已加载: count={} enabled={}", words.size(), isEnabled());
+    log.info(I18n.message("message.log.other.SensitiveWordFilter_DFA_count_{}_enabled_{}.f17017"), words.size(), isEnabled());
   }
 
   /**

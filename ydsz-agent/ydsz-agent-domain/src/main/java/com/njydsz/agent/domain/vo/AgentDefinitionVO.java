@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -18,9 +16,8 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class AgentDefinitionVO implements Serializable {
+public class AgentDefinitionVO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 主键 ID */
   private String id;

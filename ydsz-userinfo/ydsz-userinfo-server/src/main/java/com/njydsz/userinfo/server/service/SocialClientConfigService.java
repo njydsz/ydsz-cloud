@@ -15,6 +15,7 @@ import com.njydsz.userinfo.domain.dto.SocialClientDTO;
 import com.njydsz.userinfo.domain.query.SocialClientPageQuery;
 import com.njydsz.userinfo.domain.repository.SocialClientRepository;
 import com.njydsz.userinfo.domain.vo.SocialClientVO;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 社交平台客户端配置服务（P1-1 DB+YAML 混合配置）。
@@ -142,7 +143,7 @@ public class SocialClientConfigService {
    */
   public void save(SocialClientDTO dto) {
     socialClientRepository.save(dto);
-    log.info("社交平台客户端配置已保存: platform={}", dto.getPlatform());
+    log.info(I18n.message("userinfo.社交平台客户端配置已保存.platform=", new Object[]{dto.getPlatform()}));
   }
 
   /**
@@ -152,7 +153,7 @@ public class SocialClientConfigService {
    */
   public void delete(String platform) {
     socialClientRepository.deleteByPlatform(platform);
-    log.info("社交平台客户端配置已删除: platform={}", platform);
+    log.info(I18n.message("userinfo.社交平台客户端配置已删除.platform=", new Object[]{platform}));
   }
 
   /**

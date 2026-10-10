@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.config.hotreload.ConfigChangeListener;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 工作流模块配置变更监听器（P1-B2：接入统一 ConfigChangeBridge）。
@@ -57,16 +58,16 @@ public class FlowConfigChangeListener implements ConfigChangeListener {
       return;
     }
 
-    log.info("[Workflow] 配置变更通知: key={}, {} -> {}", key, oldValue, newValue);
+    log.info(I18n.message("workflow.config.change.notify", new Object[]{key, oldValue, newValue}));
 
     // 模块总开关变更 → 提示需重启
     if ("ydsz.flow.enabled".equals(key)) {
-      log.warn("[Workflow] 工作流模块启用状态变更: {} -> {}，需重启生效", oldValue, newValue);
+      log.warn(I18n.message("workflow.config.enable.changed", new Object[]{oldValue, newValue}));
     }
 
     // 缓存 TTL 变更 → 提示缓存 TTL 修改需重建 YdszCache 实例
     if (key.contains("cache") && key.toLowerCase().contains("ttl")) {
-      log.info("[Workflow] 缓存 TTL 配置变更已感知（{}），现有 YdszCache 实例 TTL 不变，后续可触发重建", key);
+      log.info(I18n.message("workflow.config.ttl.changed", new Object[]{key}));
     }
   }
 

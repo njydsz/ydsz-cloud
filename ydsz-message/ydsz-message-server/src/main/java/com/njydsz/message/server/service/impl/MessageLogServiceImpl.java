@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -120,7 +121,7 @@ public class MessageLogServiceImpl implements MessageLogService {
     entity.setStatus(MessageStatusEnum.DEAD.name());
     entity.setErrorMessage(errorMessage);
     msgLogRepository.update(entity);
-    log.warn("[MessageLog] 标记死信: id={} err={}", id, errorMessage);
+    log.warn(I18n.message("message.log.other.MessageLog_id_{}_err_{}.c50257"), id, errorMessage);
     // P1-4: 死信告警检测
     checkAndFireDeadLetterAlert(entity.getChannel());
   }
@@ -174,7 +175,7 @@ public class MessageLogServiceImpl implements MessageLogService {
       entity.setNextRetryAt(null);
       entity.setStatus(MessageStatusEnum.SENDING.name());
       msgLogRepository.update(entity);
-      log.info("[MessageLog] 手动重发死信: logId={} channel={}", logId, entity.getChannel());
+      log.info(I18n.message("message.log.other.MessageLog_logId_{}_channel_{}.23fe70"), logId, entity.getChannel());
 
       long start = System.currentTimeMillis();
       try {
@@ -186,7 +187,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         entity.setCostMs(cost);
         msgLogRepository.update(entity);
         messageMetrics.recordSend(entity.getChannel(), "SUCCESS", cost);
-        log.info("[MessageLog] 死信重发成功: logId={} providerTraceId={}", logId, providerTraceId);
+        log.info(I18n.message("message.log.other.MessageLog_logId_{}_providerTraceId_{}.cec8d8"), logId, providerTraceId);
       } catch (Exception e) {
         long cost = System.currentTimeMillis() - start;
         int newRetryCount = 1;
@@ -251,7 +252,7 @@ public class MessageLogServiceImpl implements MessageLogService {
             cfg.getThreshold());
       }
     } catch (Exception e) {
-      log.error("[MessageLog] 死信告警检测异常,不影响主流程: {}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.MessageLog_{}.1c3b62"), e.getMessage(), e);
     }
   }
 

@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.model;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +17,8 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  * @since 26.10.01
  */
-public final class ChatMessage implements Serializable {
+public final class ChatMessage {
 
-  private static final long serialVersionUID = 1L;
 
   /** 消息唯一标识 */
   private final String id;

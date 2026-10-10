@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.manager.QueueManager;
@@ -83,9 +84,9 @@ public class FlowQueuePublisher {
       flowEventMetrics = new QueueMetrics(FlowQueueChannels.FLOW_EVENT, "STREAM");
       queueManager.register(FlowQueueChannels.FLOW_EVENT, "STREAM", flowEventQueue,
           flowEventMetrics);
-      log.info("[FlowQueue] 工作流事件队列发布者已启动, channel={}", FlowQueueChannels.FLOW_EVENT);
+      log.info(I18n.message("workflow.queue.started", new Object[]{FlowQueueChannels.FLOW_EVENT}));
     } catch (Exception e) {
-      log.warn("[FlowQueue] 工作流事件队列发布者启动失败, 将降级为仅本地事件: {}", e.getMessage());
+      log.warn(I18n.message("workflow.queue.start.failed", new Object[]{e.getMessage()}));
     }
   }
 
@@ -119,7 +120,7 @@ public class FlowQueuePublisher {
           event.getInstanceId(),
           event.getTaskId());
     } catch (Exception e) {
-      log.warn("[FlowQueue] 事件发布到队列失败: type={} err={}", event.getEventType(), e.getMessage());
+      log.warn(I18n.message("workflow.queue.publish.failed", new Object[]{event.getEventType(), e.getMessage()}));
     }
   }
 
@@ -152,9 +153,9 @@ public class FlowQueuePublisher {
       message.addHeader("source", "workflow");
 
       flowEventPublisher.publish(message);
-      log.debug("[FlowQueue] 上下文事件已发布到队列: type={} instanceId={}", eventType, ctx.getInstanceId());
+      log.debug(I18n.message("workflow.queue.context.published", new Object[]{eventType, ctx.getInstanceId()}));
     } catch (Exception e) {
-      log.warn("[FlowQueue] 上下文事件发布到队列失败: type={} err={}", eventType, e.getMessage());
+      log.warn(I18n.message("workflow.queue.context.publish.failed", new Object[]{eventType, e.getMessage()}));
     }
   }
 
@@ -200,9 +201,9 @@ public class FlowQueuePublisher {
       }
 
       flowEventPublisher.publish(message);
-      log.debug("[FlowQueue] 业务事件已发布到队列: type={} payload={}", eventType, data.keySet());
+      log.debug(I18n.message("workflow.queue.biz.published", new Object[]{eventType, data.keySet()}));
     } catch (Exception e) {
-      log.warn("[FlowQueue] 业务事件发布到队列失败: type={} err={}", eventType, e.getMessage());
+      log.warn(I18n.message("workflow.queue.biz.publish.failed", new Object[]{eventType, e.getMessage()}));
     }
   }
 
@@ -225,6 +226,6 @@ public class FlowQueuePublisher {
     if (flowEventQueue != null) {
       flowEventQueue.close();
     }
-    log.info("[FlowQueue] 工作流事件队列发布者已关闭");
+    log.info(I18n.message("workflow.queue.closed", new Object[]{}));
   }
 }

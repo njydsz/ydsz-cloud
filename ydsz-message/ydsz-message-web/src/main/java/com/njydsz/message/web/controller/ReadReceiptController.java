@@ -1,6 +1,7 @@
 package com.njydsz.message.web.controller.receipt;
 
-import java.io.IOException;
+
+import com.njydsz.common.locales.util.I18n;import java.io.IOException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -70,7 +71,7 @@ public class ReadReceiptController {
       try {
         response.sendRedirect(originalUrl);
       } catch (IOException e) {
-        log.warn("[ReadReceipt] 重定向失败: {}", e.getMessage());
+        log.warn(I18n.message("message.log.other.ReadReceipt_{}.7b4c3d"), e.getMessage());
       }
     } else {
       response.setStatus(HttpStatus.NOT_FOUND.value());

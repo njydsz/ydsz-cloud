@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.search;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -37,7 +36,6 @@ public interface WebSearchService {
    * @param snippet 内容摘要片段
    * @param url 网页链接
    */
-  record SearchResult(String title, String snippet, String url) implements Serializable {
-    private static final long serialVersionUID = 1L;
+  record SearchResult(String title, String snippet, String url) {
   }
 }

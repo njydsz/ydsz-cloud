@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,12 +32,9 @@ import com.njydsz.common.json.YdszJson;
  */
 @Getter
 @ToString
-public class UrgeChannelConfigVO implements Serializable {
+public class UrgeChannelConfigVO {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 8;
-
-
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 默认催办通道 */
   private static final List<String> DEFAULT_URGE_CHANNELS = List.of("INAPP");

@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.model;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,7 +13,7 @@ import java.util.Objects;
  * @author ydsz-team
  * @since 26.10.01
  */
-public final class MessageContent implements Serializable {
+public final class MessageContent {
 
   /** 低分辨率单图 Token 估算值 */
   private static final double IMAGE_TOKEN_ESTIMATE = 85;
@@ -22,7 +21,6 @@ public final class MessageContent implements Serializable {
   /** 图片 Token 转字符数比率（与 tokenCharRatio 估算口径一致） */
   private static final double IMAGE_TOKEN_CHAR_RATIO = 2.5;
 
-  private static final long serialVersionUID = 1L;
 
   /** 内容段落列表（按显示顺序排列） */
   private final List<ContentPart> parts;
@@ -113,7 +111,7 @@ public final class MessageContent implements Serializable {
    * @param text 文本内容（type=text 时有效）
    * @param imageUrl 图片 URL（type=image_url 时有效）
    */
-  public record ContentPart(String type, String text, String imageUrl) implements Serializable {
+  public record ContentPart(String type, String text, String imageUrl) {
 
     /**
      * 创建文本段落。

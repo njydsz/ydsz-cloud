@@ -30,6 +30,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
 import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
 import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
@@ -180,7 +181,7 @@ public class FlowMonitorDashboardController {
         }
       }
     } catch (Exception e) {
-      log.warn("[Monitor] 异常检测失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.monitor.anomaly.detection.failed", new Object[]{e.getMessage()}));
     }
 
     int total = all.size();
@@ -305,14 +306,14 @@ public class FlowMonitorDashboardController {
     try {
       dashboard.put("overview", buildOverview(tenantId));
     } catch (Exception e) {
-      log.warn("[Dashboard] overview 聚合失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.dashboard.overview.agg.failed", new Object[]{e.getMessage()}));
       dashboard.put("overview", new LinkedHashMap<>(COLLECTION_CAPACITY));
     }
 
     try {
       dashboard.put("instanceTrend", buildInstanceTrend(tenantId, TREND_DAYS));
     } catch (Exception e) {
-      log.warn("[Dashboard] instanceTrend 聚合失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.dashboard.instanceTrend.agg.failed", new Object[]{e.getMessage()}));
       dashboard.put("instanceTrend", new ArrayList<>(0));
     }
 
@@ -320,7 +321,7 @@ public class FlowMonitorDashboardController {
       List<Map<String, Object>> overdueTop = taskService.selectOverdueTopN(tenantId, OVERDUE_TOP_N);
       dashboard.put("overdueTop5", overdueTop != null ? overdueTop : new ArrayList<>(0));
     } catch (Exception e) {
-      log.warn("[Dashboard] overdueTop5 查询失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.dashboard.overdueTop5.query.failed", new Object[]{e.getMessage()}));
       dashboard.put("overdueTop5", new ArrayList<>(0));
     }
 
@@ -330,21 +331,21 @@ public class FlowMonitorDashboardController {
               tenantId, ANOMALY_TOP_N, STUCK_HOURS_THRESHOLD, LONG_RUNNING_DAYS);
       dashboard.put("anomalyTop5", anomalies != null ? anomalies : new ArrayList<>(0));
     } catch (Exception e) {
-      log.warn("[Dashboard] anomalyTop5 查询失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.dashboard.anomalyTop5.query.failed", new Object[]{e.getMessage()}));
       dashboard.put("anomalyTop5", new ArrayList<>(0));
     }
 
     try {
       dashboard.put("efficiency", efficiencyService.efficiencyStats(tenantId, null, null));
     } catch (Exception e) {
-      log.warn("[Dashboard] efficiency 查询失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.dashboard.efficiency.query.failed", new Object[]{e.getMessage()}));
       dashboard.put("efficiency", new LinkedHashMap<>(COLLECTION_CAPACITY));
     }
 
     try {
       dashboard.put("healthScore", efficiencyService.healthScore(tenantId, null, null));
     } catch (Exception e) {
-      log.warn("[Dashboard] healthScore 查询失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.dashboard.healthScore.query.failed", new Object[]{e.getMessage()}));
       dashboard.put("healthScore", new LinkedHashMap<>(COLLECTION_CAPACITY));
     }
 
@@ -592,7 +593,7 @@ public class FlowMonitorDashboardController {
         }
       }
     } catch (Exception e) {
-      log.warn("[Monitor] 批量查询实例失败，降级为空映射: {}", e.getMessage());
+      log.warn(I18n.message("workflow.monitor.batch.query.failed", new Object[]{e.getMessage()}));
     }
     return result;
   }
@@ -618,7 +619,7 @@ public class FlowMonitorDashboardController {
         }
       }
     } catch (Exception e) {
-      log.warn("[Dashboard] 状态分组计数查询失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.dashboard.statusGroup.query.failed", new Object[]{e.getMessage()}));
     }
     overview.put("runningCount", running);
 
@@ -632,7 +633,7 @@ public class FlowMonitorDashboardController {
         overview.put("todayCompletedCount", 0L);
       }
     } catch (Exception e) {
-      log.warn("[Dashboard] 今日计数查询失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.dashboard.todayCount.query.failed", new Object[]{e.getMessage()}));
       overview.put("todayNewCount", 0L);
       overview.put("todayCompletedCount", 0L);
     }
@@ -640,14 +641,14 @@ public class FlowMonitorDashboardController {
     try {
       overview.put("pendingTaskCount", taskService.countPending(tenantId));
     } catch (Exception e) {
-      log.warn("[Dashboard] 待办任务计数失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.dashboard.pendingCount.query.failed", new Object[]{e.getMessage()}));
       overview.put("pendingTaskCount", 0L);
     }
 
     try {
       overview.put("overdueTaskCount", taskService.countOverdue(null, tenantId));
     } catch (Exception e) {
-      log.warn("[Dashboard] 超期任务计数失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.dashboard.overdueCount.query.failed", new Object[]{e.getMessage()}));
       overview.put("overdueTaskCount", 0L);
     }
     return overview;
@@ -720,7 +721,7 @@ public class FlowMonitorDashboardController {
       try {
         return LocalDate.parse(str).atStartOfDay();
       } catch (Exception ex) {
-        log.warn("[Monitor] 无法解析时间: {}", str);
+        log.warn(I18n.message("workflow.monitor.datetime.parse.failed", new Object[]{str}));
         return null;
       }
     }

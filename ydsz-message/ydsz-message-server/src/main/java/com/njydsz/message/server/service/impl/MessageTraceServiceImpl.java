@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -60,9 +61,9 @@ public class MessageTraceServiceImpl implements MessageTraceService {
         trace.setExtra(YdszJson.toJson(extra));
       }
       msgTraceRepository.save(trace);
-      log.debug("[Trace] 记录轨迹: msgId={} node={} status={}", msgId, node, status);
+      log.debug(I18n.message("message.log.other.Trace_msgId_{}_node_{}_status_{}.20d6fa"), msgId, node, status);
     } catch (Exception e) {
-      log.warn("[Trace] 记录轨迹失败,不影响主流程: msgId={} node={} err={}", msgId, node, e.getMessage());
+      log.warn(I18n.message("message.log.other.Trace_msgId_{}_node_{}_err_{}.115989"), msgId, node, e.getMessage());
     }
   }
 

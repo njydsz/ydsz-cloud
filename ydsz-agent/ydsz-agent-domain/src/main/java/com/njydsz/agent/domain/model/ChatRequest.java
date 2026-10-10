@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.model;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,9 +13,8 @@ import java.util.Objects;
  * @author ydsz-team
  * @since 26.10.01
  */
-public final class ChatRequest implements Serializable {
+public final class ChatRequest {
 
-  private static final long serialVersionUID = 1L;
 
   /** 模型名称 */
   private final String model;

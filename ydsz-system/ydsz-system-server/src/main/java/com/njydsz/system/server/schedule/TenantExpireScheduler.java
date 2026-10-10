@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.system.domain.repository.TenantRepository;
 
@@ -53,11 +54,11 @@ public class TenantExpireScheduler {
     try {
       affected = tenantRepository.disableExpiredTenants();
     } catch (Exception e) {
-      log.error("[TenantExpireScheduler] 停用到期租户失败", e);
+      log.error(I18n.message("system.tenant.expire.fail"), e);
       return;
     }
     if (affected > 0) {
-      log.warn("[TenantExpireScheduler] 已自动停用 {} 个到期租户", affected);
+      log.warn(I18n.message("system.tenant.expire.disabled", new Object[]{affected}));
     }
   }
 }

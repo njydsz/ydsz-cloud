@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.auth.UserIdentityProvider;
 import com.njydsz.userinfo.domain.enums.IdentityProviderType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -61,7 +62,7 @@ public class LocalUserIdentityProvider implements UserIdentityProvider {
     UserAccountCredentialVO credential = userAccountRepository
         .findCredentialByUsername(username)
         .orElseThrow(() -> {
-          log.warn("本地用户认证失败[用户不存在]: username={}", username);
+          log.warn(I18n.message("userinfo.local.auth.user.not.found", new Object[]{username}));
           return new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
         });
 
@@ -74,7 +75,7 @@ public class LocalUserIdentityProvider implements UserIdentityProvider {
       return result;
     }
 
-    log.warn("本地用户认证失败[密码错误]: username={}", username);
+    log.warn(I18n.message("userinfo.local.auth.password.incorrect", new Object[]{username}));
     throw new BusinessException(UserInfoExceptionCode.PASSWORD_INCORRECT);
   }
 

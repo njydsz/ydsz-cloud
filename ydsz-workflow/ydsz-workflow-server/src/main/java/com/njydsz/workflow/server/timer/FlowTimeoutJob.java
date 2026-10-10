@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.workflow.domain.enums.FlowTimeoutStrategy;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
@@ -64,7 +65,7 @@ public class FlowTimeoutJob {
     try {
       doProcessTimeouts();
     } catch (Exception e) {
-      log.error("[Flow-TimeoutJob] 超时处理异常: {}", e.getMessage(), e);
+      log.error(I18n.message("workflow.timeout.job.process.error", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -87,7 +88,7 @@ public class FlowTimeoutJob {
       return;
     }
 
-    log.info("[Flow-TimeoutJob] 扫描到 {} 个超时定时器", dueTimers.size());
+    log.info(I18n.message("workflow.timeout.job.scan.result", new Object[]{dueTimers.size()}));
 
     int successCount = 0;
     int failCount = 0;
@@ -109,12 +110,12 @@ public class FlowTimeoutJob {
         try {
           timerRepository.markFired(timer.getId());
         } catch (Exception e) {
-          log.warn("[Flow-TimeoutJob] 标记定时器已触发失败: timerId={}", timer.getId());
+          log.warn(I18n.message("workflow.timeout.job.mark.failed", new Object[]{timer.getId()}));
         }
       }
     }
 
-    log.info("[Flow-TimeoutJob] 超时处理完成: success={} fail={}", successCount, failCount);
+    log.info(I18n.message("workflow.timeout.job.process.complete", new Object[]{successCount, failCount}));
   }
 
   /**
@@ -125,13 +126,13 @@ public class FlowTimeoutJob {
   private void processSingleTimer(FlowTimerVO timer) {
     String taskId = timer.getTaskId();
     if (taskId == null || taskId.isBlank()) {
-      log.warn("[Flow-TimeoutJob] 定时器未关联任务: timerId={}", timer.getId());
+      log.warn(I18n.message("workflow.timeout.job.no.task", new Object[]{timer.getId()}));
       return;
     }
 
     FlowRunTaskVO task = runTaskRepository.findById(taskId).orElse(null);
     if (task == null) {
-      log.warn("[Flow-TimeoutJob] 定时器关联任务不存在: timerId={} taskId={}", timer.getId(), taskId);
+      log.warn(I18n.message("workflow.timeout.job.task.not.found", new Object[]{timer.getId(), taskId}));
       return;
     }
 
@@ -146,7 +147,7 @@ public class FlowTimeoutJob {
 
     // 委托处理器执行超时策略
     String result = timeoutHandler.handleTimeout(task, strategy);
-    log.info("[Flow-TimeoutJob] 超时处理结果: timerId={} result={}", timer.getId(), result);
+    log.info(I18n.message("workflow.timeout.job.process.result", new Object[]{timer.getId(), result}));
   }
 
   /**

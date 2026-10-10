@@ -1,0 +1,340 @@
+package com.njydsz.message.server.channel.sms;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
+
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.collection.MapUtils;
+import com.njydsz.common.util.date.DateUtils;
+import com.njydsz.common.util.http.RestTemplateUtils;
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.notify.signature.AliyunSmsSigner;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
+import com.njydsz.message.server.config.MessageProperties;
+
+/**
+ * 阿里云短信服务商实现。
+ *
+ * <p>通过阿里云 SMS Common RPC API（{@code SendSms}）发送短信，签名委托 {@link AliyunSmsSigner}（位于
+ * {@code ydzs-common-notify/signature/}），零外部 SDK 依赖。
+ *
+ * <p>仅当 {@code ydsz.message.sms.provider=aliyun} 时装配；凭证缺失时返回 fail（由
+ * {@link com.njydsz.message.server.channel.impl.SmsChannel} 自动降级到 Mock）。
+ *
+ * <p>参数来源：
+ *
+ * <ul>
+ *   <li>PhoneNumbers = {@code request.getReceiver()}
+ *   <li>SignName = {@code template.signName}（回退配置默认签名）
+ *   <li>TemplateCode = {@code template.providerKey}（阿里云侧模板 ID）
+ *   <li>TemplateParam = {@code request.getParams()} 的 JSON
+ * </ul>
+ *
+ * <p><b>与 ydzs-common-notify 同名类的关系（ADR-1，见 docs/architecture/adr/ADR-009-public-capability-convergence.md）：</b>
+ * common-notify 亦提供 {@code AliyunSmsProvider}（独立接口 + 共享 signer）。本类为其<b>权威实现</b>
+ * （能力超集：batchSend + queryReceipt），HMAC-SHA1 签名逻辑已下沉至 common-notify 的 signer 中。
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ */
+@Slf4j
+@Component
+@ConditionalOnProperty(prefix = "ydsz.message.sms", name = "provider", havingValue = "aliyun")
+public class AliyunSmsProvider implements SmsProvider {
+  /** 业务 ID 前缀长度 */
+  private static final int BIZ_ID_PREFIX_LENGTH = 7;
+
+  /** Map 初始容量 */
+  private static final int MAP_CAPACITY_16 = 16;
+
+
+  private final MessageProperties.AliyunSmsConfig config;
+  private final RestTemplate restTemplate;
+
+  /**
+   * 生产构造：从 {@link MessageProperties} 读取阿里云配置并构建 RestTemplate。
+   *
+   *
+   * @param messageProperties 消息模块配置属性（含 aliyun 子配置项 AccessKeyId/AccessKeySecret/Endpoint 等）
+   */
+  public AliyunSmsProvider(MessageProperties messageProperties) {
+    this.config = messageProperties.getSms().getAliyun();
+    this.restTemplate =
+        RestTemplateUtils.create(config.getConnectTimeout(), config.getReadTimeout());
+  }
+
+  /**
+   * 测试构造：注入自定义 config 与 RestTemplate（便于 mock）。
+   *
+   * @param config 阿里云配置
+   * @param restTemplate RestTemplate（测试可 mock）
+   */
+  AliyunSmsProvider(MessageProperties.AliyunSmsConfig config, RestTemplate restTemplate) {
+    this.config = config;
+    this.restTemplate = restTemplate;
+  }
+
+  @Override
+  public String providerType() {
+    return "aliyun";
+  }
+
+  @Override
+  public MessageSendResultVO send(MessageItemRequestDTO request, MsgTemplateVO template) {
+    String phone = request.getReceiver();
+    if (!StringUtils.hasText(phone)) {
+      return MessageSendResultVO.fail(
+          "SMS", null, I18n.message("message.sms.phone_required"),
+          I18n.message("message.sms.phone_required"), null);
+    }
+    if (!StringUtils.hasText(config.getAccessKeyId())
+        || !StringUtils.hasText(config.getAccessKeySecret())) {
+      log.warn("[AliyunSms] 凭证未配置,发送失败: phone={}", phone);
+      return MessageSendResultVO.fail(
+          "SMS", null,
+          I18n.message("message.sms.aliyun_credential_missing"),
+          I18n.message("message.sms.aliyun_credential_missing"), null);
+    }
+    String signName =
+        template != null && StringUtils.hasText(template.getSignName())
+            ? template.getSignName()
+            : config.getSignName();
+    String templateCode = template != null ? template.getProviderKey() : null;
+    if (!StringUtils.hasText(signName) || !StringUtils.hasText(templateCode)) {
+      return MessageSendResultVO.fail(
+          "SMS", null,
+          I18n.message("message.sms.sign_or_code_missing"),
+          I18n.message("message.sms.sign_or_code_missing"),
+          null);
+    }
+    try {
+      Map<String, String> params = buildCommonParams();
+      params.put("PhoneNumbers", phone);
+      params.put("SignName", signName);
+      params.put("TemplateCode", templateCode);
+      params.put("TemplateParam", YdszJson.toJson(request.getParams()));
+      String signature = AliyunSmsSigner.sign(params, config.getAccessKeySecret());
+      params.put("Signature", signature);
+      String url = "https://" + config.getEndpoint() + "/?" + AliyunSmsSigner.buildQuery(params);
+      ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
+      Map<String, Object> json = YdszJson.parseMap(resp.getBody());
+      String code = MapUtils.getString(json, "Code");
+      if ("OK".equals(code)) {
+        String bizId = MapUtils.getString(json, "BizId");
+        log.info("[AliyunSms] 发送成功: phone={} bizId={}", phone, bizId);
+        return MessageSendResultVO.ok("SMS", "ALIYUN-" + bizId);
+      }
+      log.warn(
+          "[AliyunSms] 发送失败: phone={} code={} msg={}",
+          phone,
+          code,
+          MapUtils.getString(json, "Message"));
+      return MessageSendResultVO.fail(
+          "SMS", null, code + ": " + MapUtils.getString(json, "Message"),
+          code + ": " + MapUtils.getString(json, "Message"), null);
+    } catch (Exception e) {
+      log.error("[AliyunSms] 发送异常: phone={} err={}", phone, e.getMessage(), e);
+      return MessageSendResultVO.fail(
+          "SMS", null, e.getClass().getSimpleName() + ": " + e.getMessage(),
+          e.getClass().getSimpleName() + ": " + e.getMessage(), null);
+    }
+  }
+
+  /**
+   * 构造阿里云 RPC 公共参数。
+   *
+   * @return 公共参数 Map
+   */
+  private Map<String, String> buildCommonParams() {
+    Map<String, String> p = new HashMap<>(MAP_CAPACITY_16);
+    p.put("AccessKeyId", config.getAccessKeyId());
+    p.put("Action", "SendSms");
+    p.put("Format", "JSON");
+    p.put("RegionId", "cn-hangzhou");
+    p.put("SignatureMethod", "HMAC-SHA1");
+    p.put("SignatureNonce", UUID.randomUUID().toString());
+    p.put("SignatureVersion", "1.0");
+    p.put("Timestamp", DateUtils.formatUtcDateTime(LocalDateTime.now()));
+    p.put("Version", "2017-05-25");
+    return p;
+  }
+
+  // ==================== P0-4: 批量发送 + 回执查询 ====================
+
+  /** 阿里云 SendBatchSms 单次最大手机号数 */
+  private static final int BATCH_MAX_PHONES = 100;
+
+  @Override
+  public List<MessageSendResultVO> batchSend(List<MessageItemRequestDTO> requests, MsgTemplateVO template) {
+    List<MessageSendResultVO> results = new ArrayList<>(requests.size());
+    // 按 BATCH_MAX_PHONES 分批调用阿里云 SendBatchSms
+    for (int i = 0; i < requests.size(); i += BATCH_MAX_PHONES) {
+      int end = Math.min(i + BATCH_MAX_PHONES, requests.size());
+      List<MessageItemRequestDTO> chunk = requests.subList(i, end);
+      results.addAll(doBatchSend(chunk, template));
+    }
+    return results;
+  }
+
+  /**
+   * 调用阿里云 SendBatchSms 接口批量发送。
+   *
+   * <p>参数构造：PhoneNumberJson = ["phone1","phone2",...]， SignNameJson =
+   * ["sign","sign",...]，TemplateParamJson = [{...},{...},...]。
+   *
+   * @param requests 待批量发送的消息请求列表（每批不超过 100 条）
+   * @param template 短信模板（提供 signName / providerKey）
+   * @return 与 requests 一一对应的发送结果列表
+   */
+  private List<MessageSendResultVO> doBatchSend(List<MessageItemRequestDTO> requests, MsgTemplateVO template) {
+    List<MessageSendResultVO> results = new ArrayList<>(requests.size());
+    if (!StringUtils.hasText(config.getAccessKeyId())
+        || !StringUtils.hasText(config.getAccessKeySecret())) {
+      String credErr = I18n.message("message.sms.aliyun_credential_missing");
+      for (int i = 0; i < requests.size(); i++) {
+        results.add(MessageSendResultVO.fail("SMS", null, credErr, credErr, null));
+      }
+      return results;
+    }
+    String signName =
+        template != null && StringUtils.hasText(template.getSignName())
+            ? template.getSignName()
+            : config.getSignName();
+    String templateCode = template != null ? template.getProviderKey() : null;
+    if (!StringUtils.hasText(signName) || !StringUtils.hasText(templateCode)) {
+      String sigErr = I18n.message("message.sms.sign_or_code_missing");
+      for (int i = 0; i < requests.size(); i++) {
+        results.add(MessageSendResultVO.fail("SMS", null, sigErr, sigErr, null));
+      }
+      return results;
+    }
+    try {
+      // 构造 JSON 数组参数
+      List<String> phones = new ArrayList<>(requests.size());
+      List<String> signNames = new ArrayList<>(requests.size());
+      List<String> templateParams = new ArrayList<>(requests.size());
+      for (MessageItemRequestDTO req : requests) {
+        phones.add(req.getReceiver());
+        signNames.add(signName);
+        templateParams.add(YdszJson.toJson(req.getParams()));
+      }
+      Map<String, String> params = buildCommonParams();
+      params.put("Action", "SendBatchSms");
+      params.put("PhoneNumberJson", YdszJson.toJson(phones));
+      params.put("SignNameJson", YdszJson.toJson(signNames));
+      params.put("TemplateCode", templateCode);
+      params.put("TemplateParamJson", YdszJson.toJson(templateParams));
+      String signature = AliyunSmsSigner.sign(params, config.getAccessKeySecret());
+      params.put("Signature", signature);
+      String url = "https://" + config.getEndpoint() + "/?" + AliyunSmsSigner.buildQuery(params);
+      ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
+      Map<String, Object> json = YdszJson.parseMap(resp.getBody());
+      String code = MapUtils.getString(json, "Code");
+      if ("OK".equals(code)) {
+        String bizId = MapUtils.getString(json, "BizId");
+        log.info("[AliyunSms] 批量发送成功: count={} bizId={}", requests.size(), bizId);
+        for (int i = 0; i < requests.size(); i++) {
+          results.add(MessageSendResultVO.ok("SMS", "ALIYUN-" + bizId + "-" + i));
+        }
+      } else {
+        log.warn("[AliyunSms] 批量发送失败: code={} msg={}", code, MapUtils.getString(json, "Message"));
+        for (int i = 0; i < requests.size(); i++) {
+          results.add(MessageSendResultVO.fail(
+              "SMS", null, code + ": " + MapUtils.getString(json, "Message"),
+              code + ": " + MapUtils.getString(json, "Message"), null));
+        }
+      }
+    } catch (Exception e) {
+      log.error("[AliyunSms] 批量发送异常: count={} err={}", requests.size(), e.getMessage(), e);
+      for (int i = 0; i < requests.size(); i++) {
+        results.add(MessageSendResultVO.fail(
+            "SMS", null, e.getClass().getSimpleName() + ": " + e.getMessage(),
+            e.getClass().getSimpleName() + ": " + e.getMessage(), null));
+      }
+    }
+    return results;
+  }
+
+  @Override
+  public MessageSendResultVO queryReceipt(String providerTraceId, String phone) {
+    if (!StringUtils.hasText(providerTraceId) || !StringUtils.hasText(phone)) {
+      String msg = I18n.message("providerTraceId 或手机号为空");
+      return MessageSendResultVO.fail("SMS", null, msg, msg, null);
+    }
+    if (!StringUtils.hasText(config.getAccessKeyId())
+        || !StringUtils.hasText(config.getAccessKeySecret())) {
+      return MessageSendResultVO.fail(
+          "SMS", null,
+          I18n.message("message.sms.aliyun_credential_missing"),
+          I18n.message("message.sms.aliyun_credential_missing"),
+          null);
+    }
+    // 从 ALIYUN-{bizId}-{idx} 中提取 bizId
+    String bizId = providerTraceId;
+    if (bizId.startsWith("ALIYUN-")) {
+      bizId = bizId.substring(BIZ_ID_PREFIX_LENGTH);
+      int dashIdx = bizId.lastIndexOf('-');
+      if (dashIdx > 0) {
+        bizId = bizId.substring(0, dashIdx);
+      }
+    }
+    try {
+      Map<String, String> params = buildCommonParams();
+      params.put("Action", "QuerySendDetails");
+      params.put("PhoneNumber", phone);
+      params.put("BizId", bizId);
+      params.put("SendDate", DateUtils.formatNow("yyyyMMdd"));
+      params.put("PageSize", "1");
+      params.put("CurrentPage", "1");
+      String signature = AliyunSmsSigner.sign(params, config.getAccessKeySecret());
+      params.put("Signature", signature);
+      String url = "https://" + config.getEndpoint() + "/?" + AliyunSmsSigner.buildQuery(params);
+      ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
+      Map<String, Object> json = YdszJson.parseMap(resp.getBody());
+      String code = MapUtils.getString(json, "Code");
+      if ("OK".equals(code)) {
+        Map<String, Object> detail = MapUtils.safeCastMap(json.get("SmsSendDetailDTOs"));
+        if (detail != null) {
+          List<Map<String, Object>> arr = MapUtils.getListOfMaps(detail, "SmsSendDetailDTO");
+          if (arr != null && !arr.isEmpty()) {
+            Map<String, Object> first = arr.get(0);
+            String sendStatus = MapUtils.getString(first, "SendStatus");
+            String errMsg = MapUtils.getString(first, "ErrCode");
+            if ("DELIVERED".equals(sendStatus)) {
+              return MessageSendResultVO.ok("SMS", providerTraceId);
+            } else if ("FAILED".equals(sendStatus)) {
+              String failMsg = I18n.message("message.sms.send.failed", new Object[] {errMsg});
+              MessageSendResultVO r = MessageSendResultVO.fail("SMS", null, failMsg, failMsg, null);
+              r.setProviderTraceId(providerTraceId);
+              return r;
+            }
+          }
+        }
+        // 未查询到详情,返回 UNKNOWN
+        MessageSendResultVO r = new MessageSendResultVO(false, null, providerTraceId, "UNKNOWN", null, null, null, null);
+        return r;
+      }
+      return MessageSendResultVO.fail(
+          "SMS", null, code + ": " + MapUtils.getString(json, "Message"),
+          code + ": " + MapUtils.getString(json, "Message"), null);
+    } catch (Exception e) {
+      log.error("[AliyunSms] 回执查询异常: bizId={} err={}", bizId, e.getMessage(), e);
+      return MessageSendResultVO.fail(
+          "SMS", null, e.getClass().getSimpleName() + ": " + e.getMessage(),
+          e.getClass().getSimpleName() + ": " + e.getMessage(), null);
+    }
+  }
+}

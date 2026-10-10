@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,9 +14,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "DAG 工作流保存请求")
-public class DagWorkflowDTO implements Serializable {
+public class DagWorkflowDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 工作流编码（唯一，更新时必填） */
   @Schema(description = "工作流编码（唯一标识，为空则自动生成）")

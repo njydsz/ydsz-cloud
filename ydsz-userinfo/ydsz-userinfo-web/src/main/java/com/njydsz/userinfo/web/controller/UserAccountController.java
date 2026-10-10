@@ -47,6 +47,7 @@ import com.njydsz.userinfo.server.service.LoginHistoryService;
 import com.njydsz.userinfo.server.service.UserAccountService;
 import com.njydsz.userinfo.server.service.UserExcelService;
 import com.njydsz.userinfo.server.service.UserLifecycleService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户账号 Controller
@@ -325,7 +326,7 @@ public class UserAccountController {
           userExcelService.importUsers(file.getInputStream(), file.getOriginalFilename());
       return YdszResponse.success(result);
     } catch (IOException e) {
-      log.error("导入用户文件读取失败", e);
+      log.error(I18n.message("userinfo.导入用户文件读取失败"), e);
       throw new BusinessException(UserInfoExceptionCode.IMPORT_READ_FAILED);
     }
   }
@@ -342,14 +343,13 @@ public class UserAccountController {
   public void downloadImportTemplate(HttpServletResponse response) {
     try {
       byte[] templateBytes = userExcelService.getImportTemplate();
-      response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-      response.setHeader("Content-Disposition", "attachment; filename=用户导入模板.xlsx");
+      com.njydsz.common.web.util.ExportHelper.prepareExcelDownload(response, "用户导入模板.xlsx");
       response.getOutputStream().write(templateBytes);
       response.getOutputStream().flush();
     } catch (IOException e) {
-      log.warn("下载导入模板IO异常，可能由客户端断开连接导致: {}", e.getMessage());
+      log.warn(I18n.message("userinfo.下载导入模板IO异常.可能由客户端断开连接导致", new Object[]{e.getMessage()}));
     } catch (Exception e) {
-      log.error("下载导入模板失败", e);
+      log.error(I18n.message("userinfo.下载导入模板失败"), e);
       if (!response.isCommitted()) {
         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
       }
@@ -375,14 +375,13 @@ public class UserAccountController {
   public void exportUsers(HttpServletResponse response) {
     try {
       byte[] excelBytes = userExcelService.exportUsers();
-      response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-      response.setHeader("Content-Disposition", "attachment; filename=用户列表.xlsx");
+      com.njydsz.common.web.util.ExportHelper.prepareExcelDownload(response, "用户列表.xlsx");
       response.getOutputStream().write(excelBytes);
       response.getOutputStream().flush();
     } catch (IOException e) {
-      log.warn("导出用户列表IO异常，可能由客户端断开连接导致: {}", e.getMessage());
+      log.warn(I18n.message("userinfo.导出用户列表IO异常.可能由客户端断开连接导致", new Object[]{e.getMessage()}));
     } catch (Exception e) {
-      log.error("导出用户列表失败", e);
+      log.error(I18n.message("userinfo.导出用户列表失败"), e);
       if (!response.isCommitted()) {
         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
       }

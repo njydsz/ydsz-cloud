@@ -42,7 +42,7 @@ class AgentDefinitionControllerSmokeTest extends BaseControllerMockTest {
 
   @Nested
   @DisplayName("GET /agent/definitions")
-  class List {
+  class ListDefinitions {
 
     @Test
     @DisplayName("should return 200 when list succeeds")

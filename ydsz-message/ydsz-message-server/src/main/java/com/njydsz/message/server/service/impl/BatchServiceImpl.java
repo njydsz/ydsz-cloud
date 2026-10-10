@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -156,12 +157,12 @@ public class BatchServiceImpl implements BatchService {
     query.setBatchId(batchId);
     MsgBatchVO batch = msgBatchRepository.findOne(query).orElse(null);
     if (batch == null) {
-      log.warn("[Batch] executeBatch 批次不存在: batchId={}", batchId);
+      log.warn(I18n.message("message.log.server.batch.warn.not.found"), batchId);
       return;
     }
     List<MessageItemRequestDTO> requests = parsePayload(batch.getPayload());
     if (requests.isEmpty()) {
-      log.warn("[Batch] executeBatch payload 为空: batchId={}", batchId);
+      log.warn(I18n.message("message.log.server.batch.warn.payload.empty"), batchId);
       updateBatchStatus(batchId, "FAILED", "payload 为空");
       return;
     }
@@ -249,7 +250,7 @@ public class BatchServiceImpl implements BatchService {
           (List<MessageItemRequestDTO>) YdszJson.fromJson(payload, List.class, MessageItemRequestDTO.class);
       return requests != null ? requests : new ArrayList<>(0);
     } catch (Exception e) {
-      log.warn("[Batch] payload 解析失败: {}", e.getMessage(), e);
+      log.warn(I18n.message("message.log.server.batch.error.payload.parse.failed"), e.getMessage(), e);
       return new ArrayList<>(0);
     }
   }
@@ -303,12 +304,12 @@ public class BatchServiceImpl implements BatchService {
    * @param incremental 是否增量累加（首次执行=true，会从当前 DB 计数开始累加）
    */
   private void doExecuteBatch(String batchId, List<MessageItemRequestDTO> requests, boolean incremental) {
-    log.info("[Batch] doExecuteBatch 开始: batchId={}, requests={}, incremental={}", batchId, requests.size(), incremental);
+    log.info(I18n.message("message.log.server.batch.info.execute.start"), batchId, requests.size(), incremental);
 
     // 1. 加载批次，初始化计数器
     MsgBatchVO batch = loadBatch(batchId);
     if (batch == null) {
-      log.error("[Batch] 批次不存在，无法执行: batchId={}", batchId);
+      log.error(I18n.message("message.log.server.batch.warn.execute.not.executable"), batchId);
       return;
     }
 
@@ -338,18 +339,18 @@ public class BatchServiceImpl implements BatchService {
         if (result != null && result.isSuccess()) {
           success++;
         } else {
-          log.warn("[Batch] 单条发送失败: batchId={}, index={}, error={}",
+          log.warn(I18n.message("message.log.server.batch.warn.single.send.failed"),
               batchId, i, result != null ? result.getUserMessage() : "null result");
           failed++;
         }
       } catch (SysException e) {
         // 业务异常：记失败，保留堆栈供排查
-        log.warn("[Batch] 单条业务异常: batchId={}, index={}, code={}, msg={}",
+        log.warn(I18n.message("message.log.server.batch.warn.single.business.exception"),
             batchId, i, e.getCode(), e.getMessage());
         failed++;
       } catch (Exception e) {
         // 系统异常：记失败，继续执行下一条
-        log.error("[Batch] 单条系统异常: batchId={}, index={}", batchId, i, e);
+        log.error(I18n.message("message.log.server.batch.error.single.system.exception"), batchId, i, e);
         failed++;
       }
 
@@ -395,7 +396,7 @@ public class BatchServiceImpl implements BatchService {
             TenantContextHolder.getTenantId(),
             batchId, total, success, failed, skipped, mode));
 
-    log.info("[Batch] doExecuteBatch 完成: batchId={}, status={}, success={}, failed={}, skipped={}",
+    log.info(I18n.message("message.log.server.batch.info.execute.complete"),
         batchId, finalStatus, success, failed, skipped);
   }
 
@@ -429,7 +430,7 @@ public class BatchServiceImpl implements BatchService {
       boolean ok = msgBatchRepository.save(batch);
       if (!ok) {
         // 乐观锁冲突：加载最新值后合并再写
-        log.warn("[Batch] 进度持久化冲突，重试加载: batchId={}", batchId);
+        log.warn(I18n.message("message.log.server.batch.warn.progress.persistence.conflict"), batchId);
         MsgBatchVO fresh = loadBatch(batchId);
         if (fresh != null) {
           fresh.setSuccess(success);
@@ -441,7 +442,7 @@ public class BatchServiceImpl implements BatchService {
       }
     } catch (Exception e) {
       // 持久化异常不影响发送主流程，仅记日志
-      log.error("[Batch] 进度持久化异常: batchId={}, err={}", batchId, e.getMessage());
+      log.error(I18n.message("message.log.server.batch.error.progress.persistence.exception"), batchId, e.getMessage());
     }
   }
 
@@ -475,7 +476,7 @@ public class BatchServiceImpl implements BatchService {
       sseEmitterService.broadcastProgress(batchId, data);
     } catch (Exception e) {
       // SSE 推送异常不影响主流程
-      log.warn("[Batch] SSE 推送异常: batchId={}, err={}", batchId, e.getMessage());
+      log.warn(I18n.message("message.log.server.batch.warn.sse.push.exception"), batchId, e.getMessage());
     }
   }
 

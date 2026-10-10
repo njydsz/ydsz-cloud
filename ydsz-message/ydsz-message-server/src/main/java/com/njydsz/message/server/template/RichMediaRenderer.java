@@ -1,6 +1,7 @@
 package com.njydsz.message.server.template;
 
-import java.util.Map;
+
+import com.njydsz.common.locales.util.I18n;import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -53,7 +54,7 @@ public class RichMediaRenderer {
       String json = raw instanceof String ? (String) raw : YdszJson.toJson(raw);
       return YdszJson.fromJson(json, RichMediaContentDTO.class);
     } catch (Exception e) {
-      log.warn("[RichMediaRenderer] 解析富媒体内容失败: {}", e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.RichMediaRenderer_{}.f33204"), e.getMessage(), e);
       return null;
     }
   }

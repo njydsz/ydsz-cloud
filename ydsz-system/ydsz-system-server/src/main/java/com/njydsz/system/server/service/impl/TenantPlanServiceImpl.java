@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.dto.TenantPlanDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.TenantPageQuery;
@@ -105,7 +106,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
           .data("planCode", dto.getPlanCode());
     }
     tenantPlanRepository.insert(dto);
-    log.info("创建套餐成功: planCode={}", dto.getPlanCode());
+    log.info(I18n.message("system.tenant.plan.save.success", new Object[]{dto.getPlanCode()}));
     return dto.getId();
   }
 

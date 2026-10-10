@@ -1,0 +1,121 @@
+package com.njydsz.message.server.consumer;
+
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.spring.annotation.ConsumeMode;
+import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
+import org.apache.rocketmq.spring.core.RocketMQListener;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
+import com.njydsz.common.queue.constant.YdszMessageTopics;
+import com.njydsz.message.server.service.core.MessageService;
+
+/**
+ * 批量消息消费者，监听 RocketMQ 批量消费 Topic 异步处理大批量非实时通知。
+ *
+ * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE_BATCH} Topic，消息体为 JSON 数组格式
+ * （[MessageItemRequestDTO, MessageItemRequestDTO, ...]）。批量大小由 RocketMQ pullBatchSize 控制。
+ * 幂等策略：批量内逐条通过 {@link IdempotentStrategy#acquire} 获取分布式锁
+ * （前缀 msg:batch:），失败则跳过；成功发送后释放锁允许重试。
+ *
+ * @author ydsz
+ * @since 26.09.24
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+@ConditionalOnClass(name = "org.apache.rocketmq.spring.annotation.RocketMQMessageListener")
+@ConditionalOnProperty(
+    prefix = "rocketmq.consumer",
+    name = "batch-enabled",
+    havingValue = "true",
+    matchIfMissing = false)
+@RocketMQMessageListener(
+    topic = YdszMessageTopics.TOPIC_MESSAGE_BATCH,
+    consumerGroup = YdszMessageTopics.GROUP_MESSAGE_BATCH,
+    selectorExpression = "*",
+    maxReconsumeTimes = 3,
+    consumeMode = ConsumeMode.CONCURRENTLY)
+public class BatchMessageConsumer implements RocketMQListener<String> {
+
+  private final MessageService messageService;
+  private final IdempotentStrategy idempotentStrategy;
+
+  /** 批量消费幂等前缀 */
+  private static final String BATCH_IDEMPOTENT_PREFIX = "msg:batch:";
+
+  /** 幂等 TTL */
+  private static final long IDEMPOTENT_TTL_SECONDS = 300L;
+
+  @Override
+  public void onMessage(String body) {
+    if (body == null || body.isBlank()) {
+      log.warn("[BatchConsumer] 空消息体,跳过");
+      return;
+    }
+    List<MessageItemRequestDTO> requests;
+    try {
+      requests = YdszJson.parseArray(body, MessageItemRequestDTO.class);
+    } catch (Exception e) {
+      log.error("[BatchConsumer] 批量消息解析失败,尝试单条解析: err={}", e.getMessage(), e);
+      // 降级：尝试作为单条消息处理
+      try {
+        MessageItemRequestDTO single = YdszJson.fromJson(body, MessageItemRequestDTO.class);
+        if (single != null) {
+          requests = List.of(single);
+        } else {
+          return;
+        }
+      } catch (Exception ex) {
+        log.error("[BatchConsumer] 单条解析也失败: {}", ex.getMessage());
+        return;
+      }
+    }
+    if (requests == null || requests.isEmpty()) {
+      return;
+    }
+    log.info("[BatchConsumer] 收到批量消息: count={}", requests.size());
+    int success = 0;
+    int failure = 0;
+    for (MessageItemRequestDTO request : requests) {
+      // 批量内逐条幂等检查
+      String idempotentKey = BATCH_IDEMPOTENT_PREFIX + request.getMessageId();
+      String batchToken = null;
+      if (request.getMessageId() != null) {
+        batchToken = idempotentStrategy.acquire(idempotentKey, IDEMPOTENT_TTL_SECONDS * 1000L);
+        if (batchToken == null) {
+          log.debug("[BatchConsumer] 批量内消息已处理,跳过: msgId={}", request.getMessageId());
+          continue;
+        }
+      }
+      try {
+        messageService.send(request);
+        success++;
+      } catch (Exception e) {
+        failure++;
+        log.error(
+            "[BatchConsumer] 批量内消息发送失败: msgId={} err={}", request.getMessageId(), e.getMessage());
+        // 释放幂等锁，允许重试
+        if (batchToken != null) {
+          idempotentStrategy.release(idempotentKey, batchToken);
+        }
+      }
+    }
+    log.info(
+        "[BatchConsumer] 批量消费完成: total={} success={} failure={}",
+        requests.size(),
+        success,
+        failure);
+    // 如果全部失败，抛出异常触发重试
+    if (failure > 0 && success == 0) {
+      throw new IllegalStateException("Batch consumption all failed: " + failure + " messages");
+    }
+  }
+}

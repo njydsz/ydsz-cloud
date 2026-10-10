@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,9 +18,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "批量对话响应")
-public class BatchChatResponseDTO implements Serializable {
+public class BatchChatResponseDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 批量结果列表（与请求 items 顺序一致） */
   @Schema(description = "批量结果列表（与请求 items 顺序一致）")
@@ -45,9 +42,8 @@ public class BatchChatResponseDTO implements Serializable {
    *
    * <p>每条结果与请求中的 {@link BatchChatRequestDTO.BatchChatItem} 通过 {@link #itemId} 对应。
    */
-  public static class BatchResultItem implements Serializable {
+  public static class BatchResultItem {
 
-    @Serial private static final long serialVersionUID = 1L;
 
     /** 条目标识（与请求中 itemId 对应） */
     @Schema(description = "条目标识（与请求中 itemId 对应）")

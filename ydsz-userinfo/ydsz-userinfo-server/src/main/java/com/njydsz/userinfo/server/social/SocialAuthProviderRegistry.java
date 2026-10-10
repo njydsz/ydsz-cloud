@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.social.SocialAuthProvider;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 社交认证提供者注册表（P3-4：运行时动态注册预留）。
@@ -81,7 +82,7 @@ public class SocialAuthProviderRegistry {
     }
     SocialAuthProvider removed = providers.remove(platform.toUpperCase());
     if (removed != null) {
-      log.info("SocialAuthProvider 注销: platform={}", platform);
+      log.info(I18n.message("userinfo.SocialAuthProvider.注销.platform=", new Object[]{platform}));
     }
     return removed;
   }

@@ -1,6 +1,7 @@
 package com.njydsz.message.server.config.hotreload;
 
-import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.locales.util.I18n;import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.config.hotreload.ConfigChangeListener;
@@ -55,11 +56,11 @@ public class MessageConfigChangeListener implements ConfigChangeListener {
       return;
     }
 
-    log.info("[Message] 配置变更通知: key={}, {} -> {}", key, oldValue, newValue);
+    log.info(I18n.message("message.log.other.Message_key_{}_{}_{}.cb99ff"), key, oldValue, newValue);
 
     // 通道开关变更 → 重要性级别较高，使用 WARN
     if (key.startsWith("ydsz.message.channelEnabled")) {
-      log.warn("[Message] 通道开关变更: {} -> {}", key, newValue);
+      log.warn(I18n.message("message.log.other.Message_{}_{}.a22f31"), key, newValue);
     }
   }
 

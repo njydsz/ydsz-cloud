@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -18,9 +16,7 @@ import com.njydsz.workflow.domain.entity.FlowRunTask;
  * @since 26.10.01
  */
 @Data
-public class FlowRunTaskVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowRunTaskVO {
 
   /** 主键 ID */
   private String id;

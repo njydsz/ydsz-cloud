@@ -1,0 +1,215 @@
+package com.njydsz.message.server.service.impl;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import com.njydsz.common.locales.util.I18nContextPropagator;
+import com.njydsz.common.locales.util.Locales;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.common.lock.annotation.DistributedScheduled;
+import com.njydsz.common.queue.trace.MessageTracer;
+import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.enums.core.MessageStatusEnum;
+import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.server.channel.ChannelRouter;
+import com.njydsz.message.server.metric.MessageMetrics;
+
+/**
+ * 定时消息调度扫描器，扫描到期 SCHEDULED 消息并在分布式锁内并发触发发送。
+ *
+ * <p>扫描 status=SCHEDULED AND scheduled_at<=now 的消息（批次 200 条），
+ * 使用 CompletableFuture 并发分发（线程池核心数 = min(CPU, 4)），吞吐量提升 3-4 倍。
+ * 发送成功 → SUCCESS；失败 → RETRY（nextRetryAt=now+30s，retryCount=1）。
+ * 容器关闭时通过 ContextClosedEvent 优雅停止线程池（最多等待 10s）。
+ * 多实例部署通过 DistributedScheduled 分布式锁保证单实例执行扫描。
+ *
+ * @author ydsz
+ * @since 26.09.24
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+@EnableScheduling
+@ConditionalOnProperty(
+    prefix = "ydsz.message",
+    name = "scheduled-enabled",
+    havingValue = "true",
+    matchIfMissing = true)
+public class ScheduledMessageScanner {
+  /** 下次重试偏移（秒） */
+  private static final int NEXT_RETRY_OFFSET_SECONDS = 30;
+
+  /** 单次扫描批量大小 */
+  private static final int BATCH_SIZE = 200;
+
+  /** F2: 定时消息并发发送线程池（守护线程，核心数 = CPU 核数，最大 4）。统一走 ydsz-common-thread（YDIZ-CONC-001）。 */
+  private final ExecutorService dispatcher =
+      ExecutorUtils.newDaemonFixedThreadPool(
+          Math.min(Runtime.getRuntime().availableProcessors(), 4), "scheduled-dispatch-");
+
+  private final MsgLogRepository msgLogRepository;
+  private final ChannelRouter channelRouter;
+  private final MessageMetrics messageMetrics;
+
+  /**
+   * F2: 查询当前到期但未发送的定时消息数量（计划发送时间 ≤ 当前时间）。
+   *
+   * <p>供运维接口暴露积压指标，判断扫描器是否跟上生产能力。
+   *
+   * @return 积压数量
+   */
+  public long getBacklogCount() {
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setStatus(MessageStatusEnum.SCHEDULED.name());
+    query.setScheduledAtEnd(LocalDateTime.now());
+    return msgLogRepository.count(query);
+  }
+
+  /**
+   * 定时扫描到期消息。
+   *
+   * <p>默认 30s 扫描一次，分布式锁通过 {@link DistributedScheduled} 注解自动管理，TTL 60s，获取失败直接跳过。
+   */
+  @Scheduled(fixedDelayString = "${ydsz.message.scheduled-scan-interval-ms:30000}")
+  @DistributedScheduled(lockKey = "message:scheduled-scan", leaseTime = 60)
+  public void scan() {
+    try {
+      doScan();
+    } catch (Exception e) {
+      log.error("[ScheduledScanner] 扫描异常: {}", e.getMessage(), e);
+    }
+  }
+
+  /** 执行定时消息扫描（并发分发提升吞吐量）。 */
+  private void doScan() {
+    LocalDateTime now = LocalDateTime.now();
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setStatus(MessageStatusEnum.SCHEDULED.name());
+    query.setScheduledAtEnd(now);
+    query.setPageSize(BATCH_SIZE);
+    List<MsgLogVO> due = msgLogRepository.findList(query);
+    if (due.isEmpty()) {
+      return;
+    }
+    log.info("[ScheduledScanner] 到期定时消息 {} 条", due.size());
+    // F2: 并发分发，单条失败不影响其他消息（包装 I18n 上下文传播）
+    final Locale currentLocale = Locales.current();
+    List<CompletableFuture<Boolean>> futures =
+        due.stream()
+            .map(
+                logDO -> {
+                  Callable<Boolean> callable = () -> {
+                    try {
+                      sendScheduledMessage(logDO);
+                      return true;
+                    } catch (Exception e) {
+                      log.error(
+                          "[ScheduledScanner] 定时消息发送异常: logId={} err={}",
+                          logDO.getId(),
+                          e.getMessage(),
+                          e);
+                      return false;
+                    }
+                  };
+                  return CompletableFuture.supplyAsync(
+                      () -> {
+                        try {
+                          return I18nContextPropagator.wrap(callable, currentLocale).call();
+                        } catch (Exception e) {
+                          throw new java.util.concurrent.CompletionException(e);
+                        }
+                      },
+                      dispatcher);
+                })
+            .toList();
+    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+    long success =
+        futures.stream()
+            .filter(
+                f -> {
+                  try {
+                    return f.get(30, TimeUnit.SECONDS);
+                  } catch (Exception e) {
+                    return false;
+                  }
+                })
+            .count();
+    long failed = due.size() - success;
+    messageMetrics.recordScheduledScan((int) due.size(), (int) success);
+    log.info(
+        "[ScheduledScanner] 扫描完成: total={} success={} failed={}", due.size(), success, failed);
+  }
+
+  /**
+   * 发送单条定时消息：状态流转 SCHEDULED → dispatch → SUCCESS/RETRY。
+   *
+   * @param logDO 消息日志实体
+   */
+  private void sendScheduledMessage(MsgLogVO logDO) {
+    try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(logDO.getTraceId())) {
+      long start = System.currentTimeMillis();
+      try {
+        String providerTraceId = channelRouter.dispatch(logDO);
+        long cost = System.currentTimeMillis() - start;
+        logDO.setStatus(MessageStatusEnum.SUCCESS.name());
+        logDO.setProviderTraceId(providerTraceId);
+        logDO.setCostMs(cost);
+        msgLogRepository.update(logDO);
+        messageMetrics.recordSend(logDO.getChannel(), "SUCCESS", cost);
+        log.info(
+            "[ScheduledScanner] 定时消息发送成功: msgId={} scheduledAt={} cost={}ms",
+            logDO.getMsgId(),
+            logDO.getScheduledAt(),
+            cost);
+      } catch (Exception e) {
+        long cost = System.currentTimeMillis() - start;
+        logDO.setCostMs(cost);
+        logDO.setErrorMessage(e.getMessage());
+        logDO.setStatus(MessageStatusEnum.RETRY.name());
+        logDO.setRetryCount(1);
+        logDO.setNextRetryAt(LocalDateTime.now().plusSeconds(NEXT_RETRY_OFFSET_SECONDS));
+        msgLogRepository.update(logDO);
+        messageMetrics.recordRetry(logDO.getChannel());
+        log.warn(
+            "[ScheduledScanner] 定时消息发送失败转重试: msgId={} err={}",
+            logDO.getMsgId(),
+            e.getMessage());
+      }
+    }
+  }
+
+  /**
+   * F2: 容器关闭时优雅停止定时消息分发线程池。
+   *
+   * <p>触发 {@code shutdown()} 停止接收新任务，并等待已提交任务完成；超时后强制退出。
+   */
+  @EventListener(ContextClosedEvent.class)
+  public void onContextClosed() {
+    dispatcher.shutdown();
+    try {
+      if (!dispatcher.awaitTermination(10, TimeUnit.SECONDS)) {
+        log.warn("[ScheduledScanner] 线程池未在 10s 内完成关闭,执行强制 shutdown");
+        dispatcher.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      dispatcher.shutdownNow();
+    }
+  }
+}

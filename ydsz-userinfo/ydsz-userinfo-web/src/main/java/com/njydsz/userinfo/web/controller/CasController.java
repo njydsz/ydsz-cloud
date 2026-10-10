@@ -26,6 +26,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.CasService;
 import com.njydsz.userinfo.server.config.CasProperties;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * CAS 协议控制器。
@@ -300,7 +301,7 @@ public class CasController {
       // 6. 签发 ST 并重定向
       return redirectWithServiceTicket(tgtId, service, response);
     } catch (Exception e) {
-      log.error("CAS 登录失败: username={}, error={}", username, e.getMessage());
+      log.error(I18n.message("userinfo.CAS.登录失败.username=.error=", new Object[]{username, e.getMessage()}));
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
           .body(buildLoginPageHtml(service, "登录失败，请重试"));
     }

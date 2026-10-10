@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -211,7 +212,7 @@ public class DndService {
   public void removeDnd(String userId) {
     redisStringOps.del(cacheKeyBuilder.dnd(userId));
     configCache.invalidate(userId);
-    log.info("[DND] 用户免打扰配置已移除: userId={}", userId);
+    log.info(I18n.message("message.log.other.DND_userId_{}.43ca94"), userId);
   }
 
   /**
@@ -252,7 +253,7 @@ public class DndService {
       String tz = parts.length > 1 ? parts[1] : DEFAULT_TIMEZONE;
       return new DndConfig(LocalTime.parse(times[0]), LocalTime.parse(times[1]), tz);
     } catch (Exception e) {
-      log.warn("[DND] 配置解析失败: value={} err={}", value, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.DND_value_{}_err_{}.7cb098"), value, e.getMessage(), e);
       return null;
     }
   }

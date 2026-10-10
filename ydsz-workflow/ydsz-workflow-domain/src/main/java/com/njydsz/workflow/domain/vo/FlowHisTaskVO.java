@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -14,9 +12,7 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class FlowHisTaskVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowHisTaskVO {
 
   private String id;
   private String instanceId;

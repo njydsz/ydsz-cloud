@@ -16,20 +16,20 @@ import lombok.Data;
 public class ConfigApprovalSubmitDTO {
 
   /** 资源类型（CONFIG / DICT / VARIABLE） */
-  @NotBlank(message = "资源类型不能为空")
+  @NotBlank(message = "{system.approval.resourceType.required}")
   private String resourceType;
 
   /** 资源唯一标识（如配置键、字典类型编码、变量键） */
-  @NotBlank(message = "资源标识不能为空")
-  @Size(max = 128, message = "资源标识长度不能超过 128")
+  @NotBlank(message = "{system.approval.resourceKey.required}")
+  @Size(max = 128, message = "{system.approval.resourceKey.max}")
   private String resourceKey;
 
   /** 资源分组（仅 CONFIG 类型有值） */
-  @Size(max = 64, message = "资源分组长度不能超过 64")
+  @Size(max = 64, message = "{system.approval.resourceGroup.max}")
   private String resourceGroup;
 
   /** 变更操作类型（CREATE / UPDATE / DELETE） */
-  @NotBlank(message = "变更类型不能为空")
+  @NotBlank(message = "{system.approval.changeType.required}")
   private String changeType;
 
   /** 变更前的 JSON 值（CREATE 时为空） */
@@ -39,6 +39,6 @@ public class ConfigApprovalSubmitDTO {
   private String afterJson;
 
   /** 变更原因 */
-  @Size(max = 500, message = "变更原因长度不能超过 500")
+  @Size(max = 500, message = "{system.approval.reason.max}")
   private String reason;
 }

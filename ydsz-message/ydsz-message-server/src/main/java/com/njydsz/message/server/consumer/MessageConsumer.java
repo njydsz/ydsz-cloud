@@ -1,6 +1,7 @@
 package com.njydsz.message.server.consumer;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -91,11 +92,11 @@ public class MessageConsumer implements RocketMQListener<String> {
     long consumeStart = System.currentTimeMillis();
     // P1-10: 优雅停机检查
     if (shuttingDown.get()) {
-      log.warn("[MessageConsumer] 服务正在关闭,拒绝新消息");
+      log.warn(I18n.message("message.log.other.MessageConsumer.62c206"));
       throw new IllegalStateException("Consumer is shutting down");
     }
     if (body == null || body.isBlank()) {
-      log.warn("[MessageConsumer] 空消息体,跳过");
+      log.warn(I18n.message("message.log.other.MessageConsumer.2fc3e3"));
       return;
     }
     // P2-21: 消息解压（如果带 GZIP: 前缀则自动解压）
@@ -104,7 +105,7 @@ public class MessageConsumer implements RocketMQListener<String> {
     try {
       request = YdszJson.fromJson(body, MessageItemRequestDTO.class);
     } catch (Exception e) {
-      log.error("[MessageConsumer] 解析失败: body={} err={}", body, e.getMessage(), e);
+      log.error(I18n.message("message.log.other.MessageConsumer_body_{}_err_{}.351f9e"), body, e.getMessage(), e);
       return;
     }
     if (request == null) {
@@ -151,7 +152,7 @@ public class MessageConsumer implements RocketMQListener<String> {
         dbIdempotentQuery.setStatus(MessageStatusEnum.SUCCESS.name());
         long dbCount = msgLogRepository.count(dbIdempotentQuery);
         if (dbCount > 0) {
-          log.warn("[MessageConsumer] DB二级幂等检查命中,跳过: messageId={}", request.getMessageId());
+          log.warn(I18n.message("message.log.other.MessageConsumer_DB_messageId_{}.403c61"), request.getMessageId());
           return;
         }
       }
@@ -179,7 +180,7 @@ public class MessageConsumer implements RocketMQListener<String> {
       recordFailedLog(request, e.getMessage());
     } catch (Exception e) {
       // 系统异常:释放锁(允许重投),抛出触发重试
-      log.error("[MessageConsumer] 系统异常: messageId={}", request.getMessageId(), e);
+      log.error(I18n.message("message.log.other.MessageConsumer_messageId_{}.f9d083"), request.getMessageId(), e);
       releaseLock(idempotentKey, idempotentToken);
       throw new IllegalStateException("MessageConsumer failed, will retry", e);
     } finally {
@@ -207,12 +208,12 @@ public class MessageConsumer implements RocketMQListener<String> {
     try {
       boolean mightContain = bloomFilter.mightContain(msgId);
       if (mightContain) {
-        log.info("[MessageConsumer] BloomFilter 疑似重复,跳过: messageId={}", msgId);
+        log.info(I18n.message("message.log.other.MessageConsumer_BloomFilter_messageId_{}.9871f3"), msgId);
         return true;
       }
     } catch (Exception e) {
       // BloomFilter 异常时不能阻塞消息处理，降级放行
-      log.warn("[BloomFilter] 判定异常,降级放行: messageId={} err={}", msgId, e.getMessage());
+      log.warn(I18n.message("message.log.other.BloomFilter_messageId_{}_err_{}.a06950"), msgId, e.getMessage());
     }
     return false;
   }
@@ -235,7 +236,7 @@ public class MessageConsumer implements RocketMQListener<String> {
           existingVO.setStatus(MessageStatusEnum.FAILED.name());
           existingVO.setErrorMessage(errorMessage);
           msgLogRepository.update(existingVO);
-          log.info("[MessageConsumer] 已更新现有记录为 FAILED: messageId={}", msgId);
+          log.info(I18n.message("message.log.other.MessageConsumer_FAILED_messageId_{}.bf3474"), msgId);
           return;
         }
       }
@@ -310,7 +311,7 @@ public class MessageConsumer implements RocketMQListener<String> {
     try {
       idempotentStrategy.release(lockKey, token);
     } catch (Exception e) {
-      log.warn("[MessageConsumer] 释放幂等锁失败(等待 TTL 过期): key={} err={}", lockKey, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.MessageConsumer_TTL_key_{}_err_{}.e2b6b4"), lockKey, e.getMessage(), e);
     }
   }
 
@@ -363,7 +364,7 @@ public class MessageConsumer implements RocketMQListener<String> {
    */
   @PreDestroy
   public void gracefulShutdown() {
-    log.info("[MessageConsumer] 开始优雅停机... inFlight={}", inFlight.get());
+    log.info(I18n.message("message.log.other.MessageConsumer_inFlight_{}.067559"), inFlight.get());
     shuttingDown.set(true);
     // P1-5: 等待在飞消息处理完成
     int waitSeconds = 0;
@@ -381,9 +382,9 @@ public class MessageConsumer implements RocketMQListener<String> {
       }
     }
     if (inFlight.get() > 0) {
-      log.warn("[MessageConsumer] 优雅停机超时,仍有 {} 条消息在处理中", inFlight.get());
+      log.warn(I18n.message("message.log.other.MessageConsumer_{}.d468f4"), inFlight.get());
     } else {
-      log.info("[MessageConsumer] 优雅停机完成,所有消息已处理");
+      log.info(I18n.message("message.log.other.MessageConsumer.54ca8d"));
     }
   }
 }

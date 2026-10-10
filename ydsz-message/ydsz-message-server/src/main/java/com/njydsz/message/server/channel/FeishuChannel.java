@@ -1,6 +1,7 @@
 package com.njydsz.message.server.channel;
 
-import java.nio.charset.StandardCharsets;
+
+import com.njydsz.common.locales.util.I18n;import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -106,7 +107,7 @@ public class FeishuChannel implements MessageChannel {
   public MessageSendResultVO send(MessageItemRequestDTO request) {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
-      log.warn("[FEISHU] 未配置 hook，跳过发送: receiver={}", request.getReceiver());
+      log.warn(I18n.message("message.log.other.FEISHU_hook_receiver_{}.e8658c"), request.getReceiver());
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "飞书 hook 未配置", "飞书 hook 未配置", null);
     }
 
@@ -127,17 +128,17 @@ public class FeishuChannel implements MessageChannel {
         // 飞书 v2 hook 返回 {"code":0,"msg":"success"}，0 表示成功
         int code = ((Number) body.getOrDefault("code", -1)).intValue();
         if (code == 0) {
-          log.info("[FEISHU] 发送成功");
+          log.info(I18n.message("message.log.server.channel.feishu.info.send.success"));
           return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
         }
         String msg = (String) body.getOrDefault("msg", "unknown");
-        log.error("[FEISHU] 发送失败: code={} msg={}", code, msg);
+        log.error(I18n.message("message.log.other.FEISHU_code_{}_msg_{}.6cd3a7"), code, msg);
         return MessageSendResultVO.fail(CHANNEL_TYPE, null, "code=" + code + ", msg=" + msg, "code=" + code + ", msg=" + msg, null);
       }
-      log.error("[FEISHU] 发送失败: status={}", response.getStatusCode());
+      log.error(I18n.message("message.log.server.channel.feishu.error.send.failed.status"), response.getStatusCode());
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
-      log.error("[FEISHU] 发送异常: reason={}", e.getMessage(), e);
+      log.error(I18n.message("message.log.server.channel.feishu.error.send.exception"), e.getMessage(), e);
       return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
@@ -267,7 +268,7 @@ public class FeishuChannel implements MessageChannel {
       result.put("sign", sign);
       return result;
     } catch (Exception e) {
-      log.error("[FEISHU] 加签失败,放弃发送: {}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.FEISHU_{}.80833a"), e.getMessage(), e);
       return Collections.emptyMap();
     }
   }

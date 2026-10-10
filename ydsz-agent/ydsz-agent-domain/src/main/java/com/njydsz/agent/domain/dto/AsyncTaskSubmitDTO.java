@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -17,12 +15,9 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "异步任务提交请求")
-public class AsyncTaskSubmitDTO implements Serializable {
+public class AsyncTaskSubmitDTO {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  /** 任务类型编码（REPORT_GENERATE / DOC_INGEST / BATCH_CHAT / CODE_EXECUTION） */
+/** 任务类型编码（REPORT_GENERATE / DOC_INGEST / BATCH_CHAT / CODE_EXECUTION） */
   @NotBlank(message = "任务类型不能为空")
   @Schema(description = "任务类型编码", example = "REPORT_GENERATE")
   private String taskType;

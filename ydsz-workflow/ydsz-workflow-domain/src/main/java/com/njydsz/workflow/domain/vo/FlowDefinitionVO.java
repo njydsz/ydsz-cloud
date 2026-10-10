@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import lombok.Data;
@@ -17,9 +15,7 @@ import com.njydsz.workflow.domain.entity.FlowDefinition;
  * @since 26.10.01
  */
 @Data
-public class FlowDefinitionVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowDefinitionVO {
 
   /** 主键 ID */
   private String id;

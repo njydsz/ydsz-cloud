@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -18,9 +16,8 @@ import lombok.Data;
  * @since 26.09.17
  */
 @Data
-public class SkillExecutionResponseVO implements Serializable {
+public class SkillExecutionResponseVO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** Skill 编码 */
   private String skillCode;

@@ -1,0 +1,169 @@
+package com.njydsz.message.web.controller.core;
+
+import java.util.List;
+import java.util.Map;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.message.domain.dto.MessageFeedbackDTO;
+import com.njydsz.message.domain.vo.MsgFeedbackVO;
+import com.njydsz.message.server.service.core.MessageFeedbackService;
+
+/**
+ * 消息质量反馈（Feedback）Controller。
+ *
+ * <p>提供<b>用户对消息质量的评分与反馈</b>能力， 是 P1-4「消息质量闭环」的核心入口。通过收集用户对送达 / 内容 / 时机的主观评分，
+ * 驱动发送策略的自动调优（降频、屏蔽、模板优化等）。
+ *
+ * <p><b>接口路径：</b>{@code /api/message/feedback/**}
+ *
+ * <p><b>核心能力：</b>
+ *
+ * <ul>
+ *   <li><b>提交反馈</b>：{@code POST /} — 用户对单条消息提交 1-5 星评分 + 文本意见
+ *   <li><b>用户平均评分</b>：{@code GET /rating} — 查询某用户 + 某通道的综合平均评分
+ *   <li><b>分页查询反馈</b>：{@code GET /page} — 管理后台查看全部反馈记录
+ *   <li><b>降频决策</b>：{@code GET /shouldReduceFreq} — 判定某用户是否需要降频推送
+ * </ul>
+ *
+ * <p><b>降频策略：</b>当用户近 N 条消息评分持续低于阈值（默认 2.0），自动标记为「应降频」， 后续发送时由 {@code MessageService.send}
+ * 自动按降频策略（减少非必要通知 / 改用低频通道）发送。
+ *
+ * <p><b>典型场景：</b>
+ *
+ * <ul>
+ *   <li>用户对某条营销短信打 1 星 + 反馈「太多广告」→ 系统识别为低质 → 自动降低后续营销通知频次
+ *   <li>客服在管理后台查询「近 7 天评分低于 2.0 的反馈」→ 优化对应模板
+ *   <li>运营查看通道维度评分 → 决定是否切换供应商
+ * </ul>
+ *
+ * <p><b>多租户隔离：</b>所有反馈按 {@code tenantId} 隔离，跨租户反馈不可见。
+ *
+ * <p><b>安全特性：</b>
+ *
+ * <ul>
+ *   <li>写接口（submit）启用 {@link Idempotent} 5s 防重（同一用户对同一消息多次反馈幂等）
+ *   <li>写接口（submit）启用 {@link RateLimit} 50 QPS 限流，防止恶意刷评分
+ *   <li>写接口（submit）启用 {@link Audit} 审计日志（异步持久化）
+ *   <li>读接口（rating / page / shouldReduceFreq）需校验 {@link PermissionCodes#MESSAGE_LOG_VIEW} 权限码
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ * @see com.njydsz.message.server.service.core.MessageFeedbackService 消息反馈服务
+ * @see com.njydsz.message.domain.entity.config.MsgFeedback 反馈实体
+ */
+@Tag(name = "消息反馈", description = "消息质量评分与用户反馈")
+@Slf4j
+@ApiVersion("26.10.01")
+@RestController
+@RequestMapping("/message/feedback")
+@RequiredArgsConstructor
+public class MessageFeedbackController {
+
+  /** 消息质量反馈服务 */
+  private final MessageFeedbackService messageFeedbackService;
+
+  /**
+   * 提交消息质量反馈。
+   *
+   * <p>用户对单条消息提交 1-5 星评分 + 文本意见；同一用户对同一消息多次提交幂等处理（取首次提交）。
+   * 启用租户隔离、5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param dto 反馈请求体（含消息 ID、评分、意见等，经 {@code @Valid} 校验）
+   * @return 反馈记录唯一 ID
+   */
+  @Operation(summary = "提交消息反馈")
+  @Idempotent(key = "ydsz:message:feedback:submit", ttlSeconds = 5)
+  @Audit(
+      module = "消息反馈",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'submitFeedback'")
+  @RateLimit(resource = "message.messagefeedback.submitFeedback", threshold = 50)
+  @PostMapping
+  public YdszResponse<String> submitFeedback(@Valid @RequestBody MessageFeedbackDTO dto) {
+    return YdszResponse.success(messageFeedbackService.submitFeedback(dto));
+  }
+
+  /**
+   * 查询用户和通道的平均评分。
+   *
+   * <p>返回维度：userRating = 某用户所有评分的平均值；channelRating = 某通道所有评分的平均值（channel 为空时返回 0）。
+   *
+   * @param userId 用户 ID（必填）
+   * @param channel 通道（可选，如 SMS / EMAIL / IN_APP）
+   * @return Map，key = "userRating" / "channelRating"，value 为对应平均分（0.0 ~ 5.0）
+   */
+  @Operation(summary = "查询用户平均评分")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
+  @GetMapping("/rating")
+  public YdszResponse<Map<String, Double>> getAverageRating(
+      @RequestParam String userId, @RequestParam(required = false) String channel) {
+    double userRating = messageFeedbackService.getAverageRating(userId);
+    double channelRating =
+        channel != null ? messageFeedbackService.getAverageRatingByChannel(channel) : 0;
+    return YdszResponse.success(
+        Map.of(
+            "userRating", userRating,
+            "channelRating", channelRating));
+  }
+
+  /**
+   * 分页查询反馈记录。
+   *
+   * <p>管理后台查看全部反馈记录，支持按通道 / 用户 ID 过滤，按租户隔离。
+   *
+   * @param page 页码（默认 1）
+   * @param size 每页条数（默认 20）
+   * @param channel 通道过滤（可选，如 SMS / EMAIL / IN_APP）
+   * @param userId 用户 ID 过滤（可选）
+   * @return 反馈分页结果（data 为 MsgFeedbackVO 列表；无匹配时 data 为空列表）
+   */
+  @Operation(summary = "分页查询反馈记录")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
+  @GetMapping("/page")
+  public YdszResponse<PageResponse<List<MsgFeedbackVO>>> pageFeedback(
+      @RequestParam(defaultValue = "1") int page,
+      @RequestParam(defaultValue = "20") int size,
+      @RequestParam(required = false) String channel,
+      @RequestParam(required = false) String userId) {
+    return YdszResponse.success(messageFeedbackService.pageFeedback(page, size, channel, userId));
+  }
+
+  /**
+   * 检查用户是否需要降频推送。
+   *
+   * <p>当用户近 N 条消息评分持续低于阈值（默认 2.0）时返回 {@code true}，后续非必要通知将自动降频或改用低频通道。
+   *
+   * @param userId 用户 ID（必填）
+   * @return Map，key = "shouldReduce"，value = true 表示应降频 / false 表示正常发送
+   */
+  @Operation(summary = "检查用户是否需要降频")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
+  @GetMapping("/shouldReduceFreq")
+  public YdszResponse<Map<String, Boolean>> shouldReduceFrequency(@RequestParam String userId) {
+    return YdszResponse.success(
+        Map.of("shouldReduce", messageFeedbackService.shouldReduceFrequency(userId)));
+  }
+}

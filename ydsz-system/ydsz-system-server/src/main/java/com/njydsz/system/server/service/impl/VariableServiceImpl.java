@@ -241,7 +241,7 @@ public class VariableServiceImpl implements VariableService {
       dto.setStatus("ENABLED");
     }
     variableRepository.insert(dto);
-    publishVariableChangedEvent(dto.getVariableKey(), "创建变量");
+    publishVariableChangedEvent(dto.getVariableKey(), I18n.message("system.variable.event.created", new Object[]{dto.getVariableKey()}));
     return dto.getId();
   }
 
@@ -284,10 +284,10 @@ public class VariableServiceImpl implements VariableService {
                   .resourceType(EntityVersionService.RESOURCE_TYPE_VARIABLE)
                   .resourceKey(dto.getVariableKey())
                   .version(SystemVersionUtils.nextVersion())
-                  .changeLog("更新变量: " + dto.getVariableKey())
+                  .changeLog(I18n.message("system.variable.event.updated", new Object[]{dto.getVariableKey()}))
                   .snapshotJson(snapshotJson)
                   .build()));
-      publishVariableChangedEvent(dto.getVariableKey(), "更新变量");
+      publishVariableChangedEvent(dto.getVariableKey(), I18n.message("system.variable.event.updated", new Object[]{dto.getVariableKey()}));
     }
     return updated;
   }
@@ -325,10 +325,10 @@ public class VariableServiceImpl implements VariableService {
                   .resourceType(EntityVersionService.RESOURCE_TYPE_VARIABLE)
                   .resourceKey(vo.getVariableKey())
                   .version(SystemVersionUtils.nextVersion())
-                  .changeLog("删除变量: " + vo.getVariableKey())
+                  .changeLog(I18n.message("system.variable.event.deleted", new Object[]{vo.getVariableKey()}))
                   .snapshotJson(snapshotJson)
                   .build()));
-      publishVariableChangedEvent(vo.getVariableKey(), "删除变量");
+      publishVariableChangedEvent(vo.getVariableKey(), I18n.message("system.variable.event.deleted", new Object[]{vo.getVariableKey()}));
     }
     return removed;
   }
@@ -469,7 +469,7 @@ public class VariableServiceImpl implements VariableService {
           ExcelFacade.read(inputStream, VariableExcelVO.class).sheet(0).doReadAll();
       return rows != null ? rows : List.of();
     } catch (Exception e) {
-      log.warn("[VariableService] Excel 读取失败: {}", e.getMessage(), e);
+      log.warn(I18n.message("system.variable.import.excel.fail", new Object[]{e.getMessage()}), e);
       throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
           .data("reason", "Excel 文件读取失败: " + e.getMessage());
     }
@@ -503,7 +503,7 @@ public class VariableServiceImpl implements VariableService {
     // DB 唯一性校验
     VariableVO existing = variableRepository.findByKeyIgnoreStatus(excelRow.getVariableKey()).orElse(null);
     if (existing != null) {
-      return rowPrefix + I18n.message("system.excel.variableKey.duplicate", new Object[] {excelRow.getVariableKey()});
+      return rowPrefix + I18n.message("system.excel.variable.duplicate", new Object[]{excelRow.getVariableKey()});
     }
     return null;
   }
@@ -558,10 +558,10 @@ public class VariableServiceImpl implements VariableService {
       // 精准失效缓存：按涉及 variableKey 逐一失效
       validItems.forEach(vo -> evictVariable(vo.getVariableKey()));
       // 发布变更事件
-      validItems.forEach(vo -> publishVariableChangedEvent(vo.getVariableKey(), "导入变量"));
+      validItems.forEach(vo -> publishVariableChangedEvent(vo.getVariableKey(), I18n.message("system.variable.event.import", new Object[]{vo.getVariableKey()})));
       return validItems.size();
     } catch (Exception e) {
-      errors.add("批量导入失败: " + e.getMessage());
+      errors.add(I18n.message("system.variable.import.batch.fail", new Object[]{e.getMessage()}));
       return 0;
     }
   }

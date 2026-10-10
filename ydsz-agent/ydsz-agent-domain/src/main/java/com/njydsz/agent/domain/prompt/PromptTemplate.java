@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.prompt;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
@@ -19,9 +18,8 @@ import java.util.Objects;
  * @author ydsz-team
  * @since 26.10.01
  */
-public final class PromptTemplate implements Serializable {
+public final class PromptTemplate {
 
-  private static final long serialVersionUID = 1L;
 
   private final String code;
   private final String content;

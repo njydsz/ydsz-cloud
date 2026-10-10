@@ -1,6 +1,7 @@
 package com.njydsz.message.web.controller.core;
 
-import java.util.List;
+
+import com.njydsz.common.locales.util.I18n;import java.util.List;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
@@ -281,10 +282,10 @@ public class MessageController {
           .exportedAt(System.currentTimeMillis())
           .build();
       eventPublisher.publishEvent(event);
-      log.debug("[Audit] 数据导出事件已发布: module={}, bizType={}, rowCount={}",
+      log.debug(I18n.message("message.log.other.Audit_module_{}_bizType_{}_rowCount_{}.21d1c0"),
           exportModule, bizType, rowCount);
     } catch (Exception e) {
-      log.warn("[Audit] 发布数据导出事件异常: exportModule={}, reason={}", exportModule, e.getMessage());
+      log.warn(I18n.message("message.log.other.Audit_exportModule_{}_reason_{}.7b191f"), exportModule, e.getMessage());
     }
   }
 

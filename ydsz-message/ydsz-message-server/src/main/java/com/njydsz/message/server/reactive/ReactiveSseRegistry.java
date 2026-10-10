@@ -1,6 +1,7 @@
 package com.njydsz.message.server.reactive;
 
-import jakarta.annotation.PreDestroy;
+
+import com.njydsz.common.locales.util.I18n;import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -70,7 +71,7 @@ public class ReactiveSseRegistry {
     public Sinks.EmitResult publish(ReactiveEvent event) {
         Sinks.EmitResult result = eventSink.tryEmitNext(event);
         if (!result.isSuccess()) {
-            log.warn("[ReactiveSSE] 事件推送失败: eventId={} result={}", event.getEventId(), result);
+            log.warn(I18n.message("message.log.other.ReactiveSSE_eventId_{}_result_{}.50928e"), event.getEventId(), result);
         }
         return result;
     }
@@ -80,7 +81,7 @@ public class ReactiveSseRegistry {
      */
     @PreDestroy
     public void shutdown() {
-        log.info("[ReactiveSSE] 注册表关闭，完成事件管道");
+        log.info(I18n.message("message.log.other.ReactiveSSE.f8175a"));
         eventSink.tryEmitComplete();
     }
 }

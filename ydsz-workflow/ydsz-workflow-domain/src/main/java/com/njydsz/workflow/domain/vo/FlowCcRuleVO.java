@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -14,9 +12,7 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class FlowCcRuleVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowCcRuleVO {
 
   private String id;
   private String flowCode;

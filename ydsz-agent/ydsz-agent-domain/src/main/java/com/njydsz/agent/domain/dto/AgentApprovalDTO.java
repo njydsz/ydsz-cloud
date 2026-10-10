@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import com.njydsz.common.safe.annotation.Xss;
@@ -18,9 +16,8 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class AgentApprovalDTO implements Serializable {
+public class AgentApprovalDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 审批请求 ID（更新时必填） */
   private String id;

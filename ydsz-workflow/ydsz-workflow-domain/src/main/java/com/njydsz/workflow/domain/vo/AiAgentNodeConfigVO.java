@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Map;
 
 import lombok.Getter;
@@ -37,9 +35,7 @@ import com.njydsz.common.json.YdszJson;
  */
 @Getter
 @ToString
-public class AiAgentNodeConfigVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class AiAgentNodeConfigVO {
 
   /** 默认超时时间（毫秒） */
   public static final int DEFAULT_TIMEOUT_MS = 30000;

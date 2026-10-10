@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Map;
 
 import lombok.Getter;
@@ -32,9 +30,7 @@ import com.njydsz.common.json.YdszJson;
  */
 @Getter
 @ToString
-public class AssigneeConfigVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class AssigneeConfigVO {
 
   /** 默认兜底策略（AUTO_PASS 自动通过） */
   public static final EmptyStrategy DEFAULT_EMPTY_STRATEGY = EmptyStrategy.AUTO_PASS;

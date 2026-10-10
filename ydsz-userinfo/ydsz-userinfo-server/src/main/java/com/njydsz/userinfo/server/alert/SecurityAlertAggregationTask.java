@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 安全告警聚合分析定时任务。
@@ -106,7 +107,7 @@ public class SecurityAlertAggregationTask {
         }
       }
     } catch (Exception e) {
-      log.warn("暴力破解检测异常: {}", e.getMessage(), e);
+      log.warn(I18n.message("userinfo.暴力破解检测异常", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -145,7 +146,7 @@ public class SecurityAlertAggregationTask {
         }
       }
     } catch (Exception e) {
-      log.warn("密码喷洒检测异常: {}", e.getMessage(), e);
+      log.warn(I18n.message("userinfo.密码喷洒检测异常", new Object[]{e.getMessage()}), e);
     }
   }
 }

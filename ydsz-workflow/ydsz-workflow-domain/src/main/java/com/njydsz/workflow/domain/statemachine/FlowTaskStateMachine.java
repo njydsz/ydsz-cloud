@@ -110,12 +110,12 @@ public class FlowTaskStateMachine {
       throw new WorkflowException("workflow.validation.transition_params_required", I18n.message("workflow.validation.transition_params_required", new Object[]{current, target}));
     }
     if (current == target) {
-      log.debug("[FlowTaskStateMachine] 状态未变化: {}", current);
+      log.debug(I18n.message("workflow.statemachine.task.state.unchanged", new Object[]{current}));
       return true;
     }
     boolean allowed = current.canTransitTo(target);
     if (!allowed) {
-      log.warn("[FlowTaskStateMachine] 非法状态流转: {} -> {}", current, target);
+      log.warn(I18n.message("workflow.statemachine.task.illegal.transition", new Object[]{current, target}));
     }
     return allowed;
   }

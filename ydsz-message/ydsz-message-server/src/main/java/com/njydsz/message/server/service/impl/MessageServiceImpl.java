@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
@@ -424,7 +425,7 @@ public class MessageServiceImpl implements MessageService {
               sendInternal(child, depth + 1);
               return true;
             } catch (Exception e) {
-              log.warn("[Message] 级联消息发送失败,不影响其他级联: parentMsgId={} childMsgId={} err={}",
+              log.warn(I18n.message("message.log.other.Message_parentMsgId_{}_childMsgId_{}_err_{}.0440e1"),
                   parentLog.getMsgId(),
                   child.getMessageId(),
                   e.getMessage());
@@ -448,9 +449,9 @@ public class MessageServiceImpl implements MessageService {
       CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
           .get(ASYNC_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     } catch (TimeoutException e) {
-      log.warn("[Message] 级联消息发送超时,部分消息可能未完成: parentMsgId={}", parentLog.getMsgId());
+      log.warn(I18n.message("message.log.other.Message_parentMsgId_{}.836eb9"), parentLog.getMsgId());
     } catch (Exception e) {
-      log.error("[Message] 级联消息发送异常: parentMsgId={}", parentLog.getMsgId(), e);
+      log.error(I18n.message("message.log.other.Message_parentMsgId_{}.599eb0"), parentLog.getMsgId(), e);
     }
   }
 
@@ -533,7 +534,7 @@ public class MessageServiceImpl implements MessageService {
     logVO.setStatus(MessageStatusEnum.SKIPPED.name());
     logVO.setErrorMessage("USER_CANCELLED");
     msgLogRepository.update(logVO);
-    log.info("[Message] 定时消息已取消: msgId={} channel={}", msgId, logVO.getChannel());
+    log.info(I18n.message("message.log.other.Message_msgId_{}_channel_{}.82ff71"), msgId, logVO.getChannel());
     return MessageSendResultVO.ok(logVO.getChannel(), msgId);
   }
 
@@ -591,7 +592,7 @@ public class MessageServiceImpl implements MessageService {
     }
     MessageQueueOperations mqProducer = mqProducerProvider.getIfAvailable();
     if (mqProducer == null) {
-      log.warn("[Message] MQ 未配置,事务消息降级为同步发送: channel={}", request.getChannel());
+      log.warn(I18n.message("message.log.other.Message_MQ_channel_{}.dcffc2"), request.getChannel());
       return send(request);
     }
     try {
@@ -681,7 +682,7 @@ public class MessageServiceImpl implements MessageService {
       log.info(
           "[Message] 异步消息已落库 PENDING: msgId={} channel={}", logDO.getMsgId(), request.getChannel());
     } catch (Exception e) {
-      log.error("[Message] 异步消息落库失败: msgId={} err={}", request.getMessageId(), e.getMessage(), e);
+      log.error(I18n.message("message.log.other.Message_msgId_{}_err_{}.2fa764"), request.getMessageId(), e.getMessage(), e);
       return MessageSendResultVO.fail(request.getChannel(), null, "消息落库失败: " + e.getMessage(), "消息落库失败: " + e.getMessage(), null);
     }
     // ② 写入 Outbox 表（委托 OutboxDomainEventPublisher，由 OutboxProcessor 异步投递 MQ）

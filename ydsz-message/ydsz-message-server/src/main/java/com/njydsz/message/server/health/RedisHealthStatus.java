@@ -1,6 +1,7 @@
 package com.njydsz.message.server.health;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.njydsz.common.locales.util.I18n;import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -58,14 +59,14 @@ public class RedisHealthStatus {
       boolean healthy = "ok".equals(value);
       boolean wasHealthy = redisHealthy.getAndSet(healthy);
       if (!wasHealthy && healthy) {
-        log.info("[RedisHealthStatus] Redis 已恢复");
+        log.info(I18n.message("message.log.other.RedisHealthStatus_Redis.5c45b7"));
       } else if (wasHealthy && !healthy) {
-        log.warn("[RedisHealthStatus] Redis 异常，启用 DB 幂等兜底");
+        log.warn(I18n.message("message.log.other.RedisHealthStatus_Redis_DB.473ce5"));
       }
     } catch (Exception e) {
       boolean wasHealthy = redisHealthy.getAndSet(false);
       if (wasHealthy) {
-        log.warn("[RedisHealthStatus] Redis 异常: {}, 启用 DB 幂等兜底", e.getMessage());
+        log.warn(I18n.message("message.log.other.RedisHealthStatus_Redis_{}_DB.f53481"), e.getMessage());
       }
     }
   }

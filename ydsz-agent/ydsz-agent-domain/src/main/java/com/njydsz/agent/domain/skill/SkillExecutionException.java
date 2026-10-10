@@ -13,7 +13,6 @@ import com.njydsz.common.exception.custom.BusinessException;
  */
 public class SkillExecutionException extends BusinessException {
 
-  private static final long serialVersionUID = 1L;
 
   /** 错误码 */
   private static final String ERROR_CODE = "SKILL_EXECUTION_ERROR";

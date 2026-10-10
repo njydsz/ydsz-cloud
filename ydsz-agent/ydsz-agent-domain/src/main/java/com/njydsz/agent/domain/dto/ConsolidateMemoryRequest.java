@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -16,9 +14,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "记忆整合请求")
-public class ConsolidateMemoryRequest implements Serializable {
+public class ConsolidateMemoryRequest {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 租户 ID（可选，缺省使用当前租户） */
   @Schema(description = "租户 ID")

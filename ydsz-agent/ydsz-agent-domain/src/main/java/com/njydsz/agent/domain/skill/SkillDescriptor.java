@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.skill;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -49,9 +48,8 @@ public record SkillDescriptor(
     Map<String, Object> inputSchema,
     Map<String, String> metadata,
     SkillExecutionTarget targetType
-) implements Serializable {
+) {
 
-  private static final long serialVersionUID = 1L;
 
   /** 默认版本号 */
   private static final String DEFAULT_VERSION = "1.0.0";

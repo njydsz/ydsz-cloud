@@ -1,6 +1,7 @@
 package com.njydsz.message.server.template;
 
-import java.util.ArrayList;
+
+import com.njydsz.common.locales.util.I18n;import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -47,7 +48,7 @@ public class TemplateVariableValidator {
     try {
       return YdszJson.parseArray(variableDefs, TemplateVariableDef.class);
     } catch (Exception e) {
-      log.warn("[VariableValidator] 变量定义解析失败,跳过校验: {}", e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.VariableValidator_{}.3bc7a7"), e.getMessage(), e);
       return List.of();
     }
   }

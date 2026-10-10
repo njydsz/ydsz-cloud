@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,9 +16,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "Skill 执行请求")
-public class SkillExecutionRequestDTO implements Serializable {
+public class SkillExecutionRequestDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** Skill 编码 */
   @NotBlank(message = "skillCode 不能为空")

@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import lombok.Data;
 
@@ -16,9 +14,8 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class TokenUsageRecordDTO implements Serializable {
+public class TokenUsageRecordDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 关联的 Agent 定义 ID（botId），由 RequestContext 在记录时注入，支持按 Agent 维度聚合 */
   private String botId;

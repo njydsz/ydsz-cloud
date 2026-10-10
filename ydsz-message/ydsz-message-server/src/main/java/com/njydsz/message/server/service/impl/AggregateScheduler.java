@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.batch;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -54,7 +55,7 @@ public class AggregateScheduler {
     try {
       doScan();
     } catch (Exception e) {
-      log.error("[AggregateScheduler] 扫描异常: {}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.AggregateScheduler_{}.8b552d"), e.getMessage(), e);
     }
   }
 
@@ -75,8 +76,8 @@ public class AggregateScheduler {
         dueIds,
         AggregateBatchStatusEnum.PENDING.name(),
         AggregateBatchStatusEnum.READY.name());
-    log.debug("[AggregateScheduler] 批量流转 {} 个到期批次 PENDING→READY (实际 {} 条)", dueIds.size(), transitioned);
+    log.debug(I18n.message("message.log.other.AggregateScheduler_{}_PENDING_READY_{}.767a15"), dueIds.size(), transitioned);
     int sent = aggregateService.flushDue();
-    log.debug("[AggregateScheduler] 流转 {} 个到期批次,发送 {} 个", due.size(), sent);
+    log.debug(I18n.message("message.log.other.AggregateScheduler_{}_{}.96094f"), due.size(), sent);
   }
 }

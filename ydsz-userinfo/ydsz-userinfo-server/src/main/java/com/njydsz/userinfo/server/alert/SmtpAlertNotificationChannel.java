@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * SMTP 邮件告警通知渠道（P2 告警通知扩展）。
@@ -54,7 +55,7 @@ public class SmtpAlertNotificationChannel implements AlertNotificationChannel {
   public void sendAlert(SecurityAlert alert) {
     String to = System.getProperty("ydsz.userinfo.alert.email.to", "admin@ydsz.top");
     if (to == null || to.isBlank()) {
-      log.warn("邮件告警收件人未配置: alertId={}", alert.id());
+      log.warn(I18n.message("userinfo.邮件告警收件人未配置.alertId=", new Object[]{alert.id()}));
       return;
     }
     String[] recipients = to.split(",");

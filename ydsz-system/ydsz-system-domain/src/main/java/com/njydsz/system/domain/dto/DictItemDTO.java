@@ -39,27 +39,27 @@ public class DictItemDTO {
 
   private String parentId;
 
-  @NotBlank(message = "字典类型编码不能为空")
-  @Size(max = 64, message = "字典类型编码长度不能超过64")
-  @Xss(message = "字典类型编码包含非法内容")
+  @NotBlank(message = "{system.dto.dictItem.typeCode.required}")
+  @Size(max = 64, message = "{system.dto.dictItem.typeCode.max}")
+  @Xss(message = "{system.dto.dictItem.typeCode.xss}")
   private String typeCode;
 
-  @NotBlank(message = "字典项编码不能为空")
-  @Size(max = 64, message = "字典项编码长度不能超过64")
-  @Xss(message = "字典项编码包含非法内容")
+  @NotBlank(message = "{system.dto.dictItem.itemCode.required}")
+  @Size(max = 64, message = "{system.dto.dictItem.itemCode.max}")
+  @Xss(message = "{system.dto.dictItem.itemCode.xss}")
   private String itemCode;
 
-  @NotBlank(message = "字典项展示值不能为空")
-  @Size(max = 255, message = "字典项展示值长度不能超过255")
-  @Xss(message = "字典项展示值包含非法内容")
+  @NotBlank(message = "{system.dto.dictItem.itemValue.required}")
+  @Size(max = 255, message = "{system.dto.dictItem.itemValue.max}")
+  @Xss(message = "{system.dto.dictItem.itemValue.xss}")
   private String itemValue;
 
   private Integer sort;
 
-  @Xss(message = "字典项业务说明包含非法内容")
+  @Xss(message = "{system.dto.dictItem.description.xss}")
   private String description;
 
-  @Xss(message = "扩展属性包含非法内容")
+  @Xss(message = "{system.dto.dictItem.extJson.xss}")
   private String extJson;
 
   private String status;

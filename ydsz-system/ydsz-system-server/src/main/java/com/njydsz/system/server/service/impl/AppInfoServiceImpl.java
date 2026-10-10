@@ -18,6 +18,7 @@ import com.njydsz.system.domain.repository.AppInfoRepository;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.server.service.AppInfoService;
 
 
@@ -224,12 +225,12 @@ public class AppInfoServiceImpl implements AppInfoService {
       int failCount = Integer.parseInt(failCountStr);
       if (failCount >= systemProperties.getApp().getMaxFailCount()) {
         log.warn(
-            "应用校验锁定中: appKey={}, 连续失败次数={}, 锁定 {}s", appKey, failCount, systemProperties.getApp().getFailLockTtlSeconds());
+            I18n.message("system.app.locked", new Object[]{appKey, failCount, systemProperties.getApp().getFailLockTtlSeconds()}));
         return true;
       }
     } catch (NumberFormatException ignored) {
       // 缓存值非数字（旧格式/缓存污染）时放行，由后续 BCrypt 兜底校验
-      log.debug("应用校验锁定 - 失败计数缓存值非数字，按未锁定处理: appKey={}, value={}", appKey, failCountStr);
+      log.debug(I18n.message("system.app.locked.fail_count_invalid", new Object[]{appKey, failCountStr}));
     }
     return false;
   }
@@ -256,7 +257,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     long count = redisStringOps.incr(failKey, 1);
     redisStringOps.expire(failKey, systemProperties.getApp().getFailLockTtlSeconds());
     metrics.recordAppValidateFail();
-    log.warn("应用校验失败: appKey={}, {}, 连续失败次数={}/{}", appKey, reason, count, systemProperties.getApp().getMaxFailCount());
+    log.warn(I18n.message("system.app.validate.fail", new Object[]{appKey, reason, count, systemProperties.getApp().getMaxFailCount()}));
   }
 
   /**

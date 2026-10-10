@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.skill;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -33,9 +32,8 @@ public record SkillExecutionResult(
     Map<String, Object> metrics,
     String errorMessage,
     LocalDateTime completedAt
-) implements Serializable {
+) {
 
-  private static final long serialVersionUID = 1L;
 
   public SkillExecutionResult {
     Objects.requireNonNull(skillCode, "skillCode 不能为 null");

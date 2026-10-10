@@ -29,6 +29,7 @@ import com.njydsz.userinfo.server.auth.VerifyCodeService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.SelfServiceService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 自助服务实现。
@@ -112,7 +113,7 @@ public class SelfServiceServiceImpl implements SelfServiceService {
     String passwordHash = passwordEncoder.encode(dto.getPassword());
     UserAccountDTO createDTO = buildCreateDTO(dto, passwordHash);
     UserAccountVO createdUser = userAccountRepository.save(createDTO);
-    log.info("用户自助注册成功: userId={}, username={}", createdUser.getId(), createdUser.getUsername());
+    log.info(I18n.message("userinfo.用户自助注册成功.userId=.username=", new Object[]{createdUser.getId(), createdUser.getUsername()}));
 
     // 5. 记录初始密码到历史（防重用）
     passwordHistoryService.recordPasswordHistory(
@@ -172,7 +173,7 @@ public class SelfServiceServiceImpl implements SelfServiceService {
     // 8. 搜索索引同步 + 领域事件
     indexUpsert(userVO);
     eventPublisher.publishUserUpdated(userVO);
-    log.info("用户找回密码成功: userId={}, username={}", userVO.getId(), userVO.getUsername());
+    log.info(I18n.message("userinfo.用户找回密码成功.userId=.username=", new Object[]{userVO.getId(), userVO.getUsername()}));
     return true;
   }
 
@@ -218,7 +219,7 @@ public class SelfServiceServiceImpl implements SelfServiceService {
     // 6. 解锁账号
     int affected = userAccountRepository.unlockAccount(credential.getId());
     if (affected > 0) {
-      log.info("账号自助解锁成功: userId={}, username={}", credential.getId(), credential.getUsername());
+      log.info(I18n.message("userinfo.账号自助解锁成功.userId=.username=", new Object[]{credential.getId(), credential.getUsername()}));
       // 7. 发布领域事件
       eventPublisher.publishUserUpdated(userVO);
     }

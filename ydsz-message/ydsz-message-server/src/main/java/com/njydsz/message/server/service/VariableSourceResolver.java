@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service;
 
-import java.lang.reflect.Method;
+
+import com.njydsz.common.locales.util.I18n;import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -130,7 +131,7 @@ public class VariableSourceResolver {
           case "BEAN" -> resolveBean(expr, context);
           case "HTTP" -> resolveHttp(expr, context);
           default -> {
-            log.warn("[VariableSource] 未知数据源类型: {}", type);
+            log.warn(I18n.message("message.log.other.VariableSource_{}.cd9943"), type);
             yield null;
           }
         };
@@ -156,7 +157,7 @@ public class VariableSourceResolver {
       String resolvedSql = resolvePlaceholders(sql, context);
       return jdbcTemplate.queryForObject(resolvedSql, Object.class);
     } catch (Exception e) {
-      log.warn("[VariableSource] SQL 解析失败: sql={} err={}", sql, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.VariableSource_SQL_sql_{}_err_{}.a3c125"), sql, e.getMessage(), e);
       return null;
     }
   }
@@ -195,12 +196,12 @@ public class VariableSourceResolver {
               beanName + "." + methodName,
               k -> findMethod(bean.getClass(), methodName, args.length));
       if (method == null) {
-        log.warn("[VariableSource] Bean 方法不存在: {}.{}", beanName, methodName);
+        log.warn(I18n.message("message.log.other.VariableSource_Bean_{}_{}.a9e694"), beanName, methodName);
         return null;
       }
       return method.invoke(bean, args);
     } catch (Exception e) {
-      log.warn("[VariableSource] BEAN 解析失败: expr={} err={}", expr, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.VariableSource_BEAN_expr_{}_err_{}.cb7ba2"), expr, e.getMessage(), e);
       return null;
     }
   }
@@ -221,7 +222,7 @@ public class VariableSourceResolver {
         return YdszJson.fromJson(body, Object.class);
       }
     } catch (Exception e) {
-      log.warn("[VariableSource] HTTP 解析失败: url={} err={}", url, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.VariableSource_HTTP_url_{}_err_{}.000716"), url, e.getMessage(), e);
     }
     return null;
   }

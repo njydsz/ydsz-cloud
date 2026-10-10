@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.template;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -352,7 +353,7 @@ public class TemplateServiceImpl implements TemplateService {
     updateDto.setDescription(entity.getDescription());
     updateDto.setTenantId(entity.getTenantId());
     msgTemplateRepository.update(updateDto);
-    log.info("[Template] 审核模板: id={} {} -> {}", id, current, target);
+    log.info(I18n.message("message.log.other.Template_id_{}_{}_{}.09c6aa"), id, current, target);
   }
 
   /**

@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.chain.handler;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -95,7 +96,7 @@ public class UserPreferenceHandler implements SendHandler {
     boolean urgentBypass =
         stc != null && stc.isUrgentBypassDnd() && "URGENT".equals(parsePriority(request));
     if (!channelDisruptive) {
-      log.debug("[Message] 非打扰型通道绕过 DND: channel={}", channel);
+      log.debug(I18n.message("message.log.other.Message_DND_channel_{}.8d14c4"), channel);
       return true;
     }
     if (urgentBypass) {
@@ -200,7 +201,7 @@ public class UserPreferenceHandler implements SendHandler {
       LocalTime e = LocalTime.parse(end);
       return DndService.isInWindow(LocalTime.now(), s, e);
     } catch (Exception ex) {
-      log.warn("[Message] DND 时段解析失败: start={} end={} err={}", start, end, ex.getMessage());
+      log.warn(I18n.message("message.log.other.Message_DND_start_{}_end_{}_err_{}.6a60fd"), start, end, ex.getMessage());
       return false;
     }
   }

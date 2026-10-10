@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.config;
 
-import java.util.List;
+
+import com.njydsz.common.locales.util.I18n;import java.util.List;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
@@ -184,7 +185,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
       vo.setChannel(channel);
       vo.setStatus(SubscriptionStatusEnum.SUBSCRIBED.name());
       msgSubscriptionRepository.save(vo);
-      log.info("[Unsubscribe] 恢复订阅(新建): user={} topic={} channel={}", userId, topicCode, channel);
+      log.info(I18n.message("message.log.other.Unsubscribe_user_{}_topic_{}_channel_{}.c110a3"), userId, topicCode, channel);
       return;
     }
     MsgSubscriptionVO vo = existing.get();
@@ -194,6 +195,6 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     vo.setStatus(SubscriptionStatusEnum.SUBSCRIBED.name());
     vo.setUnsubscribedAt(null);
     msgSubscriptionRepository.update(vo);
-    log.info("[Unsubscribe] 恢复订阅: user={} topic={} channel={}", userId, topicCode, channel);
+    log.info(I18n.message("message.log.other.Unsubscribe_user_{}_topic_{}_channel_{}.11932a"), userId, topicCode, channel);
   }
 }

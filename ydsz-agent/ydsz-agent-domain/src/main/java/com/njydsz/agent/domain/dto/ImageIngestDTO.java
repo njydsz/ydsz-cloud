@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -18,9 +16,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "图片摄入请求")
-public class ImageIngestDTO implements Serializable {
+public class ImageIngestDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 图片文件内容的 Base64 编码 */
   @NotBlank(message = "图片内容不能为空")

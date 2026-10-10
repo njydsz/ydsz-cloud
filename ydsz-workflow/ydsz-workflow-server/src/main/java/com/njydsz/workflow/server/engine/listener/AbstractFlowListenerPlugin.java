@@ -1,6 +1,7 @@
 package com.njydsz.workflow.server.engine.listener;
 
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 监听器插件基类，提供日志和异常兜底
@@ -21,7 +22,7 @@ public abstract class AbstractFlowListenerPlugin implements FlowListenerPlugin {
    * @param e         异常
    */
   protected void handleException(FlowListenerEventType eventType, String nodeId, Exception e) {
-    log.warn("[FlowListener][{}] 执行失败: node={} err={}", pluginName(), nodeId, e.getMessage());
+    log.warn(I18n.message("workflow.listener.plugin.execution.failed", new Object[]{pluginName(), nodeId, e.getMessage()}));
   }
 
   /**

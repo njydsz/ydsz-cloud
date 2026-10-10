@@ -1,6 +1,7 @@
 package com.njydsz.message.server.listener;
 
-import lombok.RequiredArgsConstructor;
+
+import com.njydsz.common.locales.util.I18n;import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -95,7 +96,7 @@ public class CrossModuleEventSubscriber implements OutboxSubscriber {
    * @param message Outbox 消息
    */
   private void onJobExecutionFailed(OutboxMessage message) {
-    log.warn("[CrossModuleSubscriber] 接收定时任务执行失败事件: aggregateId={}, payload={}",
+    log.warn(I18n.message("message.log.server.crosmodulesub.warn.job.execution.failed"),
         message.getAggregateId(), message.getPayload());
     String title = i18n.resolve("message.notify.job.execution.failed.title");
     String content = i18n.resolve("message.notify.job.execution.failed.content",
@@ -109,7 +110,7 @@ public class CrossModuleEventSubscriber implements OutboxSubscriber {
    * @param message Outbox 消息
    */
   private void onAgentApprovalRequested(OutboxMessage message) {
-    log.info("[CrossModuleSubscriber] 接收 Agent 审批请求事件: aggregateId={}",
+    log.info(I18n.message("message.log.server.crosmodulesub.info.agent.approval"),
         message.getAggregateId());
     String title = i18n.resolve("message.notify.agent.approval.requested.title");
     String content = i18n.resolve("message.notify.agent.approval.requested.content",
@@ -123,12 +124,12 @@ public class CrossModuleEventSubscriber implements OutboxSubscriber {
    * @param message Outbox 消息
    */
   private void onFlowInstanceApproved(OutboxMessage message) {
-    log.info("[CrossModuleSubscriber] 接收流程审批通过事件: aggregateId={}", message.getAggregateId());
+    log.info(I18n.message("message.log.server.crosmodulesub.info.flow.approved"), message.getAggregateId());
     var payload = YdszJson.parseMap(message.getPayload());
     String flowTitle = payload.getOrDefault("flowTitle", "未命名流程").toString();
     String initiatorId = payload.getOrDefault("initiatorId", "").toString();
     if (initiatorId.isBlank()) {
-      log.debug("[CrossModuleSubscriber] 审批通过事件无发起人，跳过通知: aggregateId={}",
+      log.debug(I18n.message("message.log.server.crosmodulesub.debug.flow.approved.no.initiator.skipped"),
           message.getAggregateId());
       return;
     }
@@ -145,13 +146,13 @@ public class CrossModuleEventSubscriber implements OutboxSubscriber {
    * @param message Outbox 消息
    */
   private void onFlowInstanceRejected(OutboxMessage message) {
-    log.info("[CrossModuleSubscriber] 接收流程审批驳回事件: aggregateId={}", message.getAggregateId());
+    log.info(I18n.message("message.log.server.crosmodulesub.info.flow.rejected"), message.getAggregateId());
     var payload = YdszJson.parseMap(message.getPayload());
     String flowTitle = payload.getOrDefault("flowTitle", "未命名流程").toString();
     String initiatorId = payload.getOrDefault("initiatorId", "").toString();
     String rejectReason = payload.getOrDefault("rejectReason", "未提供原因").toString();
     if (initiatorId.isBlank()) {
-      log.debug("[CrossModuleSubscriber] 审批驳回事件无发起人，跳过通知: aggregateId={}",
+      log.debug(I18n.message("message.log.server.crosmodulesub.debug.flow.rejected.no.initiator.skipped"),
           message.getAggregateId());
       return;
     }
@@ -168,7 +169,7 @@ public class CrossModuleEventSubscriber implements OutboxSubscriber {
    * @param message Outbox 消息
    */
   private void onFlowInstanceTerminated(OutboxMessage message) {
-    log.info("[CrossModuleSubscriber] 接收流程终止事件: aggregateId={}", message.getAggregateId());
+    log.info(I18n.message("message.log.server.crosmodulesub.info.flow.terminated"), message.getAggregateId());
     var payload = YdszJson.parseMap(message.getPayload());
     String flowTitle = payload.getOrDefault("flowTitle", "未命名流程").toString();
     String reason = payload.getOrDefault("reason", "管理员终止").toString();
@@ -185,13 +186,13 @@ public class CrossModuleEventSubscriber implements OutboxSubscriber {
    * @param message Outbox 消息
    */
   private void onProjectInitiationApproved(OutboxMessage message) {
-    log.info("[CrossModuleSubscriber] 接收项目立项审批通过事件: aggregateId={}",
+    log.info(I18n.message("message.log.server.crosmodulesub.info.project.initiation.approved"),
         message.getAggregateId());
     var payload = YdszJson.parseMap(message.getPayload());
     String projectName = payload.getOrDefault("projectName", "未命名项目").toString();
     String managerId = payload.getOrDefault("managerId", "").toString();
     if (managerId.isBlank()) {
-      log.debug("[CrossModuleSubscriber] 项目立项事件无项目经理，跳过通知: aggregateId={}",
+      log.debug(I18n.message("message.log.server.crosmodulesub.debug.project.no.manager.skipped"),
           message.getAggregateId());
       return;
     }
@@ -208,7 +209,7 @@ public class CrossModuleEventSubscriber implements OutboxSubscriber {
    * @param message Outbox 消息
    */
   private void onProjectContractSigned(OutboxMessage message) {
-    log.info("[CrossModuleSubscriber] 接收合同签订事件: aggregateId={}", message.getAggregateId());
+    log.info(I18n.message("message.log.server.crosmodulesub.info.contract.signed"), message.getAggregateId());
     var payload = YdszJson.parseMap(message.getPayload());
     String contractName = payload.getOrDefault("contractName", "未命名合同").toString();
     String title = i18n.resolve("message.notify.project.contract.signed.title",
@@ -224,7 +225,7 @@ public class CrossModuleEventSubscriber implements OutboxSubscriber {
    * @param message Outbox 消息
    */
   private void onJobTimeout(OutboxMessage message) {
-    log.warn("[CrossModuleSubscriber] 接收定时任务超时事件: aggregateId={}",
+    log.warn(I18n.message("message.log.server.crosmodulesub.warn.job.timeout"),
         message.getAggregateId());
     String title = i18n.resolve("message.notify.job.timeout.title");
     String content = i18n.resolve("message.notify.job.timeout.content",

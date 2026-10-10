@@ -1,0 +1,82 @@
+package com.njydsz.message.server.service.impl.batch;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.common.lock.annotation.DistributedScheduled;
+import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
+import com.njydsz.message.domain.query.MsgAggregateQuery;
+import com.njydsz.message.domain.repository.MsgAggregateRepository;
+import com.njydsz.message.domain.vo.MsgAggregateVO;
+import com.njydsz.message.server.service.batch.AggregateService;
+
+/**
+ * 聚合批次调度器，定时扫描到达发送时间的 PENDING 批次并触发摘要发送。
+ *
+ * <p>扫描 scheduled_send_at<=now 的 PENDING 聚合批次，先流转为 READY 状态，
+ * 再调用 AggregateService.flushDue 批量发送聚合摘要。
+ * 多实例部署通过 DistributedScheduled 分布式锁保证单实例执行扫描
+ * （非阻塞，TTL 300s，获取失败跳过由下一周期接管）。
+ *
+ * @author ydsz
+ * @since 26.09.24
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+@EnableScheduling
+@ConditionalOnProperty(
+    prefix = "ydsz.message",
+    name = "aggregate-enabled",
+    havingValue = "true",
+    matchIfMissing = true)
+public class AggregateScheduler {
+
+  private final MsgAggregateRepository msgAggregateRepository;
+  private final AggregateService aggregateService;
+
+  /**
+   * 定时扫描聚合批次:将 PENDING 且 scheduled_send_at<=now 的批次置 READY,再 flushDue 发送。
+   *
+   * <p>分布式锁通过 {@link DistributedScheduled} 注解自动管理,获取失败直接跳过本次扫描。
+   */
+  @Scheduled(fixedDelayString = "${ydsz.message.aggregate-scan-interval-ms:60000}")
+  @DistributedScheduled(lockKey = "message:aggregate-scan", leaseTime = 60)
+  public void scan() {
+    try {
+      doScan();
+    } catch (Exception e) {
+      log.error("[AggregateScheduler] 扫描异常: {}", e.getMessage(), e);
+    }
+  }
+
+  /** 执行聚合批次扫描与发送。 */
+  private void doScan() {
+    LocalDateTime now = LocalDateTime.now();
+    MsgAggregateQuery dueQuery = new MsgAggregateQuery();
+    dueQuery.setBatchStatus(AggregateBatchStatusEnum.PENDING.name());
+    dueQuery.setScheduledSendAtBefore(now);
+    List<MsgAggregateVO> due = msgAggregateRepository.findList(dueQuery);
+    if (due.isEmpty()) {
+      return;
+    }
+    List<String> dueIds = due.stream()
+        .map(MsgAggregateVO::getId)
+        .collect(Collectors.toList());
+    int transitioned = msgAggregateRepository.updateStatusByIds(
+        dueIds,
+        AggregateBatchStatusEnum.PENDING.name(),
+        AggregateBatchStatusEnum.READY.name());
+    log.debug("[AggregateScheduler] 批量流转 {} 个到期批次 PENDING→READY (实际 {} 条)", dueIds.size(), transitioned);
+    int sent = aggregateService.flushDue();
+    log.debug("[AggregateScheduler] 流转 {} 个到期批次,发送 {} 个", due.size(), sent);
+  }
+}

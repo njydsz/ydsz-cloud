@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.model;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -19,9 +18,8 @@ import java.util.List;
  * @author ydsz-team
  * @since 26.10.01
  */
-public class BatchChatResult implements Serializable {
+public class BatchChatResult {
 
-  private static final long serialVersionUID = 1L;
 
   /** 批量结果列表（与请求 items 顺序一致） */
   private final List<BatchResultItem> results;
@@ -98,9 +96,8 @@ public class BatchChatResult implements Serializable {
    *
    * <p>不可变对象，通过 {@link #isSuccess} 标记本条对话是否成功完成。
    */
-  public static class BatchResultItem implements Serializable {
+  public static class BatchResultItem {
 
-    private static final long serialVersionUID = 1L;
 
     /** 条目标识（与请求中 itemId 对应） */
     private final String itemId;

@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import lombok.Data;
@@ -15,9 +13,7 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class FlowRejectableNodeVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowRejectableNodeVO {
 
   /** 节点编码 */
   private String nodeCode;

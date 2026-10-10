@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.TimeZone;
 
@@ -56,23 +57,23 @@ public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
 
       // 在推荐时段内，返回当前时间
       if (currentHour >= RECOMMENDED_START_HOUR && currentHour < RECOMMENDED_END_HOUR) {
-        log.debug("[DeliveryTime] 当前在推荐时段内,立即发送: userId={} hour={}", userId, currentHour);
+        log.debug(I18n.message("message.log.other.DeliveryTime_userId_{}_hour_{}.0b99d8"), userId, currentHour);
         return now;
       }
 
       // 在时段之前，返回今天时段开始时间
       if (currentHour < RECOMMENDED_START_HOUR) {
         LocalDateTime scheduledAt = now.toLocalDate().atTime(RECOMMENDED_START_HOUR, 0);
-        log.debug("[DeliveryTime] 推荐今天时段开始: userId={} scheduledAt={}", userId, scheduledAt);
+        log.debug(I18n.message("message.log.other.DeliveryTime_userId_{}_scheduledAt_{}.8819bf"), userId, scheduledAt);
         return scheduledAt;
       }
 
       // 在时段之后，返回明天时段开始时间
       LocalDateTime scheduledAt = now.toLocalDate().plusDays(1).atTime(RECOMMENDED_START_HOUR, 0);
-      log.debug("[DeliveryTime] 推荐明天时段开始: userId={} scheduledAt={}", userId, scheduledAt);
+      log.debug(I18n.message("message.log.other.DeliveryTime_userId_{}_scheduledAt_{}.6d2988"), userId, scheduledAt);
       return scheduledAt;
     } catch (Exception e) {
-      log.warn("[DeliveryTime] 获取最佳推送时间失败,降级立即发送: userId={} err={}", userId, e.getMessage());
+      log.warn(I18n.message("message.log.other.DeliveryTime_userId_{}_err_{}.f70753"), userId, e.getMessage());
       return null;
     }
   }

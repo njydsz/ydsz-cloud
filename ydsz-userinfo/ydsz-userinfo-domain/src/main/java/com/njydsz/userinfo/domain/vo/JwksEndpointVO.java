@@ -13,6 +13,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * JWKS（JSON Web Key Set）公钥端点（本地实现，避免 common-auth 依赖编译问题）。
@@ -52,7 +53,7 @@ public class JwksEndpointVO {
         Map<String, Object> rsaKey = buildRsaKey(publicKeyPem);
         keys.add(rsaKey);
       } catch (Exception e) {
-        log.warn("RSA 公钥解析失败，降级为 HMAC oct 格式输出: {}", e.getMessage());
+        log.warn(I18n.message("userinfo.RSA.公钥解析失败.降级为.HMAC.oct.格式输出", new Object[]{e.getMessage()}));
         keys.add(buildHmacKey(hmacSecret));
       }
     } else {

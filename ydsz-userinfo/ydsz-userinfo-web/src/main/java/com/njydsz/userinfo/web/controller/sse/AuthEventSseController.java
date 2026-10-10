@@ -101,7 +101,7 @@ public class AuthEventSseController {
               "message", "SSE 连接已建立",
               "timestamp", LocalDateTime.now().toString()));
     } catch (Exception e) {
-      log.debug("SSE 连接确认发送失败: userId={}", userId);
+      log.debug(I18n.message("userinfo.SSE.连接确认发送失败.userId=", new Object[]{userId}));
       emitterRegistry.remove(userId, emitter);
       return emitter;
     }
@@ -109,15 +109,15 @@ public class AuthEventSseController {
     // 连接完成/超时/错误时清理
     emitter.onCompletion(() -> {
       emitterRegistry.remove(userId, emitter);
-      log.debug("SSE 连接正常关闭: userId={}", userId);
+      log.debug(I18n.message("userinfo.SSE.连接正常关闭.userId=", new Object[]{userId}));
     });
     emitter.onTimeout(() -> {
       emitterRegistry.remove(userId, emitter);
-      log.debug("SSE 连接超时关闭: userId={}", userId);
+      log.debug(I18n.message("userinfo.SSE.连接超时关闭.userId=", new Object[]{userId}));
     });
     emitter.onError(ex -> {
       emitterRegistry.remove(userId, emitter);
-      log.debug("SSE 连接异常关闭: userId={}, error={}", userId, ex.getMessage());
+      log.debug(I18n.message("userinfo.SSE.连接异常关闭.userId=.error=", new Object[]{userId, ex.getMessage()}));
     });
 
     log.info("SSE 连接建立: userId={}, 当前连接数={}", userId,

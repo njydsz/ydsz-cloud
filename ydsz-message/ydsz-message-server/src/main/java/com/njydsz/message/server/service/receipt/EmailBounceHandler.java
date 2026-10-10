@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.receipt;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -55,7 +56,7 @@ public class EmailBounceHandler {
    */
   public void handleBounce(String logId, String bounceType, String reason, String recipient) {
     if (!StringUtils.hasText(logId)) {
-      log.warn("[EmailBounce] logId 为空,跳过处理");
+      log.warn(I18n.message("message.log.other.EmailBounce_logId.805d2c"));
       return;
     }
     String fullReason = (StringUtils.hasText(bounceType) ? "[" + bounceType + "] " : "") + reason;
@@ -94,7 +95,7 @@ public class EmailBounceHandler {
     String key = BOUNCE_KEY_PREFIX + email.toLowerCase().trim();
     redisStringOps.set(
         key, bounceReason != null ? bounceReason : "unknown", Duration.ofDays(BOUNCE_TTL_DAYS));
-    log.warn("[Bounce] 邮件退信已记录: email={} reason={}", email, bounceReason);
+    log.warn(I18n.message("message.log.other.Bounce_email_{}_reason_{}.ca4259"), email, bounceReason);
   }
 
   /**
@@ -119,7 +120,7 @@ public class EmailBounceHandler {
   public void removeFromBounceList(String email) {
     String key = BOUNCE_KEY_PREFIX + email.toLowerCase().trim();
     redisStringOps.del(key);
-    log.info("[Bounce] 邮箱已从退信黑名单移除: email={}", email);
+    log.info(I18n.message("message.log.other.Bounce_email_{}.87dcb6"), email);
   }
 
   /**

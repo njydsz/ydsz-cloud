@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.template;
 
-import java.util.List;
+
+import com.njydsz.common.locales.util.I18n;import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -164,7 +165,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     updateDto.setDescription(template.getDescription());
     updateDto.setTenantId(template.getTenantId());
     templateRepository.update(updateDto);
-    log.info("[TemplateVersion] 版本回滚: code={} targetVersion={}", templateCode, version);
+    log.info(I18n.message("message.log.other.TemplateVersion_code_{}_targetVersion_{}.80ef38"), templateCode, version);
     return versionDO.getContent();
   }
 

@@ -1,6 +1,7 @@
 package com.njydsz.message.server.consumer;
 
-import java.util.List;
+
+import com.njydsz.common.locales.util.I18n;import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,14 +58,14 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
   @Override
   public void onMessage(String body) {
     if (body == null || body.isBlank()) {
-      log.warn("[BatchConsumer] 空消息体,跳过");
+      log.warn(I18n.message("message.log.other.BatchConsumer.db43fb"));
       return;
     }
     List<MessageItemRequestDTO> requests;
     try {
       requests = YdszJson.parseArray(body, MessageItemRequestDTO.class);
     } catch (Exception e) {
-      log.error("[BatchConsumer] 批量消息解析失败,尝试单条解析: err={}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.BatchConsumer_err_{}.a24e88"), e.getMessage(), e);
       // 降级：尝试作为单条消息处理
       try {
         MessageItemRequestDTO single = YdszJson.fromJson(body, MessageItemRequestDTO.class);
@@ -74,14 +75,14 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
           return;
         }
       } catch (Exception ex) {
-        log.error("[BatchConsumer] 单条解析也失败: {}", ex.getMessage());
+        log.error(I18n.message("message.log.other.BatchConsumer_{}.df2b2b"), ex.getMessage());
         return;
       }
     }
     if (requests == null || requests.isEmpty()) {
       return;
     }
-    log.info("[BatchConsumer] 收到批量消息: count={}", requests.size());
+    log.info(I18n.message("message.log.other.BatchConsumer_count_{}.4ab596"), requests.size());
     int success = 0;
     int failure = 0;
     for (MessageItemRequestDTO request : requests) {
@@ -91,7 +92,7 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
       if (request.getMessageId() != null) {
         batchToken = idempotentStrategy.acquire(idempotentKey, IDEMPOTENT_TTL_SECONDS * 1000L);
         if (batchToken == null) {
-          log.debug("[BatchConsumer] 批量内消息已处理,跳过: msgId={}", request.getMessageId());
+          log.debug(I18n.message("message.log.other.BatchConsumer_msgId_{}.3ce64b"), request.getMessageId());
           continue;
         }
       }

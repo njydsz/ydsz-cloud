@@ -14,6 +14,7 @@ import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.alert.SecurityAlertRepository;
 import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 安全告警服务。
@@ -349,7 +350,7 @@ public class SecurityAlertService {
         }
       }
     } catch (Exception e) {
-      log.warn("检查告警去重标记异常: {}", e.getMessage());
+      log.warn(I18n.message("userinfo.检查告警去重标记异常", new Object[]{e.getMessage()}));
     }
     return false;
   }
@@ -372,7 +373,7 @@ public class SecurityAlertService {
         redisStringOps.set(ipKey, "1", properties.getAlertIpDedupTtlSeconds());
       }
     } catch (Exception e) {
-      log.warn("设置告警去重标记异常: {}", e.getMessage());
+      log.warn(I18n.message("userinfo.设置告警去重标记异常", new Object[]{e.getMessage()}));
     }
   }
 
@@ -407,7 +408,7 @@ public class SecurityAlertService {
         }
       }
     } catch (Exception e) {
-      log.warn("检查 MFA 告警条件异常: {}", e.getMessage());
+      log.warn(I18n.message("userinfo.检查.MFA.告警条件异常", new Object[]{e.getMessage()}));
     }
     // 默认为首次或第 2 次失败，继续记录但不告警
     return false;

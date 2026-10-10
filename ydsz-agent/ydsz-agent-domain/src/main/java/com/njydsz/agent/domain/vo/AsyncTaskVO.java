@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,12 +20,9 @@ import com.njydsz.agent.domain.entity.AsyncTask;
  */
 @Data
 @Schema(description = "异步任务详情")
-public class AsyncTaskVO implements Serializable {
+public class AsyncTaskVO {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  /** 任务唯一 ID */
+/** 任务唯一 ID */
   @Schema(description = "任务唯一 ID")
   private String id;
 

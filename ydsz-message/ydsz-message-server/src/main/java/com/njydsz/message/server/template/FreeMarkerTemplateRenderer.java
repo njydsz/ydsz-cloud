@@ -1,6 +1,7 @@
 package com.njydsz.message.server.template;
 
-import java.io.StringWriter;
+
+import com.njydsz.common.locales.util.I18n;import java.io.StringWriter;
 import java.util.Map;
 import java.util.Set;
 
@@ -57,7 +58,7 @@ public class FreeMarkerTemplateRenderer implements MessageTemplateRenderer {
     }
     // 检测是否使用旧语法，如果是则回退到自研引擎
     if (isLegacyTemplate(template)) {
-      log.debug("[Template] 检测到旧语法模板，回退到自研引擎渲染");
+      log.debug(I18n.message("message.log.other.Template.b94e31"));
       return fallbackEngine.render(template, params, requiredKeys);
     }
     try {
@@ -66,10 +67,10 @@ public class FreeMarkerTemplateRenderer implements MessageTemplateRenderer {
       freemarkerTemplate.process(params != null ? params : Map.of(), writer);
       return writer.toString();
     } catch (TemplateException e) {
-      log.warn("[Template] FreeMarker 渲染失败，回退到自研引擎: err={}", e.getMessage());
+      log.warn(I18n.message("message.log.other.Template_FreeMarker_err_{}.7fd56a"), e.getMessage());
       return fallbackEngine.render(template, params, requiredKeys);
     } catch (Exception e) {
-      log.error("[Template] FreeMarker 渲染异常: err={}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.Template_FreeMarker_err_{}.98c1a8"), e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
           .message("模板渲染失败: " + e.getMessage())

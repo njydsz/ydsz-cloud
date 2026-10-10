@@ -14,6 +14,7 @@ import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
 import com.njydsz.userinfo.domain.provision.ProvisionResult;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 身份供给调度器（P0-1 Identity Provisioning 管道）。
@@ -95,7 +96,7 @@ public class ProvisionScheduler {
     for (IdentityProvisionConnector connector : registry.getAllConnectors()) {
       String type = connector.getConnectorType();
       if (!connector.isAvailable()) {
-        log.info("Provision connector 不可用，跳过: type={}", type);
+        log.info(I18n.message("userinfo.Provision.connector.不可用.跳过.type=", new Object[]{type}));
         continue;
       }
 
@@ -115,7 +116,7 @@ public class ProvisionScheduler {
               type, result.failed(), result.errors().size());
         }
       } catch (Exception e) {
-        log.error("Provision 同步异常: type={}, error={}", type, e.getMessage(), e);
+        log.error(I18n.message("userinfo.Provision.同步异常.type=.error=", new Object[]{type, e.getMessage()}), e);
       }
     }
 
@@ -132,7 +133,7 @@ public class ProvisionScheduler {
     try {
       return redisStringOps.get(TOKEN_KEY_PREFIX + connectorType, String.class);
     } catch (Exception e) {
-      log.warn("读取增量令牌失败: type={}, error={}", connectorType, e.getMessage());
+      log.warn(I18n.message("userinfo.读取增量令牌失败.type=.error=", new Object[]{connectorType, e.getMessage()}));
       return null;
     }
   }
@@ -147,7 +148,7 @@ public class ProvisionScheduler {
     try {
       redisStringOps.set(TOKEN_KEY_PREFIX + connectorType, token, TOKEN_TTL_SECONDS);
     } catch (Exception e) {
-      log.warn("保存增量令牌失败: type={}, error={}", connectorType, e.getMessage());
+      log.warn(I18n.message("userinfo.保存增量令牌失败.type=.error=", new Object[]{connectorType, e.getMessage()}));
     }
   }
 }

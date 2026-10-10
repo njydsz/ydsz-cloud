@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
@@ -132,7 +133,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
   /** {@inheritDoc} */
   @Override
   public void onTaskCompleted(String taskId, String action, Map<String, Object> variables) {
-    log.info("[FlowListener] 立项任务完成: taskId={} action={}", taskId, action);
+      log.info(I18n.message("workflow.initiation.task.complete", new Object[]{taskId, action}));
     // 审批轨迹与驳回通知由 onInstanceCompleted / onInstanceRejected 统一处理，
     // 此处仅记录任务级审计日志，避免重复触达。
   }
@@ -140,7 +141,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
   /** {@inheritDoc} */
   @Override
   public void onInstanceCompleted(String instanceId) {
-    log.info("[FlowListener] 立项流程完成: instanceId={}", instanceId);
+    log.info(I18n.message("workflow.initiation.instance.complete", new Object[]{instanceId}));
     // P0-1: 通知发起人流程已完成
     if (instanceId == null) {
       return;
@@ -181,7 +182,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
   /** {@inheritDoc} */
   @Override
   public void onInstanceRejected(String instanceId, String reason) {
-    log.info("[FlowListener] 立项流程驳回: instanceId={} reason={}", instanceId, reason);
+    log.info(I18n.message("workflow.initiation.instance.rejected", new Object[]{instanceId, reason}));
     // P0-1: 通知发起人流程已驳回
     if (instanceId == null) {
       return;
@@ -225,7 +226,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
   /** {@inheritDoc} */
   @Override
   public void onError(String instanceId, Throwable t) {
-    log.error("[FlowListener][ALERT] 立项流程异常: instanceId={}", instanceId, t);
+    log.error(I18n.message("workflow.initiation.instance.error", new Object[]{instanceId}), t);
     // P0-7: 异常恢复 —— 重新发布 markProcessing 事件让消费方有机会恢复立项状态
     if (instanceId == null) {
       return;

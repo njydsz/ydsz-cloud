@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.locales.util.I18n;
 import org.springframework.stereotype.Component;
 
 /**
@@ -125,8 +126,7 @@ public class FlowVariableReplacer {
         putCache(cacheKey, method);
         return method.invoke(target);
       } catch (NoSuchMethodException e) {
-        log.debug("[FlowVariableReplacer] getter 方法不存在 {}.{}(), 降级到字段反射",
-            clazz.getSimpleName(), methodName);
+    log.debug(I18n.message("workflow.varReplacer.getter.missing", new Object[]{clazz.getSimpleName(), methodName}));
         // getter 不存在 → 继续尝试下一个或降级到字段反射
       } catch (Exception e) {
         log.warn(
@@ -145,7 +145,7 @@ public class FlowVariableReplacer {
       putCache(cacheKey, field);
       return field.get(target);
     } catch (NoSuchFieldException e) {
-      log.warn("[FlowVariableReplacer] 字段不存在 {}.{}", clazz.getSimpleName(), fieldName);
+      log.warn(I18n.message("workflow.varReplacer.field.missing", new Object[]{clazz.getSimpleName(), fieldName}));
       return null;
     } catch (InaccessibleObjectException e) {
       // Java 17+ JPMS 模块封装导致 setAccessible 失败

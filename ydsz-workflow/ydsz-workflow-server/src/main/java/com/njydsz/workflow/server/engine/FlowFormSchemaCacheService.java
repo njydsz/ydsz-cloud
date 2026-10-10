@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.form.FlowFormSchema;
 import com.njydsz.workflow.server.form.FlowFormValidator;
@@ -85,7 +86,7 @@ public class FlowFormSchemaCacheService {
         return formValidator.parseSchema(schemaJson);
       });
     } catch (Exception e) {
-      log.warn("[FlowFormSchemaCache] 解析表单 Schema 失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.form.schema.parse.failed", new Object[]{e.getMessage()}));
       return null;
     }
   }

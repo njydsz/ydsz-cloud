@@ -1,0 +1,54 @@
+# =====================================================================
+#  YDSZ 消息通知引擎 application 配置
+#  --------------------------------------------------------------------
+#  本文件为 SkyWalking 链路追踪 + 日志 traceId 的专用配置
+#  公共配置（datasource / redis / mybatis-plus）由 Nacos ydsz-common.yaml 提供
+# =====================================================================
+
+logging:
+  pattern:
+    # SkyWalking traceId 支持：Agent 注入时自动填充 X{traceId}，未启用时为空
+    level: "%5p [%X{traceId:-},%X{spanId:-}]"
+
+# SkyWalking 链路追踪（通过 Java Agent 方式启用，无需修改业务代码）
+# 启动示例：java -javaagent:/path/to/skywalking-agent.jar \
+#   -Dskywalking.agent.service_name=ydsz-message \
+#   -Dskywalking.collector.backend_service=localhost:11800 \
+#   -jar ydsz-message.jar
+#
+# Agent 配置优先级：-Dskywalking.xxx > agent/config/agent.config > 默认值
+# P2-2: 线程池配置 — 消息批次异步处理（@Async("messageBatchExecutor")）
+ydsz:
+  thread:
+    enabled: true
+    pools:
+      messageBatch:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 200
+        thread-name-prefix: ydsz-msg-batch-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+
+  # 慢 SQL 监控
+  jdbc:
+    slow-sql:
+      enabled: true
+      threshold-millis: 500
+      alert-threshold-millis: 2000
+  # P2-2: 搜索引擎 PG 索引表名（各模块独立表，避免共用默认 ydzs_wiki_search_index）
+  search:
+    pg:
+      index-table: ydsz_message_search_index
+
+skywalking:
+  agent:
+    service_name: ${spring.application.name}
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}
+
+# 错误码元信息端点无需认证（前端代码生成器 / CI 流水线直接访问）
+ydsz:
+  auth:
+    filter:
+      common-ignore-url:
+        - /message/error-codes

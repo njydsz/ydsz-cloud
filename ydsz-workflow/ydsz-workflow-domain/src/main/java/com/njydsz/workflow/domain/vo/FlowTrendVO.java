@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import lombok.Data;
 
@@ -14,9 +12,7 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class FlowTrendVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowTrendVO {
 
   /** 时间标签（如 "2024-01"、"2024-W03"） */
   private String timeLabel;

@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
@@ -238,7 +239,7 @@ public class FlowMetrics extends SentryMetricsAdapter {
       Long val = query.get();
       return val == null ? 0L : val;
     } catch (Exception e) {
-      log.debug("[FlowMetrics] Gauge 查询失败: {}", e.getMessage());
+      log.debug(I18n.message("workflow.metrics.gauge.query.failed", new Object[]{e.getMessage()}));
       return 0L;
     }
   }

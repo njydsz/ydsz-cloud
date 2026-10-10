@@ -20,6 +20,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 import com.njydsz.userinfo.server.alert.SecurityAlertService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 安全告警管理 Controller。
@@ -89,7 +90,7 @@ public class SecurityAlertController {
         riskLevelEnum = SecurityAlert.RiskLevel.valueOf(riskLevel.toUpperCase());
       } catch (IllegalArgumentException e) {
         // 忽略无效的风险等级值
-        log.debug("[SecurityAlert] 忽略无效的风险等级值: riskLevel={}", riskLevel);
+        log.debug(I18n.message("userinfo.SecurityAlert.忽略无效的风险等级值.riskLevel=", new Object[]{riskLevel}));
       }
     }
     return YdszResponse.success(alertService.findPendingAlerts(riskLevelEnum, limit));

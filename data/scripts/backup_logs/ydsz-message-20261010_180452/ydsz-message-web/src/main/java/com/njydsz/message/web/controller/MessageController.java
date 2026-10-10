@@ -1,0 +1,440 @@
+package com.njydsz.message.web.controller.core;
+
+import java.util.List;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpHeaders;
+
+import com.njydsz.message.domain.vo.MessageSendResultVO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.audit.event.DataExportAuditEvent;
+import com.njydsz.common.json.annotation.JsonView;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.ExcelWriter;
+import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.util.date.DateUtils;
+import com.njydsz.common.util.id.TracerUtils;
+import com.njydsz.common.util.mask.MaskUtils;
+import com.njydsz.message.domain.dto.BatchSendResultDTO;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.dto.MessageSendDTO;
+import com.njydsz.message.domain.enums.core.SendStrategyEnum;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.domain.vo.MsgLogViews;
+import com.njydsz.message.server.service.core.MessageService;
+import com.njydsz.message.domain.vo.MsgLogExportVO;
+
+/**
+ * 消息发送 Controller。
+ *
+ * <p>提供<b>多模态消息发送能力</b>的 HTTP 入口：同步 / 异步 / 事务 / 批量四种发送语义， 是 {@code ydsz-message} 模块的核心门面，被
+ * ydsz-workflow、ydsz-project、ydsz-system 等业务模块通过 Feign（{@code com.njydsz.message.api.client.NotificationClient}）远程调用。
+ *
+ * <p><b>接口路径：</b>{@code /api/message/**}
+ *
+ * <p><b>统一发送端点：</b>
+ *
+ * <ul>
+ *   <li><b>统一发送</b>：{@code POST /send} — 通过 DTO 内 {@code strategy} 字段区分 SYNC / DIRECT / ASYNC /
+ *       TRANSACTIONAL / BATCH 五种模式
+ *   <li><b>日志查询</b>：{@code GET /log/page} — 发送日志分页 / {@code GET /log/batch/{batchId}/page} — 批次进度
+ * </ul>
+ *
+ * <p><b>已废弃端点（已迁移到统一 /send）：</b>
+ *
+ * <ul>
+ *   <li>{@code /sendDirect} → 使用 {@code POST /send} + strategy=DIRECT
+ *   <li>{@code /sendAsync} → 使用 {@code POST /send} + strategy=ASYNC
+ *   <li>{@code /sendTransactional} → 使用 {@code POST /send} + strategy=TRANSACTIONAL
+ *   <li>{@code /batchSend} → 使用 {@code POST /send} + strategy=BATCH
+ * </ul>
+ *
+ * <p><b>异步发送落库机制（P0-3）：</b>为保证消息不丢失， 异步发送会先以 {@code PENDING} 状态写入 {@code ydsz_msg_log}，再投递到 MQ； MQ
+ * 消费失败时由 {@code DeadLetterController} 处理，避免「发送即丢」。
+ *
+ * <p><b>多渠道支持：</b>短信（阿里云 / 腾讯云 / 华为云）/ 邮件 / 站内信 / IM / 企业微信 / WebSocket。 渠道路由由
+ * {@code RouteRuleController} 配置。
+ *
+ * <p><b>安全特性：</b>
+ *
+ * <ul>
+ *   <li>所有写接口启用 {@link Idempotent} 5s 防重（Redis SET NX EX）
+ *   <li>所有写接口启用 {@link RateLimit} 50 QPS 限流
+ *   <li>所有写接口启用 {@link Audit} 审计日志（异步持久化）
+ *   <li>权限模型：通过 {@code @AuthApiPermission} 校验 {@link PermissionCodes#NOTIF_MESSAGE_SEND} 等权限码
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ * @see com.njydsz.message.server.service.core.MessageService 消息发送服务
+ * @see com.njydsz.message.domain.dto.MessageItemRequestDTO 共享消息请求 DTO
+ * @see com.njydsz.message.domain.enums.core.SendStrategyEnum 发送策略枚举
+ */
+@Slf4j
+@Tag(name = "消息发送", description = "消息发送与发送日志查询")
+@ApiVersion("26.10.01")
+@RestController
+@RequestMapping("/message")
+@RequiredArgsConstructor
+public class MessageController {
+
+  /** 消息发送服务 */
+  private final MessageService messageService;
+
+  /** 事件发布器 */
+  private final ApplicationEventPublisher eventPublisher;
+
+  /**
+   * 统一消息发送入口。
+   *
+   * <p>通过 DTO 内 {@code strategy} 字段区分五种发送模式：
+   *
+   * <ul>
+   *   <li><b>SYNC</b>：同步发送，阻塞返回供应商结果
+   *   <li><b>DIRECT</b>：直接发送，使用本模块 DTO 扩展字段（senderId / messageGroup / locale 等）
+   *   <li><b>ASYNC</b>：异步发送，先落库 PENDING 再投递 MQ，返回 msg=ASYNC_QUEUED
+   *   <li><b>TRANSACTIONAL</b>：事务消息，RocketMQ 半消息 + 本地事务校验
+   *   <li><b>BATCH</b>：批量发送，同步循环限制 100 条/批（需配合 batchRequests + batchId）
+   * </ul>
+   *
+   * @param dto 消息发送请求体（含 strategy 策略字段）
+   * @return 发送结果（SYNC/DIRECT/ASYNC/TRANSACTIONAL 返回 MessageResult，BATCH 返回 BatchSendResultDTO）
+   */
+  @Operation(
+      summary = "统一消息发送",
+      description = "通过 strategy 字段区分五种发送模式：SYNC（同步）/ DIRECT（直接）/ ASYNC（异步）/ TRANSACTIONAL（事务）/ BATCH（批量）。"
+          + "支持短信/邮件/站内信/IM/企业微信/WebSocket 共 12 种通道。")
+  @ApiResponse(responseCode = "200", description = "操作成功")
+  @ApiResponse(responseCode = "400", description = "请求参数错误")
+  @ApiResponse(responseCode = "429", description = "请求过于频繁")
+  @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
+  @Idempotent(key = "ydsz:message:message:send", ttlSeconds = 5)
+  @Audit(
+      module = "消息管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'send strategy=' + #dto.strategy")
+  @RateLimit(resource = "message.message.send", threshold = 50)
+  @PostMapping("/send")
+  public YdszResponse<?> send(@Valid @RequestBody MessageSendDTO dto) {
+    SendStrategyEnum strategy = dto.getStrategy();
+    if (strategy == null) {
+      strategy = SendStrategyEnum.SYNC;
+    }
+
+    return switch (strategy) {
+      case SYNC -> {
+        MessageSendResultVO result = messageService.send(toMessageRequest(dto));
+        yield YdszResponse.success(result);
+      }
+      case DIRECT -> {
+        MessageSendResultVO result = messageService.sendDirect(dto);
+        yield YdszResponse.success(result);
+      }
+      case ASYNC -> {
+        // P0-3: 先落库 PENDING 再投递 MQ，保证消息不丢失
+        MessageSendResultVO result = messageService.sendAsync(toMessageRequest(dto));
+        YdszResponse<MessageSendResultVO> response = YdszResponse.success(result);
+        response.setMsg("ASYNC_QUEUED");
+        yield response;
+      }
+      case TRANSACTIONAL -> {
+        MessageSendResultVO result = messageService.sendTransactionally(toMessageRequest(dto));
+        yield YdszResponse.success(result);
+      }
+      case BATCH -> {
+        List<MessageItemRequestDTO> items = dto.getBatchRequests();
+        if (items == null || items.isEmpty()) {
+          yield YdszResponse.error(YdszResultCode.BAD_REQUEST, "批量请求列表为空");
+        }
+        List<MessageItemRequestDTO> requests = toMessageRequestList(items);
+        BatchSendResultDTO result = messageService.batchSend(requests, dto.getBatchId());
+        yield YdszResponse.success(result);
+      }
+    };
+  }
+
+
+  /**
+   * 分页查询发送日志。
+   *
+   * <p>按租户隔离，支持按 bizId、channelCode、status、时间范围等多维过滤；
+   * 当查询参数为空时默认返回当前租户下按时间倒序的分页列举。
+   *
+   * @param query 日志查询参数（bizId / channelCode / status / startTime / endTime / pageNum / pageSize）
+   * @return 日志分页结果（data 为 MsgLogVO 列表，含消息 ID、通道、接收人、状态、回执 ID、发送时间；无匹配时 data 为空列表）
+   */
+  @Operation(summary = "发送日志分页", description = "分页查询消息发送日志。支持按 bizId、channelCode、status、时间范围等条件过滤。"
+            + "返回分页结果含 MsgLogVO（消息 ID、通道、接收人、状态、回执 ID、发送时间）。")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回发送日志分页结果"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 message.log.view 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
+  @JsonView(MsgLogViews.Summary.class)
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
+  @GetMapping("/log/page")
+  public YdszResponse<PageResponse<List<MsgLogVO>>> pageLog(MessageLogQueryDTO query) {
+    return YdszResponse.success(messageService.pageLog(query));
+  }
+
+  /**
+   * 导出消息投递日志（Excel）
+   *
+   * <p>根据当前过滤条件（channelCode/bizId/status/时间范围等）导出投递日志，自动处理多页分页查询并聚合全部数据后一次性写入。
+   * SuperFastExcelWriter 每次 {@code doWrite} 输出完整 xlsx，禁止多次调用，因此先聚合再写入。
+   * 文件名为 {@code msg_logs_yyyyMMddHHmmss.xlsx}。接收人字段使用 {@link MaskUtils#mask(String, int, int)} 脱敏。
+   *
+   * @param query 日志查询参数（同 {@link #pageLog}）
+   */
+  @Operation(summary = "导出投递日志（Excel）",
+      description = "根据筛选条件导出投递日志为 Excel 文件，支持多页分页查询后聚合写入。")
+  @ApiResponse(responseCode = "200", description = "导出成功（返回 xlsx 文件流）")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
+  @GetMapping("/log/export")
+  public void exportLogs(MessageLogQueryDTO query,
+      jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+    String fileName = "msg_logs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
+    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
+            + "filename*=UTF-8''" + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+                .replace("+", "%20"));
+
+    // 设置大页大小减少分页查询次数
+    query.setPageSize(200);
+    query.setIsUseSearchAfter(false);
+
+    final int pageSize = 200;
+    List<MsgLogExportVO> rows = new java.util.ArrayList<>();
+    int pageNum = 1;
+    while (true) {
+      query.setPageNum(pageNum);
+      PageResponse<List<MsgLogVO>> page = messageService.pageLog(query);
+      if (page == null || page.getData() == null || page.getData().isEmpty()) {
+        break;
+      }
+      for (MsgLogVO vo : page.getData()) {
+        rows.add(toMsgLogExportVO(vo));
+      }
+      if (page.getData().size() < pageSize || pageNum * pageSize >= page.getTotal()) {
+        break;
+      }
+      pageNum++;
+    }
+    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), MsgLogExportVO.class)
+        .sheet("MsgLogs")) {
+      writer.doWrite(rows);
+    }
+    publishDataExportAudit("消息投递", "msg_log", rows.size());
+  }
+
+  // ==================== 私有辅助方法 ====================
+
+  /**
+   * 发布数据导出审计事件。
+   *
+   * <p>事件发布不阻塞业务链路，异常仅记录日志。
+   *
+   * @param exportModule 导出模块名
+   * @param bizType 业务类型
+   * @param rowCount 导出行数
+   */
+  private void publishDataExportAudit(String exportModule, String bizType, int rowCount) {
+    try {
+      DataExportAuditEvent event = DataExportAuditEvent.builder()
+          .userId(AuthContextUtils.getUserId())
+          .username(AuthContextUtils.getUsername())
+          .exportModule(exportModule)
+          .bizType(bizType)
+          .rowCount(rowCount)
+          .traceId(TracerUtils.getTraceId())
+          .clientIp(RequestContext.getClientIp())
+          .tenantId(AuthContextUtils.getTenantIdOrDefault())
+          .exportedAt(System.currentTimeMillis())
+          .build();
+      eventPublisher.publishEvent(event);
+      log.debug("[Audit] 数据导出事件已发布: module={}, bizType={}, rowCount={}",
+          exportModule, bizType, rowCount);
+    } catch (Exception e) {
+      log.warn("[Audit] 发布数据导出事件异常: exportModule={}, reason={}", exportModule, e.getMessage());
+    }
+  }
+
+  // ==================== 私有转换方法（domain VO → excel VO） ====================
+
+  /**
+   * 将 {@link MsgLogVO} 转换为 Excel 导出行。
+   *
+   * <p>接收人字段使用 {@link MaskUtils#mask(String, int, int)} 脱敏（前 3 + 后 4）。
+   *
+   * @param vo 消息投递日志领域 VO
+   * @return Excel 导出行
+   */
+  private MsgLogExportVO toMsgLogExportVO(MsgLogVO vo) {
+    MsgLogExportVO export = new MsgLogExportVO();
+    export.setMsgId(vo.getMsgId());
+    export.setChannel(vo.getChannel());
+    export.setBizType(vo.getBizType());
+    export.setBizId(vo.getBizId());
+    // 接收人脱敏：前 3 位 + 后 4 位可见
+    export.setReceiver(vo.getReceiver() != null ? MaskUtils.mask(vo.getReceiver(), 3, 4) : null);
+    export.setTemplateCode(vo.getTemplateCode());
+    export.setStatus(vo.getStatus());
+    export.setPriority(vo.getPriority());
+    export.setSenderId(vo.getSenderId());
+    export.setMessageGroup(vo.getMessageGroup());
+    export.setBatchId(vo.getBatchId());
+    export.setReceiptStatus(vo.getReceiptStatus());
+    export.setReceiptAt(vo.getReceiptAt() != null ? vo.getReceiptAt().toString() : null);
+    export.setRetryCount(vo.getRetryCount());
+    export.setNextRetryAt(vo.getNextRetryAt() != null ? vo.getNextRetryAt().toString() : null);
+    export.setCostMs(vo.getCostMs());
+    export.setCost(vo.getCost());
+    export.setTraceId(vo.getTraceId());
+    export.setScheduledAt(vo.getScheduledAt() != null ? vo.getScheduledAt().toString() : null);
+    export.setProviderTraceId(vo.getProviderTraceId());
+    export.setCreatedAt(vo.getCreatedAt() != null ? vo.getCreatedAt().toString() : null);
+    return export;
+  }
+
+  /**
+   * P1-F3: 取消定时消息（仅允许取消状态为 SCHEDULED 的消息）。
+   *
+   * @param msgId 定时消息 ID（发送定时消息时返回的 messageId）
+   * @return 取消结果
+   */
+  @Operation(summary = "取消定时消息", description = "取消已调度但尚未发送的定时消息。"
+            + "仅允许取消状态为 SCHEDULED 的消息，通过 msgId（发送定时消息时返回的 messageId）定位。"
+            + "取消成功后消息状态变为 CANCELLED。")
+  @ApiResponse(responseCode = "200", description = "操作成功")
+  @ApiResponse(responseCode = "400", description = "请求参数错误")
+  @ApiResponse(responseCode = "429", description = "请求过于频繁")
+  @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
+  @Audit(
+      module = "消息管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.DELETE,
+      content = "'取消定时消息: msgId=' + #msgId")
+  @PostMapping("/cancelScheduled")
+  public YdszResponse<MessageSendResultVO> cancelScheduled(@RequestParam String msgId) {
+    return YdszResponse.success(messageService.cancelScheduledMessage(msgId));
+  }
+
+
+  /**
+   * 查询批次发送进度：按 bizId=batchId 分页查询发送日志。
+   *
+   * <p>用于前端展示批次执行明细，按批次 ID 过滤当前租户下的发送日志。
+   *
+   * @param batchId 批次 ID（路径变量，不可为空）
+   * @param page 页码（默认 1）
+   * @param size 每页大小（默认 20）
+   * @return 分页日志（data 为各消息当前状态、通道、接收人、回执 ID；批次不存在时 data 为空列表）
+   */
+  @Operation(summary = "查询批次发送进度", description = "按批次 ID 分页查询发送日志，用于追踪批量发送任务的执行进度。"
+            + "返回分页结果含各消息当前状态（PENDING/SENT/FAILED）、通道、接收人、回执 ID。")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "成功，返回批次发送进度分页结果"),
+      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "403", description = "无访问权限（需要 message.log.view 授权码）"),
+      @ApiResponse(responseCode = "500", description = "服务端内部错误")})
+  @JsonView(MsgLogViews.Summary.class)
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
+  @GetMapping("/batch/{batchId}/progress")
+  public YdszResponse<PageResponse<List<MsgLogVO>>> batchProgress(
+      @PathVariable String batchId,
+      @RequestParam(defaultValue = "1") long page,
+      @RequestParam(defaultValue = "20") long size) {
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setBizId(batchId);
+    query.setPageNum((int) page);
+    query.setPageSize((int) size);
+    return YdszResponse.success(messageService.pageLog(query));
+  }
+
+  // ===== 私有辅助方法 =====
+
+  /**
+   * 将 MessageSendDTO 转换为 MessageItemRequestDTO（用于 SYNC / ASYNC / TRANSACTIONAL 模式）。
+   *
+   * @param dto 本模块 DTO
+   * @return 共享请求 DTO
+   */
+  private MessageItemRequestDTO toMessageRequest(MessageSendDTO dto) {
+    MessageItemRequestDTO request = new MessageItemRequestDTO();
+    request.setChannel(dto.getChannel());
+    request.setReceiver(dto.getReceiver());
+    request.setSubject(dto.getSubject());
+    request.setContent(dto.getContent());
+    request.setBizType(dto.getBizType());
+    request.setBizId(dto.getBizId());
+    request.setTemplateCode(dto.getTemplateCode());
+    request.setParams(dto.getParams());
+    request.setPriority(dto.getPriority());
+    request.setMessageId(dto.getMessageId());
+    return request;
+  }
+
+  /**
+   * 将批量请求子项 DTO 列表转换为内部的 MessageItemRequestDTO 列表。
+   *
+   * @param items 批量请求子项 DTO 列表
+   * @return MessageItemRequestDTO 列表
+   */
+  private List<MessageItemRequestDTO> toMessageRequestList(List<MessageItemRequestDTO> items) {
+    return items.stream().map(this::toMessageRequestItem).toList();
+  }
+
+  /**
+   * 将单个 MessageItemRequestDTO 转换为 MessageItemRequestDTO。
+   *
+   * @param item 子项 DTO
+   * @return MessageItemRequestDTO
+   */
+  private MessageItemRequestDTO toMessageRequestItem(MessageItemRequestDTO item) {
+    MessageItemRequestDTO request = new MessageItemRequestDTO();
+    request.setChannel(item.getChannel());
+    request.setReceiver(item.getReceiver());
+    request.setSubject(item.getSubject());
+    request.setContent(item.getContent());
+    request.setBizType(item.getBizType());
+    request.setBizId(item.getBizId());
+    request.setTemplateCode(item.getTemplateCode());
+    request.setParams(item.getParams());
+    request.setChannelMeta(item.getChannelMeta());
+    request.setPriority(item.getPriority());
+    request.setMessageId(item.getMessageId());
+    request.setScheduledAt(item.getScheduledAt());
+    request.setParentMsgId(item.getParentMsgId());
+    request.setScenario(item.getScenario());
+    return request;
+  }
+}

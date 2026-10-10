@@ -1,6 +1,7 @@
 package com.njydsz.message.server.channel;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -98,13 +99,13 @@ public class ChannelRouter {
     for (MessageChannel channel : beans.values()) {
       String type = channel.channelType() == null ? "" : channel.channelType().trim().toUpperCase();
       if (type.isEmpty()) {
-        log.warn("[ChannelRouter] 跳过 channelType 为空的通道: {}", channel.getClass().getName());
+        log.warn(I18n.message("message.log.other.ChannelRouter_channelType_{}.fac190"), channel.getClass().getName());
         continue;
       }
       channelCache.put(type, channel);
       breakerCache.put(type, engineRegistry.circuitBreaker("ch-" + type, engineConfig));
     }
-    log.info("[ChannelRouter] 已注册 {} 个消息通道(含熔断器): {}", channelCache.size(), channelCache.keySet());
+    log.info(I18n.message("message.log.other.ChannelRouter_{}_{}.1bda79"), channelCache.size(), channelCache.keySet());
   }
 
   /**
@@ -143,7 +144,7 @@ public class ChannelRouter {
     CircuitBreaker breaker = breakerCache.get(channel.trim().toUpperCase());
     // 熔断开启时快速失败，不调用真实通道
     if (breaker != null && breaker.getState() == CircuitBreaker.State.OPEN) {
-      log.warn("[ChannelRouter] 通道熔断中，快速失败: channel={} state={}", channel, breaker.getState());
+      log.warn(I18n.message("message.log.other.ChannelRouter_channel_{}_state_{}.174249"), channel, breaker.getState());
       messageMetrics.recordChannelError(channel, "CIRCUIT_BREAKER");
       return MessageSendResultVO.fail(channel, null, "通道熔断中，请稍后重试", "通道熔断中，请稍后重试", null);
     }
@@ -234,7 +235,7 @@ public class ChannelRouter {
     }
 
     if (enabledChannels.isEmpty()) {
-      log.warn("[ChannelRouter] dispatchWithScore: 无可用启用通道");
+      log.warn(I18n.message("message.log.other.ChannelRouter_dispatchWithScore.8596a5"));
       return MessageSendResultVO.fail(null, null, "无可用启用通道", "无可用启用通道", null);
     }
 

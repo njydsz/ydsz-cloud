@@ -19,7 +19,7 @@ import com.njydsz.system.domain.vo.ConfigVO;
 @Data
 public class ConfigBatchDTO {
 
-  @NotEmpty(message = "配置列表不能为空")
-  @Size(max = 500, message = "单次批量创建最多 500 条")
+  @NotEmpty(message = "{system.dto.configBatch.items.required}")
+  @Size(max = 500, message = "{system.dto.configBatch.items.max}")
   private List<ConfigVO> items;
 }

@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.archive.impl;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -67,7 +68,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     if (!messageProperties.getArchive().isEsEnabled() || logList == null || logList.isEmpty()) {
       return;
     }
-    log.debug("[Archive] 批量索引: count={}", logList.size());
+    log.debug(I18n.message("message.log.other.Archive_count_{}.b1f50b"), logList.size());
     for (MsgLogVO logDO : logList) {
       index(logDO);
     }
@@ -103,7 +104,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
       int pageSize) {
     if (messageProperties.getArchive().isEsEnabled()) {
       // ES 全文搜索（ES 可用时实现）
-      log.info("[Archive] ES 搜索: keyword={} channel={} status={}", keyword, channel, status);
+      log.info(I18n.message("message.log.other.Archive_ES_keyword_{}_channel_{}_status_{}.71aded"), keyword, channel, status);
     }
     // 降级：数据库 LIKE 查询
     return searchByDatabase(
@@ -122,7 +123,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     if (!messageProperties.getArchive().isEsEnabled() || !StringUtils.hasText(id)) {
       return;
     }
-    log.debug("[Archive] 删除索引: id={}", id);
+    log.debug(I18n.message("message.log.other.Archive_id_{}.0c9370"), id);
   }
 
   /**

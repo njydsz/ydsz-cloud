@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,9 +16,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "文档摄入请求")
-public class DocumentIngestDTO implements Serializable {
+public class DocumentIngestDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 文档 ID（必填，唯一标识待摄入的文档） */
   @NotBlank(message = "文档 ID 不能为空")

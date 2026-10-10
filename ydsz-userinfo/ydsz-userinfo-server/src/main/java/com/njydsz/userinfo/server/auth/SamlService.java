@@ -29,6 +29,7 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.server.config.SamlProperties;
 import com.njydsz.userinfo.server.service.SamlIdpConfigService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * SAML 2.0 Service Provider 服务（P2-1 多租户 IdP 路由）。
@@ -118,7 +119,7 @@ public class SamlService {
     metadata.append("  </md:SPSSODescriptor>\n");
     metadata.append("</md:EntityDescriptor>");
 
-    log.info("SAML SP Metadata 已生成: entityId={}", entityId);
+    log.info(I18n.message("userinfo.SAML.SP.Metadata.已生成.entityId=", new Object[]{entityId}));
     return metadata.toString();
   }
 
@@ -159,7 +160,7 @@ public class SamlService {
     String redirectUrl = idpSsoUrl + "?SAMLRequest=" + URLEncoder.encode(
         base64Request, StandardCharsets.UTF_8);
 
-    log.info("SAML AuthnRequest 已生成: id={}, idp={}", requestId, samlProperties.getIdpEntityId());
+    log.info(I18n.message("userinfo.SAML.AuthnRequest.已生成.id=.idp=", new Object[]{requestId, samlProperties.getIdpEntityId()}));
     return redirectUrl;
   }
 
@@ -178,9 +179,9 @@ public class SamlService {
     String idpSsoUrl;
     if (idpConfig != null && "ENABLED".equals(idpConfig.getStatus())) {
       idpSsoUrl = idpConfig.getSsoUrl();
-      log.info("多租户 IdP 路由: idpEntityId={}, ssoUrl={}", idpEntityId, idpSsoUrl);
+      log.info(I18n.message("userinfo.多租户.IdP.路由.idpEntityId=.ssoUrl=", new Object[]{idpEntityId, idpSsoUrl}));
     } else {
-      log.warn("多租户 SSO 发起拒绝: IdP 不存在或未启用, idpEntityId={}", idpEntityId);
+      log.warn(I18n.message("userinfo.多租户.SSO.发起拒绝.IdP.不存在或未启用.idpEntityId=", new Object[]{idpEntityId}));
       throw new BusinessException(UserInfoExceptionCode.SAML_CONFIG_MISSING);
     }
 
@@ -207,7 +208,7 @@ public class SamlService {
     String redirectUrl = idpSsoUrl + "?SAMLRequest=" + URLEncoder.encode(
         base64Request, StandardCharsets.UTF_8);
 
-    log.info("SAML AuthnRequest 已生成（多租户路由）: id={}, idpEntityId={}", requestId, idpEntityId);
+    log.info(I18n.message("userinfo.SAML.AuthnRequest.已生成.多租户路由.id=.idpEntityId=", new Object[]{requestId, idpEntityId}));
     return redirectUrl;
   }
 
@@ -245,12 +246,12 @@ public class SamlService {
       // 提取用户属性
       Map<String, String> attributes = extractAttributes(document);
 
-      log.info("SAML Response 验证成功: nameId={}", attributes.get("nameId"));
+      log.info(I18n.message("userinfo.SAML.Response.验证成功.nameId=", new Object[]{attributes.get("nameId")}));
       return attributes;
     } catch (BusinessException e) {
       throw e;
     } catch (Exception e) {
-      log.error("SAML Response 处理失败", e);
+      log.error(I18n.message("userinfo.SAML.Response.处理失败"), e);
       throw new BusinessException(UserInfoExceptionCode.SAML_RESPONSE_INVALID);
     }
   }
@@ -290,7 +291,7 @@ public class SamlService {
     } catch (BusinessException e) {
       throw e;
     } catch (Exception e) {
-      log.error("SAML Response 处理失败（多租户）: idpEntityId={}", idpEntityId, e);
+      log.error(I18n.message("userinfo.SAML.Response.处理失败.多租户.idpEntityId=", new Object[]{idpEntityId}), e);
       throw new BusinessException(UserInfoExceptionCode.SAML_RESPONSE_INVALID);
     }
   }
@@ -310,14 +311,14 @@ public class SamlService {
     String idpCertPem;
     if (idpConfig != null && idpConfig.getCertificate() != null && !idpConfig.getCertificate().isBlank()) {
       idpCertPem = idpConfig.getCertificate();
-      log.debug("使用 DB 配置的 IdP 证书验证签名: idpEntityId={}", idpEntityId);
+      log.debug(I18n.message("userinfo.使用.DB.配置的.IdP.证书验证签名.idpEntityId=", new Object[]{idpEntityId}));
     } else {
-      log.warn("多租户 ACS 拒绝: IdP 未配置数据库证书, idpEntityId={}", idpEntityId);
+      log.warn(I18n.message("userinfo.多租户.ACS.拒绝.IdP.未配置数据库证书.idpEntityId=", new Object[]{idpEntityId}));
       throw new BusinessException(UserInfoExceptionCode.SAML_CONFIG_MISSING);
     }
 
     if (idpCertPem == null || idpCertPem.isBlank()) {
-      log.warn("IdP 证书未配置，跳过签名验证");
+      log.warn(I18n.message("userinfo.IdP.证书未配置.跳过签名验证"));
       return;
     }
 
@@ -387,7 +388,7 @@ public class SamlService {
   private void verifySignature(Document document) throws SamlException {
     String idpCertPem = samlProperties.getIdpCertificate();
     if (idpCertPem == null || idpCertPem.isBlank()) {
-      log.warn("IdP 证书未配置，跳过签名验证");
+      log.warn(I18n.message("userinfo.IdP.证书未配置.跳过签名验证"));
       return;
     }
 
@@ -478,7 +479,7 @@ public class SamlService {
       }
     }
 
-    log.warn("SAML Audience 验证失败: expected={}", entityId);
+    log.warn(I18n.message("userinfo.SAML.Audience.验证失败.expected=", new Object[]{entityId}));
     throw new BusinessException(UserInfoExceptionCode.SAML_AUDIENCE_MISMATCH);
   }
 

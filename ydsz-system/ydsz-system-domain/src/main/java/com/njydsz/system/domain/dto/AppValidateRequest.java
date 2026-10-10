@@ -15,12 +15,12 @@ import lombok.Data;
 public class AppValidateRequest {
 
   /** 应用 Key（client_id） */
-  @NotBlank(message = "应用 Key 不能为空")
+  @NotBlank(message = "{system.dto.appValidate.appKey.required}")
   @Schema(description = "应用 Key（client_id）", requiredMode = Schema.RequiredMode.REQUIRED)
   private String appKey;
 
   /** 应用密钥（client_secret） */
-  @NotBlank(message = "应用密钥不能为空")
+  @NotBlank(message = "{system.dto.appValidate.appSecret.required}")
   @Schema(description = "应用密钥（client_secret）", requiredMode = Schema.RequiredMode.REQUIRED)
   private String appSecret;
 }

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.system.domain.vo.ErrorCodeVO;
@@ -65,7 +66,7 @@ public class ErrorCodeController {
   @GetMapping
   @Operation(summary = "查询全部业务异常错误码")
   public YdszResponse<List<ErrorCodeVO>> listAll() {
-    log.debug("查询全部业务异常错误码");
+    log.debug(I18n.message("system.web.errorcode.list.all"));
     Map<String, Map<String, ErrorCodeTable.CodeEntry>> grouped = errorCodeTable.groupByModule();
     List<ErrorCodeVO> result = new ArrayList<>(errorCodeTable.size());
 
@@ -83,7 +84,7 @@ public class ErrorCodeController {
       }
     }
 
-    log.debug("查询完成，返回 {} 条错误码", result.size());
+    log.debug(I18n.message("system.web.errorcode.list.done", new Object[]{result.size()}));
     return YdszResponse.success(result);
   }
 }

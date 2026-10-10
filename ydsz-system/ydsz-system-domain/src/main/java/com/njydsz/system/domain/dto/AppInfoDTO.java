@@ -44,37 +44,37 @@ public class AppInfoDTO {
 
   private String id;
 
-  @NotBlank(message = "应用编码不能为空")
-  @Size(max = 64, message = "应用编码长度不能超过64")
-  @Xss(message = "应用编码包含非法内容")
+  @NotBlank(message = "{system.dto.appInfo.appCode.required}")
+  @Size(max = 64, message = "{system.dto.appInfo.appCode.max}")
+  @Xss(message = "{system.dto.appInfo.appCode.xss}")
   private String appCode;
 
-  @NotBlank(message = "应用名称不能为空")
-  @Size(max = 128, message = "应用名称长度不能超过128")
-  @Xss(message = "应用名称包含非法内容")
+  @NotBlank(message = "{system.dto.appInfo.appName.required}")
+  @Size(max = 128, message = "{system.dto.appInfo.appName.max}")
+  @Xss(message = "{system.dto.appInfo.appName.xss}")
   private String appName;
 
-  @NotBlank(message = "应用 Key 不能为空")
-  @Size(max = 128, message = "应用 Key 长度不能超过128")
-  @Xss(message = "应用 Key 包含非法内容")
+  @NotBlank(message = "{system.dto.appInfo.appKey.required}")
+  @Size(max = 128, message = "{system.dto.appInfo.appKey.max}")
+  @Xss(message = "{system.dto.appInfo.appKey.xss}")
   private String appKey;
 
-  @Size(max = 256, message = "应用密钥长度不能超过256")
+  @Size(max = 256, message = "{system.dto.appInfo.appSecret.max}")
   private String appSecret;
 
-  @Size(max = 512, message = "回调地址长度不能超过512")
-  @Xss(message = "回调地址包含非法内容")
+  @Size(max = 512, message = "{system.dto.appInfo.redirectUrl.max}")
+  @Xss(message = "{system.dto.appInfo.redirectUrl.xss}")
   private String redirectUrl;
 
-  @Size(max = 512, message = "授权范围长度不能超过512")
-  @Xss(message = "授权范围包含非法内容")
+  @Size(max = 512, message = "{system.dto.appInfo.scopes.max}")
+  @Xss(message = "{system.dto.appInfo.scopes.xss}")
   private String scopes;
 
-  @Size(max = 512, message = "IP 白名单长度不能超过512")
-  @Xss(message = "IP 白名单包含非法内容")
+  @Size(max = 512, message = "{system.dto.appInfo.boundIps.max}")
+  @Xss(message = "{system.dto.appInfo.boundIps.xss}")
   private String boundIps;
 
-  @Xss(message = "应用描述包含非法内容")
+  @Xss(message = "{system.dto.appInfo.description.xss}")
   private String description;
 
   private String status;

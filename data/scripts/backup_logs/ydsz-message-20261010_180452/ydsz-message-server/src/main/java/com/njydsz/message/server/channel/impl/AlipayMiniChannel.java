@@ -1,0 +1,184 @@
+package com.njydsz.message.server.channel.impl;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
+
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.util.date.DateUtils;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.message.server.channel.MessageChannel;
+import com.njydsz.message.server.config.MessageProperties;
+
+/**
+ * 支付宝小程序模板消息通道实现，通过支付宝开放平台 API 下发小程序订阅消息。
+ *
+ * <p>实现 {@link MessageChannel} SPI，调用 alipay.open.app.mini.templatemessage.send
+ * 接口以 form 表单方式提交请求（含 RSA2 签名、UTF-8 编码）。
+ * 依赖的第三方服务：支付宝开放平台小程序网关。
+ * 降级条件：未配置 AppID/privateKey 或 provider=mock 时降级为日志输出。
+ *
+ * @author ydsz
+ * @since 26.09.24
+ */
+@Slf4j
+@Component
+@ConditionalOnProperty(
+    prefix = "ydsz.message.alipay-mini",
+    name = "provider",
+    havingValue = "alipay",
+    matchIfMissing = false)
+public class AlipayMiniChannel implements MessageChannel {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
+
+  private static final String CHANNEL_TYPE = "ALIPAY_MINI";
+
+  private final MessageProperties messageProperties;
+  private final RestTemplate restTemplate;
+  private final SnowflakeIdGenerator snowflakeIdGenerator;
+
+  public AlipayMiniChannel(
+      MessageProperties messageProperties,
+      RestTemplate restTemplate,
+      SnowflakeIdGenerator snowflakeIdGenerator) {
+    this.messageProperties = messageProperties;
+    this.restTemplate = restTemplate;
+    this.snowflakeIdGenerator = snowflakeIdGenerator;
+  }
+
+  @Override
+  public String channelType() {
+    return CHANNEL_TYPE;
+  }
+
+  @Override
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
+    if (request.getReceiver() == null || request.getReceiver().isBlank()) {
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "支付宝小程序接收人(UserID)不能为空", "支付宝小程序接收人(UserID)不能为空", null);
+    }
+
+    MessageProperties.AlipayMiniConfig config = messageProperties.getAlipayMini();
+    if (config == null
+        || !StringUtils.hasText(config.getAppId())
+        || !StringUtils.hasText(config.getPrivateKey())) {
+      log.warn(
+          "[AlipayMiniChannel] 未配置 AppID/privateKey,降级为日志输出: receiver={}", request.getReceiver());
+      return mockSend(request);
+    }
+
+    try {
+      // 构造支付宝开放平台请求参数
+      Map<String, String> bizContent = new HashMap<>(COLLECTION_CAPACITY);
+      bizContent.put("to_user_id", request.getReceiver());
+      bizContent.put(
+          "template_id", request.getTemplateCode() != null ? request.getTemplateCode() : "");
+      bizContent.put("page", "pages/index/index");
+
+      // 构造模板数据
+      if (request.getParams() != null) {
+        Map<String, String> data = new HashMap<>(COLLECTION_CAPACITY);
+        for (Map.Entry<String, Object> entry : request.getParams().entrySet()) {
+          data.put(
+              entry.getKey(), entry.getValue() == null ? "" : String.valueOf(entry.getValue()));
+        }
+        bizContent.put("data", YdszJson.toJson(data));
+      }
+
+      Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY);
+      params.put("method", "alipay.open.app.mini.templatemessage.send");
+      params.put("app_id", config.getAppId());
+      params.put("charset", "UTF-8");
+      params.put("sign_type", "RSA2");
+      params.put(
+          "timestamp",
+          DateUtils.now());
+      params.put("version", "1.0");
+      params.put("biz_content", YdszJson.toJson(bizContent));
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+      // 使用 form 表单提交
+      StringBuilder formBody = new StringBuilder();
+      for (Map.Entry<String, Object> entry : params.entrySet()) {
+        if (formBody.length() > 0) {
+          formBody.append("&");
+        }
+        formBody.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8));
+        formBody.append("=");
+        formBody.append(
+            URLEncoder.encode(String.valueOf(entry.getValue()), StandardCharsets.UTF_8));
+      }
+
+      HttpEntity<String> entity = new HttpEntity<>(formBody.toString(), headers);
+      ResponseEntity<String> resp =
+          restTemplate.postForEntity(config.getGateway(), entity, String.class);
+      String respBody = resp.getBody();
+
+      // 解析响应（支付宝返回 JSON）
+      Map<String, Object> result =
+          YdszJson.fromJson(respBody, new JsonType<Map<String, Object>>() {});
+      if (result != null) {
+        Map<?, ?> alipayResp =
+            (Map<?, ?>) result.get("alipay_open_app_mini_templatemessage_send_response");
+        if (alipayResp != null && "10000".equals(String.valueOf(alipayResp.get("code")))) {
+          String traceId = "ALIPAY_MINI-" + String.valueOf(snowflakeIdGenerator.nextId());
+          log.info(
+              "[AlipayMiniChannel] 发送成功: receiver={} template={}",
+              request.getReceiver(),
+              request.getTemplateCode());
+          return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
+        } else {
+          String errMsg = alipayResp != null ? String.valueOf(alipayResp.get("sub_msg")) : "未知错误";
+          String errCode = alipayResp != null ? String.valueOf(alipayResp.get("sub_code")) : "N/A";
+          log.error(
+              "[AlipayMiniChannel] 发送失败: receiver={} code={} msg={}",
+              request.getReceiver(),
+              errCode,
+              errMsg);
+          return MessageSendResultVO.fail(CHANNEL_TYPE, null, "支付宝小程序发送失败: " + errMsg, "支付宝小程序发送失败: " + errMsg, null);
+        }
+      }
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "支付宝返回空响应", "支付宝返回空响应", null);
+    } catch (Exception e) {
+      log.error(
+          "[AlipayMiniChannel] 发送异常: receiver={} err={}", request.getReceiver(), e.getMessage(), e);
+      return MessageSendResultVO.fail(
+          CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
+          e.getClass().getSimpleName() + ": " + e.getMessage(), null);
+    }
+  }
+
+  /**
+   * Mock 发送（开发环境降级）。
+   *
+   * @param request 消息请求（含 receiver/templateCode/content）
+   * @return 模拟发送结果（status=SUCCESS，traceId 含 MOCK 前缀）
+   */
+  private MessageSendResultVO mockSend(MessageItemRequestDTO request) {
+    String traceId = "ALIPAY_MINI-MOCK-" + String.valueOf(snowflakeIdGenerator.nextId());
+    log.info(
+        "[AlipayMiniChannel][MOCK] 模拟发送: receiver={} template={} content={}",
+        request.getReceiver(),
+        request.getTemplateCode(),
+        request.getContent());
+    return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
+  }
+}

@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 身份供给连接器注册表（P0-1 Identity Provisioning 管道）。
@@ -73,7 +74,7 @@ public class ProvisionConnectorRegistry {
     }
     IdentityProvisionConnector removed = connectors.remove(type.toUpperCase());
     if (removed != null) {
-      log.info("ProvisionConnector 注销: type={}", type);
+      log.info(I18n.message("userinfo.ProvisionConnector.注销.type=", new Object[]{type}));
     }
     return removed;
   }

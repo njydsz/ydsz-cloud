@@ -1,0 +1,70 @@
+package com.njydsz.message.domain.dto;
+
+import java.time.LocalDateTime;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import com.njydsz.common.domain.query.PageQuery;
+import com.njydsz.common.safe.annotation.Xss;
+
+/**
+ * 消息日志分页查询 DTO
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class MessageLogQueryDTO extends PageQuery {
+
+  /** 通道 */
+  @Xss private String channel;
+
+  /** 业务类型 */
+  @Xss private String bizType;
+
+  /** 业务单据 ID */
+  @Xss private String bizId;
+
+  /** 发送状态 */
+  @Xss private String status;
+
+  /** 接收人 */
+  @Xss private String receiver;
+
+  /** 发送优先级 */
+  @Xss private String priority;
+
+  /** 撤回状态 */
+  @Xss private String recallStatus;
+
+  // tenantId 已由父类 BaseQuery 提供，此处不再重复声明
+
+  /** P2-13: 全文搜索关键词（模糊匹配 content / receiver / templateCode） */
+  @Xss private String keyword;
+
+  /** P2-13: 消息分组（按业务分组筛选） */
+  @Xss private String messageGroup;
+
+  /** 消息业务 ID（精确匹配，用于幂等查重等场景） */
+  @Xss private String msgId;
+
+  /** 回执状态（精确匹配，用于统计查询） */
+  @Xss private String receiptStatus;
+
+  /** P2-13: 时间范围开始 */
+  @Xss private String startTime;
+
+  /** P2-13: 时间范围结束 */
+  @Xss private String endTime;
+
+  /** 定时消息调度时间结束（scheduledAt <= now） */
+  private LocalDateTime scheduledAtEnd;
+
+  /** 游标 ID（searchAfter 分页）：上一页最后一条记录的 ID */
+  @Xss private String searchAfterId;
+
+  /** 是否启用 searchAfter 游标分页（true 时优先使用游标分页，忽略 pageNum） */
+  private Boolean isUseSearchAfter;
+}

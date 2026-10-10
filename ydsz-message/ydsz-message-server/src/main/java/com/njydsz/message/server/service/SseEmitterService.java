@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service;
 
-import java.io.IOException;
+
+import com.njydsz.common.locales.util.I18n;import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -131,7 +132,7 @@ public class SseEmitterService {
       String batchId, long timeoutMs, Object initialSnapshot, String lastEventId) {
     // 连接数限制校验
     if (!tryAcquireConnection(batchId)) {
-      log.warn("[SSE] 连接数超限,拒绝订阅: batchId={}", batchId);
+      log.warn(I18n.message("message.log.other.SSE_batchId_{}.19433a"), batchId);
       SseEmitter emitter = new SseEmitter(1000L);
       try {
         emitter.send(SseEmitter.event().name("error").data("连接数超限,请稍后重试"));
@@ -165,7 +166,7 @@ public class SseEmitterService {
                     .name(entry.getEventType())
                     .data(entry.getData()));
           } catch (IllegalStateException | IOException e) {
-            log.debug("[SSE] 重连回放失败: batchId={} err={}", batchId, e.getMessage());
+            log.debug(I18n.message("message.log.other.SSE_batchId_{}_err_{}.039322"), batchId, e.getMessage());
             break;
           }
         }
@@ -188,7 +189,7 @@ public class SseEmitterService {
         emitter.send(event);
         recordEvent(batchId, eventIdStr, "initial", initialSnapshot);
       } catch (IllegalStateException | IOException e) {
-        log.debug("[SSE] 初始快照发送失败: batchId={} err={}", batchId, e.getMessage());
+        log.debug(I18n.message("message.log.other.SSE_batchId_{}_err_{}.7ab04a"), batchId, e.getMessage());
         removeSubscription(subscription);
         return emitter;
       }
@@ -223,7 +224,7 @@ public class SseEmitterService {
         sub.getEmitter().send(
             SseEmitter.event().id(eventIdStr).name("progress").data(eventData));
       } catch (IllegalStateException | IOException e) {
-        log.debug("[SSE] 发送失败,移除订阅: batchId={} subId={} err={}",
+        log.debug(I18n.message("message.log.other.SSE_batchId_{}_subId_{}_err_{}.ade44d"),
             batchId, sub.getSubscriptionId(), e.getMessage());
         deadSubs.add(sub);
       }
@@ -254,16 +255,16 @@ public class SseEmitterService {
   private void registerCleanupHandlers(String batchId, SseEmitterSubscription subscription) {
     SseEmitter emitter = subscription.getEmitter();
     emitter.onCompletion(() -> {
-      log.debug("[SSE] 连接完成: batchId={} subId={}", batchId, subscription.getSubscriptionId());
+      log.debug(I18n.message("message.log.other.SSE_batchId_{}_subId_{}.83391c"), batchId, subscription.getSubscriptionId());
       removeSubscription(subscription);
     });
     emitter.onTimeout(() -> {
-      log.debug("[SSE] 连接超时: batchId={} subId={}", batchId, subscription.getSubscriptionId());
+      log.debug(I18n.message("message.log.other.SSE_batchId_{}_subId_{}.d5e051"), batchId, subscription.getSubscriptionId());
       removeSubscription(subscription);
       emitter.complete();
     });
     emitter.onError(e -> {
-      log.debug("[SSE] 连接错误: batchId={} subId={} err={}",
+      log.debug(I18n.message("message.log.other.SSE_batchId_{}_subId_{}_err_{}.a77f31"),
           batchId, subscription.getSubscriptionId(), e.getMessage());
       removeSubscription(subscription);
     });
@@ -418,7 +419,7 @@ public class SseEmitterService {
         }
       }
     } catch (Exception e) {
-      log.warn("[SSE] 心跳发送异常: err={}", e.getMessage());
+      log.warn(I18n.message("message.log.other.SSE_err_{}.19d356"), e.getMessage());
     }
   }
 }

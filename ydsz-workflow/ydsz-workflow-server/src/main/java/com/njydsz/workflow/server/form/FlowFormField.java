@@ -1,7 +1,5 @@
 package com.njydsz.workflow.server.form;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -29,9 +27,7 @@ import com.njydsz.common.json.annotation.JsonProperty;
  * @author ydsz-team
  */
 @Data
-public class FlowFormField implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowFormField {
 
   /** 字段标识（唯一，对应流程变量的 key） */
   private String fieldKey;
@@ -110,8 +106,7 @@ public class FlowFormField implements Serializable {
 
   /** 选项定义 */
   @Data
-  public static class Option implements Serializable {
-    @Serial private static final long serialVersionUID = 1L;
+  public static class Option {
 
     /** 选项值 */
     private String value;
@@ -130,8 +125,7 @@ public class FlowFormField implements Serializable {
 
   /** 校验规则 */
   @Data
-  public static class ValidationRule implements Serializable {
-    @Serial private static final long serialVersionUID = 1L;
+  public static class ValidationRule {
 
     /** 是否必填 */
     private Boolean isRequired;
@@ -182,8 +176,7 @@ public class FlowFormField implements Serializable {
    * <p>当触发字段（triggerField）的值满足条件（triggerValue）时， 对当前字段执行动作（show/hide/setValue/required）。
    */
   @Data
-  public static class LinkageRule implements Serializable {
-    @Serial private static final long serialVersionUID = 1L;
+  public static class LinkageRule {
 
     /** 触发字段 key */
     private String triggerField;

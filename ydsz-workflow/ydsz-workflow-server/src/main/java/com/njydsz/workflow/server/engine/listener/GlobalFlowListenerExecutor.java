@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.workflow.server.engine.FlowEventContext;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 全局监听器执行器。
@@ -51,7 +52,7 @@ public class GlobalFlowListenerExecutor {
     List<GlobalFlowListener> list = new ArrayList<>(globalListeners);
     list.sort(Comparator.comparingInt(GlobalFlowListener::getOrder));
     this.sortedListeners = List.copyOf(list);
-    log.info("[Flow] 全局监听器已注册: count={}", sortedListeners.size());
+    log.info(I18n.message("workflow.global.listener.registered", new Object[]{sortedListeners.size()}));
     for (GlobalFlowListener listener : sortedListeners) {
       log.info("[Flow]   - {} order={}", listener.getClass().getSimpleName(), listener.getOrder());
     }
@@ -72,8 +73,7 @@ public class GlobalFlowListenerExecutor {
       try {
         listener.onTaskCreated(instanceId, taskId, nodeCode, variables, ctx);
       } catch (Exception e) {
-        log.error("[Flow] 全局监听器 onTaskCreated 异常: listener={} err={}",
-            listener.getClass().getSimpleName(), e.getMessage(), e);
+      log.error(I18n.message("workflow.global.listener.onTaskCreated.error", new Object[]{listener.getClass().getSimpleName(), e.getMessage()}), e);
       }
     }
   }
@@ -94,8 +94,7 @@ public class GlobalFlowListenerExecutor {
       try {
         listener.onTaskFinished(instanceId, taskId, nodeCode, action, variables, ctx);
       } catch (Exception e) {
-        log.error("[Flow] 全局监听器 onTaskFinished 异常: listener={} err={}",
-            listener.getClass().getSimpleName(), e.getMessage(), e);
+      log.error(I18n.message("workflow.global.listener.onTaskFinished.error", new Object[]{listener.getClass().getSimpleName(), e.getMessage()}), e);
       }
     }
   }
@@ -113,8 +112,7 @@ public class GlobalFlowListenerExecutor {
       try {
         listener.onInstanceStarted(instanceId, variables, ctx);
       } catch (Exception e) {
-        log.error("[Flow] 全局监听器 onInstanceStarted 异常: listener={} err={}",
-            listener.getClass().getSimpleName(), e.getMessage(), e);
+      log.error(I18n.message("workflow.global.listener.onInstanceStarted.error", new Object[]{listener.getClass().getSimpleName(), e.getMessage()}), e);
       }
     }
   }
@@ -130,8 +128,7 @@ public class GlobalFlowListenerExecutor {
       try {
         listener.onInstanceFinished(instanceId, ctx);
       } catch (Exception e) {
-        log.error("[Flow] 全局监听器 onInstanceFinished 异常: listener={} err={}",
-            listener.getClass().getSimpleName(), e.getMessage(), e);
+      log.error(I18n.message("workflow.global.listener.onInstanceFinished.error", new Object[]{listener.getClass().getSimpleName(), e.getMessage()}), e);
       }
     }
   }
@@ -148,8 +145,7 @@ public class GlobalFlowListenerExecutor {
       try {
         listener.onInstanceRejected(instanceId, reason, ctx);
       } catch (Exception e) {
-        log.error("[Flow] 全局监听器 onInstanceRejected 异常: listener={} err={}",
-            listener.getClass().getSimpleName(), e.getMessage(), e);
+      log.error(I18n.message("workflow.global.listener.onInstanceRejected.error", new Object[]{listener.getClass().getSimpleName(), e.getMessage()}), e);
       }
     }
   }
@@ -166,8 +162,7 @@ public class GlobalFlowListenerExecutor {
       try {
         listener.onInstanceTerminated(instanceId, reason, ctx);
       } catch (Exception e) {
-        log.error("[Flow] 全局监听器 onInstanceTerminated 异常: listener={} err={}",
-            listener.getClass().getSimpleName(), e.getMessage(), e);
+      log.error(I18n.message("workflow.global.listener.onInstanceTerminated.error", new Object[]{listener.getClass().getSimpleName(), e.getMessage()}), e);
       }
     }
   }

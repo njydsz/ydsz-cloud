@@ -1,0 +1,29 @@
+# =====================================================================
+#  YDSZ · Message · UAT 环境配置（Nacos DataId）
+#  DataId:    ydsz-message-uat.yaml
+#  Group:     uat
+#  端口:      9004
+#  说明:      以下配置已迁移至 ydsz-message-common.yaml（shared-configs 加载）：
+#             server.* / spring.mail.* / ydsz.json.* / ydsz.message 基础项
+#             ydsz.webhook.* / ydsz.channel.* / rocketmq.* / mybatis-plus.*
+#             resilience4j.* / management.*
+#             本文件仅保留 UAT 环境特有配置
+# =====================================================================
+
+spring:
+  profiles: uat
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: false
+knife4j:
+  production: true
+
+logging:
+  level:
+    root: INFO
+    "[com.njydsz]": INFO

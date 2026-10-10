@@ -19,6 +19,7 @@ import com.njydsz.userinfo.domain.event.auth.MfaVerifiedEvent;
 import com.njydsz.userinfo.domain.event.auth.PasswordChangedEvent;
 import com.njydsz.userinfo.domain.event.auth.SessionEvictedEvent;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 认证指标事件监听器。
@@ -45,73 +46,73 @@ public class MetricsEventListener implements UserAuthEventListener {
 
   @Override
   public void onLoginSuccess(LoginSuccessEvent event) {
-    log.debug("认证指标-登录成功: userId={}, deviceType={}", event.userId(), event.deviceType());
+    log.debug(I18n.message("userinfo.认证指标-登录成功.userId=.deviceType=", new Object[]{event.userId(), event.deviceType()}));
     userInfoMetrics.recordLoginSuccess();
   }
 
   @Override
   public void onLoginFailed(LoginFailedEvent event) {
-    log.debug("认证指标-登录失败: userId={}, reason={}", event.userId(), event.reason());
+    log.debug(I18n.message("userinfo.认证指标-登录失败.userId=.reason=", new Object[]{event.userId(), event.reason()}));
     userInfoMetrics.recordLoginFail();
   }
 
   @Override
   public void onLogout(LogoutEvent event) {
-    log.debug("认证指标-注销: userId={}, sessionDuration={}", event.userId(), event.sessionDuration());
+    log.debug(I18n.message("userinfo.认证指标-注销.userId=.sessionDuration=", new Object[]{event.userId(), event.sessionDuration()}));
     userInfoMetrics.recordLogout();
   }
 
   @Override
   public void onMfaTriggered(MfaTriggeredEvent event) {
-    log.debug("认证指标-MFA触发: userId={}, mfaType={}", event.userId(), event.mfaType());
+    log.debug(I18n.message("userinfo.认证指标-MFA触发.userId=.mfaType=", new Object[]{event.userId(), event.mfaType()}));
     userInfoMetrics.incrementCounter("mfa_triggers_total", "mfa_type", event.mfaType());
   }
 
   @Override
   public void onMfaVerified(MfaVerifiedEvent event) {
-    log.debug("认证指标-MFA验证成功: userId={}, mfaType={}", event.userId(), event.mfaType());
+    log.debug(I18n.message("userinfo.认证指标-MFA验证成功.userId=.mfaType=", new Object[]{event.userId(), event.mfaType()}));
     userInfoMetrics.incrementCounter("mfa_verifications_total", "mfa_type", event.mfaType(), "result", "success");
   }
 
   @Override
   public void onMfaFailed(MfaFailedEvent event) {
-    log.debug("认证指标-MFA验证失败: userId={}, mfaType={}", event.userId(), event.mfaType());
+    log.debug(I18n.message("userinfo.认证指标-MFA验证失败.userId=.mfaType=", new Object[]{event.userId(), event.mfaType()}));
     userInfoMetrics.incrementCounter("mfa_verifications_total", "mfa_type", event.mfaType(), "result", "fail");
   }
 
   @Override
   public void onAccountLocked(AccountLockedEvent event) {
-    log.debug("认证指标-账号锁定: userId={}", event.userId());
+    log.debug(I18n.message("userinfo.认证指标-账号锁定.userId=", new Object[]{event.userId()}));
     userInfoMetrics.incrementCounter("account_lockouts_total");
   }
 
   @Override
   public void onAccountUnlocked(AccountUnlockedEvent event) {
-    log.debug("认证指标-账号解锁: userId={}", event.userId());
+    log.debug(I18n.message("userinfo.认证指标-账号解锁.userId=", new Object[]{event.userId()}));
     userInfoMetrics.incrementCounter("account_unlocks_total");
   }
 
   @Override
   public void onSessionEvicted(SessionEvictedEvent event) {
-    log.debug("认证指标-会话驱逐: userId={}, evictedBy={}", event.userId(), event.evictedBy());
+    log.debug(I18n.message("userinfo.认证指标-会话驱逐.userId=.evictedBy=", new Object[]{event.userId(), event.evictedBy()}));
     userInfoMetrics.incrementCounter("session_evictions_total");
   }
 
   @Override
   public void onPasswordChanged(PasswordChangedEvent event) {
-    log.debug("认证指标-密码修改: userId={}, changedBy={}", event.userId(), event.changedBy());
+    log.debug(I18n.message("userinfo.认证指标-密码修改.userId=.changedBy=", new Object[]{event.userId(), event.changedBy()}));
     userInfoMetrics.incrementCounter("password_changes_total");
   }
 
   @Override
   public void onAccountBanned(AccountBannedEvent event) {
-    log.debug("认证指标-账号封禁: userId={}, banType={}", event.userId(), event.banType());
+    log.debug(I18n.message("userinfo.认证指标-账号封禁.userId=.banType=", new Object[]{event.userId(), event.banType()}));
     userInfoMetrics.incrementCounter("account_bans_total", "ban_type", event.banType());
   }
 
   @Override
   public void onAccountUnbanned(AccountUnbannedEvent event) {
-    log.debug("认证指标-账号解封: userId={}", event.userId());
+    log.debug(I18n.message("userinfo.认证指标-账号解封.userId=", new Object[]{event.userId()}));
     userInfoMetrics.incrementCounter("account_unbans_total");
   }
 

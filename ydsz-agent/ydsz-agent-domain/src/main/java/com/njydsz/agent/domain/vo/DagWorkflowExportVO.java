@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
 
@@ -16,12 +14,9 @@ import lombok.Data;
  * @since 26.09.17
  */
 @Data
-public class DagWorkflowExportVO implements Serializable {
+public class DagWorkflowExportVO {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  /** 工作流编码（业务唯一标识） */
+/** 工作流编码（业务唯一标识） */
   @ExcelProperty(value = "工作流编码", order = 1, width = 22)
   private String workflowCode;
 

@@ -6,6 +6,7 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.locales.util.I18n;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -77,7 +78,7 @@ public class BpmnDiagramParser {
       bpmnDiagram = bpmnElementHelper.findChildByLocalName(root, "bpmndiagram");
     }
     if (bpmnDiagram == null) {
-      log.debug("[BpmnDiagramParser] BPMN XML 未包含 <BPMNDiagram> 段，跳过坐标解析");
+      log.debug(I18n.message("workflow.bpmn.diagram.missing", new Object[]{}));
       return;
     }
     // 找 <BPMNPlane>

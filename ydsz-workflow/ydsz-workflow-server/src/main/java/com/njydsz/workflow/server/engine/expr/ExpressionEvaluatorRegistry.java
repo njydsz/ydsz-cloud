@@ -72,11 +72,9 @@ public class ExpressionEvaluatorRegistry {
       if (strategy != null) {
         ExpressionEvaluator prev = registry.put(strategy, evaluator);
         if (prev != null) {
-          log.warn("[Flow] 表达式引擎策略重复注册: strategy={} new={} old={}",
-              strategy, evaluator.getClass().getSimpleName(), prev.getClass().getSimpleName());
+        log.warn(I18n.message("workflow.expr.strategy.duplicate", new Object[]{strategy, evaluator.getClass().getSimpleName(), prev.getClass().getSimpleName()}));
         } else {
-          log.info("[Flow] 表达式引擎已注册: strategy={} impl={}",
-              strategy, evaluator.getClass().getSimpleName());
+        log.info(I18n.message("workflow.expr.strategy.registered", new Object[]{strategy, evaluator.getClass().getSimpleName()}));
         }
       }
     }
@@ -93,7 +91,7 @@ public class ExpressionEvaluatorRegistry {
     // 设置活动求值器
     activeEvaluator = registry.get(activeStrategy);
     if (activeEvaluator == null) {
-      log.warn("[Flow] 活动策略 {} 未注册，回退到 AVIATOR", activeStrategy);
+      log.warn(I18n.message("workflow.expr.strategy.not.registered", new Object[]{activeStrategy}));
       activeStrategy = ExpressionEvalStrategy.AVIATOR;
       activeEvaluator = registry.get(ExpressionEvalStrategy.AVIATOR);
     }

@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.List;
 
 import com.njydsz.common.safe.annotation.Xss;
@@ -19,9 +17,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "Agent 执行请求")
-public class AgentExecutionRequestDTO implements Serializable {
+public class AgentExecutionRequestDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** Agent 编码（指定使用哪个 Agent 执行） */
   @Schema(description = "Agent 编码（指定使用哪个 Agent）")

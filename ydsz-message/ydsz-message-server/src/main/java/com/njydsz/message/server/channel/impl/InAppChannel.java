@@ -1,6 +1,7 @@
 package com.njydsz.message.server.channel.impl;
 
-import java.util.Map;
+
+import com.njydsz.common.locales.util.I18n;import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +79,7 @@ public class InAppChannel implements MessageChannel {
           traceId);
       return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
     } catch (Exception e) {
-      log.error("[INAPP] 站内信发送异常: receiver={} err={}", request.getReceiver(), e.getMessage(), e);
+      log.error(I18n.message("message.log.server.inapp.error.send.exception"), request.getReceiver(), e.getMessage(), e);
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "站内信发送异常: " + e.getMessage(), "站内信发送异常: " + e.getMessage(), null);
     }
   }

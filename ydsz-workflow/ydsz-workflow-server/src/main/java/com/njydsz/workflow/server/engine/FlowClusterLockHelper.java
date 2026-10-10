@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.core.LockTemplate;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * P0-2: 工作流集群调度分布式锁辅助工具（P0-C2：委托 LockTemplate 消除 try-finally 样板代码）
@@ -36,7 +37,7 @@ public class FlowClusterLockHelper {
    */
   public FlowClusterLockHelper(LockTemplate lockTemplate) {
     this.lockTemplate = lockTemplate;
-    log.info("[FlowClusterLock] LockTemplate 已注入，定时任务将以集群锁模式运行");
+    log.info(I18n.message("workflow.cluster.lock.injected", new Object[]{}));
   }
 
   /**

@@ -1,6 +1,7 @@
 package com.njydsz.message.server.channel.impl;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -123,19 +124,19 @@ public class WeComAppChannel implements MessageChannel {
         Map<String, Object> body = YdszJson.parseMap(response.getBody());
         int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
         if (errcode == 0) {
-          log.info("[WECOM_APP] 发送成功: receiver={}", receiver);
+          log.info(I18n.message("message.log.other.WECOM_APP_receiver_{}.2348a5"), receiver);
           return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
         }
         String errmsg = (String) body.getOrDefault("errmsg", "unknown");
-        log.error("[WECOM_APP] 发送失败: errcode={} errmsg={}", errcode, errmsg);
+        log.error(I18n.message("message.log.other.WECOM_APP_errcode_{}_errmsg_{}.6ec0ac"), errcode, errmsg);
         return MessageSendResultVO.fail(
             CHANNEL_TYPE, null, "errcode=" + errcode + ", errmsg=" + errmsg,
             "errcode=" + errcode + ", errmsg=" + errmsg, null);
       }
-      log.error("[WECOM_APP] 发送失败: status={}", response.getStatusCode());
+      log.error(I18n.message("message.log.other.WECOM_APP_status_{}.382812"), response.getStatusCode());
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
-      log.error("[WECOM_APP] 发送异常: reason={}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.WECOM_APP_reason_{}.f0d0e9"), e.getMessage(), e);
       return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
@@ -168,14 +169,14 @@ public class WeComAppChannel implements MessageChannel {
         if (errcode == 0) {
           String token = (String) body.get("access_token");
           redisStringOps.set(cacheKey, token, TOKEN_TTL.minusSeconds(TOKEN_SAFETY_MARGIN_SECONDS));
-          log.info("[WECOM_APP] 刷新 access_token 成功: corpId={}", cfg.getCorpId());
+          log.info(I18n.message("message.log.other.WECOM_APP_access_token_corpId_{}.1b544f"), cfg.getCorpId());
           return token;
         }
         log.error(
             "[WECOM_APP] 获取 access_token 失败: errcode={} errmsg={}", errcode, body.get("errmsg"));
       }
     } catch (Exception e) {
-      log.error("[WECOM_APP] 获取 access_token 异常: {}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.WECOM_APP_access_token_{}.1a0b81"), e.getMessage(), e);
     }
     return null;
   }

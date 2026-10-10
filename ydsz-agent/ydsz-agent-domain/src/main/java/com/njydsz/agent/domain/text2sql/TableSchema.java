@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.text2sql;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
@@ -21,9 +20,8 @@ public record TableSchema(
     String tableName,
     List<ColumnDefinition> columns,
     String description)
-    implements Serializable {
+    {
 
-  private static final long serialVersionUID = 1L;
 
   /**
    * 紧凑构造，执行防御性拷贝与必填校验。
@@ -43,9 +41,8 @@ public record TableSchema(
    * @param description 列描述（可为 null）
    */
   public record ColumnDefinition(String name, String type, String description)
-      implements Serializable {
+      {
 
-    private static final long serialVersionUID = 1L;
 
     /**
      * 紧凑构造，校验必填字段。

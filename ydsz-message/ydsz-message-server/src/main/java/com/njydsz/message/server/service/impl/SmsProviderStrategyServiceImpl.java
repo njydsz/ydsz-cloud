@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.math.BigDecimal;
+
+import com.njydsz.common.locales.util.I18n;import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -113,7 +114,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
         failureCount.computeIfAbsent(providerType, k -> new AtomicInteger(0)).set(0);
       }
     } catch (Exception e) {
-      log.debug("[SmsStrategy] 统计记录失败(忽略): {}", e.getMessage());
+      log.debug(I18n.message("message.log.other.SmsStrategy_{}.85f561"), e.getMessage());
     }
   }
 
@@ -139,7 +140,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
         stats.put(provider, new long[] {total, total - failed, failed});
       }
     } catch (Exception e) {
-      log.warn("[SmsStrategy] 统计查询失败: {}", e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.SmsStrategy_{}.9bccd2"), e.getMessage(), e);
     }
     return stats;
   }
@@ -209,7 +210,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
       }
     }
     // 所有 provider 都超阈值，降级选择第一个
-    log.warn("[SmsStrategy] 所有 provider 连续失败超阈值,降级选择第一个");
+    log.warn(I18n.message("message.log.other.SmsStrategy_provider.45c2a1"));
     return providers.get(0);
   }
 

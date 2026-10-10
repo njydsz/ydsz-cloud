@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
 
@@ -16,12 +14,9 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class TriggerExportVO implements Serializable {
+public class TriggerExportVO {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  /** 触发器 ID */
+/** 触发器 ID */
   @ExcelProperty(value = "触发器ID", order = 1, width = 22)
   private String triggerId;
 

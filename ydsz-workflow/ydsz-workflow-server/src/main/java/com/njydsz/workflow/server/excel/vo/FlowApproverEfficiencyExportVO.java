@@ -1,7 +1,5 @@
 package com.njydsz.workflow.server.excel.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
 
@@ -17,9 +15,7 @@ import lombok.Data;
  * @since 26.09.30
  */
 @Data
-public class FlowApproverEfficiencyExportVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowApproverEfficiencyExportVO {
 
   /** 办理人用户 ID */
   @ExcelProperty(value = "办理人ID", order = 1, width = 20)

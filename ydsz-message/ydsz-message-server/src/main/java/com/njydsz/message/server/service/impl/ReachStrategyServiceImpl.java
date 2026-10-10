@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.util.ArrayList;
+
+import com.njydsz.common.locales.util.I18n;import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -135,14 +136,14 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
           try {
             scores.put(channel, Integer.parseInt(e.getValue()));
           } catch (NumberFormatException ex) {
-            log.debug("[ReachStrategy] 通道活跃度评分解析失败，跳过: channel={}, value={}", key, ex.getMessage());
+            log.debug(I18n.message("message.log.other.ReachStrategy_channel_{}_value_{}.b892df"), key, ex.getMessage());
           }
         }
       }
       profile.setChannelActivityScores(scores);
       return profile;
     } catch (Exception e) {
-      log.warn("[ReachStrategy] 画像加载失败,使用默认: userId={} err={}", userId, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.ReachStrategy_userId_{}_err_{}.07f638"), userId, e.getMessage(), e);
       return defaultProfile();
     }
   }

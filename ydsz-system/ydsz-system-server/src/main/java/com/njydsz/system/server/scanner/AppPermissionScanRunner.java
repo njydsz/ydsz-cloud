@@ -5,6 +5,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.server.service.ApiPermissionService;
 
 
@@ -47,13 +48,13 @@ public class AppPermissionScanRunner implements CommandLineRunner {
    */
   @Override
   public void run(String... args) {
-    log.info("[AppPermissionScanRunner] 开始扫描 @AuthApiPermission 注解...");
+    log.info(I18n.message("system.api.scan.start"));
     try {
       int registered = apiPermissionService.scanAndRegister();
-      log.info("[AppPermissionScanRunner] 扫描完成，共注册 {} 个接口权限", registered);
+      log.info(I18n.message("system.api.scan.done", new Object[]{registered}));
     } catch (Exception e) {
       // 扫描注册失败不应阻止应用启动
-      log.error("[AppPermissionScanRunner] 扫描注册失败：{}", e.getMessage(), e);
+      log.error(I18n.message("system.api.scan.fail", new Object[]{e.getMessage()}), e);
     }
   }
 }

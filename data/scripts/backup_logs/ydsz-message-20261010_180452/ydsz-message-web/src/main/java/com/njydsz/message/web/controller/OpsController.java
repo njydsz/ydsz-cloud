@@ -1,0 +1,170 @@
+package com.njydsz.message.web.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.cache.stats.CacheStats;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.message.domain.vo.BloomFilterStatsVO;
+import com.njydsz.message.domain.vo.CacheStatsVO;
+import com.njydsz.message.domain.vo.PipelineTopologyVO;
+import com.njydsz.message.server.consumer.BloomFilterDeduplicator;
+import com.njydsz.message.server.service.chain.SendPipelineFacade;
+import com.njydsz.message.server.service.impl.ScheduledMessageScanner;
+import com.njydsz.message.server.template.cache.CachedMessageTemplateRenderer;
+
+/**
+ * 运维诊断 Controller。
+ *
+ * <p>提供消息模块运维操作能力的 HTTP API，包含模板缓存管理（查询统计、失效清除）和 BloomFilter 去重过滤器状态查询，供管理后台运维面板和自动化运维系统消费。
+ *
+ * <p><b>接口路径：</b>{@code /api/message/ops/**}
+ *
+ * <p><b>核心能力：</b>
+ *
+ * <ul>
+ * <li><b>模板缓存统计</b>：{@code GET /ops/template-cache/stats} — 返回 YdszCache 缓存条目数、命中率、淘汰次数等指标
+ *   <li><b>模板缓存清除</b>：{@code DELETE /ops/template-cache?template=xxx} — 失效指定模板的编译缓存
+ *   <li><b>模板缓存全清</b>：{@code DELETE /ops/template-cache/all} — 清空所有模板编译缓存
+ * <li><b>BloomFilter 统计</b>：{@code GET /ops/bloomfilter/stats} — 返回 BloomFilter 容量、误判率、窗口年龄等指标
+ *   <li><b>管线拓扑</b>：{@code GET /ops/pipeline/topology} — 返回各模板下 Handler 链执行顺序与中文描述
+ *   <li><b>定时消息积压</b：{@code GET /ops/scheduled/backlog} — 返回到期未发送的定时消息积压数量
+ * </ul>
+ *
+ * <p><b>安全要求：</b>所有接口均需高权限认证（{@code MESSAGE_LOG_VIEW} 或 {@code MESSAGE_TEMPLATE_EDIT}），防止越权操作。
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ * @see CachedMessageTemplateRenderer 模板引擎缓存
+ * @see BloomFilterDeduplicator 消息去重过滤器
+ */
+@Slf4j
+@Tag(name = "运维诊断", description = "消息模块运维操作接口（高权限）")
+@ApiVersion("26.10.01")
+@RestController
+@RequestMapping("/message/ops")
+@RequiredArgsConstructor
+public class OpsController {
+
+  /** 带 AST 缓存的模板引擎 */
+  private final CachedMessageTemplateRenderer cachedTemplateEngine;
+
+  /** 基于 BloomFilter 的消息去重过滤器 */
+  private final BloomFilterDeduplicator bloomFilterDeduplicator;
+
+  /** 管线编排门面（拓扑查询） */
+  private final SendPipelineFacade sendPipelineFacade;
+
+  /** 定时消息扫描器（积压统计） */
+  private final ScheduledMessageScanner scheduledMessageScanner;
+
+  /**
+   * 获取模板缓存统计信息。
+   *
+   * <p>返回 YdszCache 缓存（ydsz-common-cache）的运行时指标，包含当前缓存条目数、命中次数、未命中次数、命中率和淘汰次数。
+   *
+   * @return 统一响应结果，包含缓存统计信息
+   */
+  @Operation(summary = "模板缓存统计")
+  @AuthApiPermission(apiCodes = "MESSAGE_LOG_VIEW")
+  @GetMapping("/template-cache/stats")
+  public YdszResponse<CacheStatsVO> getTemplateCacheStats() {
+    CacheStats stats = cachedTemplateEngine.getCacheStats();
+    CacheStatsVO vo = CacheStatsVO.builder()
+        .size(cachedTemplateEngine.cacheSize())
+        .hitCount(stats.getHitCount())
+        .missCount(stats.getMissCount())
+        .hitRate(stats.getHitRate())
+        .evictionCount(stats.getEvictionCount())
+        .build();
+    return YdszResponse.success(vo);
+  }
+
+  /**
+   * 清除指定模板缓存。
+   *
+   * <p>主动失效指定模板的编译后 AST 缓存，通常在模板内容更新后调用，确保下次渲染使用最新编译结果。
+   *
+   * @param template 模板内容
+   * @return 统一响应结果
+   */
+  @Operation(summary = "清除模板缓存")
+  @AuthApiPermission(apiCodes = "MESSAGE_TEMPLATE_EDIT")
+  @DeleteMapping("/template-cache")
+  public YdszResponse<Void> evictTemplateCache(@RequestParam String template) {
+    cachedTemplateEngine.evictCache(template);
+    return YdszResponse.success(null);
+  }
+
+  /**
+   * 清空所有模板缓存。
+   *
+   * <p>清除全部模板 AST 缓存并重置命中/未命中计数器。此操作会导致后续请求重新编译模板，短时间内 CPU 负载升高，请谨慎使用。
+   *
+   * @return 统一响应结果
+   */
+  @Operation(summary = "清空所有模板缓存")
+  @AuthApiPermission(apiCodes = "MESSAGE_TEMPLATE_EDIT")
+  @DeleteMapping("/template-cache/all")
+  public YdszResponse<Void> clearTemplateCache() {
+    cachedTemplateEngine.clearCache();
+    return YdszResponse.success(null);
+  }
+
+  /**
+   * 获取 BloomFilter 统计信息。
+   *
+   * <p>返回消息去重 BloomFilter 的运行状态，包含预期插入条目数、当前误判率、是否为主窗口和窗口已运行秒数。
+   *
+   * @return 统一响应结果，包含 BloomFilter 统计信息
+   */
+  @Operation(summary = "BloomFilter 统计")
+  @AuthApiPermission(apiCodes = "MESSAGE_LOG_VIEW")
+  @GetMapping("/bloomfilter/stats")
+  public YdszResponse<BloomFilterStatsVO> getBloomFilterStats() {
+    BloomFilterStatsVO vo = BloomFilterStatsVO.builder()
+        .expectedInsertions(bloomFilterDeduplicator.getExpectedInsertions())
+        .fpp(bloomFilterDeduplicator.getFalsePositiveProbability())
+        .isPrimary(true)
+        .windowAgeSeconds(bloomFilterDeduplicator.getWindowAgeSeconds())
+        .build();
+    return YdszResponse.success(vo);
+  }
+
+  /**
+   * F1: 查询管线 Handler 链拓扑。
+   *
+   * <p>返回每种模板下 Handler 的执行顺序、名称与中文描述，供运维看板可视化渲染管线 DAG 结构。
+   *
+   * @return 管线拓扑信息列表（含模板编码、Handler 链顺序与描述）；无 Handler 链时返回空列表
+   */
+  @Operation(summary = "管线拓扑查询")
+  @AuthApiPermission(apiCodes = "MESSAGE_LOG_VIEW")
+  @GetMapping("/pipeline/topology")
+  public YdszResponse<java.util.List<PipelineTopologyVO>> getPipelineTopology() {
+    return YdszResponse.success(sendPipelineFacade.topology());
+  }
+
+  /**
+   * F2: 查询定时消息积压数量。
+   *
+   * <p>返回当前到期但未发送的 {@code status=SCHEDULED} 消息数量（计划发送时间 ≤ 当前时间）， 供监控告警判断扫描器是否跟上生产能力。
+   *
+   * @return 积压数量
+   */
+  @Operation(summary = "定时消息积压统计")
+  @AuthApiPermission(apiCodes = "MESSAGE_LOG_VIEW")
+  @GetMapping("/scheduled/backlog")
+  public YdszResponse<Long> getScheduledBacklog() {
+    return YdszResponse.success(scheduledMessageScanner.getBacklogCount());
+  }
+}

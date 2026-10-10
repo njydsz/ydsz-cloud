@@ -1,0 +1,183 @@
+package com.njydsz.message.web.controller.config;
+
+import java.util.List;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.message.domain.dto.UnsubscribeQueryDTO;
+import com.njydsz.message.domain.vo.MsgSubscriptionVO;
+import com.njydsz.message.server.service.config.UnsubscribeService;
+import com.njydsz.message.server.token.UnsubscribeTokenPayload;
+
+/**
+ * 退订中心（Unsubscribe）Controller。
+ *
+ * <p>提供<b>基于 HMAC 签名 token 的一键退订</b>能力（P1-5），对标 RFC 8058 List-Unsubscribe-Post。 适用于邮件 /
+ * 短信等无登录态场景的退订：用户在邮件底部点击退订链接即可完成退订， 无需登录管理后台。
+ *
+ * <p><b>接口路径：</b>{@code /api/message/unsubscribe/**}
+ *
+ * <p><b>核心能力：</b>
+ *
+ * <ul>
+ *   <li><b>token 一键退订</b>：{@code POST /oneClick} — 无需登录态，token 校验通过后立即执行退订
+ *   <li><b>token 预览</b>：{@code GET /preview} — 预览 token 内容（供退订确认页渲染，不执行退订）
+ *   <li><b>退订记录查询</b>：{@code GET /page} — 管理后台分页查询已退订记录
+ *   <li><b>恢复订阅</b>：{@code POST /resubscribe} — 管理后台或用户自助恢复订阅
+ * </ul>
+ *
+ * <p><b>token 格式：</b>由 {@link com.njydsz.message.server.token.UnsubscribeTokenService} 生成， 含 HMAC
+ * 签名（防伪造）+ payload（userId + topicCode + channel + expireAt）。 典型示例（URL Safe Base64）：{@code
+ * eyJ1IjoiMTAwMSIsInQiOiJPUkRfVVBEQVRFIiwiYyI6IkVNQUlMIiwiZSI6MTcwMDAwMDAwMH0=.signature}.
+ *
+ * <p><b>安全特性：</b>
+ *
+ * <ul>
+ *   <li>token 含 HMAC-SHA256 签名，密钥从 Nacos / 配置中心加载，防止伪造
+ *   <li>token 含 {@code expireAt}，默认有效期 30 天，过期后失效
+ *   <li>token 一次性使用（使用后从 Redis 标记失效，防止 token 重放）
+ *   <li>写接口（oneClick / resubscribe）启用 {@link Idempotent} 5s 防重
+ *   <li>写接口启用 {@link RateLimit} 50 QPS 限流（防爆破）
+ *   <li>写接口启用 {@link Audit} 审计日志（异步持久化），便于合规审计
+ *   <li>权限模型：通过 {@code @AuthApiPermission} 校验 {@link PermissionCodes#MESSAGE_UNSUBSCRIBE_ACT} 权限码
+ * </ul>
+ *
+ * <p><b>典型场景：</b>
+ *
+ * <ul>
+ *   <li>邮件退订：用户点击邮件 footer 中的「取消订阅」链接 → 跳转退订确认页 → 确认后调用 {@code /oneClick}
+ *   <li>短信退订：短信中插入退订短链 → 用户点击 → 调用 {@code /oneClick}
+ *   <li>管理后台恢复：客服收到用户反馈后通过 {@code /resubscribe} 恢复订阅
+ * </ul>
+ *
+ * <p><b>多租户隔离：</b>所有退订按 {@code tenantId} 隔离，跨租户退订不可见。
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ * @see com.njydsz.message.server.service.config.UnsubscribeService 退订服务
+ * @see com.njydsz.message.server.token.UnsubscribeTokenPayload 退订 token 载荷
+ */
+@Slf4j
+@Tag(name = "退订中心", description = "token 一键退订与退订管理")
+@ApiVersion("26.10.01")
+@RestController
+@RequestMapping("/message/unsubscribe")
+@RequiredArgsConstructor
+public class UnsubscribeController {
+
+  /** 退订服务 */
+  private final UnsubscribeService unsubscribeService;
+
+  /**
+   * token 一键退订（无需登录态）。
+   *
+   * <p>对应邮件 footer 中的退订链接 / SMS 短链。token 校验通过后立即执行退订，幂等：重复点击不会报错。
+   * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param token 退订 token（含 HMAC-SHA256 签名 + payload，格式为 Base64(payload).signature）
+   * @return 退订后的订阅记录 VO（含 userId、topicCode、channel 等）
+   */
+  @Operation(summary = "token 一键退订")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
+  @Idempotent(key = "ydsz:message:UnsubscribeController:oneClick:lock", ttlSeconds = 5)
+  @Audit(
+      module = "退订管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.DELETE,
+      content = "'oneClick'")
+  @RateLimit(resource = "message.unsubscribe.oneClick", threshold = 50)
+  @PostMapping("/oneClick")
+  public YdszResponse<MsgSubscriptionVO> oneClick(@RequestParam String token) {
+    if (token == null || token.isBlank()) {
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "退订 token 不能为空");
+    }
+    return YdszResponse.success(unsubscribeService.unsubscribeByToken(token));
+  }
+
+  /**
+   * 预览 token 内容（不执行退订）。
+   *
+   * <p>供退订确认页渲染：先展示 "您即将退订 [主题] 的 [通道] 通知"，用户确认后再调用 {@code /one-click} 执行退订。
+   *
+   * @param token 退订 token（含 HMAC-SHA256 签名 + payload）
+   * @return token 载荷（含 userId / topicCode / channel / expireAt 等字段）
+   */
+  @Operation(summary = "预览退订 token")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
+  @GetMapping("/preview")
+  public YdszResponse<UnsubscribeTokenPayload> preview(@RequestParam String token) {
+    if (token == null || token.isBlank()) {
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "退订 token 不能为空");
+    }
+    return YdszResponse.success(unsubscribeService.previewToken(token));
+  }
+
+  /**
+   * 分页查询已退订记录（管理后台）。
+   *
+   * <p>管理后台分页浏览已退订记录，支持按用户 / 主题 / 通道 / 时间范围过滤。
+   *
+   * @param query 查询参数（userId / topicCode / channel / unsubscribeTimeStart / unsubscribeTimeEnd / pageNum / pageSize）
+   * @return 退订记录分页结果（data 为 MsgSubscriptionVO 列表）
+   */
+  @Operation(summary = "分页查询已退订记录")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
+  @GetMapping("/page")
+  public YdszResponse<PageResponse<List<MsgSubscriptionVO>>> page(UnsubscribeQueryDTO query) {
+    return YdszResponse.success(unsubscribeService.pageUnsubscribed(query));
+  }
+
+  /**
+   * 恢复订阅（管理后台 / 用户自助）。
+   *
+   * <p>恢复已退订的订阅关系，恢复后用户将重新接收该主题+通道的通知。
+   * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param userId 用户 ID（Query 参数，不可为空）
+   * @param topicCode 主题编码（Query 参数，不可为空）
+   * @param channel 通道（Query 参数，不可为空）
+   * @return 无业务数据（仅返回操作成功标识）
+   */
+  @Operation(summary = "恢复订阅")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
+  @Idempotent(key = "ydsz:message:UnsubscribeController:resubscribe:lock", ttlSeconds = 5)
+  @Audit(
+      module = "退订管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'resubscribe'")
+  @RateLimit(resource = "message.unsubscribe.resubscribe", threshold = 50)
+  @PostMapping("/resubscribe")
+  public YdszResponse<Void> resubscribe(
+      @RequestParam String userId, @RequestParam String topicCode, @RequestParam String channel) {
+    if (userId == null
+        || userId.isBlank()
+        || topicCode == null
+        || topicCode.isBlank()
+        || channel == null
+        || channel.isBlank()) {
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+    }
+    unsubscribeService.resubscribe(userId, topicCode, channel);
+    return YdszResponse.success();
+  }
+}

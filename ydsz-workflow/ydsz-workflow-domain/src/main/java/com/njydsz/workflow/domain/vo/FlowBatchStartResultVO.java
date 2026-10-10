@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.List;
 
 import lombok.Data;
@@ -15,9 +13,7 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class FlowBatchStartResultVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowBatchStartResultVO {
 
   /** 成功启动的数量 */
   private int successCount;
@@ -35,9 +31,7 @@ public class FlowBatchStartResultVO implements Serializable {
    * 批量启动失败条目。
    */
   @Data
-  public static class FailedItemVO implements Serializable {
-
-    @Serial private static final long serialVersionUID = 1L;
+  public static class FailedItemVO {
 
     /** 条目序号 */
     private int index;

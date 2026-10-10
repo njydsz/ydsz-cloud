@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.config.hotreload.ConfigChangeListener;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户信息中心配置变更监听器（P0-1：接入统一 ConfigChangeBridge）
@@ -66,7 +67,7 @@ public class UserInfoConfigChangeListener implements ConfigChangeListener {
       return;
     }
 
-    log.info("[UserInfo] 配置变更通知: key={}, {} -> {}", key, oldValue, newValue);
+    log.info(I18n.message("userinfo.UserInfo.配置变更通知.key=.->", new Object[]{key, oldValue, newValue}));
 
     // 风险评分权重变更
     if (key.contains(RISK_WEIGHT_PATTERN)) {
@@ -82,13 +83,13 @@ public class UserInfoConfigChangeListener implements ConfigChangeListener {
 
     // Token 续签阈值变更
     if (TOKEN_AUTO_RENEWAL_THRESHOLD_KEY.equals(key)) {
-      log.info("[UserInfo] Token 自动续签阈值变更: {} -> {}", oldValue, newValue);
+      log.info(I18n.message("userinfo.UserInfo.Token.自动续签阈值变更.->", new Object[]{oldValue, newValue}));
       return;
     }
 
     // 会话限制变更
     if (MAX_SESSIONS_PER_USER_KEY.equals(key)) {
-      log.info("[UserInfo] 单用户最大并发会话数变更: {} -> {}", oldValue, newValue);
+      log.info(I18n.message("userinfo.UserInfo.单用户最大并发会话数变更.->", new Object[]{oldValue, newValue}));
     }
   }
 
@@ -104,7 +105,7 @@ public class UserInfoConfigChangeListener implements ConfigChangeListener {
    */
   private void handleRiskWeightChange(String key, String oldValue, String newValue) {
     String weightName = key.substring(key.lastIndexOf('.') + 1);
-    log.info("[UserInfo] 风险评分权重变更: {} = {} -> {}", weightName, oldValue, newValue);
+    log.info(I18n.message("userinfo.UserInfo.风险评分权重变更.=.->", new Object[]{weightName, oldValue, newValue}));
   }
 
   /**
@@ -118,6 +119,6 @@ public class UserInfoConfigChangeListener implements ConfigChangeListener {
    */
   private void handleAlertThresholdChange(String key, String oldValue, String newValue) {
     String thresholdName = key.substring(key.lastIndexOf('.') + 1);
-    log.info("[UserInfo] 安全告警阈值变更: {} = {} -> {}", thresholdName, oldValue, newValue);
+    log.info(I18n.message("userinfo.UserInfo.安全告警阈值变更.=.->", new Object[]{thresholdName, oldValue, newValue}));
   }
 }

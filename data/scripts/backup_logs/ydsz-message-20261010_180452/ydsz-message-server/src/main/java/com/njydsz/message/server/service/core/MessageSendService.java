@@ -1,0 +1,237 @@
+package com.njydsz.message.server.service.core;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import com.njydsz.message.domain.vo.MessageSendResultVO;
+import com.njydsz.common.safe.sensitive.SensitiveUtil;
+import com.njydsz.message.domain.enums.core.MessageStatusEnum;
+import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.domain.vo.MsgRouteRuleVO;
+import com.njydsz.message.server.channel.ChannelRouter;
+import com.njydsz.message.server.config.MessageProperties;
+import com.njydsz.message.server.config.RetryStrategyResolver;
+import com.njydsz.message.server.metric.MessageMetrics;
+
+/**
+ * 消息发送与通道分发服务。
+ *
+ * <p>负责消息的通道投递、降级链、重试等发送侧核心逻辑。 从 {@link MessageServiceImpl}（原 God Class）中提取，与预处理 / 渲染 / 查询职责解耦。
+ *
+ * <p><b>职责边界：</b>
+ *
+ * <ul>
+ *   <li>通道分发（{@link #dispatch}）—— 状态驱动（SENDING → SUCCESS / FAILED / RETRY）
+ *   <li>多级降级链（{@link #tryFallbackChain}）—— 按路由规则逐个尝试
+ *   <li>重试决策（{@link #handleFailure}）—— 指数退避 + 最大重试次数
+ *   <li>成本计算、频率记录、配额扣减等发送后处理
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class MessageSendService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
+
+  private final ChannelRouter channelRouter;
+  private final MsgLogRepository msgLogRepository;
+  private final GuardService guardService;
+  private final RetryStrategyResolver retryStrategyResolver;
+  private final MessageMetrics messageMetrics;
+  private final MessageTraceService messageTraceService;
+  private final MessageProperties messageProperties;
+
+  /**
+   * 执行通道分发，包含通道降级与重试逻辑。
+   *
+   * <p>性能优化：移除 PENDING→SENDING 的冗余 DB 写入，仅在最终状态确定时执行一次 UPDATE，将单次发送的 DB 写入次数从 2~N
+   * 次降低到 1 次。
+   *
+   * @param logVO 消息日志 VO（状态会被修改并落库）
+   * @param matchedRule 命中的路由规则（用于解析降级通道）
+   * @param receiver 收方标识（仅用于频率记录与日志，会脱敏打印）
+   * @return 发送结果
+   */
+  public MessageSendResultVO dispatch(MsgLogVO logVO, MsgRouteRuleVO matchedRule, String receiver) {
+    String channel = logVO.getChannel();
+    long start = System.currentTimeMillis();
+    try {
+      messageTraceService.recordTrace(
+          logVO.getMsgId(), "DISPATCH_START", "SUCCESS", channel, "通道分发开始");
+      String providerTraceId = channelRouter.dispatch(logVO);
+      long cost = System.currentTimeMillis() - start;
+      logVO.setStatus(MessageStatusEnum.SUCCESS.name());
+      logVO.setProviderTraceId(providerTraceId);
+      logVO.setCostMs(cost);
+      logVO.setCost(calculateCost(channel));
+      msgLogRepository.update(logVO);
+      if (StringUtils.hasText(receiver)) {
+        guardService.recordFrequency(receiver, channel, logVO.getBizType());
+      }
+      messageMetrics.recordSend(channel, "SUCCESS", cost);
+      messageMetrics.recordSendSuccess(channel, logVO.getTemplateCode(), logVO.getTenantId());
+      messageTraceService.recordTrace(
+          logVO.getMsgId(),
+          "DISPATCH_SUCCESS",
+          "SUCCESS",
+          channel,
+          "发送成功: cost=" + cost + "ms");
+      log.info(
+          "[Message] 发送成功: msgId={} channel={} receiver={} cost={}ms",
+          logVO.getMsgId(),
+          channel,
+          SensitiveUtil.scanAndMask(receiver),
+          cost);
+      return MessageSendResultVO.ok(channel, providerTraceId);
+    } catch (Exception e) {
+      long cost = System.currentTimeMillis() - start;
+      logVO.setCostMs(cost);
+      logVO.setErrorMessage(e.getMessage());
+      messageMetrics.recordSendFailure(
+          channel, logVO.getTemplateCode(), logVO.getTenantId(), e.getClass().getSimpleName());
+      messageMetrics.recordException(channel, e.getClass().getSimpleName());
+      List<String> fallbackChannels = resolveFallbackChannels(matchedRule, channel);
+      if (!fallbackChannels.isEmpty()) {
+        MessageSendResultVO fallback = tryFallbackChain(logVO, fallbackChannels, cost);
+        if (fallback != null) {
+          return fallback;
+        }
+      }
+      return handleFailure(logVO, e, cost);
+    }
+  }
+
+  /**
+   * 解析降级通道列表。
+   *
+   * @param matchedRule 命中的路由规则（从中提取 fallbackChannel 降级通道）
+   * @param currentChannel 当前已发送失败的通道（排除在降级列表之外）
+   * @return 可用的降级通道列表（可能为空）
+   */
+  public List<String> resolveFallbackChannels(MsgRouteRuleVO matchedRule, String currentChannel) {
+    if (matchedRule == null) {
+      return Collections.emptyList();
+    }
+    List<String> result = new ArrayList<>(COLLECTION_CAPACITY);
+    String single = matchedRule.getFallbackChannel();
+    if (StringUtils.hasText(single) && !single.equalsIgnoreCase(currentChannel)) {
+      result.add(single.trim().toUpperCase());
+    }
+    return result;
+  }
+
+  /**
+   * 按降级链顺序逐个尝试，任一成功即返回。
+   *
+   * @param logVO 消息日志 VO（channel 将被替换为降级通道尝试）
+   * @param fallbackChannels 降级通道列表（按优先级排序）
+   * @param prevCost 上次发送已消耗的毫秒时间（累积计算）
+   * @return 降级返回的发送结果；若全部降级失败则返回 null
+   */
+  public MessageSendResultVO tryFallbackChain(
+      MsgLogVO logVO, List<String> fallbackChannels, long prevCost) {
+    String origChannel = logVO.getChannel();
+    long accumulatedCost = prevCost;
+    List<String> tried = new ArrayList<>(fallbackChannels.size() + 1);
+    tried.add(origChannel);
+    for (String fallbackChannel : fallbackChannels) {
+      long start = System.currentTimeMillis();
+      try {
+        logVO.setChannel(fallbackChannel);
+        String providerTraceId = channelRouter.dispatch(logVO);
+        long cost = System.currentTimeMillis() - start;
+        logVO.setStatus(MessageStatusEnum.SUCCESS.name());
+        logVO.setProviderTraceId(providerTraceId);
+        logVO.setCostMs(accumulatedCost + cost);
+        logVO.setCost(calculateCost(fallbackChannel));
+        msgLogRepository.update(logVO);
+        messageMetrics.recordSend(fallbackChannel, "SUCCESS", cost);
+        log.info(
+            "[Message] 降级发送成功: msgId={} chain={} final={} cost={}ms",
+            logVO.getMsgId(),
+            tried,
+            fallbackChannel,
+            cost);
+        return MessageSendResultVO.ok(fallbackChannel, providerTraceId);
+      } catch (Exception fe) {
+        long cost = System.currentTimeMillis() - start;
+        accumulatedCost += cost;
+        tried.add(fallbackChannel);
+        log.warn(
+            "[Message] 降级发送失败: msgId={} fallback={} err={} 继续尝试下一通道",
+            logVO.getMsgId(),
+            fallbackChannel,
+            fe.getMessage());
+      }
+    }
+    logVO.setChannel(origChannel);
+    logVO.setErrorMessage(String.join("→", tried) + " 均失败");
+    return null;
+  }
+
+  /**
+   * 失败处理：retryCount < MAX → RETRY + nextRetryAt（指数退避），否则 FAILED。
+   *
+   * @param logVO 消息日志 VO
+   * @param e 发送过程中抛出的异常
+   * @param cost 本次已消耗的毫秒时间
+   * @return 发送结果（包含重试或失败信息）
+   */
+  public MessageSendResultVO handleFailure(MsgLogVO logVO, Exception e, long cost) {
+    int retryCount = logVO.getRetryCount() == null ? 0 : logVO.getRetryCount();
+    String maskedReceiver = SensitiveUtil.scanAndMask(logVO.getReceiver());
+    if (!retryStrategyResolver.isMaxRetriesReached(retryCount, logVO.getChannel())) {
+      logVO.setStatus(MessageStatusEnum.RETRY.name());
+      logVO.setNextRetryAt(retryStrategyResolver.calcNextRetryAt(retryCount, logVO.getChannel()));
+      msgLogRepository.update(logVO);
+      messageMetrics.recordRetry(logVO.getChannel());
+      log.warn(
+          "[Message] 发送失败转重试: msgId={} channel={} receiver={} retryCount={} nextRetryAt={} err={}",
+          logVO.getMsgId(),
+          logVO.getChannel(),
+          maskedReceiver,
+          retryCount,
+          logVO.getNextRetryAt(),
+          e.getMessage());
+      return MessageSendResultVO.fail(logVO.getChannel(), null, "发送失败,已加入重试队列: " + e.getMessage(), "发送失败,已加入重试队列: " + e.getMessage(), null);
+    }
+    logVO.setStatus(MessageStatusEnum.FAILED.name());
+    msgLogRepository.update(logVO);
+    messageMetrics.recordSend(logVO.getChannel(), "FAILED", cost);
+    log.error(
+        "[Message] 发送失败(重试耗尽): msgId={} channel={} receiver={} retryCount={} err={}",
+        logVO.getMsgId(),
+        logVO.getChannel(),
+        maskedReceiver,
+        retryCount,
+        e.getMessage());
+    return MessageSendResultVO.fail(logVO.getChannel(), null, e.getMessage(), e.getMessage(), null);
+  }
+
+  /**
+   * 按通道计算单条消息成本。
+   *
+   * @param channel 消息通道标识
+   * @return 该通道的单条消息成本（从配置中读取，未配置则返回 0）
+   */
+  public BigDecimal calculateCost(String channel) {
+    MessageProperties.CostConfig cfg = messageProperties.getCost();
+    if (cfg == null || !cfg.isEnabled() || cfg.getUnitPrices() == null) {
+      return BigDecimal.ZERO;
+    }
+    return cfg.getUnitPrices().getOrDefault(channel, BigDecimal.ZERO);
+  }
+}

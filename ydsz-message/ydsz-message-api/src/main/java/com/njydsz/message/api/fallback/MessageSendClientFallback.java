@@ -27,7 +27,7 @@ public class MessageSendClientFallback implements FallbackFactory<MessageSendCli
 
   @Override
   public MessageSendClient create(Throwable cause) {
-    log.warn("[MessageSendClient] 降级触发: {}", cause.getMessage());
+    log.warn(I18n.message("message.log.server.messagesendclient.warn.triggered.raw"), cause.getMessage());
     return new MessageSendClient() {
       @Override
       public YdszResponse<String> sendMessage(MessageSendDTO request) {

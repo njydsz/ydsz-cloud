@@ -19,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 import com.njydsz.common.exception.code.CoreExceptionCode;
@@ -97,7 +98,11 @@ class IdempotentConcurrencyTest {
     when(idempotent.condition()).thenReturn("");
 
     // 默认 mock proceed() 返回 null（可在测试方法中覆盖）
-    when(joinPoint.proceed()).thenReturn(null);
+    try {
+      Mockito.doAnswer(invocationOnMock -> null).when(joinPoint).proceed();
+    } catch (Throwable t) {
+      throw new RuntimeException("mock proceed 失败", t);
+    }
   }
 
   @Nested

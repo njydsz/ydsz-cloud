@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.List;
 
 import com.njydsz.common.safe.annotation.Xss;
@@ -36,9 +34,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "批量对话请求")
-public class BatchChatRequestDTO implements Serializable {
+public class BatchChatRequestDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 请求幂等键（防重，建议每条请求唯一） */
   @Schema(description = "请求幂等键（防重，建议每条请求唯一）")
@@ -72,9 +69,8 @@ public class BatchChatRequestDTO implements Serializable {
    *
    * <p>每条包含独立的用户消息和对话 ID，共享外层模型配置。
    */
-  public static class BatchChatItem implements Serializable {
+  public static class BatchChatItem {
 
-    @Serial private static final long serialVersionUID = 1L;
 
     /** 条目唯一标识（用于响应中对应结果，由调用方保证唯一） */
     @Schema(description = "条目唯一标识（用于响应匹配）")

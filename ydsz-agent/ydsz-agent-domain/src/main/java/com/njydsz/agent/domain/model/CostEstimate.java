@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.model;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -16,12 +15,11 @@ import java.math.RoundingMode;
  * @author ydsz-team
  * @since 26.10.01
  */
-public final class CostEstimate implements Serializable {
+public final class CostEstimate {
 
   /** 金额保留小数位 */
   private static final int PRICE_SCALE = 6;
 
-  private static final long serialVersionUID = 1L;
 
   /** 估算的 Prompt Token 数（调用前预检） */
   private final int estimatedPromptTokens;

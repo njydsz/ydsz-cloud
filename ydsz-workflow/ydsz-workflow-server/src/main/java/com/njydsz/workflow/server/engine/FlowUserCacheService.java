@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.gateway.NameServiceClient;
 import com.njydsz.workflow.server.config.FlowProperties;
 
@@ -99,7 +100,7 @@ public class FlowUserCacheService {
       userNameCache.put(cacheKey, name != null ? name : NULL_PLACEHOLDER);
       return name;
     } catch (Exception e) {
-      log.warn("[FlowUserCache] 获取用户名称失败 userId={}: {}", userId, e.getMessage());
+      log.warn(I18n.message("workflow.user.cache.name.failed", new Object[]{userId, e.getMessage()}));
       return null;
     }
   }
@@ -154,7 +155,7 @@ public class FlowUserCacheService {
           }
         }
       } catch (Exception e) {
-        log.warn("[FlowUserCache] 批量获取用户名称失败: {}", e.getMessage());
+        log.warn(I18n.message("workflow.user.cache.batch.name.failed", new Object[]{e.getMessage()}));
       }
     }
 

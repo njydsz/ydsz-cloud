@@ -11,6 +11,7 @@ import com.njydsz.userinfo.domain.dto.AuthPolicyDTO;
 import com.njydsz.userinfo.domain.query.AuthPolicyPageQuery;
 import com.njydsz.userinfo.domain.repository.AuthPolicyRepository;
 import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 认证策略服务（P3-1 多租户认证域隔离）。
@@ -87,7 +88,7 @@ public class AuthPolicyService {
    */
   public void save(AuthPolicyDTO dto) {
     authPolicyRepository.save(dto);
-    log.info("认证策略已保存: tenantId={}, name={}", dto.getTenantId(), dto.getName());
+    log.info(I18n.message("userinfo.认证策略已保存.tenantId=.name=", new Object[]{dto.getTenantId(), dto.getName()}));
   }
 
   /**
@@ -97,7 +98,7 @@ public class AuthPolicyService {
    */
   public void delete(String tenantId) {
     authPolicyRepository.deleteByTenantId(tenantId);
-    log.info("认证策略已删除: tenantId={}", tenantId);
+    log.info(I18n.message("userinfo.认证策略已删除.tenantId=", new Object[]{tenantId}));
   }
 
   /**

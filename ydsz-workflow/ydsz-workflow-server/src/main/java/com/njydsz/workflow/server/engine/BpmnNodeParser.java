@@ -11,6 +11,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
@@ -179,8 +180,7 @@ public class BpmnNodeParser {
           node.setSkipAnyNode(pt.name());
         }
       } catch (IllegalArgumentException e) {
-        log.debug("[BpmnNodeParser] 无效的会签类型，已跳过: nodeKey={}, value={}",
-            node.getNodeCode(), node.getSkipAnyNode(), e);
+        log.debug(I18n.message("workflow.bpmn.nodeParser.countersign.invalid", new Object[]{node.getNodeCode(), node.getSkipAnyNode()}), e);
       }
     }
 

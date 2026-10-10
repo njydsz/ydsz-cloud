@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.model;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,7 +18,7 @@ import java.util.Objects;
  * @author ydsz-team
  * @since 26.10.01
  */
-public final class ChatChunk implements Serializable {
+public final class ChatChunk {
 
   /** toString 内容截断长度 */
   private static final int TO_STRING_TRUNCATE_LEN = 50;
@@ -27,7 +26,6 @@ public final class ChatChunk implements Serializable {
   /** 主 Agent 来源标识（子 Agent 来源为 {@code 父路径/子标识} 形式） */
   public static final String SOURCE_MAIN = "main";
 
-  private static final long serialVersionUID = 1L;
 
   private final String id;
   private final String model;

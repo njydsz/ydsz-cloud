@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Map;
 
 import lombok.Getter;
@@ -34,9 +32,7 @@ import com.njydsz.workflow.domain.enums.FlowSlaAction;
  */
 @Getter
 @ToString
-public class SlaConfigVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class SlaConfigVO {
 
   /** 默认超时分钟数（120 分钟） */
   public static final int DEFAULT_TIMEOUT_MINUTES = 120;

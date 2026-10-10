@@ -9,6 +9,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 
@@ -50,7 +51,7 @@ public class FlowDefinitionCacheWarmUp {
    */
   @EventListener(ApplicationReadyEvent.class)
   public void onApplicationReady(ApplicationReadyEvent event) {
-    log.info("[FlowCacheWarmUp] 开始流程定义缓存预热...");
+    log.info(I18n.message("workflow.cache.warmup.start", new Object[]{}));
     long start = System.currentTimeMillis();
 
     List<FlowDefinitionVO> onlineDefinitions;
@@ -59,12 +60,12 @@ public class FlowDefinitionCacheWarmUp {
       onlineDefinitions = flowDefinitionRepository.findActivePage(
           1, DEFAULT_PAGE_SIZE, null, null);
     } catch (Exception e) {
-      log.warn("[FlowCacheWarmUp] 查询在线流程定义失败，跳过预热: {}", e.getMessage());
+      log.warn(I18n.message("workflow.cache.warmup.query.failed", new Object[]{e.getMessage()}));
       return;
     }
 
     if (onlineDefinitions == null || onlineDefinitions.isEmpty()) {
-      log.info("[FlowCacheWarmUp] 无在线流程定义，无需预热");
+      log.info(I18n.message("workflow.cache.warmup.no.definitions", new Object[]{}));
       return;
     }
 
@@ -87,13 +88,11 @@ public class FlowDefinitionCacheWarmUp {
         warm++;
       } catch (Exception e) {
         fail++;
-        log.warn("[FlowCacheWarmUp] 预热失败 definitionId={}: {}",
-            definition.getId(), e.getMessage());
+          log.warn(I18n.message("workflow.cache.warmup.definition.failed", new Object[]{definition.getId(), e.getMessage()}));
       }
     }
 
     long cost = System.currentTimeMillis() - start;
-    log.info("[FlowCacheWarmUp] 预热完成 total={} warm={} fail={} costMs={}",
-        total, warm, fail, cost);
+    log.info(I18n.message("workflow.cache.warmup.complete", new Object[]{total, warm, fail, cost}));
   }
 }

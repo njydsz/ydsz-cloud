@@ -102,7 +102,7 @@ public class AliyunSmsProvider implements SmsProvider {
     }
     if (!StringUtils.hasText(config.getAccessKeyId())
         || !StringUtils.hasText(config.getAccessKeySecret())) {
-      log.warn("[AliyunSms] 凭证未配置,发送失败: phone={}", phone);
+      log.warn(I18n.message("message.log.server.aliyunsms.error.credential.not.configured"), phone);
       return MessageSendResultVO.fail(
           "SMS", null,
           I18n.message("message.sms.aliyun_credential_missing"),
@@ -134,7 +134,7 @@ public class AliyunSmsProvider implements SmsProvider {
       String code = MapUtils.getString(json, "Code");
       if ("OK".equals(code)) {
         String bizId = MapUtils.getString(json, "BizId");
-        log.info("[AliyunSms] 发送成功: phone={} bizId={}", phone, bizId);
+        log.info(I18n.message("message.log.other.AliyunSms_phone_{}_bizId_{}.765be9"), phone, bizId);
         return MessageSendResultVO.ok("SMS", "ALIYUN-" + bizId);
       }
       log.warn(
@@ -146,7 +146,7 @@ public class AliyunSmsProvider implements SmsProvider {
           "SMS", null, code + ": " + MapUtils.getString(json, "Message"),
           code + ": " + MapUtils.getString(json, "Message"), null);
     } catch (Exception e) {
-      log.error("[AliyunSms] 发送异常: phone={} err={}", phone, e.getMessage(), e);
+      log.error(I18n.message("message.log.other.AliyunSms_phone_{}_err_{}.49445f"), phone, e.getMessage(), e);
       return MessageSendResultVO.fail(
           "SMS", null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
@@ -245,12 +245,12 @@ public class AliyunSmsProvider implements SmsProvider {
       String code = MapUtils.getString(json, "Code");
       if ("OK".equals(code)) {
         String bizId = MapUtils.getString(json, "BizId");
-        log.info("[AliyunSms] 批量发送成功: count={} bizId={}", requests.size(), bizId);
+        log.info(I18n.message("message.log.other.AliyunSms_count_{}_bizId_{}.dfbccb"), requests.size(), bizId);
         for (int i = 0; i < requests.size(); i++) {
           results.add(MessageSendResultVO.ok("SMS", "ALIYUN-" + bizId + "-" + i));
         }
       } else {
-        log.warn("[AliyunSms] 批量发送失败: code={} msg={}", code, MapUtils.getString(json, "Message"));
+        log.warn(I18n.message("message.log.other.AliyunSms_code_{}_msg_{}.f1c7ef"), code, MapUtils.getString(json, "Message"));
         for (int i = 0; i < requests.size(); i++) {
           results.add(MessageSendResultVO.fail(
               "SMS", null, code + ": " + MapUtils.getString(json, "Message"),
@@ -258,7 +258,7 @@ public class AliyunSmsProvider implements SmsProvider {
         }
       }
     } catch (Exception e) {
-      log.error("[AliyunSms] 批量发送异常: count={} err={}", requests.size(), e.getMessage(), e);
+      log.error(I18n.message("message.log.other.AliyunSms_count_{}_err_{}.aa590b"), requests.size(), e.getMessage(), e);
       for (int i = 0; i < requests.size(); i++) {
         results.add(MessageSendResultVO.fail(
             "SMS", null, e.getClass().getSimpleName() + ": " + e.getMessage(),
@@ -331,7 +331,7 @@ public class AliyunSmsProvider implements SmsProvider {
           "SMS", null, code + ": " + MapUtils.getString(json, "Message"),
           code + ": " + MapUtils.getString(json, "Message"), null);
     } catch (Exception e) {
-      log.error("[AliyunSms] 回执查询异常: bizId={} err={}", bizId, e.getMessage(), e);
+      log.error(I18n.message("message.log.other.AliyunSms_bizId_{}_err_{}.57754f"), bizId, e.getMessage(), e);
       return MessageSendResultVO.fail(
           "SMS", null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);

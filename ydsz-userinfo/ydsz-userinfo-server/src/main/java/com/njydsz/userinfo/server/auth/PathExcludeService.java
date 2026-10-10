@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.userinfo.server.config.UserInfoProperties;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 鉴权路径排除服务（P1-3 路径排除配置化）。
@@ -84,7 +85,7 @@ public class PathExcludeService {
   public void addExcludedPath(String pathPattern) {
     if (pathPattern != null && !pathPattern.isBlank()) {
       runtimeExcludedPaths.add(pathPattern);
-      log.info("运行时排除路径已添加: {}", pathPattern);
+      log.info(I18n.message("userinfo.运行时排除路径已添加", new Object[]{pathPattern}));
     }
   }
 
@@ -97,7 +98,7 @@ public class PathExcludeService {
   public boolean removeExcludedPath(String pathPattern) {
     boolean removed = runtimeExcludedPaths.remove(pathPattern);
     if (removed) {
-      log.info("运行时排除路径已移除: {}", pathPattern);
+      log.info(I18n.message("userinfo.运行时排除路径已移除", new Object[]{pathPattern}));
     }
     return removed;
   }
@@ -112,7 +113,7 @@ public class PathExcludeService {
   public void addIncludedPath(String pathPattern) {
     if (pathPattern != null && !pathPattern.isBlank()) {
       runtimeIncludedPaths.add(pathPattern);
-      log.info("运行时包含路径已添加（撤销排除）: {}", pathPattern);
+      log.info(I18n.message("userinfo.运行时包含路径已添加.撤销排除", new Object[]{pathPattern}));
     }
   }
 
@@ -135,7 +136,7 @@ public class PathExcludeService {
   public void clearRuntimePaths() {
     runtimeExcludedPaths.clear();
     runtimeIncludedPaths.clear();
-    log.info("运行时排除/包含路径已清空");
+    log.info(I18n.message("userinfo.运行时排除/包含路径已清空"));
   }
 
   /**

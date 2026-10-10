@@ -28,6 +28,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.audit.event.DataExportAuditEvent;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.RequestContext;
@@ -271,7 +272,7 @@ public class FlowAnalyticsController {
   @PostMapping("/history/purge")
   public YdszResponse<Map<String, Object>> purge(
       @RequestParam(required = false) Integer purgeDays) {
-    log.info("[FlowAnalyticsController] 手动触发清理 purgeDays={}", purgeDays);
+    log.info(I18n.message("workflow.analytics.purge.triggered", new Object[]{purgeDays}));
     return YdszResponse.success(archiveService.purge(purgeDays));
   }
 
@@ -486,10 +487,10 @@ private void publishDataExportAudit(String exportModule, String bizType, int row
         .exportedAt(System.currentTimeMillis())
         .build();
     eventPublisher.publishEvent(event);
-    log.debug("[Audit] 数据导出事件已发布: module={}, bizType={}, rowCount={}",
-        exportModule, bizType, rowCount);
+    log.debug(I18n.message("workflow.audit.data.export.published", new Object[]{
+        exportModule, bizType, rowCount}));
   } catch (Exception e) {
-    log.warn("[Audit] 发布数据导出事件异常: exportModule={}, reason={}", exportModule, e.getMessage());
+    log.warn(I18n.message("workflow.audit.data.export.failed", new Object[]{exportModule, e.getMessage()}));
   }
 }
 }

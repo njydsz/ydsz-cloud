@@ -25,6 +25,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
 import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationCommand;
 import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * OAuth2 应用注册管理 Controller。
@@ -104,7 +105,7 @@ public class OAuth2ApplicationController {
         statusEnum = OAuth2Application.ApplicationStatus.valueOf(status.toUpperCase());
       } catch (IllegalArgumentException e) {
         // 忽略无效的状态值
-        log.debug("[OAuth2] 忽略无效的应用状态值: status={}", status);
+        log.debug(I18n.message("userinfo.OAuth2.忽略无效的应用状态值.status=", new Object[]{status}));
       }
     }
     return YdszResponse.success(applicationService.page(statusEnum, keyword, pageNum, pageSize));
@@ -142,7 +143,7 @@ public class OAuth2ApplicationController {
         statusEnum = OAuth2Application.ApplicationStatus.valueOf(dto.status().toUpperCase());
       } catch (IllegalArgumentException e) {
         // 忽略无效的状态值
-        log.debug("[OAuth2] 忽略无效的应用状态值: status={}", dto.status());
+        log.debug(I18n.message("userinfo.OAuth2.忽略无效的应用状态值.status=", new Object[]{dto.status()}));
       }
     }
     return YdszResponse.success(applicationService.updateApplication(

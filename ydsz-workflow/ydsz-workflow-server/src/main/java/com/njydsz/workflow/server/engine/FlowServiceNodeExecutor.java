@@ -23,6 +23,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.ssrf.HttpConnectionValidator;
 import com.njydsz.common.safe.ssrf.SsrfHttpRequestInterceptor;
 import com.njydsz.common.util.http.RestTemplateUtils;
@@ -99,7 +100,7 @@ public class FlowServiceNodeExecutor {
     if (!isWsNotifyEnabled(node)) {
       return;
     }
-    log.info("[Flow-Service] WS通知: node={} assignees={}", node.getNodeCode(), assigneeIds);
+    log.info(I18n.message("flow.service.node.ws.notify", new Object[]{node.getNodeCode(), assigneeIds}));
     // 推送扩展点：FlowTodoCountPushService 待实际项目注入后替换下方 log 占位
   }
 
@@ -156,14 +157,14 @@ public class FlowServiceNodeExecutor {
   public ServiceExecutionResult execute(FlowNodeVO node, Map<String, Object> variables) {
     String serviceType = FlowNodeExt.getServiceType(node.getExt());
 
-    log.info("[Flow-Service] 执行服务节点: node={} serviceType={}", node.getNodeCode(), serviceType);
+    log.info(I18n.message("flow.service.node.execute", new Object[]{node.getNodeCode(), serviceType}));
 
     return switch (serviceType) {
       case "HTTP" -> executeHttp(node, variables);
       case "SCRIPT" -> executeScript(node, variables);
       case "AUTO_PASS" -> new ServiceExecutionResult(true, "自动通过");
       default -> {
-        log.warn("[Flow-Service] 未知服务类型 {}，默认自动通过: node={}", serviceType, node.getNodeCode());
+        log.warn(I18n.message("flow.service.node.unknown.type", new Object[]{serviceType, node.getNodeCode()}));
         yield new ServiceExecutionResult(true, "未知服务类型(" + serviceType + ")，默认自动通过");
       }
     };
@@ -191,7 +192,7 @@ public class FlowServiceNodeExecutor {
       }
       return expression.execute(env);
     } catch (Exception e) {
-      log.warn("[Flow-Service] 表达式求值异常 expr={} err={}", expr, e.getMessage());
+      log.warn(I18n.message("flow.service.node.expression.eval.error", new Object[]{expr, e.getMessage()}));
       return false;
     }
   }
@@ -207,7 +208,7 @@ public class FlowServiceNodeExecutor {
       FlowNodeVO node, Map<String, Object> variables) {
     String url = FlowNodeExt.getServiceUrl(node.getExt());
     if (!StringUtils.hasText(url) || "null".equals(url)) {
-      log.warn("[Flow-Service] HTTP 服务节点未配置 url，标记为失败: node={}", node.getNodeCode());
+      log.warn(I18n.message("flow.service.node.http.url.missing", new Object[]{node.getNodeCode()}));
       return new ServiceExecutionResult(false, "HTTP 服务节点未配置 url");
     }
     // P0-2: SSRF 校验 — 拦截内网地址、元数据服务等敏感目标
@@ -242,9 +243,9 @@ public class FlowServiceNodeExecutor {
       boolean success = response.getStatusCode().is2xxSuccessful();
       String msg = "HTTP " + method + " " + url + " -> " + response.getStatusCode();
       if (success) {
-        log.info("[Flow-Service] HTTP 调用成功: node={} {}", node.getNodeCode(), msg);
+        log.info(I18n.message("flow.service.node.http.success", new Object[]{node.getNodeCode(), msg}));
       } else {
-        log.error("[Flow-Service] HTTP 调用失败: node={} {}", node.getNodeCode(), msg);
+        log.error(I18n.message("flow.service.node.http.failed", new Object[]{node.getNodeCode(), msg}));
       }
       return new ServiceExecutionResult(success, msg);
     } catch (HttpServerErrorException e) {
@@ -309,7 +310,7 @@ public class FlowServiceNodeExecutor {
       FlowNodeVO node, Map<String, Object> variables) {
     String script = FlowNodeExt.getServiceScript(node.getExt());
     if (!StringUtils.hasText(script) || "null".equals(script)) {
-      log.warn("[Flow-Service] SCRIPT 节点未配置 script，标记为失败: node={}", node.getNodeCode());
+      log.warn(I18n.message("flow.service.node.script.missing", new Object[]{node.getNodeCode()}));
       return new ServiceExecutionResult(false, "SCRIPT 节点未配置 script");
     }
 
@@ -328,22 +329,22 @@ public class FlowServiceNodeExecutor {
 
       // 处理结果
       if (result == null) {
-        log.info("[Flow-Service] 脚本执行完成（返回 null）: node={}", node.getNodeCode());
+        log.info(I18n.message("flow.service.node.script.null.result", new Object[]{node.getNodeCode()}));
         return new ServiceExecutionResult(true, "脚本执行完成");
       }
 
       if (result instanceof Boolean boolResult) {
         String msg = "脚本结果: " + boolResult;
         if (boolResult) {
-          log.info("[Flow-Service] 脚本执行成功: node={} result={}", node.getNodeCode(), result);
+          log.info(I18n.message("flow.service.node.script.success", new Object[]{node.getNodeCode(), result}));
         } else {
-          log.warn("[Flow-Service] 脚本执行返回 false: node={} script={}", node.getNodeCode(), script);
+          log.warn(I18n.message("flow.service.node.script.returned.false", new Object[]{node.getNodeCode(), script}));
         }
         return new ServiceExecutionResult(boolResult, msg);
       }
 
       // 非 Boolean 结果视为成功
-      log.info("[Flow-Service] 脚本执行完成: node={} result={}", node.getNodeCode(), result);
+      log.info(I18n.message("flow.service.node.script.completed", new Object[]{node.getNodeCode(), result}));
       return new ServiceExecutionResult(true, "脚本结果: " + result);
     } catch (Exception e) {
       log.error(

@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
 
@@ -17,12 +15,9 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class AgentDefinitionExportVO implements Serializable {
+public class AgentDefinitionExportVO {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
-
-  /** Agent 业务编码 */
+/** Agent 业务编码 */
   @ExcelProperty(value = "Agent编码", order = 1, width = 22)
   private String agentCode;
 

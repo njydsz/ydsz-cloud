@@ -23,6 +23,7 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.search.analytics.ClickFeedbackService;
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchAnalyticsService.HotKeyword;
@@ -107,9 +108,9 @@ public class GlobalSearchController {
   public YdszResponse<SearchResponse> search(SearchRequest request) {
     fillUserContext(request);
     SearchResponse response = unifiedSearchService.search(request);
-    log.info("搜索请求: keyword={}, types={}, page={}, pageSize={}, total={}",
-        request.getKeyword(), request.getTypes(), request.getPage(), request.getPageSize(),
-        response.getTotal());
+    log.info(I18n.message("system.web.search.request",
+        new Object[]{request.getKeyword(), request.getTypes(), request.getPage(), request.getPageSize(),
+        response.getTotal()}));
     return YdszResponse.success(response);
   }
 
@@ -148,9 +149,9 @@ public class GlobalSearchController {
             .build()));
     fillUserContext(request);
     SearchResponse response = unifiedSearchService.search(request);
-    log.info("聚合查询: type={}, field={}, size={}, aggCount={}",
-        type, field, size,
-        response.getAggregations() != null ? response.getAggregations().size() : 0);
+    log.info(I18n.message("system.web.search.aggregation",
+        new Object[]{type, field, size,
+        response.getAggregations() != null ? response.getAggregations().size() : 0}));
     return YdszResponse.success(response.getAggregations());
   }
 
@@ -174,8 +175,8 @@ public class GlobalSearchController {
   @GetMapping("/suggest")
   public YdszResponse<SearchSuggestion> suggest(@RequestParam String prefix) {
     SearchSuggestion suggestion = unifiedSearchService.suggest(prefix);
-    log.debug("搜索建议: prefix={}, items={}", prefix,
-        suggestion.getItems() != null ? suggestion.getItems().size() : 0);
+    log.debug(I18n.message("system.web.search.suggest", new Object[]{prefix,
+        suggestion.getItems() != null ? suggestion.getItems().size() : 0}));
     return YdszResponse.success(suggestion);
   }
 
@@ -208,8 +209,8 @@ public class GlobalSearchController {
             ? AuthContextUtils.getCurrentOrNull().getUserId()
             : null,
         clickRequest.sessionId());
-    log.info("点击反馈: keyword={}, docId={}, position={}",
-        clickRequest.keyword(), clickRequest.docId(), clickRequest.position());
+    log.info(I18n.message("system.web.search.click", new Object[]{
+        clickRequest.keyword(), clickRequest.docId(), clickRequest.position()}));
     return YdszResponse.success(Boolean.TRUE);
   }
 
@@ -234,7 +235,7 @@ public class GlobalSearchController {
   public YdszResponse<List<HotKeyword>> hotKeywords(
       @RequestParam(defaultValue = "20") int limit) {
     List<HotKeyword> keywords = searchAnalyticsService.getHotKeywords(limit);
-    log.info("热门关键词查询: limit={}, resultSize={}", limit, keywords.size());
+    log.info(I18n.message("system.web.search.hot", new Object[]{limit, keywords.size()}));
     return YdszResponse.success(keywords);
   }
 
@@ -257,7 +258,7 @@ public class GlobalSearchController {
   public YdszResponse<List<HotKeyword>> zeroResultKeywords(
       @RequestParam(defaultValue = "20") int limit) {
     List<HotKeyword> keywords = searchAnalyticsService.getZeroResultKeywords(limit);
-    log.info("零结果关键词查询: limit={}, resultSize={}", limit, keywords.size());
+    log.info(I18n.message("system.web.search.zero.result", new Object[]{limit, keywords.size()}));
     return YdszResponse.success(keywords);
   }
 
@@ -280,8 +281,8 @@ public class GlobalSearchController {
   @GetMapping("/analytics/summary")
   public YdszResponse<SearchAnalyticsSummary> summary() {
     SearchAnalyticsSummary summary = searchAnalyticsService.getSummary();
-    log.info("搜索概览统计: totalSearches={}, zeroResultRate={}",
-        summary.totalSearches(), summary.zeroResultRate());
+    log.info(I18n.message("system.web.search.summary", new Object[]{
+        summary.totalSearches(), summary.zeroResultRate()}));
     return YdszResponse.success(summary);
   }
 
@@ -312,10 +313,10 @@ public class GlobalSearchController {
       for (String type : types) {
         indexRebuildService.rebuildAllAsync(type, null);
       }
-      log.info("索引重建已触发: types={}", types);
+      log.info(I18n.message("system.web.search.rebuild", new Object[]{types}));
     } else {
       indexRebuildService.rebuildAllAsync(null, null);
-      log.info("全量索引重建已触发");
+      log.info(I18n.message("system.web.search.rebuild.all"));
     }
     return YdszResponse.success(Boolean.TRUE);
   }
@@ -333,7 +334,7 @@ public class GlobalSearchController {
     try {
       request.setUserId(AuthContextUtils.getUserId());
     } catch (Exception e) {
-      log.debug("[GlobalSearch] 未登录用户搜索请求，跳过 userId 回填");
+      log.debug(I18n.message("system.web.search.unlogin.skip"));
     }
     request.setTenantId(AuthContextUtils.getTenantIdOrDefault());
   }

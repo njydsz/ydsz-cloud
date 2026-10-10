@@ -9,6 +9,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.service.RedisRateLimiter;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.server.cache.CacheKeyBuilder;
 
 /**
@@ -58,7 +59,7 @@ public class FlowUrgeLimiter {
     this.cacheKeyBuilder = cacheKeyBuilder;
     this.rateLimiter = rateLimiterProvider.getIfAvailable();
     if (this.rateLimiter == null) {
-      log.warn("[FlowUrgeLimiter] RedisRateLimiter 不可用，催办限流将降级放行");
+      log.warn(I18n.message("workflow.urge.limiter.unavailable", new Object[]{}));
     }
   }
 
@@ -105,7 +106,7 @@ public class FlowUrgeLimiter {
       return acquired;
     } catch (Exception e) {
       // Redis 不可用时降级放行，避免拖垮催办主流程
-      log.warn("[FlowUrgeLimiter] Redis 不可用，降级放行: {}", e.getMessage());
+      log.warn(I18n.message("workflow.urge.limiter.redis.unavailable", new Object[]{e.getMessage()}));
       return true;
     }
   }
@@ -124,7 +125,7 @@ public class FlowUrgeLimiter {
     try {
       rateLimiter.reset(cacheKeyBuilder.urgeLimit(targetType, targetId.toString(), userId));
     } catch (Exception e) {
-      log.warn("[FlowUrgeLimiter] 释放冷却失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.urge.limiter.cooldown.release.failed", new Object[]{e.getMessage()}));
     }
   }
 

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.EntityVersionPageQuery;
@@ -199,7 +200,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
       }
       return resultMap;
     } catch (Exception e) {
-      log.warn("解析快照 JSON 进行 diff 失败: {}", e.getMessage());
+      log.warn(I18n.message("system.snapshot.resolve.fail", new Object[]{e.getMessage()}));
       return new LinkedHashMap<>();
     }
   }

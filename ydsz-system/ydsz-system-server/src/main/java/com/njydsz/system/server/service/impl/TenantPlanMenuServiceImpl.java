@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
 import com.njydsz.system.domain.repository.TenantPlanMenuRepository;
 import com.njydsz.system.domain.vo.TenantPlanMenuVO;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.server.service.TenantPlanMenuService;
 
 
@@ -68,10 +69,10 @@ public class TenantPlanMenuServiceImpl implements TenantPlanMenuService {
 
     // 2. 批量插入新关联（1 次 SQL 替代 N 次单条 INSERT）
     if (dto.getMenuIds() == null || dto.getMenuIds().isEmpty()) {
-      log.info("套餐[{}]菜单配置已清空", dto.getPlanId());
+      log.info(I18n.message("system.tenant.plan.menu.cleared", new Object[]{dto.getPlanId()}));
       return;
     }
     tenantPlanMenuRepository.insertBatch(dto);
-    log.info("套餐[{}]菜单配置已更新, 菜单数量={}", dto.getPlanId(), dto.getMenuIds().size());
+    log.info(I18n.message("system.tenant.plan.menu.updated", new Object[]{dto.getPlanId(), dto.getMenuIds().size()}));
   }
 }

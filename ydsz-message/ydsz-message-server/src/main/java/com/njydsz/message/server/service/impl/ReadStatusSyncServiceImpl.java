@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.receipt;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -85,7 +86,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         userId,
         "MESSAGE_READ",
         Map.of("msgId", msgId, "status", "READ", "timestamp", System.currentTimeMillis()));
-    log.info("[ReadStatus] 消息已读: msgId={} user={}", msgId, userId);
+    log.info(I18n.message("message.log.other.ReadStatus_msgId_{}_user_{}.f84597"), msgId, userId);
     return true;
   }
 
@@ -122,7 +123,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
           userId,
           "MESSAGE_READ_BATCH",
           Map.of("msgIds", msgIds, "count", updated, "timestamp", System.currentTimeMillis()));
-      log.info("[ReadStatus] 批量消息已读: user={} count={}", userId, updated);
+      log.info(I18n.message("message.log.other.ReadStatus_user_{}_count_{}.90f32d"), userId, updated);
     }
     return updated;
   }
@@ -151,7 +152,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     if (updated > 0) {
       realtimePushService.pushToUser(
           userId, "NOTIFICATION_READ", Map.of("notificationId", notificationId, "status", "READ"));
-      log.info("[ReadStatus] 通知已读: id={} user={}", notificationId, userId);
+      log.info(I18n.message("message.log.other.ReadStatus_id_{}_user_{}.a848ed"), notificationId, userId);
     }
     return updated > 0;
   }
@@ -178,7 +179,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
           userId,
           "NOTIFICATION_READ_ALL",
           Map.of("count", updated, "bizType", bizType == null ? "ALL" : bizType));
-      log.info("[ReadStatus] 全部通知已读: user={} bizType={} count={}", userId, bizType, updated);
+      log.info(I18n.message("message.log.other.ReadStatus_user_{}_bizType_{}_count_{}.0c44b4"), userId, bizType, updated);
     }
     return updated;
   }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.context.TenantContext;
 import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
 import com.njydsz.workflow.server.config.FlowAlertProperties;
@@ -48,7 +49,7 @@ public class FlowAnomalyAlertTask {
       TenantContext context = TenantContext.builder(defaultTenant).build();
       TenantContextHolder.runWithContext(context, () -> doDetect(defaultTenant));
     } catch (Exception e) {
-      log.warn("[FlowAnomalyAlert] 异常检测执行失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.anomaly.detection.failed", new Object[]{e.getMessage()}));
     }
   }
 
@@ -75,14 +76,13 @@ public class FlowAnomalyAlertTask {
           .count();
 
       if (redCount > 0) {
-        log.warn("[FlowAnomalyAlert] 检测到 {} 条 RED 告警, {} 条 YELLOW 告警, 需关注! anomalies={}",
-            redCount, yellowCount, summarizeAnomalies(anomalies));
+        log.warn(I18n.message("workflow.anomaly.red.yellow.alert", new Object[]{redCount, yellowCount, summarizeAnomalies(anomalies)}));
       } else if (yellowCount > 0) {
-        log.info("[FlowAnomalyAlert] 检测到 {} 条 YELLOW 告警", yellowCount);
+        log.info(I18n.message("workflow.anomaly.yellow.alert", new Object[]{yellowCount}));
       }
 
     } catch (Exception e) {
-      log.warn("[FlowAnomalyAlert] 异常检测执行失败: {}", e.getMessage());
+      log.warn(I18n.message("workflow.anomaly.detection.failed", new Object[]{e.getMessage()}));
     }
   }
 

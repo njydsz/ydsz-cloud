@@ -21,6 +21,7 @@ import com.njydsz.userinfo.domain.provision.ProvisionException;
 import com.njydsz.userinfo.domain.provision.ProvisionRecord;
 import com.njydsz.userinfo.domain.provision.ProvisionRecordPage;
 import com.njydsz.userinfo.server.config.JdbcProvisionProperties;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * JDBC 身份供给连接器（P0-1 Identity Provisioning 管道）。
@@ -73,7 +74,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
   @Override
   public ProvisionRecordPage pullAll() {
     String query = resolveQuery();
-    log.info("JdbcProvisionConnector 全量拉取: query={}", query);
+    log.info(I18n.message("userinfo.JdbcProvisionConnector.全量拉取.query=", new Object[]{query}));
 
     try {
       List<ProvisionRecord> records = executeQuery(query, null);
@@ -89,7 +90,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
     // 追加增量条件（如配置了增量 SQL 则使用增量 SQL + 参数）
     String incrementalQuery = properties.getIncrementalQuery();
     if (incrementalQuery != null && !incrementalQuery.isBlank()) {
-      log.info("JdbcProvisionConnector 增量拉取: token={}", lastSyncToken);
+      log.info(I18n.message("userinfo.JdbcProvisionConnector.增量拉取.token=", new Object[]{lastSyncToken}));
       try {
         List<ProvisionRecord> records = executeQuery(incrementalQuery,
             lastSyncToken != null ? new Object[]{lastSyncToken} : null);
@@ -100,7 +101,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
       }
     }
     // 未配置增量 SQL - 退化为全量拉取
-    log.warn("JdbcProvisionConnector 未配置增量 SQL，退化为全量拉取");
+    log.warn(I18n.message("userinfo.JdbcProvisionConnector.未配置增量.SQL.退化为全量拉取"));
     return pullAll();
   }
 
@@ -108,12 +109,12 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
   public boolean isAvailable() {
     String dsName = properties.getDatasourceName();
     if (dsName == null || dsName.isBlank()) {
-      log.warn("JdbcProvisionConnector 未配置数据源名称");
+      log.warn(I18n.message("userinfo.JdbcProvisionConnector.未配置数据源名称"));
       return false;
     }
     String query = properties.getUserQuery();
     if (query == null || query.isBlank()) {
-      log.warn("JdbcProvisionConnector 未配置查询 SQL");
+      log.warn(I18n.message("userinfo.JdbcProvisionConnector.未配置查询.SQL"));
       return false;
     }
     return true;
@@ -165,7 +166,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
       DynamicDataSourceContextHolder.poll();
     }
 
-    log.debug("JdbcProvisionConnector 查询完成: count={}, ds={}", records.size(), dsName);
+    log.debug(I18n.message("userinfo.JdbcProvisionConnector.查询完成.count=.ds=", new Object[]{records.size(), dsName}));
     return records;
   }
 
@@ -221,7 +222,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
       try {
         return rs.getString(mappedColumn);
       } catch (SQLException e) {
-        log.debug("列不存在，使用默认列名");
+        log.debug(I18n.message("userinfo.列不存在.使用默认列名"));
       }
     }
     // 尝试默认列名
@@ -232,7 +233,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
           return value;
         }
       } catch (SQLException e) {
-        log.debug("列不存在，继续下一个");
+        log.debug(I18n.message("userinfo.列不存在.继续下一个"));
       }
     }
     return null;
@@ -279,7 +280,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
         }
       }
     } catch (SQLException e) {
-      log.warn("提取扩展属性时异常: error={}", e.getMessage());
+      log.warn(I18n.message("userinfo.提取扩展属性时异常.error=", new Object[]{e.getMessage()}));
     }
     return attributes;
   }

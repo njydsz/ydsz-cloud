@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
@@ -77,9 +78,9 @@ public class CasService {
 
     try {
       redisStringOps.set(tgtKey, tgt, casProperties.getTicketGrantingTicketTtl());
-      log.info("TGT 签发成功: username={}, tgtId={}", userVO.getUsername(), tgtId);
+      log.info(I18n.message("userinfo.cas.tgt.issued", new Object[]{userVO.getUsername(), tgtId}));
     } catch (Exception e) {
-      log.error("TGT 签发失败: username={}, error={}", userVO.getUsername(), e.getMessage(), e);
+      log.error(I18n.message("userinfo.cas.tgt.issue.failed", new Object[]{userVO.getUsername(), e.getMessage()}), e);
       throw new BusinessException(UserInfoExceptionCode.SSO_TOKEN_EXCHANGE_FAILED);
     }
 
@@ -114,9 +115,9 @@ public class CasService {
 
     try {
       redisStringOps.set(stKey, st, casProperties.getServiceTicketTtl());
-      log.info("ST 签发成功: username={}, serviceUrl={}", tgt.getUsername(), serviceUrl);
+      log.info(I18n.message("userinfo.cas.st.issued", new Object[]{tgt.getUsername(), serviceUrl}));
     } catch (Exception e) {
-      log.error("ST 签发失败: username={}, error={}", tgt.getUsername(), e.getMessage(), e);
+      log.error(I18n.message("userinfo.cas.st.issue.failed", new Object[]{tgt.getUsername(), e.getMessage()}), e);
       throw new BusinessException(UserInfoExceptionCode.SSO_TOKEN_EXCHANGE_FAILED);
     }
 
@@ -140,20 +141,20 @@ public class CasService {
       // 获取 ST 信息
       CasServiceTicket st = redisStringOps.get(stKey, CasServiceTicket.class);
       if (st == null) {
-        log.warn("ST 不存在或已过期: stId={}", stId);
+        log.warn(I18n.message("userinfo.cas.st.not.found", new Object[]{stId}));
         throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
       }
 
       // 校验服务 URL
       if (!serviceUrl.equals(st.getServiceUrl())) {
-        log.warn("ST 服务 URL 不匹配: expected={}, actual={}", st.getServiceUrl(), serviceUrl);
+        log.warn(I18n.message("userinfo.cas.st.service.url.mismatch", new Object[]{st.getServiceUrl(), serviceUrl}));
         throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
       }
 
       // 删除 ST（一次性使用）
       redisStringOps.del(stKey);
 
-      log.info("ST 校验成功: username={}, serviceUrl={}", st.getUsername(), serviceUrl);
+      log.info(I18n.message("userinfo.cas.st.validated", new Object[]{st.getUsername(), serviceUrl}));
 
       // 返回校验结果
       return CasServiceTicketValidationResult.builder()
@@ -164,7 +165,7 @@ public class CasService {
     } catch (BusinessException e) {
       throw e;
     } catch (Exception e) {
-      log.error("ST 校验异常: stId={}, error={}", stId, e.getMessage(), e);
+      log.error(I18n.message("userinfo.cas.st.validation.error", new Object[]{stId, e.getMessage()}), e);
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
     }
   }
@@ -180,9 +181,9 @@ public class CasService {
     String tgtKey = TGT_KEY_PREFIX + tgtId;
     try {
       redisStringOps.del(tgtKey);
-      log.info("TGT 注销成功: tgtId={}", tgtId);
+      log.info(I18n.message("userinfo.cas.tgt.logged.out", new Object[]{tgtId}));
     } catch (Exception e) {
-      log.error("TGT 注销异常: tgtId={}, error={}", tgtId, e.getMessage(), e);
+      log.error(I18n.message("userinfo.cas.tgt.logout.error", new Object[]{tgtId, e.getMessage()}), e);
     }
   }
 
@@ -199,14 +200,14 @@ public class CasService {
     try {
       CasTicketGrantingTicket tgt = redisStringOps.get(tgtKey, CasTicketGrantingTicket.class);
       if (tgt == null) {
-        log.warn("TGT 不存在或已过期: tgtId={}", tgtId);
+        log.warn(I18n.message("userinfo.cas.tgt.not.found", new Object[]{tgtId}));
         throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
       }
       return tgt;
     } catch (BusinessException e) {
       throw e;
     } catch (Exception e) {
-      log.error("TGT 校验异常: tgtId={}, error={}", tgtId, e.getMessage(), e);
+      log.error(I18n.message("userinfo.cas.tgt.validation.error", new Object[]{tgtId, e.getMessage()}), e);
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
     }
   }

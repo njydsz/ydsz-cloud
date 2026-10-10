@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户行为画像服务（P1-1 UEBA 自适应风险引擎）。
@@ -148,7 +149,7 @@ public class UserBehaviorProfileService {
       redisStringOps.expire(KNOWN_DEVICES_KEY_PREFIX + userId, PROFILE_TTL_SECONDS);
 
     } catch (Exception e) {
-      log.warn("记录行为基线失败: userId={}, error={}", userId, e.getMessage());
+      log.warn(I18n.message("userinfo.记录行为基线失败.userId=.error=", new Object[]{userId, e.getMessage()}));
     }
   }
 
@@ -248,7 +249,7 @@ public class UserBehaviorProfileService {
       bitmap |= (1L << hour);
       redisHashOps.hSet(profileKey, "hourBitmap", String.valueOf(bitmap));
     } catch (Exception e) {
-      log.warn("更新时段分布失败: userId={}, hour={}", userId, hour);
+      log.warn(I18n.message("userinfo.更新时段分布失败.userId=.hour=", new Object[]{userId, hour}));
     }
   }
 
@@ -273,7 +274,7 @@ public class UserBehaviorProfileService {
         return TIME_DEVIATION_WEIGHT;
       }
     } catch (Exception e) {
-      log.warn("评估时间偏离失败: userId={}", userId);
+      log.warn(I18n.message("userinfo.评估时间偏离失败.userId=", new Object[]{userId}));
     }
     return 0;
   }
@@ -299,7 +300,7 @@ public class UserBehaviorProfileService {
         return IP_DEVIATION_WEIGHT;
       }
     } catch (Exception e) {
-      log.warn("评估 IP 偏离失败: userId={}", userId);
+      log.warn(I18n.message("userinfo.评估.IP.偏离失败.userId=", new Object[]{userId}));
     }
     return 0;
   }
@@ -326,7 +327,7 @@ public class UserBehaviorProfileService {
         }
       }
     } catch (Exception e) {
-      log.warn("评估设备偏离失败: userId={}", userId);
+      log.warn(I18n.message("userinfo.评估设备偏离失败.userId=", new Object[]{userId}));
     }
     return 0;
   }
@@ -371,7 +372,7 @@ public class UserBehaviorProfileService {
         }
       }
     } catch (Exception e) {
-      log.warn("裁剪集合失败: key={}, maxSize={}", key, maxSize);
+      log.warn(I18n.message("userinfo.裁剪集合失败.key=.maxSize=", new Object[]{key, maxSize}));
     }
   }
 

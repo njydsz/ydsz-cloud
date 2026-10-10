@@ -8,6 +8,7 @@ import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowTimeoutStrategy;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
 /**
@@ -77,10 +78,10 @@ public class FlowTimeoutHandlerImpl implements FlowTimeoutHandler {
       dto.setUserName("系统超时");
       dto.setComment("超时自动通过");
       taskService.timeoutAutoPass(dto);
-      log.info("[Flow-Timeout] 超时自动通过: taskId={}", task.getId());
+      log.info(I18n.message("workflow.timeout.auto.pass", new Object[]{task.getId()}));
       return "已自动通过";
     } catch (Exception e) {
-      log.error("[Flow-Timeout] 自动通过失败: taskId={} err={}", task.getId(), e.getMessage(), e);
+        log.error(I18n.message("workflow.timeout.auto.pass.failed", new Object[]{task.getId(), e.getMessage()}), e);
       return "自动通过失败: " + e.getMessage();
     }
   }
@@ -102,10 +103,10 @@ public class FlowTimeoutHandlerImpl implements FlowTimeoutHandler {
       dto.setTargetUserName("管理员");
       dto.setComment("超时自动转交管理员");
       taskService.timeoutTransfer(dto);
-      log.info("[Flow-Timeout] 超时转交管理员: taskId={} admin={}", task.getId(), adminUserId);
+        log.info(I18n.message("workflow.timeout.transfer.admin", new Object[]{task.getId(), adminUserId}));
       return "已转交管理员(" + adminUserId + ")";
     } catch (Exception e) {
-      log.error("[Flow-Timeout] 转交管理员失败: taskId={} err={}", task.getId(), e.getMessage(), e);
+        log.error(I18n.message("workflow.timeout.transfer.admin.failed", new Object[]{task.getId(), e.getMessage()}), e);
       return "转交管理员失败: " + e.getMessage();
     }
   }
@@ -120,7 +121,7 @@ public class FlowTimeoutHandlerImpl implements FlowTimeoutHandler {
    */
   private String handleTransferSuperior(FlowRunTaskVO task) {
     // 暂未对接组织架构，降级到转交管理员
-    log.info("[Flow-Timeout] 转交上级暂不可用，降级到转交管理员: taskId={}", task.getId());
+          log.info(I18n.message("workflow.timeout.transfer.superior.unavailable", new Object[]{task.getId()}));
     return handleTransferAdmin(task);
   }
 
@@ -133,10 +134,10 @@ public class FlowTimeoutHandlerImpl implements FlowTimeoutHandler {
   private String handleRemind(FlowRunTaskVO task) {
     try {
       taskService.timeoutRemind(task.getInstanceId(), task.getNodeCode());
-      log.info("[Flow-Timeout] 超时催办: taskId={} instanceId={}", task.getId(), task.getInstanceId());
+        log.info(I18n.message("workflow.timeout.remind", new Object[]{task.getId(), task.getInstanceId()}));
       return "已发送催办通知";
     } catch (Exception e) {
-      log.error("[Flow-Timeout] 催办失败: taskId={} err={}", task.getId(), e.getMessage(), e);
+        log.error(I18n.message("workflow.timeout.remind.failed", new Object[]{task.getId(), e.getMessage()}), e);
       return "催办失败: " + e.getMessage();
     }
   }

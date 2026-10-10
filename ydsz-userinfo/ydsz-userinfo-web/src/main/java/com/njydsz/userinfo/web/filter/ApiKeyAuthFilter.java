@@ -19,6 +19,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.userinfo.domain.entity.ApiKey;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.service.ApiKeyService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * API Key 认证过滤器（P1-2 API Key 授权体系）。
@@ -97,7 +98,7 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
           ApiKey apiKey = apiKeyService.validateKey(token);
           request.setAttribute(API_KEY_ATTRIBUTE, apiKey);
         } catch (Exception e) {
-          log.warn("API Key 认证失败: {}", e.getMessage());
+          log.warn(I18n.message("userinfo.API.Key.认证失败", new Object[]{e.getMessage()}));
           writeUnauthorizedResponse(response, e.getMessage());
           return;
         }

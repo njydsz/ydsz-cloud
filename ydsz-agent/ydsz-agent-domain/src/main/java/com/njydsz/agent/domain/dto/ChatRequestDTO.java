@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.List;
 
 import com.njydsz.common.safe.annotation.Xss;
@@ -28,9 +26,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "对话请求")
-public class ChatRequestDTO implements Serializable {
+public class ChatRequestDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 对话 ID（null 表示新建对话，非 null 表示续接已有对话） */
   @Schema(description = "对话 ID（null 表示新建对话）")
@@ -76,9 +73,8 @@ public class ChatRequestDTO implements Serializable {
    * <p>每个段落可以是文本或图片之一，类型由 {@link #type} 标识。
    */
   @Schema(description = "多模态内容段落")
-  public static class ContentPartDTO implements Serializable {
+  public static class ContentPartDTO {
 
-    @Serial private static final long serialVersionUID = 1L;
 
     /** 内容类型（text / image_url） */
     @Schema(description = "内容类型（text / image_url）")

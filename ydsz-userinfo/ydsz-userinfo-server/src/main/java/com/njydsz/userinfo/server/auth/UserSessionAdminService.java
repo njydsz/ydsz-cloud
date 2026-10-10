@@ -15,6 +15,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.userinfo.domain.vo.UserSessionStatisticsVO;
 import com.njydsz.userinfo.domain.vo.UserSessionVO;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 管理员会话治理服务。
@@ -193,7 +194,7 @@ public class UserSessionAdminService {
       long seconds = redisStringOps.getExpire(key);
       return seconds > 0 ? Duration.ofSeconds(seconds) : null;
     } catch (Exception e) {
-      log.warn("[SessionAdmin] 获取会话TTL失败，key={}", maskKey(key), e);
+      log.warn(I18n.message("userinfo.SessionAdmin.获取会话TTL失败.key=", new Object[]{maskKey(key)}), e);
       return null;
     }
   }

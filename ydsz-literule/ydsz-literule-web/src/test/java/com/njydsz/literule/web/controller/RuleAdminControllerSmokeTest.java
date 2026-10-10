@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -66,7 +67,7 @@ class RuleAdminControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list succeeds")
     void should_return_200_when_list_succeeds() throws Exception {
-      PageResponse<List<RuleDefinitionDTO>> pageResult = PageResponse.success(0L, 1L, 20L, List.of());
+      PageResponse<List<RuleDefinitionDTO>> pageResult = PageResponse.success(0L, 1L, 20L, Collections.emptyList());
       when(ruleAdminService.pageRuleDefinitions(any(PageQuery.class))).thenReturn(pageResult);
 
       mockMvc.perform(get("/literule/rules").param("pageNum", "1").param("pageSize", "20"))

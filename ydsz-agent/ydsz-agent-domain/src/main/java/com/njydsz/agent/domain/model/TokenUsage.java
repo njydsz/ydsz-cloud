@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.model;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -11,9 +10,8 @@ import java.util.Objects;
  * @author ydsz-team
  * @since 26.10.01
  */
-public final class TokenUsage implements Serializable {
+public final class TokenUsage {
 
-  private static final long serialVersionUID = 1L;
 
   /** 输入 Token 数量（prompt 消耗） */
   private final int promptTokens;

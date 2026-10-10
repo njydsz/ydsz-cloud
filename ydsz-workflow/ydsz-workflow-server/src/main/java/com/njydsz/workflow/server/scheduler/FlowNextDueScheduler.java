@@ -18,6 +18,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.service.FlowSlaService;
@@ -118,7 +119,7 @@ public class FlowNextDueScheduler implements SchedulingConfigurer {
     try {
       doScheduleNext();
     } catch (Exception e) {
-      log.error("[NextDue] 动态调度异常: {}", e.getMessage(), e);
+      log.error(I18n.message("workflow.nextDue.schedule.error", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -127,10 +128,10 @@ public class FlowNextDueScheduler implements SchedulingConfigurer {
    */
   private void fallbackScan() {
     try {
-      log.debug("[NextDue] 兜底扫描触发");
+      log.debug(I18n.message("workflow.nextDue.fallback.scan", new Object[]{}));
       slaService.scanAndProcess();
     } catch (Exception e) {
-      log.error("[NextDue] 兜底扫描异常: {}", e.getMessage(), e);
+      log.error(I18n.message("workflow.nextDue.fallback.scan.error", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -149,7 +150,7 @@ public class FlowNextDueScheduler implements SchedulingConfigurer {
     FlowRunTaskVO nearestTask = findNearestDueTask();
 
     if (nearestTask == null || nearestTask.getDueAt() == null) {
-      log.debug("[NextDue] 无带截止时间的待办任务，跳过动态调度");
+      log.debug(I18n.message("workflow.nextDue.no.due.task", new Object[]{}));
       return;
     }
 
@@ -158,7 +159,7 @@ public class FlowNextDueScheduler implements SchedulingConfigurer {
 
     // 已过期任务：立即处理
     if (delay.isNegative() || delay.isZero()) {
-      log.info("[NextDue] 发现已过期任务，立即处理: taskId={} dueAt={}", nearestTask.getId(), nearestTask.getDueAt());
+      log.info(I18n.message("workflow.nextDue.overdue.task.found", new Object[]{nearestTask.getId(), nearestTask.getDueAt()}));
       slaService.scanAndProcess();
       return;
     }
@@ -166,7 +167,7 @@ public class FlowNextDueScheduler implements SchedulingConfigurer {
     // 限制最大提前调度间隔
     if (delay.compareTo(maxAheadSchedule) > 0) {
       delay = maxAheadSchedule;
-      log.debug("[NextDue] 超出最大提前调度间隔，截断至 {}h", maxAheadSchedule.toHours());
+      log.debug(I18n.message("workflow.nextDue.max.ahead.exceeded", new Object[]{maxAheadSchedule.toHours()}));
     }
 
     // 限制最小调度间隔
@@ -195,11 +196,11 @@ public class FlowNextDueScheduler implements SchedulingConfigurer {
    * </ol>
    */
   private void onScheduledTrigger() {
-    log.info("[NextDue] 动态调度触发，开始处理到期任务");
+    log.info(I18n.message("workflow.nextDue.triggered", new Object[]{}));
     try {
       slaService.scanAndProcess();
     } catch (Exception e) {
-      log.error("[NextDue] 到期任务处理异常: {}", e.getMessage(), e);
+      log.error(I18n.message("workflow.nextDue.process.error", new Object[]{e.getMessage()}), e);
     } finally {
       // 处理完成后重新调度下一次
       scheduleNext();

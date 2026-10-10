@@ -1,7 +1,5 @@
 package com.njydsz.workflow.server.form;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 /**
  * 表单校验错误（P0-3 表单引擎 MVP）
@@ -9,9 +7,7 @@ import java.io.Serializable;
  * @since 26.10.01
  * @author ydsz-team
  */
-public class FlowFormValidationError implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowFormValidationError {
 
   /** 出错字段 key（子表单字段格式为 parentKey[index].childKey） */
   private final String fieldKey;

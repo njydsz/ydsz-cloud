@@ -17,6 +17,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.admin.DistributedLockAdmin;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.system.domain.query.LockPageQuery;
@@ -111,8 +112,8 @@ public class LockAdminRestController {
       }
     }
 
-    log.info("[LockAdminRest] 查询锁分页 page={} size={} count={}",
-        pageNum, pageSize, lockList.size());
+    log.info(I18n.message("system.web.lock.page",
+        new Object[]{pageNum, pageSize, lockList.size()}));
     return PageResponse.success(
         (long) lockMetrics.getActiveLocks(),
         (long) pageNum,
@@ -141,7 +142,7 @@ public class LockAdminRestController {
       }
     }
     vo.setOwnerDistribution(ownerDist);
-    log.info("[LockAdminRest] 查询锁统计 active={}", vo.getActiveLockCount());
+    log.info(I18n.message("system.web.lock.stat", new Object[]{vo.getActiveLockCount()}));
     return YdszResponse.success(vo);
   }
 
@@ -155,7 +156,7 @@ public class LockAdminRestController {
   public YdszResponse<Boolean> release(@PathVariable String lockKey) {
     String fullKey = LOCK_KEY_PREFIX + lockKey;
     boolean released = lockAdmin.forceUnlock(fullKey);
-    log.warn("[LockAdminRest] 强制释放锁 key={} success={}", fullKey, released);
+    log.warn(I18n.message("system.web.lock.force.release", new Object[]{fullKey, released}));
     return YdszResponse.success(released);
   }
 

@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.rag;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -15,9 +14,8 @@ import java.util.Objects;
  * @author ydsz-team
  * @since 26.10.01
  */
-public final class TextChunk implements Serializable {
+public final class TextChunk {
 
-  private static final long serialVersionUID = 1L;
 
   /** 文本块唯一标识 */
   private final String id;

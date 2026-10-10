@@ -1,0 +1,143 @@
+package com.njydsz.message.web.controller.config;
+
+import java.util.List;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.json.annotation.JsonView;
+import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.enums.core.MessageStatusEnum;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.domain.vo.MsgLogViews;
+import com.njydsz.message.server.service.core.MessageLogService;
+
+/**
+ * 死信（Dead Letter）管理 Controller。
+ *
+ * <p>提供<b>消息死信查询与人工干预</b>的 HTTP API。 死信指超过最大重试次数（默认 {@code ydsz.message.max-retry-count}，通常 5
+ * 次）仍发送失败的消息， 由 {@code RetryScheduler} 调度器在每次重试失败后递增 {@code retryCount}， 超过阈值后将 {@code
+ * ydsz_msg_log.status} 置为 {@code DEAD}，进入死信状态。
+ *
+ * <p><b>接口路径：</b>{@code /api/message/dead-letter/**}
+ *
+ * <p><b>核心能力：</b>
+ *
+ * <ul>
+ *   <li><b>分页查询死信</b>：{@code GET /page} — 强制过滤 {@code status=DEAD}，按通道 / 业务类型 / 接收人 / 租户等多维过滤
+ *   <li><b>手动重发</b>：{@code POST /{logId}/resend} — 仅 {@code DEAD} 状态可触发，重置 {@code
+ *       retryCount/errorMessage/nextRetryAt} 后立即重新投递
+ * </ul>
+ *
+ * <p><b>死信状态机：</b>消息生命周期中可能进入死信的状态节点：
+ *
+ * <ol>
+ *   <li>{@code PENDING}（待发）→ {@code SENDING}（发送中）
+ *   <li>{@code SENDING} → {@code RETRY}（重试中，{@code retryCount < maxRetry}）
+ *   <li>{@code RETRY} → {@code DEAD}（死信，{@code retryCount ≥ maxRetry}）
+ *   <li>人工干预：{@code DEAD} → {@code PENDING}（重发成功后转为正常发送流）
+ * </ol>
+ *
+ * <p><b>重发行为：</b>{@code /resend} 成功后可能产生两种结果：
+ *
+ * <ul>
+ *   <li>立即成功 → 状态变为 {@code SUCCESS}
+ *   <li>再次失败 → 状态回退到 {@code RETRY}，进入正常重试调度（不会立刻再次变 {@code DEAD}）
+ * </ul>
+ *
+ * <p><b>多租户隔离：</b>所有查询按 {@code tenantId} 过滤，跨租户死信不可见。
+ *
+ * <p><b>安全特性：</b>
+ *
+ * <ul>
+ *   <li>写接口（resend）启用 {@link Idempotent} 5s 防重，避免运维误操作重复触发重发
+ *   <li>写接口（resend）启用 {@link RateLimit} 50 QPS 限流
+ *   <li>写接口（resend）启用 {@link Audit} 审计日志（异步持久化）
+ *   <li>权限模型：通过 {@code @AuthApiPermission} 校验 {@link PermissionCodes#MESSAGE_DEAD_LETTER_RESEND}
+ *       权限码
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ * @see com.njydsz.message.server.service.core.MessageLogService 消息日志服务
+ * @see MsgLog 发送日志实体
+ * @see com.njydsz.message.domain.enums.core.MessageStatusEnum 消息状态枚举
+ */
+@Slf4j
+@Tag(name = "死信管理", description = "死信查询与手动重发")
+@ApiVersion("26.10.01")
+@RestController
+@RequestMapping("/message/dead-letter")
+@RequiredArgsConstructor
+public class DeadLetterController {
+
+  /** 消息日志服务 */
+  private final MessageLogService messageLogService;
+
+  /**
+   * 分页查询死信列表。
+   *
+   * <p>强制过滤 {@code status=DEAD} 状态消息，支持按通道 / 业务类型 / 接收人 / 租户等多维过滤；
+   * 按租户隔离，跨租户数据不可见。
+   *
+   * @param query 查询参数（status 字段被忽略，固定为 DEAD；含 pageNum / pageSize 分页信息）
+   * @return 死信分页结果（data 为 MsgLogVO 列表，含消息 ID、通道、接收人、状态、回执 ID、发送时间；无匹配时 data 为空列表）
+   */
+  @JsonView(MsgLogViews.Summary.class)
+  @Operation(summary = "分页查询死信列表")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_VIEW)
+  @GetMapping("/page")
+  public YdszResponse<PageResponse<List<MsgLogVO>>> page(MessageLogQueryDTO query) {
+    if (query == null) {
+      query = new MessageLogQueryDTO();
+    }
+    query.setStatus(MessageStatusEnum.DEAD.name());
+    return YdszResponse.success(messageLogService.page(query));
+  }
+
+  /**
+   * 手动重发死信。
+   *
+   * <p>仅 {@code status=DEAD} 的消息可重发。重置 {@code retryCount / errorMessage / nextRetryAt} 后立即重新投递：
+   * 投递成功 → {@code SUCCESS}；投递失败 → {@code RETRY}（进入正常重试调度，不立即再次置为 DEAD）。
+   * 启用 5s 幂等防重与 50 QPS 限流，并记录审计日志。
+   *
+   * @param logId 死信日志 ID（路径变量，不可为空或空白）
+   * @return 无业务数据（仅返回操作成功标识）
+   */
+  @Operation(summary = "手动重发死信")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_RESEND)
+  @Idempotent(key = "ydsz:message:deadLetter:resend", ttlSeconds = 5)
+  @Audit(
+      module = "死信管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'resend'")
+  @RateLimit(resource = "message.deadletter.resend", threshold = 50)
+  @PostMapping("/{logId}/resend")
+  public YdszResponse<Void> resend(@PathVariable String logId) {
+    if (logId == null || logId.isBlank()) {
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "死信日志 ID 不能为空");
+    }
+    messageLogService.resendDead(logId);
+    return YdszResponse.success();
+  }
+}

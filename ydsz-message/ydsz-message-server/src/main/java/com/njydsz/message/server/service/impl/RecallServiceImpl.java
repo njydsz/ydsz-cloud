@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.receipt;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -113,7 +114,7 @@ public class RecallServiceImpl implements RecallService {
     msgNotificationRepository.update(convertToNotificationDTO(n));
     // P2-19: 推送撤回事件到前端（携带撤回原因/时间戳）
     messageRecallPushService.pushRecall(userId, notificationId, "通知撤回");
-    log.info("[Recall] 撤回通知: id={} user={}", notificationId, userId);
+    log.info(I18n.message("message.log.other.Recall_id_{}_user_{}.b47193"), notificationId, userId);
     return true;
   }
 
@@ -144,7 +145,7 @@ public class RecallServiceImpl implements RecallService {
         try {
           checkRecallWindow(logDO.getCreatedAt(), "消息");
         } catch (SysException e) {
-          log.warn("[Recall] 按 logId 撤回超过窗口期: logId={}", logId);
+          log.warn(I18n.message("message.log.other.Recall_logId_logId_{}.812f27"), logId);
           throw e;
         }
       }
@@ -160,7 +161,7 @@ public class RecallServiceImpl implements RecallService {
             "消息已撤回: logId=" + logId);
       }
     }
-    log.info("[Recall] 撤回消息: logId={}", logId);
+    log.info(I18n.message("message.log.other.Recall_logId_{}.31bea7"), logId);
     return true;
   }
 
@@ -212,7 +213,7 @@ public class RecallServiceImpl implements RecallService {
     }
     // P2-B5: 已撤回则幂等返回 false，不抛异常
     if (RecallStatusEnum.RECALLED.name().equals(logDO.getRecallStatus())) {
-      log.info("[Recall] 消息已撤回，跳过重复撤回: msgId={}", msgId);
+      log.info(I18n.message("message.log.other.Recall_msgId_{}.40dcf2"), msgId);
       return false;
     }
     // 执行撤回

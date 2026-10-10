@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.idempotent.strategy.RepeatSubmitTokenService;
 import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -80,7 +81,7 @@ public class RepeatSubmitTokenController {
           ttlMillis);
       return YdszResponse.success(token);
     } catch (IllegalArgumentException e) {
-      log.warn("[ydsz-lock] [repeat-submit] 生成 Token 失败 | cause={}", e.getMessage());
+      log.warn(I18n.message("system.web.repeat.submit.token.fail", new Object[]{e.getMessage()}));
       return YdszResponse.error(YdszResultCode.UNAUTHORIZED, "用户未登录，无法生成 Token");
     }
   }

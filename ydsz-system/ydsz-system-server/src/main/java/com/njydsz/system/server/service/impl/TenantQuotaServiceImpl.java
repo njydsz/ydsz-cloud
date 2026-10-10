@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.enums.QuotaType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.TenantPlanVO;
@@ -78,7 +79,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   public Integer getQuotaLimit(String tenantId, QuotaType quotaType) {
     TenantVO tenant = tenantService.getById(tenantId);
     if (tenant == null) {
-      log.warn("[TenantQuotaService] 租户不存在: {}", tenantId);
+      log.warn(I18n.message("system.tenant.quota.not.found", new Object[]{tenantId}));
       return null;
     }
     return getQuotaLimitFromPlan(tenant.getPlanId(), quotaType);
@@ -89,14 +90,14 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     BiFunction<String, QuotaType, Integer> provider =
         quotaUsageRegistry.getProvider(quotaType);
     if (provider == null) {
-      log.warn("[TenantQuotaService] 未找到配额使用量提供者: {}", quotaType);
+      log.warn(I18n.message("system.tenant.quota.no.provider", new Object[]{quotaType}));
       return 0;
     }
     try {
       Integer usage = provider.apply(tenantId, quotaType);
       return usage != null ? usage : 0;
     } catch (Exception e) {
-      log.warn("[TenantQuotaService] 获取配额使用量失败: {}, error={}", quotaType, e.getMessage(), e);
+      log.warn(I18n.message("system.tenant.quota.get.usage.fail", new Object[]{quotaType, e.getMessage()}), e);
       return 0;
     }
   }
@@ -140,8 +141,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
       Object value = quotaMap.get(quotaType.getJsonKey());
       return convertQuotaValue(value);
     } catch (Exception e) {
-      log.warn("[TenantQuotaService] 解析套餐配额失败: planId={}, quotaType={}, error={}",
-          quotaJson, quotaType, e.getMessage());
+      log.warn(I18n.message("system.tenant.quota.plan.parse.fail", new Object[]{quotaJson, quotaType, e.getMessage()}));
       return null;
     }
   }
@@ -183,7 +183,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     public void registerProvider(QuotaType quotaType,
         BiFunction<String, QuotaType, Integer> provider) {
       providers.put(quotaType, provider);
-      log.info("[TenantQuotaService] 注册配额使用量提供者: {}", quotaType);
+      log.info(I18n.message("system.tenant.quota.register.provider", new Object[]{quotaType}));
     }
 
     /**

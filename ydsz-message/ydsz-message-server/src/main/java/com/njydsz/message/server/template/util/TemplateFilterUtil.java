@@ -1,6 +1,7 @@
 package com.njydsz.message.server.template.util;
 
-import java.math.BigDecimal;
+
+import com.njydsz.common.locales.util.I18n;import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.time.Instant;
@@ -112,7 +113,7 @@ public class TemplateFilterUtil {
             fmt);
       }
     } catch (Exception e) {
-      log.debug("[TemplateFilter] 日期格式化降级为原始值, value={}, err={}", value, e.getMessage());
+      log.debug(I18n.message("message.log.other.TemplateFilter_value_{}_err_{}.4b4579"), value, e.getMessage());
       return String.valueOf(value);
     }
     return String.valueOf(value);
@@ -143,7 +144,7 @@ public class TemplateFilterUtil {
         return df.format(new BigDecimal(str));
       }
     } catch (Exception e) {
-      log.debug("[TemplateFilter] 数字格式化降级为原始值, value={}, err={}", value, e.getMessage());
+      log.debug(I18n.message("message.log.other.TemplateFilter_value_{}_err_{}.7d10d3"), value, e.getMessage());
       return String.valueOf(value);
     }
     return String.valueOf(value);

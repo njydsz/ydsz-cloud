@@ -24,6 +24,7 @@ import com.njydsz.system.domain.dto.ApiPermissionDTO;
 import com.njydsz.system.domain.enums.ApiPermissionStatus;
 import com.njydsz.system.domain.query.ApiPermissionQuery;
 import com.njydsz.system.domain.repository.ApiPermissionRepository;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.vo.ApiPermissionVO;
 import com.njydsz.system.server.service.ApiPermissionService;
 
@@ -73,12 +74,12 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
   public int scanAndRegister() {
     List<ApiPermissionDTO> permissions = extractApiPermissions();
     if (permissions.isEmpty()) {
-      log.info("[ApiPermissionScan] 未扫描到 @AuthApiPermission 注解接口");
+      log.info(I18n.message("system.api.scan.not_found"));
       return 0;
     }
-    log.info("[ApiPermissionScan] 扫描到 {} 个唯一权限码，准备注册", permissions.size());
+    log.info(I18n.message("system.api.scan.found", new Object[]{permissions.size()}));
     int inserted = batchRegister(permissions);
-    log.info("[ApiPermissionScan] 注册完成：新注册 {} 个接口权限", inserted);
+    log.info(I18n.message("system.api.scan.done", new Object[]{inserted}));
     return inserted;
   }
 
@@ -97,7 +98,7 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
   public boolean enable(String id) {
     ApiPermissionVO existing = apiPermissionRepository.findById(id).orElse(null);
     if (existing == null) {
-      log.warn("[ApiPermissionService] 启用失败：接口权限不存在, id={}", id);
+      log.warn(I18n.message("system.api.permission.not_found", new Object[]{id}));
       return false;
     }
     ApiPermissionDTO dto = converter.voToApiPermissionDto(existing);
@@ -110,7 +111,7 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
   public boolean disable(String id) {
     ApiPermissionVO existing = apiPermissionRepository.findById(id).orElse(null);
     if (existing == null) {
-      log.warn("[ApiPermissionService] 禁用失败：接口权限不存在, id={}", id);
+      log.warn(I18n.message("system.api.permission.not_found", new Object[]{id}));
       return false;
     }
     ApiPermissionDTO dto = converter.voToApiPermissionDto(existing);

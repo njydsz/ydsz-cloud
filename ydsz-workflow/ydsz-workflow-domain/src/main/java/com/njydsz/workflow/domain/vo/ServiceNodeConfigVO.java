@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Map;
 
 import lombok.Getter;
@@ -33,9 +31,7 @@ import com.njydsz.common.json.YdszJson;
  */
 @Getter
 @ToString
-public class ServiceNodeConfigVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class ServiceNodeConfigVO {
 
   /** 默认服务类型（AUTO_PASS 自动通过） */
   public static final ServiceType DEFAULT_TYPE = ServiceType.AUTO_PASS;

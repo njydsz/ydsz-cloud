@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.sentry.domain.AlertCategory;
 import com.njydsz.common.sentry.domain.AlertEvent;
@@ -149,7 +150,7 @@ public class MonitorReportService {
     if (storage == null) {
       SentryObservation.count(
           METRIC_SOURCEMAP_TOTAL, "前端 sourcemap 上传次数", Map.of("status", "fail"));
-      log.warn("[MonitorReport] 对象存储未配置，sourcemap 上传被拒绝, release={}, file={}", release, file);
+      log.warn(I18n.message("system.monitor.object_unconfiged", new Object[]{release, file}));
       throw BusinessException.of(SystemExceptionCode.MONITOR_SOURCE_STORE_FAILED);
     }
 
@@ -159,12 +160,12 @@ public class MonitorReportService {
       FileStorage stored = storage.upload(null, objectName, new AdaptiveMultipartFile(file, contentType, content));
       SentryObservation.count(
           METRIC_SOURCEMAP_TOTAL, "前端 sourcemap 上传次数", Map.of("status", "success"));
-      log.info("[MonitorReport] sourcemap 已存储, release={}, object={}, size={}B", release, objectName, content.length);
+      log.info(I18n.message("system.monitor.sourcemap.stored", new Object[]{release, objectName, content.length}));
       return stored.getUrl();
     } catch (RuntimeException ex) {
       SentryObservation.count(
           METRIC_SOURCEMAP_TOTAL, "前端 sourcemap 上传次数", Map.of("status", "fail"));
-      log.error("[MonitorReport] sourcemap 存储失败, release={}, object={}", release, objectName, ex);
+      log.error(I18n.message("system.monitor.sourcemap.fail", new Object[]{release, objectName}), ex);
       throw BusinessException.of(SystemExceptionCode.MONITOR_SOURCE_STORE_FAILED);
     }
   }

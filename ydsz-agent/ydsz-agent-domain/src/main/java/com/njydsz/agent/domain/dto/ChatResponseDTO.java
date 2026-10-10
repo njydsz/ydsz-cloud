@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import com.njydsz.common.json.annotation.JsonView;
@@ -21,9 +19,8 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Schema(description = "对话响应")
-public class ChatResponseDTO implements Serializable {
+public class ChatResponseDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 对话 ID */
   @JsonView(ChatResponseViews.Summary.class)
@@ -62,8 +59,7 @@ public class ChatResponseDTO implements Serializable {
    */
   @Data
   @AllArgsConstructor
-  public static class TokenUsageDTO implements Serializable {
-    @Serial private static final long serialVersionUID = 1L;
+  public static class TokenUsageDTO {
 
     /** 输入 Token 数量（prompt 消耗） */
     @Schema(description = "输入 Token")

@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import lombok.Data;
 
@@ -16,9 +14,8 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class AgentTraceVO implements Serializable {
+public class AgentTraceVO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 链路唯一 ID */
   private String traceId;

@@ -1,6 +1,7 @@
 package com.njydsz.message.server.channel;
 
-import java.util.HashMap;
+
+import com.njydsz.common.locales.util.I18n;import java.util.HashMap;
 import java.util.Map;
 
 import jakarta.annotation.PostConstruct;
@@ -105,7 +106,7 @@ public class WebhookChannel implements MessageChannel {
   public MessageSendResultVO send(MessageItemRequestDTO request) {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
-      log.warn("[WEBHOOK] 未配置 Webhook URL，跳过发送: receiver={}", request.getReceiver());
+      log.warn(I18n.message("message.log.server.webhook.warn.not.configured"), request.getReceiver());
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "Webhook URL 未配置", "Webhook URL 未配置", null);
     }
     Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
@@ -132,13 +133,13 @@ public class WebhookChannel implements MessageChannel {
         String signature = DigestUtils.hmacSha256Base64(signContent, secret);
         bodySpec.header(HEADER_TIMESTAMP, String.valueOf(timestamp));
         bodySpec.header(HEADER_SIGNATURE, signature);
-        log.debug("[WEBHOOK] 已添加签名: timestamp={}", timestamp);
+        log.debug(I18n.message("message.log.server.webhook.debug.signature.added"), timestamp);
       }
       ResponseEntity<String> response = bodySpec.body(body).retrieve().toEntity(String.class);
       int statusCode = response.getStatusCode().value();
       if (response.getStatusCode().is2xxSuccessful()) {
         String traceId = CHANNEL_TYPE + "-" + String.valueOf(snowflakeIdGenerator.nextId());
-        log.info("[WEBHOOK] 发送成功: url={} status={}", maskUrl(webhookUrl), statusCode);
+        log.info(I18n.message("message.log.server.webhook.info.send.success"), maskUrl(webhookUrl), statusCode);
         return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
       }
       log.error(
@@ -148,7 +149,7 @@ public class WebhookChannel implements MessageChannel {
           response.getBody());
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "HTTP " + statusCode, "HTTP " + statusCode, null);
     } catch (Exception e) {
-      log.error("[WEBHOOK] 发送异常: url={} reason={}", maskUrl(webhookUrl), e.getMessage(), e);
+      log.error(I18n.message("message.log.other.WEBHOOK_url_{}_reason_{}.adad31"), maskUrl(webhookUrl), e.getMessage(), e);
       return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);

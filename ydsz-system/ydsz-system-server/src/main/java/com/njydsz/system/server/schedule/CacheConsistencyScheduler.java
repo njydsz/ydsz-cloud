@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.system.server.cache.CacheWarmer;
 import com.njydsz.system.server.config.SystemProperties;
@@ -57,15 +58,15 @@ public class CacheConsistencyScheduler {
       fixedDelayString = "${ydsz.system.cache.consistency-refresh-interval-ms:300000}",
       initialDelayString = "${ydsz.system.cache.consistency-refresh-initial-delay-ms:120000}")
   public void refreshLocalCache() {
-    log.info("[CacheConsistencyScheduler] 开始全量刷新本地缓存...");
+    log.info(I18n.message("system.cache.consistency.start"));
     long start = System.currentTimeMillis();
     try {
       cacheWarmer.refreshFromDatabase();
-      log.info("[CacheConsistencyScheduler] 本地缓存全量刷新完成，耗时 {}ms",
-          System.currentTimeMillis() - start);
+      log.info(I18n.message("system.cache.consistency.done",
+          new Object[]{System.currentTimeMillis() - start}));
     } catch (Exception e) {
-      log.warn("[CacheConsistencyScheduler] 本地缓存刷新失败（不影响业务，下次调度自动重试）: {}",
-          e.getMessage(), e);
+      log.warn(I18n.message("system.cache.consistency.fail", new Object[]{e.getMessage()}),
+          e);
     }
   }
 }

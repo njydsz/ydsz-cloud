@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
@@ -80,7 +81,7 @@ public class FlowAutoUrgeScheduler {
     try {
       doAutoUrge();
     } catch (Exception e) {
-      log.error("[AutoUrge] 自动催办扫描异常: {}", e.getMessage(), e);
+      log.error(I18n.message("workflow.autoUrge.scan.error", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -90,17 +91,17 @@ public class FlowAutoUrgeScheduler {
     int batchSize = cfg.getBatchSize();
 
     LocalDateTime thresholdTime = LocalDateTime.now().minusHours(thresholdHours);
-    log.info("[AutoUrge] 开始扫描: threshold={} batchSize={}", thresholdTime, batchSize);
+    log.info(I18n.message("workflow.autoUrge.scan.start", new Object[]{thresholdTime, batchSize}));
 
     // 通过 Repository 查询超时未处理的待办任务（符合 §34.2.3，禁止直接注入 Mapper）
     List<FlowRunTaskVO> overdueTasks = runTaskRepository.findOverdueTasks(thresholdTime, batchSize);
 
     if (overdueTasks.isEmpty()) {
-      log.debug("[AutoUrge] 无超时待办");
+      log.debug(I18n.message("workflow.autoUrge.no.overdue", new Object[]{}));
       return;
     }
 
-    log.info("[AutoUrge] 发现 {} 个超时待办，开始自动催办", overdueTasks.size());
+    log.info(I18n.message("workflow.autoUrge.overdue.found", new Object[]{overdueTasks.size()}));
 
     // 按实例分组，同实例只催办一次
     Map<String, List<FlowRunTaskVO>> byInstance = new HashMap<>(COLLECTION_CAPACITY_16);
@@ -115,7 +116,7 @@ public class FlowAutoUrgeScheduler {
       try {
         urgedCount += autoUrgeInstance(instanceId, tasks);
       } catch (Exception e) {
-        log.warn("[AutoUrge] 实例催办失败: instanceId={} err={}", instanceId, e.getMessage());
+          log.warn(I18n.message("workflow.autoUrge.instance.failed", new Object[]{instanceId, e.getMessage()}));
       }
     }
 
@@ -136,7 +137,7 @@ public class FlowAutoUrgeScheduler {
   private int autoUrgeInstance(String instanceId, List<FlowRunTaskVO> tasks) {
     Optional<FlowInstanceVO> instanceOpt = instanceRepository.findById(instanceId);
     if (instanceOpt.isEmpty()) {
-      log.warn("[AutoUrge] 实例不存在: {}", instanceId);
+      log.warn(I18n.message("workflow.autoUrge.instance.not.found", new Object[]{instanceId}));
       return 0;
     }
     FlowInstanceVO instance = instanceOpt.get();
@@ -157,7 +158,7 @@ public class FlowAutoUrgeScheduler {
       urgeService.urge(instanceId, "SYSTEM_AUTO_URGE", "[自动催办] 您的审批任务已超时，请尽快处理");
     } catch (Exception e) {
       // 催办限流可能触发，忽略继续推送通知
-      log.debug("[AutoUrge] 催办限流: instanceId={} err={}", instanceId, e.getMessage());
+      log.debug(I18n.message("workflow.autoUrge.rate.limited", new Object[]{instanceId, e.getMessage()}));
     }
 
     // 推送 IM 通知
@@ -214,7 +215,7 @@ public class FlowAutoUrgeScheduler {
       notificationService.notifyBatch(
           "INAPP", List.of(receiverId), title, content, "WORKFLOW_URGE", "URGENT");
     } catch (Exception e) {
-      log.debug("[AutoUrge] IM 推送失败: receiverId={} err={}", receiverId, e.getMessage());
+      log.debug(I18n.message("workflow.autoUrge.im.push.failed", new Object[]{receiverId, e.getMessage()}));
     }
   }
 }

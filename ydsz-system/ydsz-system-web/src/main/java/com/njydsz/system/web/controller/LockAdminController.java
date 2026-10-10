@@ -18,6 +18,7 @@ import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
 import com.njydsz.common.lock.admin.DistributedLockAdmin;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.strategy.LockStrategy;
 
 /**
@@ -126,7 +127,7 @@ public class LockAdminController {
     result.put("lockTimeoutCount", lockMetrics.getLockTimeoutCount());
     result.put("watchdogRenewCount", lockMetrics.getWatchdogRenewCount());
     result.put("activeRenewalTasks", lockWatchDog.getActiveTaskCount());
-    log.info("[ydsz-lock] [admin] 查询锁指标 active={}", lockMetrics.getActiveLocks());
+    log.info(I18n.message("system.web.lock.metric", new Object[]{lockMetrics.getActiveLocks()}));
     return result;
   }
 
@@ -204,7 +205,7 @@ public class LockAdminController {
         status.put("ttlMs", ttl);
       }
     }
-    log.debug("[ydsz-lock] [admin] 查询锁状态 key={} exists={}", fullKey, exists);
+    log.debug(I18n.message("system.web.lock.status", new Object[]{fullKey, exists}));
     return status;
   }
 
@@ -224,7 +225,7 @@ public class LockAdminController {
     result.put("key", fullKey);
     boolean released = lockAdmin.forceUnlock(fullKey);
     result.put("released", released);
-    log.warn("[ydsz-lock] [admin] 强制释放锁 key={} success={}", fullKey, released);
+    log.warn(I18n.message("system.web.lock.force.release", new Object[]{fullKey, released}));
     return result;
   }
 
@@ -341,7 +342,7 @@ public class LockAdminController {
       } catch (Exception e) {
         failCount++;
         failedKeys.add(key);
-        log.warn("[ydsz-lock] [admin] 批量释放锁异常 key={} cause={}", fullKey, e.getMessage());
+        log.warn(I18n.message("system.web.lock.batch.release.err", new Object[]{fullKey, e.getMessage()}));
       }
     }
 

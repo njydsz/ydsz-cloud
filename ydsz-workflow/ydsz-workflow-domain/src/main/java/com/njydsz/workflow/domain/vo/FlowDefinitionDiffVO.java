@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -16,9 +14,7 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class FlowDefinitionDiffVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowDefinitionDiffVO {
 
   /** 第一个版本号 */
   private Integer v1;

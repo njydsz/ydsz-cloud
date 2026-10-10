@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.time.LocalDateTime;
 
 import jakarta.annotation.PostConstruct;
@@ -92,7 +93,7 @@ public class GuardServiceImpl implements GuardService {
   void initRateLimiter() {
     this.rateLimiter = rateLimiterProvider.getIfAvailable();
     if (this.rateLimiter == null) {
-      log.warn("[Guard] RedisRateLimiter 不可用，令牌桶限流将降级放行");
+      log.warn(I18n.message("message.log.other.Guard_RedisRateLimiter.124feb"));
     }
   }
 
@@ -118,10 +119,10 @@ public class GuardServiceImpl implements GuardService {
           MessageConstants.RATE_LIMIT_KEY_PREFIX + key, permits, permits, Duration.ofSeconds(1), 1);
     } catch (Exception e) {
       if (failOpen) {
-        log.warn("[Guard] tryAcquire 降级放行(fail-open): key={} err={}", key, e.getMessage(), e);
+        log.warn(I18n.message("message.log.other.Guard_tryAcquire_fail_open_key_{}_err_{}.877f84"), key, e.getMessage(), e);
         return true;
       }
-      log.warn("[Guard] tryAcquire 降级拒绝(fail-closed): key={} err={}", key, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.Guard_tryAcquire_fail_closed_key_{}_err_{}.2ffe24"), key, e.getMessage(), e);
       return false;
     }
   }
@@ -322,13 +323,13 @@ public class GuardServiceImpl implements GuardService {
     try {
       String token = idempotentStrategy.acquire(redisKey, ttl * 1000L);
       if (token != null) {
-        log.debug("[Guard] 首次到达,放行: key={} ttl={}s", dedupKey, ttl);
+        log.debug(I18n.message("message.log.other.Guard_key_{}_ttl_{}s.5fe79c"), dedupKey, ttl);
         return true;
       }
-      log.info("[Guard] 检测到重复消息,跳过发送: key={} ttl={}s", dedupKey, ttl);
+      log.info(I18n.message("message.log.other.Guard_key_{}_ttl_{}s.cbbeac"), dedupKey, ttl);
       return false;
     } catch (Exception e) {
-      log.warn("[Guard] 去重检查异常(fail-open): key={} err={}", dedupKey, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.Guard_fail_open_key_{}_err_{}.a3a026"), dedupKey, e.getMessage(), e);
       return true;
     }
   }
@@ -390,7 +391,7 @@ public class GuardServiceImpl implements GuardService {
       // P0-FIX：每次 INCR 后刷新 TTL，避免 INCR 成功但 EXPIRE 失败导致 key 永不过期的原子性缺陷
       redisStringOps.expire(key, Duration.ofSeconds(ttlSeconds));
     } catch (Exception e) {
-      log.warn("[Guard] 计数失败(降级忽略): key={} err={}", key, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.Guard_key_{}_err_{}.e63dc8"), key, e.getMessage(), e);
     }
   }
 }

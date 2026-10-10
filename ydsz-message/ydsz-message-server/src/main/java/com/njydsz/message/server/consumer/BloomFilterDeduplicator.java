@@ -1,6 +1,7 @@
 package com.njydsz.message.server.consumer;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -156,7 +157,7 @@ public class BloomFilterDeduplicator {
       } catch (Exception e) {
         // Redis 异常时降级为纯本地 BloomFilter（fail-open）
         redisDegraded = true;
-        log.warn("[BloomFilter] Redis 异常，降级为本地模式: {}", e.getMessage(), e);
+        log.warn(I18n.message("message.log.other.BloomFilter_Redis_{}.ed4d6f"), e.getMessage(), e);
         totalHits++;
         return true;
       }
@@ -191,7 +192,7 @@ public class BloomFilterDeduplicator {
       } catch (Exception e) {
         // Redis 异常时降级为纯本地 BloomFilter（fail-open）
         redisDegraded = true;
-        log.warn("[BloomFilter] Redis 写入异常，降级为本地模式: {}", e.getMessage(), e);
+        log.warn(I18n.message("message.log.other.BloomFilter_Redis_{}.fc1563"), e.getMessage(), e);
       }
     }
   }
@@ -216,9 +217,9 @@ public class BloomFilterDeduplicator {
       previousFilter.set(oldActive);
       currentWindowCount = 0;
       windowCreatedAt.set(System.currentTimeMillis());
-      log.debug("[BloomFilter] 窗口已翻转");
+      log.debug(I18n.message("message.log.other.BloomFilter.00b561"));
     } catch (Exception e) {
-      log.warn("[BloomFilter] 窗口翻转异常: {}", e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.BloomFilter_{}.dedc18"), e.getMessage(), e);
     }
   }
 

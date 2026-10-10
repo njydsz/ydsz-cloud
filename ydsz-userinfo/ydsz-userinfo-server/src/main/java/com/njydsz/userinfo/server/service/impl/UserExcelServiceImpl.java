@@ -31,6 +31,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.dto.UserImportDTO;
 import com.njydsz.userinfo.server.service.UserAccountService;
 import com.njydsz.userinfo.server.service.UserExcelService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户 Excel 导入导出服务实现
@@ -216,7 +217,7 @@ public class UserExcelServiceImpl implements UserExcelService {
               });
       return result;
     } catch (Exception e) {
-      log.error("读取 Excel 失败: filename={}, error={}", originalFilename, e.getMessage(), e);
+      log.error(I18n.message("userinfo.读取.Excel.失败.filename=.error=", new Object[]{originalFilename, e.getMessage()}), e);
       throw BusinessException.builder()
           .resultCode(UserInfoExceptionCode.IMPORT_READ_FAILED)
           .params(e.getMessage())

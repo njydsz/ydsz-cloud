@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.model;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
@@ -14,9 +13,8 @@ import java.util.Objects;
  * @author ydsz-team
  * @since 26.10.01
  */
-public final class ToolCall implements Serializable {
+public final class ToolCall {
 
-  private static final long serialVersionUID = 1L;
 
   /** 工具调用 ID */
   private final String id;

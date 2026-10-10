@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.text2sql;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -18,9 +17,8 @@ import java.util.Optional;
  * @author ydsz-team
  * @since 26.10.01
  */
-public final class Text2SqlStateContext implements Serializable {
+public final class Text2SqlStateContext {
 
-  private static final long serialVersionUID = 1L;
 
   /** 默认集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;

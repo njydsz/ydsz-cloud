@@ -10,6 +10,7 @@ import com.njydsz.userinfo.domain.dto.SamlIdpDTO;
 import com.njydsz.userinfo.domain.query.SamlIdpPageQuery;
 import com.njydsz.userinfo.domain.repository.SamlIdpConfigRepository;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * SAML 身份提供者配置服务（P2-1 多租户）。
@@ -70,7 +71,7 @@ public class SamlIdpConfigService {
    */
   public void save(SamlIdpDTO dto) {
     samlIdpConfigRepository.save(dto);
-    log.info("SAML IdP 配置已保存: entityId={}", dto.getEntityId());
+    log.info(I18n.message("userinfo.SAML.IdP.配置已保存.entityId=", new Object[]{dto.getEntityId()}));
   }
 
   /**
@@ -80,6 +81,6 @@ public class SamlIdpConfigService {
    */
   public void delete(String entityId) {
     samlIdpConfigRepository.deleteByEntityId(entityId);
-    log.info("SAML IdP 配置已删除: entityId={}", entityId);
+    log.info(I18n.message("userinfo.SAML.IdP.配置已删除.entityId=", new Object[]{entityId}));
   }
 }

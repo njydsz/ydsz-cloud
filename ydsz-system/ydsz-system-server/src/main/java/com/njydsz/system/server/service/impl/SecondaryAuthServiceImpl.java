@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.system.domain.dto.VerifyPasswordRequest;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -68,7 +69,7 @@ public class SecondaryAuthServiceImpl implements SecondaryAuthService {
 
     // 检查失败锁定
     if (isLocked(userId)) {
-      log.warn("二次认证被锁定: userId={}, scene={}", userId, scene);
+      log.warn(I18n.message("system.secondary.auth.locked", new Object[]{userId, scene}));
       throw new BusinessException(SystemExceptionCode.SECONDARY_AUTH_TOKEN_INVALID);
     }
 
@@ -78,14 +79,14 @@ public class SecondaryAuthServiceImpl implements SecondaryAuthService {
     if (!passwordValid) {
       // 记录失败计数
       incrementFailCount(userId);
-      log.warn("二次认证密码错误: userId={}, scene={}", userId, scene);
+      log.warn(I18n.message("system.secondary.auth.password.incorrect.log", new Object[]{userId, scene}));
       throw new BusinessException(SystemExceptionCode.SECONDARY_AUTH_PASSWORD_INCORRECT);
     }
 
     // 密码校验通过：清除失败计数、颁发令牌
     clearFailCount(userId);
     SecondaryAuthVO vo = issueToken(userId);
-    log.info("二次认证通过: userId={}, scene={}, expiresAt={}", userId, scene, vo.getExpiresAt());
+    log.info(I18n.message("system.secondary.auth.passed", new Object[]{userId, scene, vo.getExpiresAt()}));
     return vo;
   }
 
@@ -106,7 +107,7 @@ public class SecondaryAuthServiceImpl implements SecondaryAuthService {
       String value = redisStringOps.get(key, String.class);
       return TOKEN_VERIFIED_VALUE.equals(value);
     } catch (Exception e) {
-      log.warn("读取二次认证令牌异常: userId={}, error={}", userId, e.getMessage());
+      log.warn(I18n.message("system.secondary.auth.token.read.fail", new Object[]{userId, e.getMessage()}));
       return false;
     }
   }
@@ -122,7 +123,7 @@ public class SecondaryAuthServiceImpl implements SecondaryAuthService {
     try {
       return userCredentialPort.verifyPassword(userId, password);
     } catch (Exception e) {
-      log.warn("调用用户中心密码校验服务异常: userId={}, error={}", userId, e.getMessage());
+      log.warn(I18n.message("system.secondary.auth.password.verify.fail", new Object[]{userId, e.getMessage()}));
       return false;
     }
   }
@@ -165,7 +166,7 @@ public class SecondaryAuthServiceImpl implements SecondaryAuthService {
     } catch (NumberFormatException e) {
       return false;
     } catch (Exception e) {
-      log.warn("读取二次认证失败计数异常: userId={}, error={}", userId, e.getMessage());
+      log.warn(I18n.message("system.secondary.auth.fail.count.read.fail", new Object[]{userId, e.getMessage()}));
       return false;
     }
   }
@@ -184,7 +185,7 @@ public class SecondaryAuthServiceImpl implements SecondaryAuthService {
       Duration ttl = Duration.ofMinutes(systemProperties.getSecondaryAuth().getFailLockMinutes());
       redisStringOps.set(key, String.valueOf(count), ttl);
     } catch (Exception e) {
-      log.warn("更新二次认证失败计数异常: userId={}, error={}", userId, e.getMessage());
+      log.warn(I18n.message("system.secondary.auth.fail.count.update.fail", new Object[]{userId, e.getMessage()}));
     }
   }
 
@@ -198,7 +199,7 @@ public class SecondaryAuthServiceImpl implements SecondaryAuthService {
       String key = buildFailCountKey(userId);
       redisStringOps.del(key);
     } catch (Exception e) {
-      log.warn("清除二次认证失败计数异常: userId={}, error={}", userId, e.getMessage());
+      log.warn(I18n.message("system.secondary.auth.fail.count.clear.fail", new Object[]{userId, e.getMessage()}));
     }
   }
 

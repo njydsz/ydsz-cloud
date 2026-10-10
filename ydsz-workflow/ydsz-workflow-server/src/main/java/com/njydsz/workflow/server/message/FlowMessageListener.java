@@ -10,6 +10,7 @@ import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 
 /**
@@ -45,20 +46,20 @@ public class FlowMessageListener implements MessageListener {
 
     String body = new String(message.getBody(), StandardCharsets.UTF_8);
     String channel = pattern != null ? new String(pattern, StandardCharsets.UTF_8) : "unknown";
-    log.info("[FlowMessageListener] 收到 Redis 消息: channel={} body={}", channel, body);
+    log.info(I18n.message("workflow.messageListener.received", new Object[]{channel, body}));
 
     try {
       // 解析消息体
       Map<String, Object> messageMap = YdszJson.parseMap(body);
       if (messageMap == null || messageMap.isEmpty()) {
-        log.warn("[FlowMessageListener] 消息体为空，跳过: channel={}", channel);
+        log.warn(I18n.message("workflow.messageListener.empty.body", new Object[]{channel}));
         return;
       }
 
       String messageName = messageMap.get("messageName") != null
           ? messageMap.get("messageName").toString() : null;
       if (messageName == null || messageName.isBlank()) {
-        log.warn("[FlowMessageListener] 消息体缺少 messageName，跳过: channel={}", channel);
+        log.warn(I18n.message("workflow.messageListener.missing.messageName", new Object[]{channel}));
         return;
       }
 

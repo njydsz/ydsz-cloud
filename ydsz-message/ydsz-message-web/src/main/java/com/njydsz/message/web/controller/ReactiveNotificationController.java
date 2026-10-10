@@ -1,6 +1,7 @@
 package com.njydsz.message.web.controller;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
@@ -77,7 +78,7 @@ public class ReactiveNotificationController {
     public Flux<ServerSentEvent<ReactiveEvent>> streamEvents(
             @RequestHeader(value = "X-User-Id", required = false) String userId) {
 
-        log.info("[ReactiveSSE] 用户 {} 建立响应式 SSE 连接", userId);
+        log.info(I18n.message("message.log.other.ReactiveSSE_{}_SSE.bb2684"), userId);
 
         // 心跳流：每 15 秒发送 comment 事件防代理超时
         Flux<ServerSentEvent<ReactiveEvent>> heartbeat = Flux.interval(Duration.ofSeconds(HEARTBEAT_INTERVAL_SECONDS))
@@ -97,7 +98,7 @@ public class ReactiveNotificationController {
 
         // 合并心跳流与事件流，客户端断开时记录日志
         return Flux.merge(heartbeat, events)
-                .doOnCancel(() -> log.info("[ReactiveSSE] 用户 {} 断开连接", userId));
+                .doOnCancel(() -> log.info(I18n.message("message.log.other.ReactiveSSE_{}.c5c523"), userId));
     }
 
     /**

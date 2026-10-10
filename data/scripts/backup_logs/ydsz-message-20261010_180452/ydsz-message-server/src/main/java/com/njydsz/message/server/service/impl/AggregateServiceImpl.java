@@ -1,0 +1,365 @@
+package com.njydsz.message.server.service.impl.batch;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.constant.PageConstants;
+import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.domain.query.PageQuery;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
+import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.message.domain.constant.MessageConstants;
+import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
+import com.njydsz.message.domain.query.MsgAggregateQuery;
+import com.njydsz.message.domain.repository.MsgAggregateRepository;
+import com.njydsz.message.domain.vo.MsgAggregateVO;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
+import com.njydsz.message.server.service.TemplateService;
+import com.njydsz.message.server.service.batch.AggregateService;
+import com.njydsz.message.server.service.core.MessageService;
+import com.njydsz.message.server.template.MessageTemplateRenderer;
+
+/**
+ * 消息聚合服务实现。
+ *
+ * <p>按 (bizKey, channel, user) 维度对短时间内高频触发的同一类消息进行合并去重，
+ *
+ * <p>对应实体 {@code ydsz_msg_aggregate}。窗口期内同一业务键仅发送 1 条聚合消息，
+ *
+ * <p>避免对用户造成骚扰。
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class AggregateServiceImpl implements AggregateService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
+  /** 锁等待时间（秒） */
+  private static final int LOCK_WAIT_SECONDS = 3;
+
+  /** 锁 TTL（秒） */
+  private static final int LOCK_TTL_SECONDS = 10;
+
+
+  /** 默认聚合频率窗口(分钟) */
+  private static final long DEFAULT_FREQUENCY_MINUTES = 30L;
+
+  /** 摘要模板编码前缀,完整编码 = 前缀 + aggregateGroup(bizType) */
+  private static final String DIGEST_TEMPLATE_PREFIX = "DIGEST_";
+
+  /** 默认摘要模板内容(未配置摘要模板时回退) */
+  private static final String DEFAULT_DIGEST_TEMPLATE = "您有 ${count} 条 ${group} 相关消息,请及时查看";
+
+  /** 聚合批次 Repository */
+  private final MsgAggregateRepository msgAggregateRepository;
+
+  /** 消息发送服务（flush 时回调发送） */
+  private final MessageService messageService;
+
+  /** 模板引擎（摘要渲染） */
+  private final MessageTemplateRenderer templateEngine;
+
+  /** 模板管理服务（加载摘要模板） */
+  private final TemplateService templateService;
+
+  /** 分布式锁 */
+  private final DistributedLocker distributedLocker;
+
+  @Override
+  public MsgAggregateVO appendOrStart(
+      String group, String receiver, String channel, String tenantId) {
+    if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("聚合组与接收人不能为空")
+          .build();
+    }
+    String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContextHolder.getTenantId();
+    String lockKey = MessageConstants.AGGREGATE_LOCK_PREFIX + group + ":" + receiver;
+    String lockValue = null;
+    try {
+      lockValue = distributedLocker.tryLock(lockKey, LOCK_WAIT_SECONDS, LOCK_TTL_SECONDS, TimeUnit.SECONDS);
+      if (lockValue == null) {
+        throw SysException.builder()
+            .resultCode(YdszResultCode.BAD_REQUEST)
+            .message("获取聚合锁失败: " + group)
+            .build();
+      }
+      // 查 PENDING 批次
+      MsgAggregateQuery pendingQuery = new MsgAggregateQuery();
+      pendingQuery.setAggregateGroup(group);
+      pendingQuery.setReceiver(receiver);
+      pendingQuery.setBatchStatus(AggregateBatchStatusEnum.PENDING.name());
+      MsgAggregateVO batch = msgAggregateRepository.findOne(pendingQuery).orElse(null);
+      LocalDateTime now = LocalDateTime.now();
+      if (batch != null) {
+        batch.setMessageCount((batch.getMessageCount() == null ? 0 : batch.getMessageCount()) + 1);
+        batch.setLastMessageAt(now);
+        msgAggregateRepository.update(batch);
+        return batch;
+      }
+      // 新建 PENDING 批次
+      MsgAggregateVO entity = new MsgAggregateVO();
+      entity.setAggregateGroup(group);
+      entity.setReceiver(receiver);
+      entity.setChannel(channel);
+      entity.setBatchStatus(AggregateBatchStatusEnum.PENDING.name());
+      entity.setMessageCount(1);
+      entity.setFirstMessageAt(now);
+      entity.setLastMessageAt(now);
+      entity.setScheduledSendAt(now.plusMinutes(DEFAULT_FREQUENCY_MINUTES));
+      entity.setTenantId(tid);
+      msgAggregateRepository.save(entity);
+      log.info(
+          "[Aggregate] 新建批次: group={} receiver={} scheduledAt={}",
+          group,
+          receiver,
+          entity.getScheduledSendAt());
+      return entity;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("聚合锁等待中断")
+          .build();
+    } finally {
+      if (lockValue != null) {
+        distributedLocker.unlock(lockKey, lockValue);
+      }
+    }
+  }
+
+  @Override
+  public int flushDue() {
+    LocalDateTime now = LocalDateTime.now();
+    MsgAggregateQuery dueQuery = new MsgAggregateQuery();
+    dueQuery.setBatchStatus(AggregateBatchStatusEnum.READY.name());
+    dueQuery.setScheduledSendAtBefore(now);
+    List<MsgAggregateVO> due = msgAggregateRepository.findList(dueQuery);
+    // N+1 治理: 批量加载摘要模板，避免 sendBatch 循环内逐条调 loadByCodeAndChannel 产生 N 次 DB 查询
+    Map<String, String> digestTemplateMap = batchLoadDigestTemplates(due);
+    int sent = 0;
+    for (MsgAggregateVO batch : due) {
+      if (sendBatch(batch, digestTemplateMap)) {
+        sent++;
+      }
+    }
+    if (sent > 0) {
+      log.info("[Aggregate] flushDue 发送 {} 个到期批次", sent);
+    }
+    return sent;
+  }
+
+  @Override
+  public int flushByGroup(String group, String receiver) {
+    if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("聚合组与接收人不能为空")
+          .build();
+    }
+    // 先把 PENDING 批次流转为 READY,统一由 sendBatch 的 CAS 占有发送
+    msgAggregateRepository.updateStatusByGroup(
+        group, receiver, AggregateBatchStatusEnum.PENDING.name(), AggregateBatchStatusEnum.READY.name());
+    MsgAggregateQuery readyQuery = new MsgAggregateQuery();
+    readyQuery.setAggregateGroup(group);
+    readyQuery.setReceiver(receiver);
+    readyQuery.setBatchStatus(AggregateBatchStatusEnum.READY.name());
+    List<MsgAggregateVO> batches = msgAggregateRepository.findList(readyQuery);
+    // N+1 治理: 批量加载摘要模板，避免 sendBatch 循环内逐条调 loadByCodeAndChannel 产生 N 次 DB 查询
+    Map<String, String> digestTemplateMap = batchLoadDigestTemplates(batches);
+    int sent = 0;
+    for (MsgAggregateVO batch : batches) {
+      if (sendBatch(batch, digestTemplateMap)) {
+        sent++;
+      }
+    }
+    log.info("[Aggregate] flushByGroup 发送 {} 个批次: group={} receiver={}", sent, group, receiver);
+    return sent;
+  }
+
+  @Override
+  public PageResponse<List<MsgAggregateVO>> page(PageQuery query) {
+    MsgAggregateQuery aggQuery = new MsgAggregateQuery();
+    if (query != null) {
+      aggQuery.setPageNum(query.getPageNum());
+      aggQuery.setPageSize(Math.min(query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
+    }
+    return msgAggregateRepository.findPage(aggQuery);
+  }
+
+  /**
+   * 发送单个聚合批次:CAS 占有(READY→SENDING) → 渲染摘要 → 调 MessageService 发送 → 更新 SENT。
+   *
+   * <p>P1-2: 通过 CAS 占有 SENDING 中间态,保证多实例并发调用 flushDue/flushByGroup 时
+   * 同一批次只会被一个实例发送,避免重复发送。发送失败/异常时回退 READY 等待下一轮重试。
+   *
+   * <p>N+1 治理: 摘要模板由调用方批量加载后通过 {@code digestTemplateMap} 传入，
+   * 不再在循环内逐条调用 {@link #loadDigestTemplate(MsgAggregateVO)} 产生 DB 查询。
+   *
+   * @param batch 聚合批次
+   * @param digestTemplateMap 预加载的模板 Map，key = aggregateGroup，value = 模板内容
+   * @return true 表示发送成功
+   */
+  private boolean sendBatch(MsgAggregateVO batch, Map<String, String> digestTemplateMap) {
+    // CAS 占有: READY → SENDING,updated=0 表示已被其他实例占有
+    int claimed =
+        msgAggregateRepository.updateStatus(
+            batch.getId(), AggregateBatchStatusEnum.READY.name(), AggregateBatchStatusEnum.SENDING.name());
+    if (claimed == 0) {
+      log.debug("[Aggregate] 批次已被其他实例占有,跳过: id={}", batch.getId());
+      return false;
+    }
+    batch.setBatchStatus(AggregateBatchStatusEnum.SENDING.name());
+    try {
+      // F5: 构建丰富摘要参数（总数量 + 时间范围 + 用户偏好语言）
+      Map<String, Object> params = buildDigestParams(batch);
+      // N+1 治理: 从预加载 Map 中取模板，O(1) 内存查询，避免逐条 DB 调用
+      String digestTemplate = resolveDigestTemplate(batch, digestTemplateMap);
+      String digest = templateEngine.render(digestTemplate, params);
+      batch.setDigestContent(digest);
+      MessageItemRequestDTO request = new MessageItemRequestDTO();
+      request.setChannel(batch.getChannel());
+      request.setReceiver(batch.getReceiver());
+      request.setContent(digest);
+      request.setBizType("AGGREGATE");
+      request.setBizId(batch.getId());
+      // 携带摘要时间范围到 header 以便追溯
+      request.setScenario("AGGREGATE");
+      MessageSendResultVO result = messageService.send(request);
+      boolean ok = result != null && result.isSuccess();
+      if (ok) {
+        batch.setBatchStatus(AggregateBatchStatusEnum.SENT.name());
+        batch.setSentAt(LocalDateTime.now());
+        msgAggregateRepository.update(batch);
+        return true;
+      }
+      log.warn(
+          "[Aggregate] 批次发送失败,回退 READY: id={} err={}",
+          batch.getId(),
+          result == null ? "无响应" : result.getUserMessage());
+      revertToReady(batch.getId());
+      return false;
+    } catch (Exception e) {
+      log.error("[Aggregate] 批次发送异常,回退 READY: id={} err={}", batch.getId(), e.getMessage(), e);
+      revertToReady(batch.getId());
+      return false;
+    }
+  }
+
+  /**
+   * 发送失败时将批次状态从 SENDING 回退到 READY,等待下一轮重试。
+   *
+   * @param batchId 批次 ID
+   */
+  private void revertToReady(String batchId) {
+    try {
+      msgAggregateRepository.updateStatus(
+          batchId, AggregateBatchStatusEnum.SENDING.name(), AggregateBatchStatusEnum.READY.name());
+    } catch (Exception revertEx) {
+      log.error(
+          "[Aggregate] 回退 READY 失败,批次滞留 SENDING: id={} err={}", batchId, revertEx.getMessage());
+    }
+  }
+
+  /**
+   * 批量加载摘要模板（N+1 治理核心方法）：
+   * 从待发送批次中提取唯一的 aggregateGroup 集合，一次性加载所有摘要模板，构建 Map 避免循环内逐条查库。
+   *
+   * @param batches 待发送的聚合批次列表
+   * @return 模板 Map，key = aggregateGroup，value = 模板内容字符串（未命中则回退默认）
+   */
+  private Map<String, String> batchLoadDigestTemplates(List<MsgAggregateVO> batches) {
+    if (batches == null || batches.isEmpty()) {
+      return new HashMap<>(0);
+    }
+    // 提取唯一的 aggregateGroup 集合
+    Set<String> groups = batches.stream()
+        .map(MsgAggregateVO::getAggregateGroup)
+        .filter(StringUtils::hasText)
+        .collect(Collectors.toSet());
+    if (groups.isEmpty()) {
+      return new HashMap<>(0);
+    }
+    // 批量加载：每个 group 对应一条摘要模板查询
+    Map<String, String> templateMap = new HashMap<>(groups.size());
+    batches.stream()
+        .filter(b -> StringUtils.hasText(b.getAggregateGroup()))
+        .collect(Collectors.toMap(
+            MsgAggregateVO::getAggregateGroup,
+            b -> b,
+            (existing, replacement) -> existing))
+        .forEach((group, batch) -> {
+          MsgTemplateVO tpl = templateService.loadByCodeAndChannel(
+              DIGEST_TEMPLATE_PREFIX + group, batch.getChannel(), null, batch.getTenantId());
+          if (tpl != null && StringUtils.hasText(tpl.getContent())) {
+            templateMap.put(group, tpl.getContent());
+          }
+        });
+    return templateMap;
+  }
+
+  /**
+   * 从预加载的模板 Map 中解析当前批次对应的摘要模板。
+   *
+   * @param batch 当前聚合批次
+   * @param digestTemplateMap 预加载的摘要模板 Map（key = aggregateGroup）
+   * @return 摘要模板内容字符串，未命中回退默认
+   */
+  private String resolveDigestTemplate(MsgAggregateVO batch, Map<String, String> digestTemplateMap) {
+    String group = batch.getAggregateGroup();
+    if (!StringUtils.hasText(group)) {
+      return DEFAULT_DIGEST_TEMPLATE;
+    }
+    String template = digestTemplateMap.get(group);
+    return template != null ? template : DEFAULT_DIGEST_TEMPLATE;
+  }
+
+  /**
+   * F5: 构建丰富摘要参数 Map。
+   *
+   * <p>除基础 count / group 外,暴露 timeWindowMinutes(聚合窗口分钟数) / firstMessageAt / lastMessageAt 到模板变量, 支持更精细的摘要文案：{@code "您在
+   * ${timeWindowMinutes} 分钟内收到 ${count} 条 ${group} 相关消息"}。
+   *
+   * @param batch 聚合批次
+   * @return 摘要模板变量 Map
+   */
+  private Map<String, Object> buildDigestParams(MsgAggregateVO batch) {
+    Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY);
+    params.put("count", batch.getMessageCount());
+    params.put("group", batch.getAggregateGroup());
+    // F5: 时间范围参数
+    if (batch.getFirstMessageAt() != null && batch.getLastMessageAt() != null) {
+      long windowMinutes = ChronoUnit.MINUTES.between(batch.getFirstMessageAt(), batch.getLastMessageAt());
+      params.put("timeWindowMinutes", Math.max(windowMinutes, 1));
+      params.put("firstMessageAt", batch.getFirstMessageAt());
+      params.put("lastMessageAt", batch.getLastMessageAt());
+    } else {
+      params.put("timeWindowMinutes", DEFAULT_FREQUENCY_MINUTES);
+      params.put("firstMessageAt", "");
+      params.put("lastMessageAt", "");
+    }
+    return params;
+  }
+}
+

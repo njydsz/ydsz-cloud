@@ -30,6 +30,7 @@ import com.njydsz.userinfo.domain.vo.MfaSetupVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.auth.MfaService;
 import com.njydsz.userinfo.server.service.UserAccountService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户资料 Controller（个人中心）。
@@ -81,7 +82,7 @@ public class UserProfileController {
   public YdszResponse<Boolean> updateCurrentUserProfile(@Valid @RequestBody UserProfileUpdateDTO dto) {
     String userId = RequestContext.getUserId();
     boolean result = userAccountService.updateProfile(userId, dto);
-    log.info("用户资料更新成功: userId={}", userId);
+    log.info(I18n.message("userinfo.用户资料更新成功.userId=", new Object[]{userId}));
     return YdszResponse.success(result);
   }
 
@@ -116,7 +117,7 @@ public class UserProfileController {
     // 确保只能修改自己的密码
     dto.setUserId(userId);
     boolean result = userAccountService.changePassword(dto);
-    log.info("用户密码修改成功: userId={}", userId);
+    log.info(I18n.message("userinfo.用户密码修改成功.userId=", new Object[]{userId}));
     return YdszResponse.success(result);
   }
 
@@ -147,7 +148,7 @@ public class UserProfileController {
     dto.setAvatar(avatarUrl);
     userAccountService.updateProfile(userId, dto);
 
-    log.info("用户头像上传成功: userId={}, url={}", userId, avatarUrl);
+    log.info(I18n.message("userinfo.用户头像上传成功.userId=.url=", new Object[]{userId, avatarUrl}));
     return YdszResponse.success(avatarUrl);
   }
 

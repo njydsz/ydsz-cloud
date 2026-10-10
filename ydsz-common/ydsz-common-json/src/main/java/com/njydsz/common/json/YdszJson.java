@@ -974,4 +974,85 @@ public class YdszJson {
     }
     return results;
   }
+
+  // ==================== JSON Schema 校验 ====================
+
+  /**
+   * 校验 JSON 字符串结构合法性（用于写入 PostgreSQL JSONB 字段前的防御性校验）。
+   *
+   * <p>校验规则：
+   * <ul>
+   *   <li>JSON 语法合法性（能正常 parse 为 JsonNode）</li>
+   *   <li>必填字段存在性检查（{@code requiredFields} 非空时）</li>
+   * </ul>
+   *
+   * <p>使用示例（RepositoryImpl 写入 JSONB 前）：
+   * <pre>{@code
+   * YdszJson.validateSchema(flowDef.getExt(), "version", "flowType");
+   * }</pre>
+   *
+   * @param jsonString     待校验的 JSON 字符串（可为 null 或空，直接放行）
+   * @param requiredFields 必填顶级字段名（可变参数，为空表示仅校验语法）
+   * @throws JsonException 校验失败时抛出
+   * @since 26.10.10
+   */
+  public static void validateSchema(String jsonString, String... requiredFields) {
+    if (jsonString == null || jsonString.isBlank()) {
+      return;
+    }
+    JsonNode rootNode;
+    try {
+      Object parsed = JsonParserUtil.parse(jsonString);
+      rootNode = TreeConverter.convertToJsonNode(parsed);
+    } catch (Exception e) {
+      LOGGER.warn("YdszJson.validateSchema JSON 语法校验失败: {}", e.getMessage());
+      throw new JsonException(1001, "JSON 语法不合法: " + e.getMessage(), null, -1,
+          JsonException.CauseType.PARSE_ERROR);
+    }
+    if (rootNode == null || !rootNode.isObject()) {
+      throw new JsonException(1002, "根节点必须是 JSON 对象", null, -1,
+          JsonException.CauseType.TYPE_MISMATCH);
+    }
+    if (requiredFields != null && requiredFields.length > 0) {
+      ObjectNode objectNode = (ObjectNode) rootNode;
+      List<String> missingFields = new ArrayList<>();
+      for (String field : requiredFields) {
+        JsonNode fieldNode = objectNode.get(field);
+        if (fieldNode == null || fieldNode == NullNode.getInstance() || fieldNode.isNull()) {
+          missingFields.add(field);
+        }
+      }
+      if (!missingFields.isEmpty()) {
+        throw new JsonException(1003, "缺少必填字段: " + String.join(", ", missingFields),
+            null, -1, JsonException.CauseType.MISSING_FIELD);
+      }
+    }
+  }
+
+  /**
+   * 校验 JSON 数组字符串语法合法性（用于 JSONB 数组字段的防御性校验）。
+   *
+   * @param jsonString 待校验的 JSON 数组字符串
+   * @throws JsonException 校验失败时抛出
+   * @since 26.10.10
+   */
+  public static void validateArraySchema(String jsonString) {
+    if (jsonString == null || jsonString.isBlank()) {
+      return;
+    }
+    try {
+      Object parsed = JsonParserUtil.parse(jsonString);
+      JsonNode rootNode = TreeConverter.convertToJsonNode(parsed);
+      if (rootNode == null || !rootNode.isArray()) {
+        throw new JsonException(1004, "根节点必须是 JSON 数组", null, -1,
+            JsonException.CauseType.TYPE_MISMATCH);
+      }
+    } catch (JsonException e) {
+      throw e;
+    } catch (Exception e) {
+      LOGGER.warn("YdszJson.validateArraySchema JSON 语法校验失败: {}", e.getMessage());
+      throw new JsonException(1001, "JSON 数组语法不合法: " + e.getMessage(), null, -1,
+          JsonException.CauseType.PARSE_ERROR);
+    }
+  }
 }

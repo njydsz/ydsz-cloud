@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,9 +16,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "DAG 编排请求")
-public class DagExecutionDTO implements Serializable {
+public class DagExecutionDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** YAML DSL 内容，定义 DAG 节点和边（必填） */
   @NotBlank(message = "DSL 内容不能为空")

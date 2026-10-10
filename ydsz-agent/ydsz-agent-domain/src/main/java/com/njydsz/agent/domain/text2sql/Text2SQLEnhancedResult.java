@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.text2sql;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -34,9 +33,8 @@ public record Text2SQLEnhancedResult(
     List<String> recalledTables,
     String feasibilityReason,
     Double consistencyScore)
-    implements Serializable {
+    {
 
-  private static final long serialVersionUID = 1L;
 
   /**
    * 创建空结果（增强版）。

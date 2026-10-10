@@ -1,6 +1,7 @@
 package com.njydsz.message.server.channel;
 
-import java.net.URLEncoder;
+
+import com.njydsz.common.locales.util.I18n;import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -93,7 +94,7 @@ public class DingTalkChannel implements MessageChannel {
   public MessageSendResultVO send(MessageItemRequestDTO request) {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
-      log.warn("[DINGTALK] 未配置 access_token，跳过发送: receiver={}", request.getReceiver());
+      log.warn(I18n.message("message.log.other.DINGTALK_access_token_receiver_{}.14a67e"), request.getReceiver());
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "钉钉 access_token 未配置", "钉钉 access_token 未配置", null);
     }
 
@@ -123,19 +124,19 @@ public class DingTalkChannel implements MessageChannel {
         Map<String, Object> body = YdszJson.parseMap(response.getBody());
         int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
         if (errcode == 0) {
-          log.info("[DINGTALK] 发送成功");
+          log.info(I18n.message("message.log.server.channel.dingtalk.info.send.success"));
           return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
         }
         String errmsg = (String) body.getOrDefault("errmsg", "unknown");
-        log.error("[DINGTALK] 发送失败: errcode={} errmsg={}", errcode, errmsg);
+        log.error(I18n.message("message.log.server.channel.dingtalk.error.send.failed.errcode"), errcode, errmsg);
         return MessageSendResultVO.fail(
             CHANNEL_TYPE, null, "errcode=" + errcode + ", errmsg=" + errmsg,
             "errcode=" + errcode + ", errmsg=" + errmsg, null);
       }
-      log.error("[DINGTALK] 发送失败: status={}", response.getStatusCode());
+      log.error(I18n.message("message.log.server.channel.dingtalk.error.send.failed.status"), response.getStatusCode());
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
-      log.error("[DINGTALK] 发送异常: reason={}", e.getMessage(), e);
+      log.error(I18n.message("message.log.server.channel.dingtalk.error.send.exception"), e.getMessage(), e);
       return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
@@ -228,7 +229,7 @@ public class DingTalkChannel implements MessageChannel {
               DigestUtils.hmacSha256Base64(stringToSign, secret), StandardCharsets.UTF_8);
       return url + "&timestamp=" + timestamp + "&sign=" + sign;
     } catch (Exception e) {
-      log.error("[DINGTALK] 加签失败,放弃发送: {}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.DINGTALK_{}.e1dcb0"), e.getMessage(), e);
       return null;
     }
   }

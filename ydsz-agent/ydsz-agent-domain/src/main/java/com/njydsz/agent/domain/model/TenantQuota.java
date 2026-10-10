@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.model;
 
-import java.io.Serializable;
 
 /**
  * 租户 LLM 配额配置值对象
@@ -12,9 +11,8 @@ import java.io.Serializable;
  * @author ydsz-team
  * @since 26.10.01
  */
-public final class TenantQuota implements Serializable {
+public final class TenantQuota {
 
-  private static final long serialVersionUID = 1L;
 
   /** 默认每日 Token 限额（100 万 Token/天） */
   public static final long DEFAULT_DAILY_TOKEN_LIMIT = 1_000_000L;

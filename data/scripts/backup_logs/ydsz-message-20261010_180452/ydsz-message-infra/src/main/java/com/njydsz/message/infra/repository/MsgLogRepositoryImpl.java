@@ -1,0 +1,209 @@
+package com.njydsz.message.infra.repository;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Repository;
+
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.message.domain.converter.MessageConverter;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.dto.MsgLogDTO;
+import com.njydsz.message.domain.entity.MsgLog;
+import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+
+/**
+ * 消息发送日志仓储实现（Infra 层）。
+ *
+ * <p>实现 {@link MsgLogRepository} 接口，封装 MsgLogMapper 数据访问细节。
+ *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>所有数据访问通过本类的语义方法，禁止暴露 Mapper
+ *   <li>通过 {@link MessageConverter} 实现 VO ↔ Entity ↔ DTO 的双向转换
+ *   <li>查询入参使用领域 Query（{@link MessageLogQueryDTO}），返回领域 VO（{@link MsgLogVO}）
+ *   <li>CUD 入参使用领域 DTO（{@link MsgLogDTO}），通过 Converter 转换为 Entity
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ */
+@Slf4j
+@Repository
+@RequiredArgsConstructor
+public class MsgLogRepositoryImpl implements MsgLogRepository {
+
+  private final MsgLogMapper msgLogMapper;
+
+  private final MessageConverter converter;
+
+  // ===== 基本 CRUD =====
+
+  @Override
+  public boolean save(MsgLogDTO dto) {
+    MsgLog entity = converter.dtoToEntity(dto);
+    return msgLogMapper.insert(entity) > 0;
+  }
+
+  @Override
+  public boolean save(MsgLogVO vo) {
+    MsgLog entity = converter.voToEntity(vo);
+    return msgLogMapper.insert(entity) > 0;
+  }
+
+  @Override
+  public boolean update(MsgLogDTO dto) {
+    MsgLog entity = converter.dtoToEntity(dto);
+    return msgLogMapper.updateById(entity) > 0;
+  }
+
+  @Override
+  public boolean update(MsgLogVO vo) {
+    MsgLog entity = converter.voToEntity(vo);
+    return msgLogMapper.updateById(entity) > 0;
+  }
+
+  @Override
+  public boolean deleteById(String id) {
+    return msgLogMapper.deleteById(id) > 0;
+  }
+
+  // ===== 查询方法 =====
+
+  @Override
+  public Optional<MsgLogVO> findById(String id) {
+    MsgLog entity = msgLogMapper.selectById(id);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
+  }
+
+  @Override
+  public Optional<MsgLogVO> findOne(MessageLogQueryDTO query) {
+    QueryWrapper<MsgLog> wrapper = buildWrapper(query);
+    MsgLog entity = msgLogMapper.selectOne(wrapper);
+    return Optional.ofNullable(entity).map(converter::entityToVO);
+  }
+
+  @Override
+  public PageResponse<List<MsgLogVO>> findPage(MessageLogQueryDTO query) {
+    Page<MsgLog> page = new Page<>(query.getPageNum(), query.getPageSize());
+    QueryWrapper<MsgLog> wrapper = buildWrapper(query);
+    wrapper.orderByDesc("created_at");
+    IPage<MsgLog> entityPage = msgLogMapper.selectPage(page, wrapper);
+    List<MsgLogVO> vos = converter.logListToVO(entityPage.getRecords());
+    return PageResponse.success(entityPage.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
+  }
+
+  @Override
+  public List<MsgLogVO> findList(MessageLogQueryDTO query) {
+    QueryWrapper<MsgLog> wrapper = buildWrapper(query);
+    wrapper.orderByDesc("created_at");
+    return converter.logListToVO(msgLogMapper.selectList(wrapper));
+  }
+
+  @Override
+  public long count(MessageLogQueryDTO query) {
+    QueryWrapper<MsgLog> wrapper = buildWrapper(query);
+    Long count = msgLogMapper.selectCount(wrapper);
+    return count != null ? count : 0L;
+  }
+
+  @Override
+  public List<MsgLogVO> findByMsgIds(List<String> msgIds, String userId) {
+    if (msgIds == null || msgIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+    QueryWrapper<MsgLog> wrapper = new QueryWrapper<>();
+    wrapper.in("msg_id", msgIds);
+    wrapper.eq("receiver", userId);
+    wrapper.eq("deleted", 0);
+    return converter.logListToVO(msgLogMapper.selectList(wrapper));
+  }
+
+  @Override
+  public boolean saveBatch(List<MsgLogDTO> list) {
+    if (list == null || list.isEmpty()) {
+      return false;
+    }
+    List<MsgLog> entities = converter.logDtoListToEntity(list);
+    return msgLogMapper.insertBatch(entities) > 0;
+  }
+
+  // ===== 游标分页（深度分页场景） =====
+
+  @Override
+  public List<MsgLogVO> pageByIdCursor(String lastId, int pageSize) {
+    List<MsgLog> list = msgLogMapper.selectByIdGreaterThan(lastId, pageSize);
+    return list == null ? Collections.emptyList() : converter.logListToVO(list);
+  }
+
+  // ===== 私有辅助方法 =====
+
+  private QueryWrapper<MsgLog> buildWrapper(MessageLogQueryDTO query) {
+    QueryWrapper<MsgLog> wrapper = new QueryWrapper<>();
+    if (query == null) {
+      return wrapper;
+    }
+    if (query.getChannel() != null && !query.getChannel().isBlank()) {
+      wrapper.eq("channel", query.getChannel());
+    }
+    if (query.getBizType() != null && !query.getBizType().isBlank()) {
+      wrapper.eq("biz_type", query.getBizType());
+    }
+    if (query.getBizId() != null && !query.getBizId().isBlank()) {
+      wrapper.eq("biz_id", query.getBizId());
+    }
+    if (query.getStatus() != null && !query.getStatus().isBlank()) {
+      wrapper.eq("status", query.getStatus());
+    }
+    if (query.getReceiver() != null && !query.getReceiver().isBlank()) {
+      wrapper.eq("receiver", query.getReceiver());
+    }
+    if (query.getPriority() != null && !query.getPriority().isBlank()) {
+      wrapper.eq("priority", query.getPriority());
+    }
+    if (query.getRecallStatus() != null && !query.getRecallStatus().isBlank()) {
+      wrapper.eq("recall_status", query.getRecallStatus());
+    }
+    if (query.getKeyword() != null && !query.getKeyword().isBlank()) {
+      wrapper.and(w -> w.like("content", query.getKeyword())
+          .or().like("receiver", query.getKeyword())
+          .or().like("template_code", query.getKeyword()));
+    }
+    if (query.getMessageGroup() != null && !query.getMessageGroup().isBlank()) {
+      wrapper.eq("message_group", query.getMessageGroup());
+    }
+    if (query.getMsgId() != null && !query.getMsgId().isBlank()) {
+      wrapper.eq("msg_id", query.getMsgId());
+    }
+    if (query.getReceiptStatus() != null && !query.getReceiptStatus().isBlank()) {
+      wrapper.eq("receipt_status", query.getReceiptStatus());
+    }
+    if (query.getStartTime() != null && !query.getStartTime().isBlank()) {
+      try {
+        wrapper.ge("created_at", LocalDateTime.parse(query.getStartTime()));
+      } catch (DateTimeParseException e) {
+        log.debug("日期格式不匹配，跳过", e);
+      }
+    }
+    if (query.getEndTime() != null && !query.getEndTime().isBlank()) {
+      try {
+        wrapper.le("created_at", LocalDateTime.parse(query.getEndTime()));
+      } catch (DateTimeParseException e) {
+        log.debug("日期格式不匹配，跳过", e);
+      }
+    }
+    wrapper.eq("deleted", 0);
+    return wrapper;
+  }
+}

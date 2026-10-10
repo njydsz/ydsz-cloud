@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
@@ -11,6 +9,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * FlowNode 视图对象。
@@ -26,9 +25,7 @@ import com.njydsz.common.json.YdszJson;
  */
 @Data
 @Slf4j
-public class FlowNodeVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowNodeVO {
 
   private String id;
   private String definitionId;
@@ -120,7 +117,7 @@ public class FlowNodeVO implements Serializable {
         parsedExt = map != null ? map : Collections.emptyMap();
         return parsedExt;
       } catch (Exception e) {
-        log.warn("[FlowNodeVO] 解析 ext JSON 失败: nodeCode={} err={}", nodeCode, e.getMessage());
+        log.warn(I18n.message("workflow.vo.node.ext.parse.failed", new Object[]{nodeCode, e.getMessage()}));
         parsedExt = Collections.emptyMap();
         return parsedExt;
       }

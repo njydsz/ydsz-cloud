@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.batch;
 
-import java.util.HashMap;
+
+import com.njydsz.common.locales.util.I18n;import java.util.HashMap;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -65,7 +66,7 @@ public class BatchProgressPusher {
           "[BatchProgress] 推送进度: batchId={} progress={}%",
           batch.getBatchId(), Math.round(progress));
     } catch (Exception e) {
-      log.warn("[BatchProgress] 推送失败: batchId={} err={}", batch.getBatchId(), e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.BatchProgress_batchId_{}_err_{}.e8796b"), batch.getBatchId(), e.getMessage(), e);
     }
   }
 

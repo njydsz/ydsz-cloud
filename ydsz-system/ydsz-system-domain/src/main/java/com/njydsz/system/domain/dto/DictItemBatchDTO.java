@@ -19,7 +19,7 @@ import com.njydsz.system.domain.vo.DictItemVO;
 @Data
 public class DictItemBatchDTO {
 
-  @NotEmpty(message = "字典项列表不能为空")
-  @Size(max = 500, message = "单次批量新增最多 500 条")
+  @NotEmpty(message = "{system.dto.dictItemBatch.items.required}")
+  @Size(max = 500, message = "{system.dto.dictItemBatch.items.max}")
   private List<DictItemVO> items;
 }

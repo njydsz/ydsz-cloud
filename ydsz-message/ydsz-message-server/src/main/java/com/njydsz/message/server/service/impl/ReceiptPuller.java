@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.receipt;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,7 +64,7 @@ public class ReceiptPuller {
     try {
       doScan();
     } catch (Exception e) {
-      log.error("[ReceiptPuller] 扫描异常: {}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.ReceiptPuller_{}.a9a64e"), e.getMessage(), e);
     }
   }
 
@@ -90,7 +91,7 @@ public class ReceiptPuller {
             logVO.getId(), ReceiptStatusEnum.TIMEOUT.name(), LocalDateTime.now());
         timeout++;
       } catch (Exception e) {
-        log.warn("[ReceiptPuller] 标记超时异常: logId={} err={}", logVO.getId(), e.getMessage());
+        log.warn(I18n.message("message.log.other.ReceiptPuller_logId_{}_err_{}.3b522a"), logVO.getId(), e.getMessage());
       }
     }
 
@@ -106,7 +107,7 @@ public class ReceiptPuller {
     if (pending.isEmpty() && timeoutMsgs.isEmpty()) {
       return;
     }
-    log.info("[ReceiptPuller] 待处理回执: 主动拉取 {} 条, 超时标记 {} 条", pending.size(), timeoutMsgs.size());
+    log.info(I18n.message("message.log.other.ReceiptPuller_{}_{}.87c8eb"), pending.size(), timeoutMsgs.size());
 
     int pulled = 0;
     int updated = 0;
@@ -127,7 +128,7 @@ public class ReceiptPuller {
             logVO.getId(), receipt.getStatus().name(), LocalDateTime.now());
         updated++;
       } catch (Exception e) {
-        log.warn("[ReceiptPuller] 拉取回执异常: logId={} err={}", logVO.getId(), e.getMessage());
+        log.warn(I18n.message("message.log.other.ReceiptPuller_logId_{}_err_{}.1195da"), logVO.getId(), e.getMessage());
         skipped++;
       }
     }

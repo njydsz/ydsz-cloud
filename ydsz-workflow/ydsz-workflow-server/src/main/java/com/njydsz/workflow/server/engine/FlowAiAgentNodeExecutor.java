@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.sentry.SentryObservation;
@@ -97,7 +98,7 @@ public class FlowAiAgentNodeExecutor {
     this.variableReplacer = variableReplacer;
     this.agentServiceClient = agentServiceClient;
     this.aiAgentExecutor = ExecutorUtils.newVirtualThreadExecutor("workflow-ai-agent-");
-    log.info("[Flow-AI-Agent] AI 审批节点执行器已初始化");
+    log.info(I18n.message("workflow.ai.agent.executor.init", new Object[]{}));
   }
 
   /**
@@ -117,15 +118,13 @@ public class FlowAiAgentNodeExecutor {
 
     // 校验 agentId
     if (!config.hasValidAgentId()) {
-      log.warn("[Flow-AI-Agent] 节点 {} 未配置 agentId，触发兜底策略: {}", nodeCode,
-          config.getFallbackStrategy());
+      log.warn(I18n.message("workflow.ai.agent.missing.agentId", new Object[]{nodeCode, config.getFallbackStrategy()}));
       return applyFallback(config, instanceId, nodeCode, "未配置 agentId");
     }
 
     // 替换提示词模板变量
     String resolvedPrompt = resolvePrompt(config.getPromptTemplate(), variables);
-    log.info("[Flow-AI-Agent] 实例 {} 节点 {} 开始执行 AI 审批, agentId={}, timeout={}ms", instanceId,
-        nodeCode, config.getAgentId(), config.getTimeoutMs());
+    log.info(I18n.message("workflow.ai.agent.execution.start", new Object[]{instanceId, nodeCode, config.getAgentId(), config.getTimeoutMs()}));
 
     Map<String, Object> context = buildContext(instanceId, nodeCode, variables);
     try {
@@ -135,12 +134,11 @@ public class FlowAiAgentNodeExecutor {
             nodeCode);
 
         if (result == null) {
-          log.warn("[Flow-AI-Agent] 实例 {} 节点 {} Agent 返回 null，触发兜底策略", instanceId, nodeCode);
+          log.warn(I18n.message("workflow.ai.agent.returned.null", new Object[]{instanceId, nodeCode}));
           return applyFallback(config, instanceId, nodeCode, "Agent 返回 null");
         }
 
-        log.info("[Flow-AI-Agent] 实例 {} 节点 {} AI 审批完成, approve={}, confidence={}, reason={}",
-            instanceId, nodeCode, result.approve(), result.confidence(), result.reason());
+    log.info(I18n.message("workflow.ai.agent.execution.complete", new Object[]{instanceId, nodeCode, result.approve(), result.confidence(), result.reason()}));
 
         return result.approve();
       });
@@ -174,8 +172,7 @@ public class FlowAiAgentNodeExecutor {
       } catch (SysException e) {
         throw e;
       } catch (Exception e) {
-        log.warn("[Flow-AI-Agent] 实例 {} 节点 {} 第 {}/{} 次执行异常: {}", instanceId, nodeCode, attempt,
-            maxAttempts, e.getMessage());
+    log.warn(I18n.message("workflow.ai.agent.execution.error", new Object[]{instanceId, nodeCode, attempt, maxAttempts, e.getMessage()}));
         if (attempt >= maxAttempts) {
           return null;
         }
@@ -246,19 +243,18 @@ public class FlowAiAgentNodeExecutor {
   private boolean applyFallback(AiAgentNodeConfigVO config, String instanceId, String nodeCode,
       String cause) {
     FallbackStrategy strategy = config.getFallbackStrategy();
-    log.warn("[Flow-AI-Agent] 实例 {} 节点 {} 触发兜底策略: {}, 原因: {}", instanceId, nodeCode, strategy,
-        cause);
+    log.warn(I18n.message("workflow.ai.agent.fallback.triggered", new Object[]{instanceId, nodeCode, strategy, cause}));
 
     switch (strategy) {
       case AUTO_PASS:
-        log.info("[Flow-AI-Agent] 实例 {} 节点 {} 兜底策略: 自动通过", instanceId, nodeCode);
+        log.info(I18n.message("workflow.ai.agent.fallback.auto.pass", new Object[]{instanceId, nodeCode}));
         return true;
       case AUTO_REJECT:
-        log.info("[Flow-AI-Agent] 实例 {} 节点 {} 兜底策略: 自动驳回", instanceId, nodeCode);
+        log.info(I18n.message("workflow.ai.agent.fallback.auto.reject", new Object[]{instanceId, nodeCode}));
         return false;
       case TRANSFER_ADMIN:
         // 转交管理员（由调用方处理）
-        log.info("[Flow-AI-Agent] 实例 {} 节点 {} 兜底策略: 转交管理员", instanceId, nodeCode);
+        log.info(I18n.message("workflow.ai.agent.fallback.transfer.admin", new Object[]{instanceId, nodeCode}));
         throw SysException.builder()
             .resultCode(YdszResultCode.BIZ_ERROR)
             .key("error.workflow.ai.agent.transfer.admin")
@@ -266,11 +262,10 @@ public class FlowAiAgentNodeExecutor {
             .build();
       case RETRY:
         // 重试已穷尽，最终兜底为自动通过
-        log.warn("[Flow-AI-Agent] 实例 {} 节点 {} 重试已穷尽，最终兜底为自动通过", instanceId, nodeCode);
+        log.warn(I18n.message("workflow.ai.agent.retry.exhausted", new Object[]{instanceId, nodeCode}));
         return true;
       default:
-        log.warn("[Flow-AI-Agent] 实例 {} 节点 {} 未知兜底策略: {}, 默认自动通过", instanceId, nodeCode,
-            strategy);
+        log.warn(I18n.message("workflow.ai.agent.fallback.unknown.strategy", new Object[]{instanceId, nodeCode, strategy}));
         return true;
     }
   }
@@ -284,13 +279,13 @@ public class FlowAiAgentNodeExecutor {
    */
   private String resolvePrompt(String template, Map<String, Object> variables) {
     if (template == null || template.isBlank()) {
-      log.warn("[Flow-AI-Agent] 提示词模板为空");
+      log.warn(I18n.message("workflow.ai.agent.prompt.empty", new Object[]{}));
       return "";
     }
     try {
       return variableReplacer.replacePlaceholders(template, variables);
     } catch (Exception e) {
-      log.warn("[Flow-AI-Agent] 提示词变量替换失败，使用原始模板: {}", e.getMessage());
+      log.warn(I18n.message("workflow.ai.agent.prompt.replace.failed", new Object[]{e.getMessage()}));
       return template;
     }
   }

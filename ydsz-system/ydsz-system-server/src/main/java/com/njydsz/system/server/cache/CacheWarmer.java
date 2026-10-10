@@ -12,6 +12,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.repository.DictRepository;
@@ -69,14 +70,14 @@ public class CacheWarmer {
    */
   @EventListener(ApplicationReadyEvent.class)
   public void onApplicationReady() {
-    log.info("[CacheWarmer] 开始缓存预热...");
+    log.info(I18n.message("system.cache.warm.start"));
     long start = System.currentTimeMillis();
     try {
       warmConfigCache();
       warmDictCache();
-      log.info("[CacheWarmer] 缓存预热完成，耗时 {}ms", System.currentTimeMillis() - start);
+      log.info(I18n.message("system.cache.warm.done", new Object[]{System.currentTimeMillis() - start}));
     } catch (Exception e) {
-      log.warn("[CacheWarmer] 缓存预热失败（不影响应用启动）: {}", e.getMessage(), e);
+      log.warn(I18n.message("system.cache.warm.fail", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -87,7 +88,7 @@ public class CacheWarmer {
    * 实现逻辑：先清除全部本地缓存数据，再从 DB 重新加载。
    */
   public void refreshFromDatabase() {
-    log.info("[CacheWarmer.refreshFromDatabase] 开始从 DB 全量刷新本地缓存...");
+    log.info(I18n.message("system.cache.refresh.db.start"));
     // Step1: 清除全部缓存（确保不残留过期数据）
     clearAllCaches();
     // Step2: 重新从 DB 加载
@@ -118,9 +119,9 @@ public class CacheWarmer {
       if (variableCache != null) {
         variableCache.clear();
       }
-      log.info("[CacheWarmer.refreshFromDatabase] 本地缓存全部清除完成");
+      log.info(I18n.message("system.cache.clear.done"));
     } catch (Exception e) {
-      log.warn("[CacheWarmer.refreshFromDatabase] 清除缓存异常: {}", e.getMessage(), e);
+      log.warn(I18n.message("system.cache.clear.fail", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -154,9 +155,9 @@ public class CacheWarmer {
           log.debug("[CacheWarmer] 预热配置分组失败: group={}", entry.getKey());
         }
       }
-      log.info("[CacheWarmer] 配置分组缓存预热完成，共 {} 个分组", groupedConfigs.size());
+      log.info(I18n.message("system.cache.group.done", new Object[]{groupedConfigs.size()}));
     } catch (Exception e) {
-      log.warn("[CacheWarmer] 配置分组缓存预热失败: {}", e.getMessage(), e);
+      log.warn(I18n.message("system.cache.group.fail", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -170,13 +171,13 @@ public class CacheWarmer {
       List<ConfigVO> configs = configRepository.findEnabledConfigs();
 
       if (configs.isEmpty()) {
-        log.info("[CacheWarmer] 系统配置表为空，跳过配置缓存预热");
+        log.info(I18n.message("system.cache.config.empty"));
         return;
       }
 
       Cache configCache = cacheManager.getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE);
       if (configCache == null) {
-        log.warn("[CacheWarmer] 配置缓存不存在，跳过预热");
+        log.warn(I18n.message("system.cache.config.notfound"));
         return;
       }
 
@@ -190,9 +191,9 @@ public class CacheWarmer {
         }
       }
 
-      log.info("[CacheWarmer] 系统配置缓存预热完成，共 {} 条", configs.size());
+      log.info(I18n.message("system.cache.config.done", new Object[]{configs.size()}));
     } catch (Exception e) {
-      log.warn("[CacheWarmer] 系统配置缓存预热失败: {}", e.getMessage(), e);
+      log.warn(I18n.message("system.cache.config.fail", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -206,13 +207,13 @@ public class CacheWarmer {
       List<DictItemVO> dictItems = dictRepository.findEnabledItems();
 
       if (dictItems.isEmpty()) {
-        log.info("[CacheWarmer] 字典项表为空，跳过字典缓存预热");
+        log.info(I18n.message("system.cache.dict.empty"));
         return;
       }
 
       Cache dictCache = cacheManager.getCache(SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE);
       if (dictCache == null) {
-        log.warn("[CacheWarmer] 字典缓存不存在，跳过预热");
+        log.warn(I18n.message("system.cache.dict.notfound"));
         return;
       }
 
@@ -232,9 +233,9 @@ public class CacheWarmer {
         }
       }
 
-      log.info("[CacheWarmer] 字典项缓存预热完成，共 {} 条，{} 个类型", dictItems.size(), groupedItems.size());
+      log.info(I18n.message("system.cache.dict.done", new Object[]{dictItems.size(), groupedItems.size()}));
     } catch (Exception e) {
-      log.warn("[CacheWarmer] 字典项缓存预热失败: {}", e.getMessage(), e);
+      log.warn(I18n.message("system.cache.dict.fail", new Object[]{e.getMessage()}), e);
     }
   }
 

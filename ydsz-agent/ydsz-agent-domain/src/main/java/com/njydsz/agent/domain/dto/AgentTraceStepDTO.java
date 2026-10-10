@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
 
 import lombok.Data;
@@ -17,9 +15,8 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class AgentTraceStepDTO implements Serializable {
+public class AgentTraceStepDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 链路 ID（关联 ydsz_agt_trace.traceId） */
   private String traceId;

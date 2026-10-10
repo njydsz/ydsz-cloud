@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,9 +16,8 @@ import java.util.Objects;
  * @author ydsz-team
  * @since 26.10.01
  */
-public final class ChatResponse implements Serializable {
+public final class ChatResponse {
 
-  private static final long serialVersionUID = 1L;
 
   /** 响应 ID */
   private final String id;

@@ -21,6 +21,7 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.ApiKeyPageQuery;
 import com.njydsz.userinfo.domain.repository.ApiKeyRepository;
 import com.njydsz.userinfo.domain.vo.ApiKeyVO;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * API Key 管理服务（P1-2 API Key 授权体系）。
@@ -119,7 +120,7 @@ public class ApiKeyService {
 
     apiKeyRepository.save(entity);
 
-    log.info("API Key 已创建: userId={}, keyId={}, prefix={}", userId, entity.getId(), keyPrefix);
+    log.info(I18n.message("userinfo.API.Key.已创建.userId=.keyId=.prefix=", new Object[]{userId, entity.getId(), keyPrefix}));
 
     // 返回 VO（含明文 Key）
     ApiKeyVO vo = new ApiKeyVO();
@@ -203,7 +204,7 @@ public class ApiKeyService {
       return 0;
     }
     int count = apiKeyRepository.revokeByIds(ids);
-    log.info("API Key 已撤销: userId={}, count={}", getCurrentUserId(), count);
+    log.info(I18n.message("userinfo.API.Key.已撤销.userId=.count=", new Object[]{getCurrentUserId(), count}));
     return count;
   }
 
@@ -215,7 +216,7 @@ public class ApiKeyService {
    */
   public void updateEnabled(String id, boolean enabled) {
     apiKeyRepository.updateEnabled(id, enabled);
-    log.info("API Key 状态已更新: userId={}, id={}, enabled={}", getCurrentUserId(), id, enabled);
+    log.info(I18n.message("userinfo.API.Key.状态已更新.userId=.id=.enabled=", new Object[]{getCurrentUserId(), id, enabled}));
   }
 
   /**
@@ -228,7 +229,7 @@ public class ApiKeyService {
     long count = apiKeyRepository.countExpired(now);
     if (count > 0) {
       int deleted = apiKeyRepository.deleteExpired(now);
-      log.info("API Key 过期清理完成: expired={}, deleted={}", count, deleted);
+      log.info(I18n.message("userinfo.API.Key.过期清理完成.expired=.deleted=", new Object[]{count, deleted}));
       return deleted;
     }
     return 0;

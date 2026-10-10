@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.webhook;
 
-import java.util.HashMap;
+
+import com.njydsz.common.locales.util.I18n;import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +56,7 @@ public class OutboundWebhookService {
             .sourceModule("message")
             .build();
     webhookDispatcher.register(sub);
-    log.info("[Webhook] 注册订阅: url={} events={}", url, events);
+    log.info(I18n.message("message.log.other.Webhook_url_{}_events_{}.d108e8"), url, events);
   }
 
   /**

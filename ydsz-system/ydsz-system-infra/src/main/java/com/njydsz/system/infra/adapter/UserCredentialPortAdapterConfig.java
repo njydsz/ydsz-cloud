@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.port.UserCredentialPort;
 
 /**
@@ -34,7 +35,7 @@ public class UserCredentialPortAdapterConfig {
    */
   @Bean
   public UserCredentialPort userCredentialPort() {
-    log.info("[ydsz-system] UserCredentialPort 使用降级适配器（本地开发模式）");
+    log.info(I18n.message("system.usercredential.adapter.degraded"));
     return new NoopUserCredentialAdapter();
   }
 
@@ -46,7 +47,7 @@ public class UserCredentialPortAdapterConfig {
 
     @Override
     public boolean verifyPassword(String userId, String password) {
-      log.warn("UserCredentialPort 处于降级模式，无法校验密码，拒绝认证: userId={}", userId);
+      log.warn(I18n.message("system.usercredential.deny.warn", new Object[]{userId}));
       return false;
     }
   }

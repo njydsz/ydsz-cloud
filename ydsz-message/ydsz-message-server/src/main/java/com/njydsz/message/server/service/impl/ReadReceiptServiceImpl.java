@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.receipt;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,9 +52,9 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
     }
     try {
       redisStringOps.set(READ_STATUS_PREFIX + "email:" + msgId, "1", Duration.ofDays(READ_STATUS_TTL_DAYS));
-      log.info("[ReadReceipt] 邮件已读: msgId={}", msgId);
+      log.info(I18n.message("message.log.other.ReadReceipt_msgId_{}.561d46"), msgId);
     } catch (Exception e) {
-      log.warn("[ReadReceipt] 邮件已读标记失败: msgId={} err={}", msgId, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.ReadReceipt_msgId_{}_err_{}.64cf4b"), msgId, e.getMessage(), e);
     }
   }
 
@@ -73,18 +74,18 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
     try {
       String originalUrl = redisStringOps.get(SHORTLINK_PREFIX + shortCode, String.class);
       if (originalUrl == null) {
-        log.warn("[ReadReceipt] 短链不存在或已过期: code={}", shortCode);
+        log.warn(I18n.message("message.log.other.ReadReceipt_code_{}.fa79fc"), shortCode);
         return null;
       }
       // 标记消息已读
       String msgId = redisStringOps.get(SHORTLINK_MSG_PREFIX + shortCode, String.class);
       if (StringUtils.hasText(msgId)) {
         redisStringOps.set(READ_STATUS_PREFIX + "sms:" + msgId, "1", Duration.ofDays(READ_STATUS_TTL_DAYS));
-        log.info("[ReadReceipt] 短信已读: msgId={} code={}", msgId, shortCode);
+        log.info(I18n.message("message.log.other.ReadReceipt_msgId_{}_code_{}.f55728"), msgId, shortCode);
       }
       return originalUrl;
     } catch (Exception e) {
-      log.warn("[ReadReceipt] 短链点击处理失败: code={} err={}", shortCode, e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.ReadReceipt_code_{}_err_{}.be4e2a"), shortCode, e.getMessage(), e);
       return null;
     }
   }

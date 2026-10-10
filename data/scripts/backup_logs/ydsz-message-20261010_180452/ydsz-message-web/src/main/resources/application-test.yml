@@ -1,0 +1,22 @@
+# 测试环境 — CI 流水线执行自动化测试专用
+# 公共配置（datasource / redis / mybatis-plus）由 Nacos ydsz-common.yaml 提供
+
+spring:
+  profiles:
+    active: test
+
+# 日志：精简输出，减少 CI 日志量
+logging:
+  level:
+    root: WARN
+    com.njydsz: INFO
+
+# 测试容器连接（Testcontainers 或 CI 专用 PG）
+datasource:
+  hikari:
+    maximum-pool-size: 5
+    connection-timeout: 3000
+
+ydsz:
+  local-dev: false
+  test-env: true

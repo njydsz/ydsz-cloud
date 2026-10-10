@@ -7,6 +7,7 @@ import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 身份供给连接器自动注册配置（P0-1 Identity Provisioning 管道）。
@@ -48,7 +49,7 @@ public class ProvisionConnectorAutoConfiguration implements SmartInitializingSin
   @Override
   public void afterSingletonsInstantiated() {
     if (connectorBeans.isEmpty()) {
-      log.info("未发现任何 IdentityProvisionConnector Bean");
+      log.info(I18n.message("userinfo.未发现任何.IdentityProvisionConnector.Bean"));
       return;
     }
     for (IdentityProvisionConnector connector : connectorBeans.values()) {

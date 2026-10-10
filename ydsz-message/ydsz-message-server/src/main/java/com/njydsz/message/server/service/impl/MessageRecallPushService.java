@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.util.HashMap;
+
+import com.njydsz.common.locales.util.I18n;import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -58,7 +59,7 @@ public class MessageRecallPushService {
       recallData.put("recallReason", recallReason);
       recallData.put("recallTime", System.currentTimeMillis());
       realtimePushService.pushToUser(userId, "RECALL", recallData);
-      log.info("[RecallPush] 撤回推送已发送: userId={} messageId={}", userId, messageId);
+      log.info(I18n.message("message.log.other.RecallPush_userId_{}_messageId_{}.815239"), userId, messageId);
     } catch (Exception e) {
       log.error(
           "[RecallPush] 撤回推送失败: userId={} messageId={} err={}", userId, messageId, e.getMessage());

@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.chain.handler;
 
-import java.util.Map;
+
+import com.njydsz.common.locales.util.I18n;import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +50,7 @@ public class ChannelResolveHandler implements SendHandler {
       return false;
     }
     if (!isChannelEnabled(channel)) {
-      log.warn("[Message] 通道未启用: {}", channel);
+      log.warn(I18n.message("message.log.other.Message_{}.5b1186"), channel);
       ctx.setErrorResult(MessageSendResultVO.fail(
           channel,
           MessageExceptionCode.CHANNEL_NOT_ENABLED.getCode(),
@@ -85,7 +86,7 @@ public class ChannelResolveHandler implements SendHandler {
         return false;
       }
     } catch (Exception e) {
-      log.debug("[Message] ChannelRouter 判断异常,回退配置: {}", e.getMessage());
+      log.debug(I18n.message("message.log.other.Message_ChannelRouter_{}.b57e31"), e.getMessage());
     }
     try {
       Map<String, Boolean> enabled = messageProperties.getChannelEnabled();
@@ -93,7 +94,7 @@ public class ChannelResolveHandler implements SendHandler {
         return Boolean.TRUE.equals(enabled.get(channel));
       }
     } catch (Exception e) {
-      log.debug("[Message] channelEnabled 配置读取异常: {}", e.getMessage());
+      log.debug(I18n.message("message.log.other.Message_channelEnabled_{}.94a835"), e.getMessage());
     }
     return true;
   }

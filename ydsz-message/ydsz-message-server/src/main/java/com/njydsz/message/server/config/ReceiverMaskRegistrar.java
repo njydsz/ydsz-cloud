@@ -1,6 +1,7 @@
 package com.njydsz.message.server.config;
 
-import java.util.regex.Pattern;
+
+import com.njydsz.common.locales.util.I18n;import java.util.regex.Pattern;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,7 @@ public class ReceiverMaskRegistrar {
   @PostConstruct
   public void register() {
     SensitiveUtil.register("default", ReceiverMaskRegistrar::maskReceiver);
-    log.info("[ReceiverMaskRegistrar] receiver 脱敏 handler 已注册");
+    log.info(I18n.message("message.log.other.ReceiverMaskRegistrar_receiver_handler.290aa1"));
   }
 
   /**

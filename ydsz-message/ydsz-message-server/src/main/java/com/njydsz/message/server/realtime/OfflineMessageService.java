@@ -1,6 +1,7 @@
 package com.njydsz.message.server.realtime;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -84,9 +85,9 @@ public class OfflineMessageService implements OfflineMessageStore {
         persistOverflowToDb(userId, key, size);
       }
 
-      log.debug("[WS-Offline] 缓存离线消息: userId={}, type={}", userId, type);
+      log.debug(I18n.message("message.log.server.woffline.debug.cache.message"), userId, type);
     } catch (Exception e) {
-      log.warn("[WS-Offline] 缓存离线消息失败，降级忽略: userId={}, err={}", userId, e.getMessage(), e);
+      log.warn(I18n.message("message.log.server.woffline.warn.cache.message.failed"), userId, e.getMessage(), e);
     }
   }
 
@@ -108,10 +109,10 @@ public class OfflineMessageService implements OfflineMessageStore {
       }
       if (!dbMessages.isEmpty()) {
         msgOfflineRepository.markPushedByUser(userId);
-        log.info("[WS-Offline] 从数据库拉取离线消息: userId={}, count={}", userId, dbMessages.size());
+        log.info(I18n.message("message.log.server.woffline.info.fetch.from.db"), userId, dbMessages.size());
       }
     } catch (Exception e) {
-      log.warn("[WS-Offline] 数据库离线消息拉取失败: userId={}, err={}", userId, e.getMessage(), e);
+      log.warn(I18n.message("message.log.server.woffline.warn.db.pull.failed"), userId, e.getMessage(), e);
     }
 
     // 再从 Redis 拉取缓存消息
@@ -124,7 +125,7 @@ public class OfflineMessageService implements OfflineMessageStore {
       result.addAll(redisResult);
     }
 
-    log.info("[WS-Offline] 拉取离线消息: userId={}, total={}", userId, result.size());
+    log.info(I18n.message("message.log.server.woffline.info.pull.result"), userId, result.size());
     return result;
   }
 
@@ -140,7 +141,7 @@ public class OfflineMessageService implements OfflineMessageStore {
       long size = redisCollectionOps.lSize(key);
       redisCount = size;
     } catch (Exception e) {
-      log.debug("[WS-Offline] Redis 计数失败: {}", e.getMessage());
+      log.debug(I18n.message("message.log.server.woffline.warn.redis.count.failed"), e.getMessage());
     }
     try {
       MsgOfflineQuery countQuery = new MsgOfflineQuery();
@@ -148,7 +149,7 @@ public class OfflineMessageService implements OfflineMessageStore {
       countQuery.setStatus("PENDING");
       dbCount = msgOfflineRepository.findList(countQuery).size();
     } catch (Exception e) {
-      log.debug("[WS-Offline] DB 计数失败: {}", e.getMessage());
+      log.debug(I18n.message("message.log.server.woffline.warn.db.count.failed"), e.getMessage());
     }
     return redisCount + dbCount;
   }
@@ -197,9 +198,9 @@ public class OfflineMessageService implements OfflineMessageStore {
         msgOfflineRepository.saveBatch(entities.subList(i, to));
       }
       redisCollectionOps.lTrim(redisKey, 0, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD - 1);
-      log.info("[WS-Offline] 溢出消息持久化到数据库: userId={}, count={}", userId, overflowMessages.size());
+      log.info(I18n.message("message.log.server.woffline.info.overflow.persist.to.db"), userId, overflowMessages.size());
     } catch (Exception e) {
-      log.warn("[WS-Offline] 溢出消息持久化失败: userId={}, err={}", userId, e.getMessage(), e);
+      log.warn(I18n.message("message.log.server.woffline.warn.overflow.persist.failed"), userId, e.getMessage(), e);
     }
   }
 }

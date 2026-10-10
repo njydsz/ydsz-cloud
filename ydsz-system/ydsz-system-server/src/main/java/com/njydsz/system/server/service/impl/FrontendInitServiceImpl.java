@@ -16,6 +16,7 @@ import com.njydsz.system.domain.vo.FrontendInitVO;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.service.ConfigService;
 import com.njydsz.system.server.service.DictItemService;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.server.service.FrontendInitService;
 
 
@@ -86,7 +87,7 @@ public class FrontendInitServiceImpl implements FrontendInitService {
               (v1, v2) -> v1 // 重复键取第一个
           ));
     } catch (Exception e) {
-      log.warn("[FrontendInitService] 获取公开配置失败: {}", e.getMessage(), e);
+      log.warn(I18n.message("system.frontend.config.fail", new Object[]{e.getMessage()}), e);
       return new HashMap<>(0);
     }
   }
@@ -109,7 +110,7 @@ public class FrontendInitServiceImpl implements FrontendInitService {
           dictMap.put(typeCode, items);
         }
       } catch (Exception e) {
-        log.warn("[FrontendInitService] 获取字典失败: typeCode={}, error={}", typeCode, e.getMessage(), e);
+        log.warn(I18n.message("system.frontend.dict.fail", new Object[]{typeCode, e.getMessage()}), e);
       }
     }
     return dictMap;
@@ -124,7 +125,7 @@ public class FrontendInitServiceImpl implements FrontendInitService {
     try {
       return RequestContext.getUserId();
     } catch (Exception e) {
-      log.warn("[FrontendInit] 获取当前用户ID失败，将以匿名用户身份初始化", e);
+      log.warn(I18n.message("system.frontend.userid.fail"), e);
       return null;
     }
   }

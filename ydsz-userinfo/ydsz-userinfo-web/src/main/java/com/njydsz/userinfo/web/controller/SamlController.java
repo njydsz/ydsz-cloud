@@ -30,6 +30,7 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.server.auth.SamlService;
 import com.njydsz.userinfo.server.service.SamlIdpConfigService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * SAML 2.0 Service Provider 端点 Controller（P2-1 多租户 IdP 路由）。
@@ -104,10 +105,10 @@ public class SamlController {
   public void initiateSso(HttpServletResponse response) {
     try {
       String redirectUrl = samlService.buildAuthnRequestUrl();
-      log.info("SAML SSO 发起: redirectUrl={}", redirectUrl.substring(0, Math.min(100, redirectUrl.length())));
+      log.info(I18n.message("userinfo.SAML.SSO.发起.redirectUrl=", new Object[]{redirectUrl.substring(0, Math.min(100, redirectUrl.length()))}));
       response.sendRedirect(redirectUrl);
     } catch (Exception e) {
-      log.error("SAML SSO 发起失败", e);
+      log.error(I18n.message("userinfo.SAML.SSO.发起失败"), e);
       throw new BusinessException(UserInfoExceptionCode.SAML_SSO_INIT_FAILED);
     }
   }
@@ -171,12 +172,12 @@ public class SamlController {
     try {
       String decodedEntityId = URLDecoder.decode(idpEntityId, StandardCharsets.UTF_8);
       String redirectUrl = samlService.buildAuthnRequestUrlByEntityId(decodedEntityId);
-      log.info("多租户 SAML SSO 发起: idpEntityId={}", decodedEntityId);
+      log.info(I18n.message("userinfo.多租户.SAML.SSO.发起.idpEntityId=", new Object[]{decodedEntityId}));
       response.sendRedirect(redirectUrl);
     } catch (BusinessException e) {
       throw e;
     } catch (Exception e) {
-      log.error("多租户 SAML SSO 发起失败: idpEntityId={}", idpEntityId, e);
+      log.error(I18n.message("userinfo.多租户.SAML.SSO.发起失败.idpEntityId=", new Object[]{idpEntityId}), e);
       throw new BusinessException(UserInfoExceptionCode.SAML_SSO_INIT_FAILED);
     }
   }

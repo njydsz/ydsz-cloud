@@ -1,6 +1,7 @@
 package com.njydsz.message.server.producer;
 
-import lombok.RequiredArgsConstructor;
+
+import com.njydsz.common.locales.util.I18n;import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
@@ -164,16 +165,16 @@ public class MessageOutboxGateway implements EventPublishGateway {
         Class<?> eventClass = Class.forName(fqcn);
         return YdszJson.fromJson(payload, eventClass);
       } catch (ClassNotFoundException ex) {
-        log.warn("[MessageOutboxGateway] 无法反序列化事件: type={} err={}", eventType,
+        log.warn(I18n.message("message.log.other.MessageOutboxGateway_type_{}_err_{}.46cd99"), eventType,
             ex.getMessage());
         return null;
       } catch (Exception ex) {
-        log.warn("[MessageOutboxGateway] 事件 JSON 解析失败: type={} err={}", eventType,
+        log.warn(I18n.message("message.log.other.MessageOutboxGateway_JSON_type_{}_err_{}.2a6846"), eventType,
             ex.getMessage());
         return null;
       }
     } catch (Exception e) {
-      log.warn("[MessageOutboxGateway] 事件反序列化异常: type={} err={}", eventType,
+      log.warn(I18n.message("message.log.other.MessageOutboxGateway_type_{}_err_{}.983402"), eventType,
           e.getMessage());
       return null;
     }

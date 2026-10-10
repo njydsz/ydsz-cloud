@@ -5,6 +5,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 
 /**
@@ -48,7 +49,7 @@ public final class FlowSkipUtils {
       Object val = ext.get("sourceRef");
       return val == null ? null : String.valueOf(val);
     } catch (Exception e) {
-      log.warn("[Flow] 提取 sourceRef 失败, skipId={}, err={}", skip.getId(), e.getMessage());
+      log.warn(I18n.message("workflow.engine.skipUtils.extract.sourceRef.failed", new Object[]{skip.getId(), e.getMessage()}));
       return null;
     }
   }

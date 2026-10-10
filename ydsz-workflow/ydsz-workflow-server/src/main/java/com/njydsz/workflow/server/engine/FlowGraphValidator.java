@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.exception.WorkflowException;
@@ -84,7 +85,7 @@ public class FlowGraphValidator {
     // 7. 环路检测（仅记录日志，不拒绝）
     detectCycles(nodeMap.keySet(), edges.outEdges);
 
-    log.info("[Flow-Validate] 流程图校验通过: nodes={} skips={}", nodes.size(), edges.validSkipCount);
+    log.info(I18n.message("workflow.validate.passed", new Object[]{nodes.size(), edges.validSkipCount}));
   }
 
   /** 构建节点索引映射（nodeCode -> FlowNode），同时校验 nodeCode 非空且唯一。 */
@@ -164,7 +165,7 @@ public class FlowGraphValidator {
         String source = extractSourceRef(skip);
         String target = skip.getNextNodeCode();
         if (!StringUtils.hasText(source) || !StringUtils.hasText(target)) {
-          log.warn("[Flow-Validate] 跳转缺少 sourceRef 或 nextNodeCode: skip={}", skip.getSkipName());
+          log.warn(I18n.message("workflow.validate.skip.missing.ref", new Object[]{skip.getSkipName()}));
           continue;
         }
         if (!nodeMap.containsKey(source)) {
@@ -300,7 +301,7 @@ public class FlowGraphValidator {
         List<String> path = new ArrayList<>(nodeCodes.size());
         List<String> cyclePath = new ArrayList<>(nodeCodes.size());
         if (dfsCycle(node, edges, visited, inStack, path, cyclePath)) {
-          log.warn("[Flow-Validate] 检测到环路: {}", String.join(" → ", cyclePath));
+          log.warn(I18n.message("workflow.validate.cycle.detected", new Object[]{String.join(" → ", cyclePath)}));
         }
       }
     }

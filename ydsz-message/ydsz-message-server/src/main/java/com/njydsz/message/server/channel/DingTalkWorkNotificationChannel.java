@@ -1,6 +1,7 @@
 package com.njydsz.message.server.channel;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -125,19 +126,19 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
         Map<String, Object> body = YdszJson.parseMap(response.getBody());
         int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
         if (errcode == 0) {
-          log.info("[DINGTALK_WORK] 发送成功: receiver={}", receiver);
+          log.info(I18n.message("message.log.other.DINGTALK_WORK_receiver_{}.c565cf"), receiver);
           return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
         }
         String errmsg = (String) body.getOrDefault("errmsg", "unknown");
-        log.error("[DINGTALK_WORK] 发送失败: errcode={} errmsg={}", errcode, errmsg);
+        log.error(I18n.message("message.log.server.channel.dingtalk_work.error.send.failed.errcode"), errcode, errmsg);
         return MessageSendResultVO.fail(
             CHANNEL_TYPE, null, "errcode=" + errcode + ", errmsg=" + errmsg,
             "errcode=" + errcode + ", errmsg=" + errmsg, null);
       }
-      log.error("[DINGTALK_WORK] 发送失败: status={}", response.getStatusCode());
+      log.error(I18n.message("message.log.server.channel.dingtalk_work.error.send.failed.status"), response.getStatusCode());
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
-      log.error("[DINGTALK_WORK] 发送异常: reason={}", e.getMessage(), e);
+      log.error(I18n.message("message.log.server.channel.dingtalk_work.error.send.exception"), e.getMessage(), e);
       return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
@@ -169,7 +170,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
         if (errcode == 0) {
           String token = (String) body.get("access_token");
           redisStringOps.set(TOKEN_CACHE_KEY, token, TOKEN_TTL.minusSeconds(TOKEN_SAFETY_MARGIN_SECONDS));
-          log.info("[DINGTALK_WORK] 刷新 access_token 成功");
+          log.info(I18n.message("message.log.other.DINGTALK_WORK_access_token.167bb0"));
           return token;
         }
         log.error(
@@ -178,7 +179,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
             body.get("errmsg"));
       }
     } catch (Exception e) {
-      log.error("[DINGTALK_WORK] 获取 access_token 异常: {}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.DINGTALK_WORK_access_token_{}.ed07ff"), e.getMessage(), e);
     }
     return null;
   }

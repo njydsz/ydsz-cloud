@@ -11,6 +11,7 @@ import org.w3c.dom.NodeList;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
@@ -88,7 +89,7 @@ public class BpmnElementHelper {
           FlowNodeType.CC.getCode();
       default -> {
         // 防御性 fail-fast：isFlowNode 白名单外的元素不应到达此处
-        log.warn("[BpmnElementHelper] 未知 BPMN 节点元素，拒绝静默降级: {}", localName);
+        log.warn(I18n.message("workflow.bpmn.element.unknown.rejected", new Object[]{localName}));
         throw BusinessException.builder()
             .resultCode(WorkflowExceptionCode.UNSUPPORTED_BPMN_ELEMENT)
             .params(localName)
@@ -165,7 +166,7 @@ public class BpmnElementHelper {
           map.putAll(parsed);
         }
       } catch (Exception e) {
-        log.debug("[BpmnElementHelper] ext JSON 格式不匹配，跳过: nodeCode={}, ext={}", node.getNodeCode(), ext, e);
+        log.debug(I18n.message("workflow.bpmn.element.ext.format.mismatch", new Object[]{node.getNodeCode(), ext}));
       }
     }
     return map;

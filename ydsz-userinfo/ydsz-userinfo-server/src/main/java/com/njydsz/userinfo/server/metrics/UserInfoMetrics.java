@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * Userinfo module Micrometer metrics.
@@ -52,7 +53,7 @@ public class UserInfoMetrics extends SentryMetricsAdapter {
   public UserInfoMetrics(RedisStringOps redisStringOps) {
     super();
     this.redisStringOps = redisStringOps;
-    log.info("[UserInfoMetrics] Micrometer 指标初始化完成");
+    log.info(I18n.message("userinfo.UserInfoMetrics.Micrometer.指标初始化完成"));
   }
 
   /**

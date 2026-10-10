@@ -38,6 +38,7 @@ import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 import com.njydsz.userinfo.server.service.LoginAttemptContext;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 认证服务编排实现。
@@ -412,7 +413,7 @@ public class AuthServiceImpl implements AuthService {
     LocalDateTime loginTime = LocalDateTime.parse(loginTimeStr);
     sessionDuration = Duration.between(loginTime, LocalDateTime.now()).toMillis();
       } catch (Exception e) {
-        log.debug("解析 loginTime 失败，跳过会话时长统计: {}", loginTimeStr);
+        log.debug(I18n.message("userinfo.解析.loginTime.失败.跳过会话时长统计", new Object[]{loginTimeStr}));
       }
     }
     // revokeSession 返回吊销会话所属的 userId
@@ -423,7 +424,7 @@ public class AuthServiceImpl implements AuthService {
         username,
         loginIp,
         sessionDuration);
-    log.info("用户已注销，Token 已吊销: userId={}", userId);
+    log.info(I18n.message("userinfo.用户已注销.Token.已吊销.userId=", new Object[]{userId}));
   }
 
   /**

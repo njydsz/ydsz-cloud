@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import lombok.Data;
@@ -15,9 +13,8 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class InsightReportVO implements Serializable {
+public class InsightReportVO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 主键 ID */
   private String id;

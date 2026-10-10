@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
@@ -353,7 +354,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
     }
     List<String> taskIds = todos.stream().map(FlowRunTaskVO::getId).toList();
     taskService.batchPass(taskIds, userId, comment);
-    log.info("[Flow] 一键通过所有待办: userId={} count={}", userId, taskIds.size());
+    log.info(I18n.message("workflow.facade.batch.approve", new Object[]{userId, taskIds.size()}));
     return taskIds.size();
   }
 
@@ -812,8 +813,7 @@ public class YdszWorkflowFacade implements WorkflowFacade {
         }
       } catch (Exception e) {
         // coordinate 解析失败：跳过此节点
-        log.warn("[WorkflowFacade] coordinate 解析失败，跳过此节点: nodeCode={}, err={}",
-            n.getNodeCode(), e.getMessage());
+        log.warn(I18n.message("workflow.facade.coordinate.parse.failed", new Object[]{n.getNodeCode(), e.getMessage()}));
       }
     }
     return result;

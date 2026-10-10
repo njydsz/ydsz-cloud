@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.service.PermissionFallbackProvider;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.repository.ApiPermissionRepository;
 import com.njydsz.system.domain.vo.ApiPermissionVO;
 
@@ -44,14 +45,14 @@ public class SystemPermissionFallbackProvider implements PermissionFallbackProvi
 
     // 仅超级管理员返回全部 API 权限
     if (!SUPER_ADMIN_ROLES.contains(roleCode)) {
-      log.debug("[SystemPermissionFallbackProvider] 非超级管理员角色，跳过 DB 回退: roleCode={}", roleCode);
+      log.debug(I18n.message("system.fallback.non_super_admin", new Object[]{roleCode}));
       return Collections.emptySet();
     }
 
     try {
       List<ApiPermissionVO> permissions = apiPermissionRepository.listAllByTenant(tenantId);
       if (permissions == null || permissions.isEmpty()) {
-        log.warn("[SystemPermissionFallbackProvider] DB 中无已注册 API 权限: tenantId={}", tenantId);
+        log.warn(I18n.message("system.fallback.no_api_permission", new Object[]{tenantId}));
         return Collections.emptySet();
       }
       Set<String> apiCodes = new HashSet<>(permissions.size());
@@ -61,13 +62,12 @@ public class SystemPermissionFallbackProvider implements PermissionFallbackProvi
         }
       }
       log.info(
-          "[SystemPermissionFallbackProvider] DB 回退完成: roleCode={}, tenantId={}, apiCodeCount={}",
-          roleCode, tenantId, apiCodes.size());
+          I18n.message("system.fallback.completed", new Object[]{roleCode, tenantId, apiCodes.size()}));
       return apiCodes;
     } catch (Exception e) {
       log.error(
-          "[SystemPermissionFallbackProvider] DB 查询 API 权限失败: roleCode={}, tenantId={}, err={}",
-          roleCode, tenantId, e.getMessage(), e);
+          I18n.message("system.fallback.query_failed", new Object[]{roleCode, tenantId, e.getMessage()}),
+          e);
       return Collections.emptySet();
     }
   }

@@ -8,6 +8,7 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
@@ -96,7 +97,7 @@ public class FlowHealthIndicator extends AbstractModuleHealthIndicator {
             Long overdueCount = runTaskRepository.countOverdue();
             return "overdue: " + (overdueCount == null ? 0 : overdueCount);
           } catch (Exception e) {
-            log.debug("[FlowHealth] SLA 超期查询失败: {}", e.getMessage());
+        log.debug(I18n.message("workflow.health.sla.query.failed", new Object[]{e.getMessage()}));
             return "overdue: N/A";
           }
         });

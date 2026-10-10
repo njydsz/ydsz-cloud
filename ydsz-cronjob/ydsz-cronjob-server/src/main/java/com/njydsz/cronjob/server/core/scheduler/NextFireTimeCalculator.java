@@ -43,7 +43,7 @@ public class NextFireTimeCalculator {
   private long cacheTtlSeconds;
 
   /** 计算结果缓存（W-TinyLFU，write-through TTL = cacheTtlSeconds） */
-  private final Cache<String, LocalDateTime> cache = YdszCache.newBuilder()
+  private final Cache<String, LocalDateTime> cache = YdszCache.<String, LocalDateTime>newBuilder()
       .maximumSize(10_000)
       .expireAfterWrite(cacheTtlSeconds, TimeUnit.SECONDS)
       .build();

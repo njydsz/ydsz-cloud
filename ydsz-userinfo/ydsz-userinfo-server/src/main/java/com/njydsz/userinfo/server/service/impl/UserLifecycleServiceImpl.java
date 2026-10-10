@@ -12,6 +12,7 @@ import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.UserLifecycleService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户生命周期状态机服务实现（P2-3）。
@@ -78,7 +79,7 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
 
     UserAccountVO user = userAccountRepository.findById(userId)
         .orElseThrow(() -> {
-          log.warn("生命周期流转失败[用户不存在]: userId={}, target={}", userId, target);
+          log.warn(I18n.message("userinfo.生命周期流转失败.用户不存在.userId=.target=", new Object[]{userId, target}));
           return new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
         });
 
@@ -87,24 +88,24 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
 
     // 幂等：已经在目标状态，直接返回
     if (current == target) {
-      log.debug("生命周期流转幂等跳过: userId={}, status={}", userId, target);
+      log.debug(I18n.message("userinfo.生命周期流转幂等跳过.userId=.status=", new Object[]{userId, target}));
       return target;
     }
 
     // 校验流转合法性
     if (!current.canTransitTo(target)) {
-      log.warn("非法状态流转: userId={}, current={}, target={}", userId, current, target);
+      log.warn(I18n.message("userinfo.非法状态流转.userId=.current=.target=", new Object[]{userId, current, target}));
       throw new BusinessException(UserInfoExceptionCode.LIFECYCLE_TRANSITION_INVALID);
     }
 
     // 执行流转
     int affected = userAccountRepository.updateLifecycleStatus(userId, target);
     if (affected == 0) {
-      log.warn("生命周期流转失败[更新影响行数为 0]: userId={}, target={}", userId, target);
+      log.warn(I18n.message("userinfo.生命周期流转失败.更新影响行数为.0.userId=.target=", new Object[]{userId, target}));
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
 
-    log.info("生命周期流转成功: userId={}, {} → {}", userId, current, target);
+    log.info(I18n.message("userinfo.生命周期流转成功.userId=.→", new Object[]{userId, current, target}));
 
     // 发布领域事件（终态 RESIGNED 额外发布会话驱逐）
     eventPublisher.publishUserUpdated(user);

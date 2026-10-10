@@ -17,6 +17,7 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.server.cache.CacheKeyBuilder;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 敏感操作二次认证服务。
@@ -89,7 +90,7 @@ public class SensitiveVerifyService {
 
     UserAccountCredentialVO credential = credentialOpt.get();
     if (!passwordEncoder.matches(password, credential.getPassword())) {
-      log.warn("敏感操作二次认证密码错误: userId={}, level={}", userId, level);
+      log.warn(I18n.message("userinfo.敏感操作二次认证密码错误.userId=.level=", new Object[]{userId, level}));
       throw new BusinessException(UserInfoExceptionCode.SENSITIVE_VERIFY_PASSWORD_INCORRECT);
     }
 
@@ -97,7 +98,7 @@ public class SensitiveVerifyService {
     long ttlMinutes = level == SensitiveLevel.CRITICAL ? criticalVerifyTtlMinutes : verifyTtlMinutes;
     Duration ttl = Duration.ofMinutes(ttlMinutes);
     redisStringOps.set(key, VERIFIED_VALUE, ttl);
-    log.info("敏感操作二次认证通过: userId={}, level={}", userId, level);
+    log.info(I18n.message("userinfo.敏感操作二次认证通过.userId=.level=", new Object[]{userId, level}));
   }
 
   /**
@@ -115,7 +116,7 @@ public class SensitiveVerifyService {
       String value = redisStringOps.get(key, String.class);
       return VERIFIED_VALUE.equals(value);
     } catch (Exception e) {
-      log.warn("读取敏感操作验证标记异常: userId={}, error={}", userId, e.getMessage());
+      log.warn(I18n.message("userinfo.读取敏感操作验证标记异常.userId=.error=", new Object[]{userId, e.getMessage()}));
       return false;
     }
   }
@@ -131,9 +132,9 @@ public class SensitiveVerifyService {
     String key = buildKey(userId);
     try {
       redisStringOps.del(key);
-      log.debug("敏感操作验证标记已清除: userId={}", userId);
+      log.debug(I18n.message("userinfo.敏感操作验证标记已清除.userId=", new Object[]{userId}));
     } catch (Exception e) {
-      log.warn("清除敏感操作验证标记异常: userId={}, error={}", userId, e.getMessage());
+      log.warn(I18n.message("userinfo.清除敏感操作验证标记异常.userId=.error=", new Object[]{userId, e.getMessage()}));
     }
   }
 

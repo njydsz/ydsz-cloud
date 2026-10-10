@@ -1,0 +1,5 @@
+com.njydsz.message.server.config.MessageAutoConfiguration
+com.njydsz.message.server.config.MessageServiceAutoConfiguration
+com.njydsz.message.server.config.NotifyChannelBridgeConfiguration
+com.njydsz.message.server.config.ChannelBulkheadConfiguration
+com.njydsz.message.server.config.BatchExecutorConfig

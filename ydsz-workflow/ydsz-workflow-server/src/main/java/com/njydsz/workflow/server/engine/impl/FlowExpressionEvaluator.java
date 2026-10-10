@@ -5,6 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.locales.util.I18n;
 import org.springframework.stereotype.Component;
 
 /**
@@ -65,7 +66,7 @@ public class FlowExpressionEvaluator {
     try {
       return evaluateOr(expr, variables);
     } catch (Exception e) {
-      log.error("[FlowExpressionEvaluator] 条件解析异常: expr={} err={}", condition, e.getMessage());
+      log.error(I18n.message("workflow.expr.condition.parse.error", new Object[]{condition, e.getMessage()}));
       return false;
     }
   }
@@ -193,7 +194,7 @@ public class FlowExpressionEvaluator {
     if ("false".equalsIgnoreCase(resolved)) {
       return false;
     }
-    log.warn("[FlowExpressionEvaluator] 条件表达式无法识别: expr={} resolved={}", expr, resolved);
+    log.warn(I18n.message("workflow.expr.condition.unrecognized", new Object[]{expr, resolved}));
     return false;
   }
 

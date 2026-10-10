@@ -78,7 +78,7 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
     this.channelRouter = channelRouter;
     IMessageQueue queue = provider.createMessageQueue(QueueType.ROCKET);
     this.publisher = queue.createPublisher(YdszMessageTopics.TOPIC_MESSAGE);
-    log.info("[CommonQueueMQ] 使用 common-queue 抽象发送消息, topic={}", YdszMessageTopics.TOPIC_MESSAGE);
+    log.info(I18n.message("message.log.other.CommonQueueMQ_common_queue_topic_{}.d46e7f"), YdszMessageTopics.TOPIC_MESSAGE);
   }
 
   @Override
@@ -107,7 +107,7 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
     if (req == null) {
       throw BusinessException.builder().key("message.request.required").build();
     }
-    log.info("[CommonQueueMQ] asyncSend 开始: messageId={} channel={}", req.getMessageId(), req.getChannel());
+    log.info(I18n.message("message.log.other.CommonQueueMQ_asyncSend_messageId_{}_channel_{}.1c8573"), req.getMessageId(), req.getChannel());
     syncSend(req);
   }
 
@@ -118,10 +118,10 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
     }
     String reason = validateRequest(req);
     if (reason != null) {
-      log.warn("[CommonQueueMQ] 事务消息校验失败，拒绝发送: messageId={} reason={}", req.getMessageId(), reason);
+      log.warn(I18n.message("message.log.other.CommonQueueMQ_messageId_{}_reason_{}.f350bf"), req.getMessageId(), reason);
       throw BusinessException.builder().key("message.rocketmq.transaction.failed").build();
     }
-    log.info("[CommonQueueMQ] 事务消息校验通过，执行同步发送: messageId={} channel={} template={}",
+    log.info(I18n.message("message.log.other.CommonQueueMQ_messageId_{}_channel_{}_template_{}.28d123"),
         req.getMessageId(), req.getChannel(), req.getTemplateCode());
     return syncSend(req);
   }

@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -65,7 +66,7 @@ public class RetryScanner {
     try {
       doScan();
     } catch (Exception e) {
-      log.error("[RetryScanner] 扫描异常: {}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.RetryScanner_{}.a568ba"), e.getMessage(), e);
     }
   }
 
@@ -79,7 +80,7 @@ public class RetryScanner {
     if (due.isEmpty()) {
       return;
     }
-    log.info("[RetryScanner] 待重试消息 {} 条", due.size());
+    log.info(I18n.message("message.log.other.RetryScanner_{}.c60175"), due.size());
     int success = 0;
     int dead = 0;
     int retryAgain = 0;
@@ -94,7 +95,7 @@ public class RetryScanner {
           retryAgain++;
         }
       } catch (Exception e) {
-        log.error("[RetryScanner] 重试异常: logId={} err={}", logDO.getId(), e.getMessage(), e);
+        log.error(I18n.message("message.log.other.RetryScanner_logId_{}_err_{}.7869bf"), logDO.getId(), e.getMessage(), e);
         retryAgain++;
       }
     }
@@ -139,7 +140,7 @@ public class RetryScanner {
           logDO.setStatus(MessageStatusEnum.DEAD.name());
           msgLogRepository.update(logDO);
           messageMetrics.recordDead(logDO.getChannel());
-          log.warn("[RetryScanner] 重试耗尽转死信: logId={} retryCount={}", logDO.getId(), newRetryCount);
+          log.warn(I18n.message("message.log.other.RetryScanner_logId_{}_retryCount_{}.66f38d"), logDO.getId(), newRetryCount);
           return MessageStatusEnum.DEAD;
         }
         // 继续重试,指数退避（P1-7: 策略可配）

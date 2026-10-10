@@ -1,0 +1,197 @@
+package com.njydsz.message.server.consumer;
+
+import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
+import org.apache.rocketmq.spring.core.RocketMQListener;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.queue.service.DeadLetterQueueService;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
+import com.njydsz.common.util.string.StringUtils;
+import com.njydsz.common.queue.constant.YdszMessageTopics;
+import com.njydsz.common.queue.trace.MessageTracer;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.enums.core.MessageStatusEnum;
+import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.server.metric.MessageMetrics;
+
+/**
+ * RocketMQ 死信队列消费者，处理重试耗尽的消息并持久化到日志表。
+ *
+ * <p>监听 {@link YdszMessageTopics#DLQ_MESSAGE} Topic，将 maxReconsumeTimes 耗尽的消息
+ * 落库标记为 DEAD 状态。幂等策略：通过 Redis SET NX EX（前缀 ydsz:msg:dlq:idempotent:）
+ * 防止 rebalance 重投导致重复处理；落库时优先按 bizMsgId 更新已有记录状态为 DEAD，
+ * 避免产生重复 msgId 记录。
+ *
+ * @author ydsz
+ * @since 26.09.24
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+@ConditionalOnClass(name = "org.apache.rocketmq.spring.annotation.RocketMQMessageListener")
+@ConditionalOnProperty(
+    prefix = "rocketmq.consumer",
+    name = "enabled",
+    havingValue = "true",
+    matchIfMissing = false)
+@RocketMQMessageListener(
+    topic = YdszMessageTopics.DLQ_MESSAGE,
+    consumerGroup = YdszMessageTopics.GROUP_DLQ_MESSAGE,
+    selectorExpression = "*",
+    maxReconsumeTimes = 1)
+public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
+  /** 内容日志截断长度 */
+  private static final int BODY_LOG_MAX_LENGTH = 500;
+
+
+  /** DLQ 幂等锁前缀 */
+  private static final String DLQ_IDEMPOTENT_PREFIX = "ydsz:msg:dlq:idempotent:";
+
+  /** DLQ 幂等锁 TTL(1 小时,DLQ maxReconsumeTimes=1 重投概率低) */
+  private static final long DLQ_IDEMPOTENT_TTL_SECONDS = 3600L;
+
+  private final MsgLogRepository msgLogRepository;
+  private final MessageMetrics messageMetrics;
+  private final IdempotentStrategy idempotentStrategy;
+  /** P1-4: common-queue 死信队列服务（NoOp 实现兜底，无 Redis 时安全降级）*/
+  private final DeadLetterQueueService deadLetterQueueService;
+
+  @Override
+  public void onMessage(MessageExt messageExt) {
+    if (messageExt == null) {
+      log.warn("[MessageDlqConsumer] 收到 null 消息,跳过");
+      return;
+    }
+    String msgId = messageExt.getMsgId();
+    int reconsumeTimes = messageExt.getReconsumeTimes();
+    String body = new String(messageExt.getBody() == null ? new byte[0] : messageExt.getBody());
+    String originTopic = messageExt.getTopic();
+
+    // Redis SET NX EX 幂等去重:防止 rebalance 重投导致重复处理
+    String idempotentKey = DLQ_IDEMPOTENT_PREFIX + msgId;
+    String dlqToken = idempotentStrategy.acquire(idempotentKey, DLQ_IDEMPOTENT_TTL_SECONDS * 1000L);
+    if (dlqToken == null) {
+      log.info("[MessageDlqConsumer] 重复死信已跳过: msgId={}", msgId);
+      return;
+    }
+
+    // P1-3: 死信处理进入追踪上下文（无原始 traceId 时自动生成）
+    try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(null)) {
+      MessageItemRequestDTO request = null;
+      try {
+        request = YdszJson.fromJson(body, MessageItemRequestDTO.class);
+      } catch (Exception e) {
+        log.error("[MessageDlqConsumer] 死信消息体解析失败: msgId={} err={}", msgId, e.getMessage(), e);
+      }
+
+      try {
+        String errorMessage =
+            String.format(
+                "DLQ: msgId=%s, originTopic=%s, reconsumeTimes=%d",
+                msgId, originTopic, reconsumeTimes);
+
+        // 优先按 request.msgId 更新已有记录状态为 DEAD
+        String bizMsgId = request != null ? request.getMessageId() : null;
+        if (bizMsgId != null && !bizMsgId.isBlank()) {
+          MsgLogVO existingVO = findByMsgId(bizMsgId);
+          if (existingVO != null) {
+            existingVO.setStatus(MessageStatusEnum.DEAD.name());
+            existingVO.setErrorMessage(errorMessage);
+            existingVO.setReconsumeTimes(reconsumeTimes);
+            msgLogRepository.update(existingVO);
+            log.info("[MessageDlqConsumer] 已更新现有记录为 DEAD: msgId={}", bizMsgId);
+            messageMetrics.recordDead(request != null ? request.getChannel() : "UNKNOWN");
+            // P1-4: 注册死信到 common-queue DLQ 跟踪存储（Redis Hash），统一可观测
+            registerDeadLetterToQueue(originTopic, msgId, body, errorMessage);
+            return;
+          }
+        }
+
+        // 未匹配到已有记录,insert 新的 DEAD 记录
+        MsgLogVO logVO = new MsgLogVO();
+        if (request != null) {
+          logVO.setChannel(request.getChannel());
+          logVO.setBizType(request.getBizType());
+          logVO.setBizId(request.getBizId());
+          logVO.setReceiver(request.getReceiver());
+          logVO.setTemplateCode(request.getTemplateCode());
+          logVO.setContent(request.getContent());
+          logVO.setMsgId(bizMsgId);
+        } else {
+          logVO.setChannel("UNKNOWN");
+          logVO.setReceiver("UNKNOWN");
+          logVO.setContent(body.length() > BODY_LOG_MAX_LENGTH ? StringUtils.truncate(body, BODY_LOG_MAX_LENGTH) + "..." : body);
+        }
+        logVO.setStatus(MessageStatusEnum.DEAD.name());
+        logVO.setErrorMessage(errorMessage);
+        logVO.setTopic(originTopic);
+        logVO.setReconsumeTimes(reconsumeTimes);
+        logVO.setTenantId(AuthContextUtils.getTenantIdOrDefault("1"));
+        msgLogRepository.save(logVO);
+        messageMetrics.recordDead(logVO.getChannel());
+        // P1-4: 注册死信到 common-queue DLQ 跟踪存储（Redis Hash），统一可观测
+        registerDeadLetterToQueue(originTopic, msgId, body, errorMessage);
+      } catch (Exception e) {
+        log.error("[MessageDlqConsumer] 死信落库失败: msgId={} err={}", msgId, e.getMessage(), e);
+      }
+
+      log.error(
+          "[MessageDlqConsumer] 死信已落库: msgId={} originTopic={} reconsumeTimes={} bizType={} bizId={} receiver={}",
+          msgId,
+          originTopic,
+          reconsumeTimes,
+          request == null ? null : request.getBizType(),
+          request == null ? null : request.getBizId(),
+          request == null ? null : request.getReceiver());
+    }
+  }
+
+  /** P1-4: 注册死信到 common-queue DLQ 跟踪存储。
+   *
+   * <p>调用 {@link DeadLetterQueueService#sendToDeadLetter} 将死信元数据写入 Redis Hash 结构。
+   * 若 common-queue 未启用或 Redis 不可用时自动降级为 NoOp 实现（无操作），不阻塞主流程。
+   *
+   * @param topic 原始 Topic 名称
+   * @param messageId RocketMQ 消息 ID
+   * @param messageBody 消息体
+   * @param failureReason 失败原因描述
+   */
+  private void registerDeadLetterToQueue(
+      String topic, String messageId, String messageBody, String failureReason) {
+    try {
+      deadLetterQueueService.sendToDeadLetter(topic, messageId, messageBody, failureReason);
+      log.info("[MessageDlqConsumer] 死信已注册到 common-queue DLQ: topic={} msgId={}", topic, messageId);
+    } catch (Exception e) {
+      // DLQ 注册为辅助观测链路，禁止影响主流程
+      log.warn("[MessageDlqConsumer] 注册死信到 common-queue 失败,不影响主流程: msgId={} err={}",
+          messageId, e.getMessage());
+    }
+  }
+
+  /**
+   * 按 msgId 精确查找消息日志 VO。
+   *
+   * @param msgId 消息 ID（业务 ID）
+   * @return 消息日志 VO，未找到返回 null
+   */
+  private MsgLogVO findByMsgId(String msgId) {
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setMsgId(msgId);
+    query.setPageNum(1);
+    query.setPageSize(1);
+    Optional<MsgLogVO> result = msgLogRepository.findOne(query);
+    return result.orElse(null);
+  }
+}
+

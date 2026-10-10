@@ -16,6 +16,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.vo.JwksEndpointVO;
 import com.njydsz.userinfo.domain.vo.OidcDiscoveryEndpointVO;
 import com.njydsz.userinfo.server.config.OidcProperties;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * OIDC（OpenID Connect）协议端点 Controller
@@ -99,7 +100,7 @@ public class OidcController {
             OidcDiscoveryEndpointVO.ALG_HS256),
         List.of(
             "sub", "preferred_username", "tenant_id", "email", "name", "iss", "aud", "exp", "iat"));
-    log.debug("OIDC Discovery 请求: issuer={}", oidcProperties.getIssuer());
+    log.debug(I18n.message("userinfo.OIDC.Discovery.请求.issuer=", new Object[]{oidcProperties.getIssuer()}));
     return ResponseEntity.ok(metadata);
   }
 

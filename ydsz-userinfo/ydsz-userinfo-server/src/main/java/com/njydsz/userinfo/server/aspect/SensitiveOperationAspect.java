@@ -11,6 +11,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.annotation.SensitiveOperation;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -58,10 +59,10 @@ public class SensitiveOperationAspect {
     SensitiveLevel level = annotation.level();
 
     if (!sensitiveVerifyService.isVerified()) {
-      log.warn("敏感操作被拒绝（未通过二次认证）: operation={}, level={}", operationDesc, level);
+      log.warn(I18n.message("userinfo.sensitive.operation.rejected", new Object[]{operationDesc, level}));
       throw new BusinessException(UserInfoExceptionCode.SENSITIVE_VERIFY_REQUIRED);
     }
 
-    log.info("敏感操作二次认证通过: operation={}, level={}", operationDesc, level);
+    log.info(I18n.message("userinfo.sensitive.operation.verified", new Object[]{operationDesc, level}));
   }
 }

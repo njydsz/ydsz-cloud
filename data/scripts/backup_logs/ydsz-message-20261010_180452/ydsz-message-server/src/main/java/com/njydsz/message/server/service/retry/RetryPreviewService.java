@@ -1,0 +1,117 @@
+package com.njydsz.message.server.service.retry;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.njydsz.common.util.date.DateUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+/**
+ * 重试策略预览服务（P3-2: 交互式预览）。
+ *
+ * <p>提供重试计划的可视化预览能力：给定预设档位，生成完整的时间线（每次重试的预计触发时刻与退避时长），
+ * 帮助用户在配置前直观理解重试行为。
+ *
+ * <p>使用方式：
+ *
+ * <ul>
+ *   <li>API: {@code GET /api/message/retry-preview?preset=standard} 获取指定预设的重试时间表
+ *   <li>API: {@code GET /api/message/retry-preview/all} 获取所有预设的对比视图
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ */
+@Slf4j
+@Service
+public class RetryPreviewService {
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
+  /** 每毫秒纳秒数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
+
+  /**
+   * 生成指定预设的重试时间线预览。
+   *
+   * <p>返回每次重试的详细信息：重试序号、距离上次失败的间隔、预计触发时刻、累计等待时间。
+   *
+   * @param presetCode 预设档位标识
+   * @return 预览结果（含预设元信息 + 时间线条目）
+   */
+  public Map<String, Object> previewRetrySchedule(String presetCode) {
+    RetryPreset preset = RetryPreset.fromCode(presetCode);
+    return previewRetrySchedule(preset);
+  }
+
+  /**
+   * 生成所有预设档位的对比预览。
+   *
+   * @return 每个预设对应的时间线
+   */
+  public Map<String, Map<String, Object>> previewAllPresets() {
+    Map<String, Map<String, Object>> result = new HashMap<>(COLLECTION_CAPACITY);
+    for (RetryPreset preset : RetryPreset.values()) {
+      result.put(preset.getCode(), previewRetrySchedule(preset));
+    }
+    return result;
+  }
+
+  private Map<String, Object> previewRetrySchedule(RetryPreset preset) {
+    Map<String, Object> preview = new HashMap<>(COLLECTION_CAPACITY);
+    preview.put("preset", preset.getCode());
+    preview.put("displayName", preset.getDisplayName());
+    preview.put("maxRetryCount", preset.getMaxRetryCount());
+    preview.put("baseBackoffMs", preset.getBaseBackoffMs());
+    preview.put("backoffMultiplier", preset.getBackoffMultiplier());
+    preview.put("maxBackoffMs", preset.getMaxBackoffMs());
+
+    List<Map<String, Object>> timeline = new ArrayList<>(COLLECTION_CAPACITY);
+    long cumulativeMs = 0L;
+    LocalDateTime baseTime = LocalDateTime.now();
+
+    for (int retry = 0; retry < preset.getMaxRetryCount(); retry++) {
+      long backoffMs = calcBackoffMs(retry, preset);
+      cumulativeMs += backoffMs;
+      LocalDateTime triggerAt = baseTime.plusNanos(backoffMs * NANOS_PER_MILLI);
+
+      Map<String, Object> entry = new HashMap<>(COLLECTION_CAPACITY);
+      entry.put("retryIndex", retry + 1); // 第 N 次重试（从 1 开始）
+      entry.put("backoffMs", backoffMs);
+      entry.put("backoffSeconds", String.format("%.1f", backoffMs / 1000.0));
+      entry.put("cumulativeMs", cumulativeMs);
+      entry.put("cumulativeSeconds", String.format("%.1f", cumulativeMs / 1000.0));
+      entry.put("triggerAt", DateUtils.formatNow("HH:mm:ss.SSS"));
+      timeline.add(entry);
+    }
+
+    preview.put("timeline", timeline);
+    preview.put("totalRetries", preset.getMaxRetryCount());
+    preview.put("totalDurationMs", cumulativeMs);
+    preview.put("totalDurationSeconds", String.format("%.1f", cumulativeMs / 1000.0));
+    preview.put("generatedAt", DateUtils.formatNow("HH:mm:ss.SSS"));
+    return preview;
+  }
+
+  /**
+   * 计算第 N 次重试的退避时间（毫秒）。
+   *
+   * <p>公式：{@code min(baseBackoffMs * backoffMultiplier^retryIndex, maxBackoffMs)}
+   *
+   * @param retryIndex 重试序号（从 0 开始）
+   * @param preset 重试预设档位配置
+   * @return 本次重试的退避毫秒数
+   */
+  private long calcBackoffMs(int retryIndex, RetryPreset preset) {
+    if (preset.getMaxRetryCount() == 0) {
+      return 0L;
+    }
+    double raw = preset.getBaseBackoffMs() * Math.pow(preset.getBackoffMultiplier(), retryIndex);
+    return Math.min((long) raw, preset.getMaxBackoffMs());
+  }
+}

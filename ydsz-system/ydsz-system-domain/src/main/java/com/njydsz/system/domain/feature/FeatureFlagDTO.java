@@ -19,17 +19,17 @@ public class FeatureFlagDTO {
   private String id;
 
   /** 开关键（全局唯一，必填，正则开头字母+数字/下划线/点） */
-  @NotBlank(message = "开关键不能为空")
+  @NotBlank(message = "{system.dto.featureFlag.flagKey.required}")
   @Pattern(regexp = "^[A-Z][A-Z0-9_.]{2,63}$",
-      message = "开关键需大写字母开头，仅含数字、下划线、点，长度 3-64")
+      message = "{system.dto.featureFlag.flagKey.pattern}")
   private String flagKey;
 
   /** 开关名称 */
-  @NotBlank(message = "开关名称不能为空")
+  @NotBlank(message = "{system.dto.featureFlag.flagName.required}")
   private String flagName;
 
   /** 开关类型: BOOLEAN / STRING / JSON */
-  @NotBlank(message = "开关类型不能为空")
+  @NotBlank(message = "{system.dto.featureFlag.flagType.required}")
   private String flagType;
 
   /** 默认值 */
@@ -42,6 +42,6 @@ public class FeatureFlagDTO {
   private String description;
 
   /** 启用状态: ENABLED / DISABLED */
-  @Pattern(regexp = "^(ENABLED|DISABLED)$", message = "状态值必须为 ENABLED 或 DISABLED")
+  @Pattern(regexp = "^(ENABLED|DISABLED)$", message = "{system.dto.featureFlag.status.pattern}")
   private String status;
 }

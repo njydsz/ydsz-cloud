@@ -1,6 +1,7 @@
 package com.njydsz.message.server.config;
 
-import io.micrometer.core.instrument.MeterRegistry;
+
+import com.njydsz.common.locales.util.I18n;import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -110,17 +111,17 @@ public class MessageAutoConfiguration {
     return args -> {
       ChannelProperties.WebhookConfig webhook = channelProperties.getWebhook();
       if (!StringUtils.hasText(webhook.getDefaultUrl())) {
-        log.warn("[Message] ydsz.webhook.default-url 未配置，Webhook 通道仅支持显式 URL 发送");
+        log.warn(I18n.message("message.log.other.Message_ydsz_webhook_default_url_Webhook_URL.dc63a6"));
       }
       ChannelProperties.FeishuConfig feishu = channelProperties.getChannel().getFeishu();
       if (!StringUtils.hasText(feishu.getDefaultHook())) {
-        log.warn("[Message] ydsz.channel.feishu.default-hook 未配置，飞书通道仅支持显式 hook 发送");
+        log.warn(I18n.message("message.log.other.Message_ydsz_channel_feishu_default_hook_hook.b2013a"));
       }
       if (!StringUtils.hasText(channelProperties.getChannel().getDingtalk().getDefaultToken())) {
-        log.warn("[Message] ydsz.channel.dingtalk.default-token 未配置，钉钉通道仅支持显式 token 发送");
+        log.warn(I18n.message("message.log.other.Message_ydsz_channel_dingtalk_default_token_token.09dc20"));
       }
       if (!StringUtils.hasText(channelProperties.getChannel().getWechatWork().getDefaultKey())) {
-        log.warn("[Message] ydsz.channel.wechat-work.default-key 未配置，企业微信群机器人仅支持显式 key 发送");
+        log.warn(I18n.message("message.log.other.Message_ydsz_channel_wechat_work_default_key_key.6cfa1f"));
       }
     };
   }

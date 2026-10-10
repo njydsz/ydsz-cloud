@@ -1,0 +1,250 @@
+package com.njydsz.message.server.service.impl.receipt;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.message.domain.dto.MessageLogQueryDTO;
+import com.njydsz.message.domain.dto.NotificationQueryDTO;
+import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
+import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
+import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.repository.MsgNotificationRepository;
+import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.server.realtime.RealtimePushService;
+import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
+
+/**
+ * 已读状态同步服务实现。
+ *
+ * <p>将 IM 渠道（企业微信/钉钉/飞书）的已读回执同步至消息中心状态，
+ *
+ * <p>供 {@code MsgLog.receiptStatus} 字段实时更新。
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
+
+  /** 消息日志 Repository */
+  private final MsgLogRepository msgLogRepository;
+
+  /** 站内通知 Repository */
+  private final MsgNotificationRepository msgNotificationRepository;
+
+  /** 实时推送服务（已读状态变更通知） */
+  private final RealtimePushService realtimePushService;
+
+  /**
+   * 标记单条消息已读。
+   *
+   * <p>事务内更新 {@code MsgLog.receipt_status} 为 READ（仅当状态非 READ 时才更新，保证幂等）， 并记录回执时间与实时推送已读事件。参数缺失抛出
+   * {@code SysException}(BAD_REQUEST)。
+   *
+   * @param msgId 消息 ID
+   * @param userId 用户 ID（须与消息接收人一致）
+   * @return true 表示状态发生变更（即本次真正标记已读）
+   * @throws com.njydsz.common.exception.custom.SysException msgId 或 userId 为空时
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public boolean markRead(String msgId, String userId) {
+    if (!StringUtils.hasText(msgId) || !StringUtils.hasText(userId)) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("消息 ID 和用户 ID 不能为空")
+          .build();
+    }
+    // 查找消息日志
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setMsgId(msgId);
+    query.setReceiver(userId);
+    query.setPageNum(1);
+    query.setPageSize(1);
+    MsgLogVO vo = msgLogRepository.findOne(query).orElse(null);
+    if (vo == null || ReceiptStatusEnum.READ.name().equals(vo.getReceiptStatus())) {
+      return false;
+    }
+    vo.setReceiptStatus(ReceiptStatusEnum.READ.name());
+    vo.setReceiptAt(LocalDateTime.now());
+    msgLogRepository.update(vo);
+
+    // 推送已读状态变更到前端
+    realtimePushService.pushToUser(
+        userId,
+        "MESSAGE_READ",
+        Map.of("msgId", msgId, "status", "READ", "timestamp", System.currentTimeMillis()));
+    log.info("[ReadStatus] 消息已读: msgId={} user={}", msgId, userId);
+    return true;
+  }
+
+  /**
+   * 批量标记消息已读。
+   *
+   * <p>事务内通过单次 {@code msg_id IN (...)} 批量查询所有目标日志（消除 N+1）， 仅对状态非 READ 的记录置为 READ 并记录回执时间；
+   * 完成后推送 {@code MESSAGE_READ_BATCH} 事件。空列表或 userId 缺失返回 0，不抛异常。
+   *
+   * @param msgIds 消息 ID 列表
+   * @param userId 用户 ID
+   * @return 实际更新的消息条数
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public int markReadBatch(List<String> msgIds, String userId) {
+    if (msgIds == null || msgIds.isEmpty() || !StringUtils.hasText(userId)) {
+      return 0;
+    }
+    // 批量查询所有消息日志（消除循环内逐条查询的 N+1 问题）
+    List<MsgLogVO> voList = msgLogRepository.findByMsgIds(msgIds, userId);
+    int updated = 0;
+    for (MsgLogVO vo : voList) {
+      if (!ReceiptStatusEnum.READ.name().equals(vo.getReceiptStatus())) {
+        vo.setReceiptStatus(ReceiptStatusEnum.READ.name());
+        vo.setReceiptAt(LocalDateTime.now());
+        msgLogRepository.update(vo);
+        updated++;
+      }
+    }
+    if (updated > 0) {
+      // 推送批量已读状态到前端
+      realtimePushService.pushToUser(
+          userId,
+          "MESSAGE_READ_BATCH",
+          Map.of("msgIds", msgIds, "count", updated, "timestamp", System.currentTimeMillis()));
+      log.info("[ReadStatus] 批量消息已读: user={} count={}", userId, updated);
+    }
+    return updated;
+  }
+
+  /**
+   * 标记单条站内通知已读。
+   *
+   * <p>事务内将 {@code MsgNotification.readStatus} 由 0 置 1（条件更新，幂等），记录已读时间并推送事件。
+   *
+   * @param notificationId 通知 ID
+   * @param userId 用户 ID
+   * @return true 表示状态发生变更
+   * @throws com.njydsz.common.exception.custom.SysException notificationId 或 userId 为空时
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public boolean markNotificationRead(String notificationId, String userId) {
+    if (!StringUtils.hasText(notificationId) || !StringUtils.hasText(userId)) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message("通知 ID 和用户 ID 不能为空")
+          .build();
+    }
+    int updated = msgNotificationRepository.markRead(notificationId, userId);
+
+    if (updated > 0) {
+      realtimePushService.pushToUser(
+          userId, "NOTIFICATION_READ", Map.of("notificationId", notificationId, "status", "READ"));
+      log.info("[ReadStatus] 通知已读: id={} user={}", notificationId, userId);
+    }
+    return updated > 0;
+  }
+
+  /**
+   * 标记用户全部站内通知已读（可按业务类型过滤）。
+   *
+   * <p>仅更新 {@code readStatus=0 且 recallStatus='NONE'} 的通知，避免把已撤回通知标记为已读； 更新后推送 {@code
+   * NOTIFICATION_READ_ALL} 事件。userId 为空返回 0。
+   *
+   * @param userId 用户 ID
+   * @param bizType 业务类型（可选，为空表示全部业务）
+   * @return 实际更新的通知条数
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public int markAllNotificationsRead(String userId, String bizType) {
+    if (!StringUtils.hasText(userId)) {
+      return 0;
+    }
+    int updated = msgNotificationRepository.markAllReadByBizType(userId, bizType);
+    if (updated > 0) {
+      realtimePushService.pushToUser(
+          userId,
+          "NOTIFICATION_READ_ALL",
+          Map.of("count", updated, "bizType", bizType == null ? "ALL" : bizType));
+      log.info("[ReadStatus] 全部通知已读: user={} bizType={} count={}", userId, bizType, updated);
+    }
+    return updated;
+  }
+
+  /**
+   * 查询用户站内未读通知总数。
+   *
+   * <p>统计 {@code readStatus=0 且 recallStatus='NONE'} 的通知数量；userId 为空返回 0，查询结果 null 视为 0。
+   *
+   * @param userId 用户 ID
+   * @return 未读通知数（>=0）
+   */
+  @Override
+  public long getUnreadCount(String userId) {
+    if (!StringUtils.hasText(userId)) {
+      return 0;
+    }
+    // 站内通知未读数
+    NotificationQueryDTO query = new NotificationQueryDTO();
+    query.setReceiverId(userId);
+    query.setReadStatus(ReadStatusEnum.UNREAD);
+    query.setRecallStatus("NONE");
+    return msgNotificationRepository.count(query);
+  }
+
+  /**
+   * 按通道查询用户未读数。
+   *
+   * <p>站内信（INAPP）走通知表统计；其他通道按 {@code MsgLog} 中 {@code receipt_status != READ 且 status != FAILED}
+   * 统计。 channel 为空时退化为 {@link #getUnreadCount}。
+   *
+   * @param userId 用户 ID
+   * @param channel 通道编码（如 SMS/EMAIL/INAPP）
+   * @return 该通道未读消息数（>=0）
+   */
+  @Override
+  public long getUnreadCountByChannel(String userId, String channel) {
+    if (!StringUtils.hasText(userId)) {
+      return 0;
+    }
+    if (!StringUtils.hasText(channel)) {
+      return getUnreadCount(userId);
+    }
+    // 站内通知按通道查询（站内信通道）
+    if ("INAPP".equalsIgnoreCase(channel)) {
+      return getUnreadCount(userId);
+    }
+    // 其他通道按消息日志查询 receipt_status != READ 且 status != FAILED
+    // 由于 DTO 不支持 ne 条件，先查总数再减去已读和失败的
+    MessageLogQueryDTO totalQuery = new MessageLogQueryDTO();
+    totalQuery.setReceiver(userId);
+    totalQuery.setChannel(channel.toUpperCase());
+    long total = msgLogRepository.count(totalQuery);
+
+    MessageLogQueryDTO readQuery = new MessageLogQueryDTO();
+    readQuery.setReceiver(userId);
+    readQuery.setChannel(channel.toUpperCase());
+    readQuery.setReceiptStatus(ReceiptStatusEnum.READ.name());
+    long readCount = msgLogRepository.count(readQuery);
+
+    MessageLogQueryDTO failedQuery = new MessageLogQueryDTO();
+    failedQuery.setReceiver(userId);
+    failedQuery.setChannel(channel.toUpperCase());
+    failedQuery.setStatus("FAILED");
+    long failedCount = msgLogRepository.count(failedQuery);
+
+    return Math.max(0, total - readCount - failedCount);
+  }
+}

@@ -26,6 +26,7 @@ import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.service.UnifiedSearchService;
 import com.njydsz.userinfo.domain.dto.UserSearchQuery;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户搜索 Controller
@@ -160,7 +161,7 @@ public class UserinfoSearchController {
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId) {
 
     unifiedSearchService.clearCache();
-    log.info("[UserinfoSearch] 索引缓存已清除, userId={}", userId);
+    log.info(I18n.message("userinfo.UserinfoSearch.索引缓存已清除.userId=", new Object[]{userId}));
     return YdszResponse.success();
   }
 }

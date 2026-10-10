@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.chain;
 
-import java.util.Comparator;
+
+import com.njydsz.common.locales.util.I18n;import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -80,17 +81,17 @@ public class SendPipelineFacade {
    */
   public SendContext execute(MessageItemRequestDTO request, SendContext ctx, PipelineTemplate template) {
     if (!templateEnabled) {
-      log.debug("[PipelineFacade] 模板功能已关闭,回退全量管线");
+      log.debug(I18n.message("message.log.other.PipelineFacade.4ab6d6"));
       return sendPipeline.execute(request, ctx);
     }
 
     List<SendHandler> handlers = resolveHandlers(template);
     if (handlers.isEmpty()) {
-      log.warn("[PipelineFacade] 模板 {} 无可用 Handler,回退全量管线", template.getCode());
+      log.warn(I18n.message("message.log.other.PipelineFacade_{}_Handler.d15756"), template.getCode());
       return sendPipeline.execute(request, ctx);
     }
 
-    log.debug("[PipelineFacade] 执行管线模板: template={} handlerCount={}", template.getCode(), handlers.size());
+    log.debug(I18n.message("message.log.other.PipelineFacade_template_{}_handlerCount_{}.8d6e2e"), template.getCode(), handlers.size());
 
     for (SendHandler handler : handlers) {
       try {
@@ -205,7 +206,7 @@ public class SendPipelineFacade {
    */
   public void clearCache() {
     templateCache.clear();
-    log.info("[PipelineFacade] 模板缓存已清除");
+    log.info(I18n.message("message.log.other.PipelineFacade.24371f"));
   }
 
   /**

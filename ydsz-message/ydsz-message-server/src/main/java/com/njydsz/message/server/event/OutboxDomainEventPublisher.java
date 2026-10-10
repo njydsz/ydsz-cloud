@@ -1,6 +1,7 @@
 package com.njydsz.message.server.event;
 
-import lombok.RequiredArgsConstructor;
+
+import com.njydsz.common.locales.util.I18n;import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
@@ -57,7 +58,7 @@ public class OutboxDomainEventPublisher {
 
     DomainEventPublisher publisher = domainEventPublisherProvider.getIfAvailable();
     if (publisher == null) {
-      log.debug("[OutboxPublisher] DomainEventPublisher 不可用，回退直接发布: eventType={}",
+      log.debug(I18n.message("message.log.other.OutboxPublisher_DomainEventPublisher_eventType_{}.21caac"),
           event.eventType());
       publishImmediate(event);
       return;
@@ -76,10 +77,10 @@ public class OutboxDomainEventPublisher {
           .metadata("batchId", event.getBatchId())
           .build();
       publisher.publish(domainEvent);
-      log.debug("[OutboxPublisher] 事件已写入 Outbox: eventId={} type={}",
+      log.debug(I18n.message("message.log.other.OutboxPublisher_Outbox_eventId_{}_type_{}.e2c601"),
           event.getEventId(), event.eventType());
     } catch (Exception e) {
-      log.error("[OutboxPublisher] 事件发布失败，回退直接发布: eventType={} err={}",
+      log.error(I18n.message("message.log.other.OutboxPublisher_eventType_{}_err_{}.b3f2d3"),
           event.eventType(), e.getMessage());
       publishImmediate(event);
     }
@@ -100,12 +101,12 @@ public class OutboxDomainEventPublisher {
    */
   public void publishAggregateDispatch(String aggregateId, String payload, String idempotencyKey) {
     if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-      log.warn("[OutboxPublisher] 非事务上下文，跳过 Outbox 写入: aggregateId={}", aggregateId);
+      log.warn(I18n.message("message.log.other.OutboxPublisher_Outbox_aggregateId_{}.122299"), aggregateId);
       return;
     }
     DomainEventPublisher publisher = domainEventPublisherProvider.getIfAvailable();
     if (publisher == null) {
-      log.warn("[OutboxPublisher] DomainEventPublisher 不可用，跳过 Outbox 写入: aggregateId={}",
+      log.warn(I18n.message("message.log.other.OutboxPublisher_DomainEventPublisher_Outbox_aggregateId_{}.1baa48"),
           aggregateId);
       return;
     }
@@ -118,7 +119,7 @@ public class OutboxDomainEventPublisher {
         .idempotencyKey(idempotencyKey)
         .build();
     publisher.publish(domainEvent);
-    log.debug("[OutboxPublisher] 异步投递指令已写入 Outbox: aggregateId={}", aggregateId);
+    log.debug(I18n.message("message.log.other.OutboxPublisher_Outbox_aggregateId_{}.f0851a"), aggregateId);
   }
 
   /**
@@ -134,9 +135,9 @@ public class OutboxDomainEventPublisher {
     }
     try {
       eventPublisher.publishEvent(event);
-      log.debug("[OutboxPublisher] 同步事件已发布: type={}", event.eventType());
+      log.debug(I18n.message("message.log.other.OutboxPublisher_type_{}.696078"), event.eventType());
     } catch (Exception e) {
-      log.warn("[OutboxPublisher] 同步事件发布失败: type={} err={}", event.eventType(),
+      log.warn(I18n.message("message.log.other.OutboxPublisher_type_{}_err_{}.88cd31"), event.eventType(),
           e.getMessage());
     }
   }

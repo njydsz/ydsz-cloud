@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.List;
 
 import lombok.Data;
@@ -20,9 +18,7 @@ import lombok.EqualsAndHashCode;
  * @since 26.10.01
  */
 @Data
-public class FlowDiagramVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowDiagramVO {
 
   /** 流程定义基本信息 */
   private FlowDefinitionVO definition;
@@ -40,9 +36,7 @@ public class FlowDiagramVO implements Serializable {
    */
   @Data
   @EqualsAndHashCode(callSuper = false)
-  public static class DiagramNodeVO extends FlowNodeVO implements Serializable {
-
-    @Serial private static final long serialVersionUID = 1L;
+  public static class DiagramNodeVO extends FlowNodeVO {
 
     /** 是否为当前激活节点（前端高亮） */
     private boolean isActive;

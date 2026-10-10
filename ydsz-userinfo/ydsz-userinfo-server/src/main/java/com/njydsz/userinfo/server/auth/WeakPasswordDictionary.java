@@ -13,6 +13,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 弱密码字典加载器。
@@ -70,7 +71,7 @@ public class WeakPasswordDictionary {
     try {
       ClassPathResource resource = new ClassPathResource(path);
       if (!resource.exists()) {
-        log.warn("弱密码字典文件不存在: {}, 弱密码校验将跳过", path);
+        log.warn(I18n.message("userinfo.弱密码字典文件不存在.弱密码校验将跳过", new Object[]{path}));
         return;
       }
       try (InputStream is = resource.getInputStream();
@@ -86,9 +87,9 @@ public class WeakPasswordDictionary {
       }
       weakPasswords = loaded;
       dictionarySize = loaded.size();
-      log.info("弱密码字典加载完成: {} 条记录", dictionarySize);
+      log.info(I18n.message("userinfo.弱密码字典加载完成.条记录", new Object[]{dictionarySize}));
     } catch (IOException e) {
-      log.warn("加载弱密码字典失败: {}, 弱密码校验将跳过", e.getMessage());
+      log.warn(I18n.message("userinfo.加载弱密码字典失败.弱密码校验将跳过", new Object[]{e.getMessage()}));
     }
   }
 

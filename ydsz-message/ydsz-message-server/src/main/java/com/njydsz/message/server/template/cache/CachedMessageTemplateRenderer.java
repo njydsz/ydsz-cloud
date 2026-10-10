@@ -1,6 +1,7 @@
 package com.njydsz.message.server.template.cache;
 
-import java.util.ArrayList;
+
+import com.njydsz.common.locales.util.I18n;import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -158,7 +159,7 @@ public class CachedMessageTemplateRenderer extends SentryMetricsAdapter implemen
     // 注册缓存驱逐数 Gauge（动态 Supplier）
     gauge("cache.eviction.count", () -> (double) astCache.getStats().getEvictionCount(),
         "engine", "template.ast");
-    log.info("[TemplateAst] 缓存监控指标已注册（通过 SentryMetricsAdapter 桥接）");
+    log.info(I18n.message("message.log.other.TemplateAst_SentryMetricsAdapter.58a7b5"));
   }
 
   @Override
@@ -412,7 +413,7 @@ public class CachedMessageTemplateRenderer extends SentryMetricsAdapter implemen
     astCache.invalidateAll();
     cacheHits.set(0);
     cacheMisses.set(0);
-    log.info("[TemplateAst] 缓存已全部清空");
+    log.info(I18n.message("message.log.other.TemplateAst.111cd6"));
   }
 
   /**

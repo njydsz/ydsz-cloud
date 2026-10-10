@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,9 +15,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "语义 Tool 搜索请求")
-public class ToolSearchRequestDTO implements Serializable {
+public class ToolSearchRequestDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 默认返回数量上限 */
   private static final int DEFAULT_TOP_K = 5;

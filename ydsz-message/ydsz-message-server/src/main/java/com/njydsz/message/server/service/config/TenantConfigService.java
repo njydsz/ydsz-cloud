@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.config;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -67,18 +68,18 @@ public class TenantConfigService {
     try {
       String cached = redisStringOps.get(cacheKey, String.class);
       if (cached != null && !cached.isBlank()) {
-        log.debug("[TenantConfig] 缓存命中: tenant={}", tenantId);
+        log.debug(I18n.message("message.log.server.tenantconfig.debug.cache.hit"), tenantId);
         return YdszJson.fromJson(cached, MsgTenantConfigVO.class);
       }
     } catch (Exception e) {
-      log.warn("[TenantConfig] 缓存读取异常(fail-open): tenant={} err={}", tenantId, e.getMessage(), e);
+      log.warn(I18n.message("message.log.server.tenantconfig.warn.cache.read.exception"), tenantId, e.getMessage(), e);
     }
 
     // 2. 缓存未命中查 DB
     MsgTenantConfigVO config = msgTenantConfigRepository.findByTenantId(tenantId)
         .orElse(null);
     if (config == null) {
-      log.debug("[TenantConfig] 配置不存在: tenant={}", tenantId);
+      log.debug(I18n.message("message.log.server.tenantconfig.debug.config.not.found"), tenantId);
       return null;
     }
 
@@ -86,7 +87,7 @@ public class TenantConfigService {
     try {
       redisStringOps.set(cacheKey, YdszJson.toJson(config), Duration.ofMinutes(CACHE_TTL_MINUTES));
     } catch (Exception e) {
-      log.warn("[TenantConfig] 缓存写入异常(忽略): tenant={} err={}", tenantId, e.getMessage(), e);
+      log.warn(I18n.message("message.log.server.tenantconfig.warn.cache.write.exception"), tenantId, e.getMessage(), e);
     }
 
     return config;
@@ -115,11 +116,11 @@ public class TenantConfigService {
           YdszJson.fromJsonToMap(config.getChannelOverrides(), String.class, Boolean.class);
       if (overrides != null && overrides.containsKey(channel)) {
         Boolean enabled = overrides.get(channel);
-        log.debug("[TenantConfig] 通道覆盖: tenant={} channel={} enabled={}", tenantId, channel, enabled);
+        log.debug(I18n.message("message.log.server.tenantconfig.debug.channel.override"), tenantId, channel, enabled);
         return enabled != null ? enabled : globalDefault;
       }
     } catch (Exception e) {
-      log.warn("[TenantConfig] channelOverrides 解析异常(fail-open): tenant={} err={}", tenantId, e.getMessage(), e);
+      log.warn(I18n.message("message.log.server.tenantconfig.warn.channeloverride.parse.exception"), tenantId, e.getMessage(), e);
     }
     return globalDefault;
   }
@@ -147,11 +148,11 @@ public class TenantConfigService {
           YdszJson.fromJsonToMap(config.getProviderOverrides(), String.class, String.class);
       if (overrides != null && overrides.containsKey(channel)) {
         String provider = overrides.get(channel);
-        log.debug("[TenantConfig] provider覆盖: tenant={} channel={} provider={}", tenantId, channel, provider);
+        log.debug(I18n.message("message.log.server.tenantconfig.debug.provider.override"), tenantId, channel, provider);
         return provider != null ? provider : globalProvider;
       }
     } catch (Exception e) {
-      log.warn("[TenantConfig] providerOverrides 解析异常(fail-open): tenant={} err={}", tenantId, e.getMessage(), e);
+      log.warn(I18n.message("message.log.server.tenantconfig.warn.provideroverride.parse.exception"), tenantId, e.getMessage(), e);
     }
     return globalProvider;
   }
@@ -173,7 +174,7 @@ public class TenantConfigService {
     if (config == null || config.getDailyLimit() == null) {
       return globalDefault;
     }
-    log.debug("[TenantConfig] 每日限额: tenant={} dailyLimit={}", tenantId, config.getDailyLimit());
+    log.debug(I18n.message("message.log.server.tenantconfig.debug.daily.limit"), tenantId, config.getDailyLimit());
     return config.getDailyLimit();
   }
 
@@ -194,7 +195,7 @@ public class TenantConfigService {
     if (config == null || config.getHourlyLimit() == null) {
       return globalDefault;
     }
-    log.debug("[TenantConfig] 每小时限额: tenant={} hourlyLimit={}", tenantId, config.getHourlyLimit());
+    log.debug(I18n.message("message.log.server.tenantconfig.debug.hourly.limit"), tenantId, config.getHourlyLimit());
     return config.getHourlyLimit();
   }
 }

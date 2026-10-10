@@ -54,6 +54,7 @@ import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.MfaService;
 import com.njydsz.userinfo.server.auth.SecondaryAuthService;
 import com.njydsz.userinfo.server.auth.WebAuthnService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 认证 Controller
@@ -474,7 +475,7 @@ public class AuthController {
     // 解析目标 token 获取归属用户，校验归属权
     String tokenOwnerUserId = tokenService.parseAccessToken(token).getUserId();
     if (tokenOwnerUserId == null || !currentUserId.equals(tokenOwnerUserId)) {
-      log.warn("越权下线会话被拒绝: currentUserId={}, targetTokenUserId={}", currentUserId, tokenOwnerUserId);
+      log.warn(I18n.message("userinfo.越权下线会话被拒绝.currentUserId=.targetTokenUserId=", new Object[]{currentUserId, tokenOwnerUserId}));
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
     }
     authService.logout(token);

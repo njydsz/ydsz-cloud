@@ -12,6 +12,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.dto.MonitorErrorBatchDTO;
 import com.njydsz.system.domain.dto.MonitorWebVitalBatchDTO;
 import com.njydsz.system.server.service.MonitorReportService;
@@ -116,8 +117,8 @@ public class MonitorReportController {
       @RequestParam("file") String file,
       @RequestBody byte[] content) {
     if (content.length > MAX_SOURCEMAP_BYTES) {
-      log.warn("[MonitorReport] sourcemap 超出体积上限, release={}, file={}, size={}B",
-          release, file, content.length);
+      log.warn(I18n.message("system.web.monitor.sourcemap.overflow",
+          new Object[]{release, file, content.length}));
       return YdszResponse.error(YdszResultCode.BAD_REQUEST);
     }
     String url = monitorReportService.storeSourcemap(release, file, content);

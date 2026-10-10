@@ -1,6 +1,7 @@
 package com.njydsz.message.server.channel.impl;
 
-import java.util.ArrayList;
+
+import com.njydsz.common.locales.util.I18n;import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -123,15 +124,15 @@ public class EmailChannel implements MessageChannel {
 
           String traceId = CHANNEL_TYPE + "-" + snowflakeIdGenerator.nextId();
           if (result.isSuccess()) {
-            log.info("[EMAIL] 发送成功: to={} subject={}", request.getReceiver(), subject);
+            log.info(I18n.message("message.log.server.email.info.send.success"), request.getReceiver(), subject);
             return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
           } else {
-            log.warn("[EMAIL] 发送失败: to={}, reason={}", request.getReceiver(), result.getErrorMessage());
+            log.warn(I18n.message("message.log.server.email.warn.send.failed"), request.getReceiver(), result.getErrorMessage());
             return MessageSendResultVO.fail(CHANNEL_TYPE, traceId, result.getErrorMessage(),
                 result.getErrorMessage(), null);
           }
         } catch (Exception e) {
-          log.error("[EMAIL] 发送异常: to={} reason={}", request.getReceiver(), e.getMessage(), e);
+          log.error(I18n.message("message.log.server.email.error.send.exception"), request.getReceiver(), e.getMessage(), e);
           return MessageSendResultVO.fail(
               CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
               e.getClass().getSimpleName() + ": " + e.getMessage(), null);
@@ -168,7 +169,7 @@ public class EmailChannel implements MessageChannel {
       }
       return result;
     } catch (Exception e) {
-      log.warn("[EMAIL] 附件解析失败: {}", e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.EMAIL_{}.e562fb"), e.getMessage(), e);
       return Collections.emptyList();
     }
   }
@@ -199,7 +200,7 @@ public class EmailChannel implements MessageChannel {
       }
       return result;
     } catch (Exception e) {
-      log.warn("[EMAIL] 内嵌图片解析失败: {}", e.getMessage(), e);
+      log.warn(I18n.message("message.log.other.EMAIL_{}.d709f5"), e.getMessage(), e);
       return Collections.emptyList();
     }
   }

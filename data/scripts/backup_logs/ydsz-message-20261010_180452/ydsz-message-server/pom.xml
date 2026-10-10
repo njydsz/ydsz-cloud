@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-message</artifactId>
+        <version>26.10.01-SNAPSHOT</version>
+    </parent>
+    <artifactId>ydsz-message-server</artifactId>
+    <name>ydsz-message-server</name>
+    <description>DDD Module</description>
+
+    <!-- P2-5 冗余 DM 已移除：fastjson2 版本统一由根 pom dependencyManagement 管理
+         （${fastjson2.version}=2.0.62，解决 rocketmq 传递依赖的版本收敛），子模块无需重复声明 -->
+
+    <dependencies>
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-exception</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-redis</artifactId>
+    </dependency>
+        <!-- P1-2: 遵循 DDD 分层，server 层不直接依赖 infra 层；infra 实现由 web/app 层通过组件扫描注入 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-message-domain</artifactId>
+        </dependency>
+        <!-- P2-3: 显式声明 common-util（多渠道发送使用 FileTypeUtils/DateUtils 等工具类） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+        </dependency>
+        <!-- common-web 传递引入: common-base(→core/util/exception), common-auth, common-safe, common-redis -->
+        <!-- common-jdbc 传递引入: common-domain -->
+        <!-- P1-A1: 显式声明 common-auth（使用 @AuthApiPermission / AuthContextUtils 等能力） -->
+        <!-- ydsz-common-domain: explicit declaration for direct usage (PageQuery/BaseStatusEnum, was transitive via common-jdbc) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
+        <!-- common-feign 传递引入: spring-cloud-starter-openfeign -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-lock</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-feign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-notify</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-queue</artifactId>
+        </dependency>
+        <!-- P0-5: TCP 推送通道依赖 common-netty -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-netty</artifactId>
+        </dependency>
+        <!-- P0-A: ydsz-common-web 已移除（WebhookDispatcher 迁移至 common-core） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
+        <!-- ydzs-common-base：提供 AbstractModuleHealthIndicator（MessageHealthIndicator 使用） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-base</artifactId>
+        </dependency>
+        <!-- ydsz-common-core: explicit declaration for direct usage (was transitive via common-web) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+        <!-- P1-FIX: 显式声明 common-json（OutboxDomainEventPublisher/CommonQueueMessageOperations 使用 JsonMapper） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+        <!-- 审计日志下沉：@Audit 注解注入到 server 层核心 Service 方法 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-audit</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
+        <!--
+            P0-FIX（保留 spring-boot-starter-mail）：EmailChannel 已改为委托
+            ydsz-common-notify 的 EmailNotifySender（@ConditionalOnClass 需邮件类在 classpath）。
+            本依赖保留的原因：EmailChannel 需要 EmailNotifySender Bean 可用（Bean 创建条件是
+            JavaMailSender.class 在 classpath 上）。业务代码不再直接 import 邮件 API。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
+            <exclusions>
+                <!-- rocketmq-acl 传递依赖 commons-validator→commons-beanutils→commons-collections:3.2.2（已禁止） -->
+                <exclusion>
+                    <groupId>commons-validator</groupId>
+                    <artifactId>commons-validator</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- spring-boot-starter-websocket -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        <!-- ydsz-common-socket -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-socket</artifactId>
+        </dependency>
+        <!-- Redisson 分布式锁/限流（ydsz-common-lock 声明为 optional，此处显式引入） -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- P0-1: 统一监控告警（Sentry SPI：ELK/Loki 日志推送 + 告警收敛 + SLA） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-sentry</artifactId>
+        </dependency>
+        <!-- 通道熔断：ydsz-common-safe + Resilience4j（ChannelRouter 直接 import Resilience4j） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
+        <!-- Resilience4j 核心熔断能力（ChannelRouter 直接 import） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
+        </dependency>
+        <!-- P1-3: 事务性 Outbox 事件模式 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-event</artifactId>
+        </dependency>
+        <!-- P1-3: 搜索 Provider SPI（消息搜索） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-search</artifactId>
+        </dependency>
+        <!-- P2: JdbcHealthIndicator 自动注册（需要 actuator 在 classpath 上） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!-- P1-1: FreeMarker 模板引擎（替代自研引擎作为默认实现） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-freemarker</artifactId>
+        </dependency>
+        <!-- ydzs-common-cache：模板 AST 缓存（CachedTemplateEngine 使用 YdszCache） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-cache</artifactId>
+        </dependency>
+            <!-- 单元测试基础设施：JUnit 5 + AssertJ + Mockito（云顶编码规范 §14.1） -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- JUnit Jupiter Params（@ParameterizedTest 支持，修复 TemplateInvocationValidationException） -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- P0-FIX: 显式声明 tenant（MQ 消费者中 TenantContextHolder 直接获取） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-tenant</artifactId>
+        </dependency>
+        <!-- 测试基础设施：JUnit 5 + AssertJ + Mockito + Spring Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+</dependencies>
+</project>

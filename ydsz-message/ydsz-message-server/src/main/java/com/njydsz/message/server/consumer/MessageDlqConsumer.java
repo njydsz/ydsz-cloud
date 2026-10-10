@@ -1,6 +1,7 @@
 package com.njydsz.message.server.consumer;
 
-import java.util.Optional;
+
+import com.njydsz.common.locales.util.I18n;import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +71,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
   @Override
   public void onMessage(MessageExt messageExt) {
     if (messageExt == null) {
-      log.warn("[MessageDlqConsumer] 收到 null 消息,跳过");
+      log.warn(I18n.message("message.log.other.MessageDlqConsumer_null.6d7690"));
       return;
     }
     String msgId = messageExt.getMsgId();
@@ -82,7 +83,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
     String idempotentKey = DLQ_IDEMPOTENT_PREFIX + msgId;
     String dlqToken = idempotentStrategy.acquire(idempotentKey, DLQ_IDEMPOTENT_TTL_SECONDS * 1000L);
     if (dlqToken == null) {
-      log.info("[MessageDlqConsumer] 重复死信已跳过: msgId={}", msgId);
+      log.info(I18n.message("message.log.other.MessageDlqConsumer_msgId_{}.ac6781"), msgId);
       return;
     }
 
@@ -92,7 +93,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
       try {
         request = YdszJson.fromJson(body, MessageItemRequestDTO.class);
       } catch (Exception e) {
-        log.error("[MessageDlqConsumer] 死信消息体解析失败: msgId={} err={}", msgId, e.getMessage(), e);
+        log.error(I18n.message("message.log.other.MessageDlqConsumer_msgId_{}_err_{}.ca9ebb"), msgId, e.getMessage(), e);
       }
 
       try {
@@ -110,7 +111,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
             existingVO.setErrorMessage(errorMessage);
             existingVO.setReconsumeTimes(reconsumeTimes);
             msgLogRepository.update(existingVO);
-            log.info("[MessageDlqConsumer] 已更新现有记录为 DEAD: msgId={}", bizMsgId);
+            log.info(I18n.message("message.log.other.MessageDlqConsumer_DEAD_msgId_{}.6c8ee4"), bizMsgId);
             messageMetrics.recordDead(request != null ? request.getChannel() : "UNKNOWN");
             // P1-4: 注册死信到 common-queue DLQ 跟踪存储（Redis Hash），统一可观测
             registerDeadLetterToQueue(originTopic, msgId, body, errorMessage);
@@ -143,7 +144,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         // P1-4: 注册死信到 common-queue DLQ 跟踪存储（Redis Hash），统一可观测
         registerDeadLetterToQueue(originTopic, msgId, body, errorMessage);
       } catch (Exception e) {
-        log.error("[MessageDlqConsumer] 死信落库失败: msgId={} err={}", msgId, e.getMessage(), e);
+        log.error(I18n.message("message.log.other.MessageDlqConsumer_msgId_{}_err_{}.472f07"), msgId, e.getMessage(), e);
       }
 
       log.error(
@@ -171,10 +172,10 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
       String topic, String messageId, String messageBody, String failureReason) {
     try {
       deadLetterQueueService.sendToDeadLetter(topic, messageId, messageBody, failureReason);
-      log.info("[MessageDlqConsumer] 死信已注册到 common-queue DLQ: topic={} msgId={}", topic, messageId);
+      log.info(I18n.message("message.log.other.MessageDlqConsumer_common_queue_DLQ_topic_{}_msgId_{}.a0e1f1"), topic, messageId);
     } catch (Exception e) {
       // DLQ 注册为辅助观测链路，禁止影响主流程
-      log.warn("[MessageDlqConsumer] 注册死信到 common-queue 失败,不影响主流程: msgId={} err={}",
+      log.warn(I18n.message("message.log.other.MessageDlqConsumer_common_queue_msgId_{}_err_{}.465faf"),
           messageId, e.getMessage());
     }
   }

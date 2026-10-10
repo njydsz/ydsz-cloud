@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.repository.VariableRepository;
@@ -83,7 +84,7 @@ public class VariableRollbackStrategy implements RollbackStrategy {
       }
     } catch (Exception e) {
       // 缓存失效失败不影响主流程
-      log.warn("[VariableRollbackStrategy] 解析快照失效缓存失败: {}", e.getMessage());
+      log.warn(I18n.message("system.snapshot.evict.fail", new Object[]{e.getMessage()}));
     }
   }
 

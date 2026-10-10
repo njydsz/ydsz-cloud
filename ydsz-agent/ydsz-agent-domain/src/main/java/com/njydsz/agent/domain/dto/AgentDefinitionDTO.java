@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
@@ -19,9 +17,8 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class AgentDefinitionDTO implements Serializable {
+public class AgentDefinitionDTO {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /**
    * 主键 ID。

@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.skill;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -29,9 +28,8 @@ public record SkillExecutionContext(
     long timeoutMs,
     Map<String, String> envVariables,
     String traceId
-) implements Serializable {
+) {
 
-  private static final long serialVersionUID = 1L;
 
   public SkillExecutionContext {
     Objects.requireNonNull(skillCode, "skillCode 不能为 null");

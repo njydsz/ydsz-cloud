@@ -19,6 +19,7 @@ import com.njydsz.userinfo.domain.provision.ProvisionRecordPage;
 import com.njydsz.userinfo.domain.provision.ProvisionResult;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 身份供给编排器（P0-1 Identity Provisioning 管道）。
@@ -84,12 +85,12 @@ public class ProvisionOrchestrator {
     } catch (ProvisionException e) {
       long duration = System.currentTimeMillis() - startTime;
       errors.add("拉取失败: " + e.getMessage());
-      log.error("Provision 拉取失败: type={}, error={}", connectorType, e.getMessage(), e);
+      log.error(I18n.message("userinfo.Provision.拉取失败.type=.error=", new Object[]{connectorType, e.getMessage()}), e);
       return new ProvisionResult(connectorType, 0, 0, 0, 0, 1, duration, null, errors);
     }
 
     List<ProvisionRecord> records = page.records();
-    log.info("Provision 拉取完成: type={}, count={}", connectorType, records.size());
+    log.info(I18n.message("userinfo.Provision.拉取完成.type=.count=", new Object[]{connectorType, records.size()}));
 
     // 2. 逐条写入本地用户表
     for (ProvisionRecord record : records) {

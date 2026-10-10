@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.chain;
 
-import java.util.Comparator;
+
+import com.njydsz.common.locales.util.I18n;import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -55,11 +56,11 @@ public class SendPipeline implements InitializingBean {
       try {
         boolean passed = handler.handle(request, ctx);
         if (!passed) {
-          log.debug("[Pipeline] Handler 短路: handler={}", handler.name());
+          log.debug(I18n.message("message.log.other.Pipeline_Handler_handler_{}.9ec127"), handler.name());
           return ctx;
         }
       } catch (Exception e) {
-        log.error("[Pipeline] Handler 执行异常: handler={} err={}", handler.name(), e.getMessage(), e);
+        log.error(I18n.message("message.log.other.Pipeline_Handler_handler_{}_err_{}.92b921"), handler.name(), e.getMessage(), e);
         ctx.setErrorResult(
             MessageSendResultVO.fail(
                 ctx.getChannel(),
@@ -92,7 +93,7 @@ public class SendPipeline implements InitializingBean {
   public void registerHandler(SendHandler handler) {
     handlers.add(handler);
     handlers.sort(ORDER_COMPARATOR);
-    log.info("[Pipeline] 动态注册 Handler: {} order={}", handler.name(), handler.order());
+    log.info(I18n.message("message.log.other.Pipeline_Handler_{}_order_{}.e21607"), handler.name(), handler.order());
   }
 
   /**
@@ -104,7 +105,7 @@ public class SendPipeline implements InitializingBean {
   public boolean removeHandler(String handlerName) {
     boolean removed = handlers.removeIf(h -> h.name().equals(handlerName));
     if (removed) {
-      log.info("[Pipeline] 移除 Handler: {}", handlerName);
+      log.info(I18n.message("message.log.other.Pipeline_Handler_{}.2d21c5"), handlerName);
     }
     return removed;
   }

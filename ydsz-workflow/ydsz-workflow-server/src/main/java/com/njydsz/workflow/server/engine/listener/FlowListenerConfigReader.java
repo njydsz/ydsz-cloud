@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 从节点 ext JSON 中读取监听器配置列表
@@ -66,7 +67,7 @@ public final class FlowListenerConfigReader {
         return result;
       }
     } catch (Exception e) {
-      log.warn("[FlowListener] 解析 listeners 配置失败: err={}", e.getMessage());
+      log.warn(I18n.message("workflow.listener.config.parse.failed", new Object[]{e.getMessage()}));
     }
     return Collections.emptyList();
   }

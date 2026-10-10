@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -43,9 +41,7 @@ import com.njydsz.common.json.YdszJson;
  */
 @Getter
 @ToString
-public class RejectStrategyConfigVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class RejectStrategyConfigVO {
 
   /** 默认驳回策略 */
   public static final RejectStrategy DEFAULT_STRATEGY = RejectStrategy.PREVIOUS;

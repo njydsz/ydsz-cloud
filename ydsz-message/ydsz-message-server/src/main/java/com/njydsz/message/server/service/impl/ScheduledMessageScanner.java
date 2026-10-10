@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
@@ -92,7 +93,7 @@ public class ScheduledMessageScanner {
     try {
       doScan();
     } catch (Exception e) {
-      log.error("[ScheduledScanner] 扫描异常: {}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.ScheduledScanner_{}.bbf1f5"), e.getMessage(), e);
     }
   }
 
@@ -107,7 +108,7 @@ public class ScheduledMessageScanner {
     if (due.isEmpty()) {
       return;
     }
-    log.info("[ScheduledScanner] 到期定时消息 {} 条", due.size());
+    log.info(I18n.message("message.log.other.ScheduledScanner_{}.54a70e"), due.size());
     // F2: 并发分发，单条失败不影响其他消息（包装 I18n 上下文传播）
     final Locale currentLocale = Locales.current();
     List<CompletableFuture<Boolean>> futures =
@@ -204,7 +205,7 @@ public class ScheduledMessageScanner {
     dispatcher.shutdown();
     try {
       if (!dispatcher.awaitTermination(10, TimeUnit.SECONDS)) {
-        log.warn("[ScheduledScanner] 线程池未在 10s 内完成关闭,执行强制 shutdown");
+        log.warn(I18n.message("message.log.other.ScheduledScanner_10s_shutdown.7b59bd"));
         dispatcher.shutdownNow();
       }
     } catch (InterruptedException e) {

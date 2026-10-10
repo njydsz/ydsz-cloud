@@ -17,6 +17,7 @@ import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * Token 自动续签过滤器（P1-2）。
@@ -127,12 +128,12 @@ public class TokenAutoRenewalFilter extends OncePerRequestFilter {
         if (userInfo != null) {
           String newAccessToken = tokenService.issueAccessToken(userInfo);
           response.setHeader(NEW_TOKEN_HEADER, newAccessToken);
-          log.debug("Token 自动续签完成: userId={}, remainingTtl={}s", userInfo.getUserId(), remainingTtl);
+          log.debug(I18n.message("userinfo.Token.自动续签完成.userId=.remainingTtl=s", new Object[]{userInfo.getUserId(), remainingTtl}));
         }
       }
     } catch (Exception e) {
       // 续签失败不阻塞原请求
-      log.warn("Token 自动续签异常（不影响原请求）: {}", e.getMessage());
+      log.warn(I18n.message("userinfo.Token.自动续签异常.不影响原请求", new Object[]{e.getMessage()}));
     }
   }
 

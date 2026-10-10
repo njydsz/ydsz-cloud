@@ -1424,6 +1424,24 @@
                         <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
                     </configuration>
                 </execution>
+                <!-- report-aggregate：聚合全模块覆盖率全局报告（target/site/jacoco-aggregate/）-->
+                <execution>
+                    <id>report-aggregate</id>
+                    <phase>verify</phase>
+                    <goals>
+                        <goal>report-aggregate</goal>
+                    </goals>
+                    <configuration>
+                        <outputDirectory>${project.reporting.outputDirectory}/jacoco-aggregate</outputDirectory>
+                        <title>ydsz-cloud 全模块覆盖率聚合报告</title>
+                        <includeCurrentProject>false</includeCurrentProject>
+                        <!-- 排除契约层（api 模块仅含 Feign 接口签名与 Assembler，无业务逻辑）和 auto-generated 代码 -->
+                        <excludes>
+                            <exclude>**/api/**/*</exclude>
+                            <exclude>**/WebMvcTestApplication.*</exclude>
+                        </excludes>
+                    </configuration>
+                </execution>
                 <!-- check：覆盖率门禁（渐进式基线 — 26.10-08 当前值：行覆盖 ≥ 10%，分支 ≥ 5%；
                      后续路线：Q4 2026 上调至行覆盖 ≥ 30% / 分支 ≥ 20%，Q1 2027 ≥ 50% / 35%，
                      与《云顶编码规范》§14.7 测试门禁路线图对齐）。

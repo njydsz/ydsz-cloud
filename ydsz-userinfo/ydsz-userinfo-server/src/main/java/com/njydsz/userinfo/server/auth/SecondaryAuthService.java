@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -103,7 +104,7 @@ public class SecondaryAuthService {
 
     String key = buildKey(scene, userId);
     redisStringOps.set(key, SAFE_VALUE, ttl);
-    log.info("安全操作模式已开启: userId={}, scene={}, ttl={}", userId, scene, ttl);
+    log.info(I18n.message("userinfo.secondary.auth.opened", new Object[]{userId, scene, ttl}));
   }
 
   /**
@@ -146,11 +147,11 @@ public class SecondaryAuthService {
       String value = redisStringOps.get(key, String.class);
       boolean safe = SAFE_VALUE.equals(value);
       if (!safe) {
-        log.warn("安全操作模式检查未通过: userId={}, scene={}, level={}", userId, scene, level);
+        log.warn(I18n.message("userinfo.secondary.auth.check.failed", new Object[]{userId, scene, level}));
       }
       return safe;
     } catch (Exception e) {
-      log.warn("读取安全操作标记异常: userId={}, scene={}, error={}", userId, scene, e.getMessage());
+      log.warn(I18n.message("userinfo.secondary.auth.mark.read.error", new Object[]{userId, scene, e.getMessage()}));
       return false;
     }
   }
@@ -168,9 +169,9 @@ public class SecondaryAuthService {
     String key = buildKey(scene, userId);
     try {
       redisStringOps.del(key);
-      log.debug("安全操作模式已关闭: userId={}, scene={}", userId, scene);
+      log.debug(I18n.message("userinfo.secondary.auth.closed", new Object[]{userId, scene}));
     } catch (Exception e) {
-      log.warn("清除安全操作标记异常: userId={}, scene={}, error={}", userId, scene, e.getMessage());
+      log.warn(I18n.message("userinfo.secondary.auth.mark.clear.error", new Object[]{userId, scene, e.getMessage()}));
     }
   }
 
@@ -247,14 +248,13 @@ public class SecondaryAuthService {
     String credentialOwnerId = webAuthnService.verifyAuthenticationResponse(
         challenge, credentialId, clientDataJSON, authenticatorData, signature);
     if (!userId.equals(credentialOwnerId)) {
-      log.warn("WebAuthn 凭证所有者与当前登录用户不一致: userId={}, credentialOwnerId={}",
-          userId, credentialOwnerId);
+      log.warn(I18n.message("userinfo.webauthn.credential.owner.mismatch", new Object[]{userId, credentialOwnerId}));
       throw new BusinessException(UserInfoExceptionCode.WEBAUTHN_CREDENTIAL_NOT_BELONG_TO_USER);
     }
 
     String key = buildKey(scene, userId);
     redisStringOps.set(key, SAFE_VALUE, ttl);
-    log.info("安全操作模式已开启（WebAuthn）: userId={}, scene={}, ttl={}", userId, scene, ttl);
+    log.info(I18n.message("userinfo.secondary.auth.opened.webauthn", new Object[]{userId, scene, ttl}));
   }
 
   /**
@@ -292,7 +292,7 @@ public class SecondaryAuthService {
     }
     UserAccountCredentialVO credential = credentialOpt.get();
     if (!passwordEncoder.matches(password, credential.getPassword())) {
-      log.warn("二级认证密码错误: userId={}", userId);
+      log.warn(I18n.message("userinfo.secondary.auth.password.incorrect", new Object[]{userId}));
       throw new BusinessException(UserInfoExceptionCode.SENSITIVE_VERIFY_PASSWORD_INCORRECT);
     }
   }

@@ -1,6 +1,7 @@
 package com.njydsz.message.server.channel.impl;
 
-import java.time.Duration;
+
+import com.njydsz.common.locales.util.I18n;import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -85,7 +86,7 @@ public class WxMiniChannel implements MessageChannel {
     if (config == null
         || !StringUtils.hasText(config.getAppId())
         || !StringUtils.hasText(config.getAppSecret())) {
-      log.warn("[WxMiniChannel] 未配置 AppID/AppSecret,降级为日志输出: receiver={}", request.getReceiver());
+      log.warn(I18n.message("message.log.server.wxmini.warn.not.configured"), request.getReceiver());
       return mockSend(request);
     }
 
@@ -182,7 +183,7 @@ public class WxMiniChannel implements MessageChannel {
           body != null ? body.get("errmsg") : "null response");
       return null;
     } catch (Exception e) {
-      log.error("[WxMiniChannel] 获取 access_token 异常: {}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.WxMiniChannel_access_token_{}.c7f1a5"), e.getMessage(), e);
       return null;
     }
   }

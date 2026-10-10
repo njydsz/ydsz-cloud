@@ -1,6 +1,7 @@
 package com.njydsz.message.server.event;
 
-import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.locales.util.I18n;import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +34,7 @@ public class DeadLetterAlertListener {
           event.getTriggeredAt());
       // 扩展告警通道（钉钉机器人 / 邮件 / 站内告警）时在此追加发送逻辑,当前仅日志告警
     } catch (Exception e) {
-      log.error("[DeadLetterAlert] 告警处理异常,不影响主流程: {}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.DeadLetterAlert_{}.24d5dc"), e.getMessage(), e);
     }
   }
 }

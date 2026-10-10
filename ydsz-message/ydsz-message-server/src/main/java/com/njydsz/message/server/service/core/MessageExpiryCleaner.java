@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.core;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,9 +33,9 @@ public class MessageExpiryCleaner {
     LocalDateTime now = LocalDateTime.now();
     try {
       int rows = msgNotificationRepository.markExpired(now);
-      log.info("[ExpiryCleaner] 清理过期通知: count={} threshold={}", rows, now);
+      log.info(I18n.message("message.log.other.ExpiryCleaner_count_{}_threshold_{}.fad6ff"), rows, now);
     } catch (Exception e) {
-      log.error("[ExpiryCleaner] 清理过期通知失败: {}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.ExpiryCleaner_{}.95ed7b"), e.getMessage(), e);
     }
   }
 }

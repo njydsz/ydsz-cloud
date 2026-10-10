@@ -1,6 +1,7 @@
 package com.njydsz.message.server.config;
 
-import java.util.ArrayList;
+
+import com.njydsz.common.locales.util.I18n;import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -114,6 +115,6 @@ public class NotifyChannelBridgeConfiguration implements InitializingBean {
           channelType,
           notifyChannel.getName());
     }
-    log.info("[NotifyBridge] 通道桥接完成,共注册 {} 个 NotifyChannelStrategy 适配器", registered.size());
+    log.info(I18n.message("message.log.other.NotifyBridge_{}_NotifyChannelStrategy.9b5490"), registered.size());
   }
 }

@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.notify.signature.DingTalkSignUtil;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 钉钉机器人告警通知渠道（P2 告警通知扩展）。
@@ -78,9 +79,9 @@ public class DingTalkAlertNotificationChannel implements AlertNotificationChanne
       HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
       restTemplate.postForObject(url, request, String.class);
 
-      log.info("钉钉告警通知发送成功: alertId={}, type={}", alert.id(), alert.alertType());
+      log.info(I18n.message("userinfo.钉钉告警通知发送成功.alertId=.type=", new Object[]{alert.id(), alert.alertType()}));
     } catch (Exception e) {
-      log.warn("钉钉告警通知发送失败: alertId={}, error={}", alert.id(), e.getMessage());
+      log.warn(I18n.message("userinfo.钉钉告警通知发送失败.alertId=.error=", new Object[]{alert.id(), e.getMessage()}));
     }
   }
 

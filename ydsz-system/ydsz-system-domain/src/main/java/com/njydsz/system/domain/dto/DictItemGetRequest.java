@@ -15,12 +15,12 @@ import lombok.Data;
 public class DictItemGetRequest {
 
   /** 字典类型编码 */
-  @NotBlank(message = "字典类型编码不能为空")
+  @NotBlank(message = "{system.dto.dictItemGet.typeCode.required}")
   @Schema(description = "字典类型编码", required = true)
   private String typeCode;
 
   /** 字典项编码 */
-  @NotBlank(message = "字典项编码不能为空")
+  @NotBlank(message = "{system.dto.dictItemGet.itemCode.required}")
   @Schema(description = "字典项编码", required = true)
   private String itemCode;
 }

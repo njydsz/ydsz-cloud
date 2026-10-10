@@ -15,6 +15,7 @@ import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.auth.SessionManager;
 import com.njydsz.common.locales.util.I18nMessages;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 设备会话管理服务（P3-2）。
@@ -97,13 +98,13 @@ public class DeviceSessionService {
         .map(token -> {
           String revokedUserId = sessionManager.evictSession(token);
           if (revokedUserId != null) {
-            log.info("设备会话被用户主动下线: userId={}, sessionId={}", userId, sessionId);
+            log.info(I18n.message("userinfo.设备会话被用户主动下线.userId=.sessionId=", new Object[]{userId, sessionId}));
             return true;
           }
           return false;
         })
         .orElseThrow(() -> {
-          log.warn("设备下线失败[会话不存在]: userId={}, sessionId={}", userId, sessionId);
+          log.warn(I18n.message("userinfo.设备下线失败.会话不存在.userId=.sessionId=", new Object[]{userId, sessionId}));
           return new BusinessException(UserInfoExceptionCode.SESSION_NOT_FOUND);
         });
   }
@@ -121,7 +122,7 @@ public class DeviceSessionService {
     try {
       return LocalDateTime.parse(timeStr);
     } catch (Exception e) {
-      log.debug("时间解析失败: {}", timeStr);
+      log.debug(I18n.message("userinfo.时间解析失败", new Object[]{timeStr}));
       return null;
     }
   }

@@ -1,0 +1,211 @@
+package com.njydsz.message.web.controller.template;
+
+import java.util.List;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.message.domain.dto.TemplateAuditDTO;
+import com.njydsz.message.domain.dto.TemplateCreateDTO;
+import com.njydsz.message.domain.dto.TemplateQueryDTO;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
+import com.njydsz.message.server.service.TemplateService;
+
+/**
+ * 消息模板管理 Controller。
+ *
+ * <p>提供消息模板的<b>全生命周期管理</b> HTTP API：创建 / 查询 / 编辑 / 删除 / 审核 / 上下线， 是 ydsz-message 模块「模板中心」的入口。
+ *
+ * <p><b>接口路径：</b>{@code /api/message/template/**}
+ *
+ * <p><b>核心能力：</b>
+ *
+ * <ul>
+ *   <li><b>CRUD</b>：{@code POST /} 创建 / {@code PUT /{id}} 编辑 / {@code DELETE /{id}} 删除（仅 DRAFT
+ *       状态可删）
+ *   <li><b>分页查询</b>：{@code GET /page} 支持按渠道 / 状态 / 关键字多维过滤
+ *   <li><b>审核流</b>：{@code POST /audit} 模板审核（PASS / REJECT）
+ *   <li><b>版本管理</b>：通过 {@code TemplateVersionController} 实现模板版本化
+ *   <li><b>预览</b>：通过 {@code TemplatePreviewController} 实时预览模板渲染结果
+ * </ul>
+ *
+ * <p><b>模板状态机：</b>{@code DRAFT}（待审核）→ {@code PUBLISHED}（已发布，可用于发送）→ {@code OFFLINE}（已下线，停止使用）/
+ * {@code REJECTED}（审核未通过）。
+ *
+ * <p><b>变量替换：</b>模板内容支持 {@code ${var}} 嵌套变量语法，发送时由 {@code MessageTemplateRenderer} 替换为实际值。 例如：{@code "您的验证码为
+ * ${code}，5 分钟内有效"} → {@code "您的验证码为 123456，5 分钟内有效"}。
+ *
+ * <p><b>多渠道支持：</b>同一模板可绑定到多个渠道（短信 / 邮件 / 站内信 / IM / 企业微信）， 每个渠道有独立的 {@code TemplateCode}
+ * 与供应商模板 ID。
+ *
+ * <p><b>安全特性：</b>
+ *
+ * <ul>
+ *   <li>写接口启用 {@link Idempotent} 5s 防重（Redis SET NX EX）
+ *   <li>写接口启用 {@link RateLimit} 50 QPS 限流
+ *   <li>写接口启用 {@link Audit} 审计日志（异步持久化）
+ *   <li>权限模型：通过 {@code @AuthApiPermission} 校验 {@link PermissionCodes#NOTIF_TEMPLATE_MANAGE} 等权限码
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 26.10.01
+ * @see com.njydsz.message.server.service.template.TemplateService 模板服务
+ * @see MsgTemplate 模板实体
+ */
+@Tag(name = "消息模板", description = "消息模板增删改查与审核")
+@Slf4j
+@ApiVersion("26.10.01")
+@RestController
+@RequestMapping("/message/template")
+@RequiredArgsConstructor
+public class TemplateController {
+
+  /** 消息模板服务 */
+  private final TemplateService templateService;
+
+  /**
+   * 创建消息模板。
+   *
+   * <p>新建一条消息模板记录，初始状态为 {@code DRAFT}（需审核通过后才能发布使用）。
+   * 模板内容支持 {@code ${var}} 占位符语法，由 {@code MessageTemplateRenderer} 在发送时替换实际值。
+   * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param dto 模板创建请求体（经 {@code @Valid} 校验；含 templateCode / name / content / subject / channel 等）
+   * @return 模板详情 VO（含模板 ID、编码、名称、内容、状态、渠道）
+   */
+  @Operation(summary = "创建模板")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_CREATE)
+  @Idempotent(key = "ydsz:message:TemplateController:create:lock", ttlSeconds = 5)
+  @Audit(
+      module = "模板管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'create'")
+  @RateLimit(resource = "message.template.create", threshold = 50)
+  @PostMapping
+  public YdszResponse<MsgTemplateVO> create(@Valid @RequestBody TemplateCreateDTO dto) {
+    return YdszResponse.success(templateService.create(dto));
+  }
+
+  /**
+   * 更新消息模板。
+   *
+   * <p>按模板 ID 更新已有模板的信息（内容、名称、变量定义等）。启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param id 模板 ID（路径变量，不可为空）
+   * @param dto 模板创建请求体（经 {@code @Valid} 校验）
+   * @return 更新后模板详情 VO
+   */
+  @Operation(summary = "更新模板")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_UPDATE)
+  @Idempotent(key = "ydsz:message:TemplateController:update:lock", ttlSeconds = 5)
+  @Audit(
+      module = "模板管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'update'")
+  @RateLimit(resource = "message.template.update", threshold = 50)
+  @PutMapping("/{id}")
+  public YdszResponse<MsgTemplateVO> update(
+      @PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
+    return YdszResponse.success(templateService.update(id, dto));
+  }
+
+  /**
+   * 删除消息模板。
+   *
+   * <p>仅 {@code DRAFT} 状态的模板可物理删除；已发布/已下线的模板需先下线后再删除。
+   *
+   * @param id 模板 ID（路径变量，不可为空）
+   * @return 无业务数据（仅返回操作成功标识）
+   */
+  @Operation(summary = "删除模板")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_DELETE)
+  @Idempotent(key = "ydsz:message:TemplateController:delete:lock", ttlSeconds = 5)
+  @Audit(
+      module = "模板管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.DELETE,
+      content = "'delete'")
+  @RateLimit(resource = "message.template.delete", threshold = 50)
+  @DeleteMapping("/{id}")
+  public YdszResponse<Void> delete(@PathVariable String id) {
+    templateService.delete(id);
+    return YdszResponse.success();
+  }
+
+  /**
+   * 查询模板详情。
+   *
+   * @param id 模板 ID（路径变量，不可为空）
+   * @return 模板详情 VO（含模板 ID、编码、名称、内容、状态、渠道、变量定义、版本号等）
+   */
+  @Operation(summary = "模板详情")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_VIEW)
+  @GetMapping("/{id}")
+  public YdszResponse<MsgTemplateVO> getById(@PathVariable String id) {
+    return YdszResponse.success(templateService.getById(id));
+  }
+
+  /**
+   * 分页查询模板列表。
+   *
+   * <p>按租户隔离，支持按渠道 / 状态 / 关键字多维过滤。
+   *
+   * @param query 查询参数（channel / status / keyword / pageNum / pageSize）
+   * @return 模板分页结果（data 为 MsgTemplateVO 列表；无匹配时 data 为空列表）
+   */
+  @Operation(summary = "模板分页")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_LIST)
+  @GetMapping("/page")
+  public YdszResponse<PageResponse<List<MsgTemplateVO>>> page(TemplateQueryDTO query) {
+    return YdszResponse.success(templateService.page(query));
+  }
+
+  /**
+   * 审核模板（通过/驳回）。
+   *
+   * <p>对 {@code DRAFT} 状态的模板执行审核：{@code PASS} → 状态变为 {@code PUBLISHED}；{@code REJECT} → 状态变为 {@code REJECTED}。
+   *
+   * @param id 模板 ID（路径变量，不可为空）
+   * @param dto 审核请求体（含审核结果 PASS/REJECT、审核意见）
+   * @return 无业务数据（仅返回操作成功标识）
+   */
+  @Operation(summary = "审核模板")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_APPROVE)
+  @Idempotent(key = "ydsz:message:TemplateController:audit:lock", ttlSeconds = 5)
+  @Audit(
+      module = "模板管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'audit'")
+  @RateLimit(resource = "message.template.audit", threshold = 50)
+  @PostMapping("/{id}/audit")
+  public YdszResponse<Void> audit(
+      @PathVariable String id, @Valid @RequestBody TemplateAuditDTO dto) {
+    dto.setId(id);
+    templateService.audit(id, dto);
+    return YdszResponse.success();
+  }
+}

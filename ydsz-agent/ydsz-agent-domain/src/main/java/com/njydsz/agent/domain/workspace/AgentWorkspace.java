@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.workspace;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -17,9 +16,8 @@ import java.time.LocalDateTime;
  * @author ydsz-team
  * @since 26.09.13
  */
-public final class AgentWorkspace implements Serializable {
+public final class AgentWorkspace {
 
-  private static final long serialVersionUID = 1L;
 
   /** 工作区 ID（对应 Agent 编码） */
   private final String workspaceId;

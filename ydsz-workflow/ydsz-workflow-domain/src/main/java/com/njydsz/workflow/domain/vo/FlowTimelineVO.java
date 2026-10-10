@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import lombok.Data;
@@ -15,9 +13,7 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class FlowTimelineVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowTimelineVO {
 
   /** 事件类型：HIS_TASK（历史任务）/ AUDIT_LOG（审计日志）/ CURRENT_TASK（当前任务） */
   private String type;

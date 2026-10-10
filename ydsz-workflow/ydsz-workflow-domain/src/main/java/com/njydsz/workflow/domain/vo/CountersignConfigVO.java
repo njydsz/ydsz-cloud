@@ -1,7 +1,5 @@
 package com.njydsz.workflow.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Map;
@@ -34,9 +32,7 @@ import com.njydsz.workflow.domain.enums.FlowPerformType;
  */
 @Getter
 @ToString
-public class CountersignConfigVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class CountersignConfigVO {
 
   /** 默认会签类型（OR 或签） */
   public static final FlowPerformType DEFAULT_PERFORM_TYPE = FlowPerformType.OR;

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.base.api.ApiVersion;
 import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.system.server.metrics.RedisMetricsService;
 
@@ -88,7 +89,7 @@ public class MetricsDashboardController {
   @Operation(summary = "获取运维仪表盘完整数据")
   @GetMapping("/dashboard")
   public YdszResponse<Map<String, Object>> dashboard() {
-    log.debug("[MetricsDashboard] 采集运维指标数据");
+    log.debug(I18n.message("system.web.metrics.dashboard"));
 
     Map<String, Object> result = new LinkedHashMap<>(DEFAULT_MAP_CAPACITY);
 

@@ -21,6 +21,7 @@ import com.njydsz.userinfo.domain.event.auth.MfaTriggeredEvent;
 import com.njydsz.userinfo.domain.event.auth.MfaVerifiedEvent;
 import com.njydsz.userinfo.domain.event.auth.PasswordChangedEvent;
 import com.njydsz.userinfo.domain.event.auth.SessionEvictedEvent;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户认证事件分发器。
@@ -94,7 +95,7 @@ public class UserAuthEventDispatcher {
         case PasswordChangedEvent e -> listener.onPasswordChanged(e);
         case AccountBannedEvent e -> listener.onAccountBanned(e);
         case AccountUnbannedEvent e -> listener.onAccountUnbanned(e);
-        default -> log.warn("未知事件类型，跳过分发: {}", event.getClass().getName());
+        default -> log.warn(I18n.message("userinfo.未知事件类型.跳过分发", new Object[]{event.getClass().getName()}));
       }
     } catch (Exception e) {
       log.warn(

@@ -1,6 +1,7 @@
 package com.njydsz.message.server.channel.impl;
 
-import java.util.HashMap;
+
+import com.njydsz.common.locales.util.I18n;import java.util.HashMap;
 import java.util.Map;
 
 import jakarta.annotation.PostConstruct;
@@ -91,7 +92,7 @@ public class WechatWorkChannel implements MessageChannel {
   public MessageSendResultVO send(MessageItemRequestDTO request) {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
-      log.warn("[WECOM] 未配置 key，跳过发送: receiver={}", request.getReceiver());
+      log.warn(I18n.message("message.log.server.wecom.warn.not.configured"), request.getReceiver());
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "企业微信 key 未配置", "企业微信 key 未配置", null);
     }
 
@@ -112,19 +113,19 @@ public class WechatWorkChannel implements MessageChannel {
         Map<String, Object> body = YdszJson.parseMap(response.getBody());
         int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
         if (errcode == 0) {
-          log.info("[WECOM] 发送成功");
+          log.info(I18n.message("message.log.other.WECOM.f01fd1"));
           return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
         }
         String errmsg = (String) body.getOrDefault("errmsg", "unknown");
-        log.error("[WECOM] 发送失败: errcode={} errmsg={}", errcode, errmsg);
+        log.error(I18n.message("message.log.other.WECOM_errcode_{}_errmsg_{}.065333"), errcode, errmsg);
         return MessageSendResultVO.fail(
             CHANNEL_TYPE, null, "errcode=" + errcode + ", errmsg=" + errmsg,
             "errcode=" + errcode + ", errmsg=" + errmsg, null);
       }
-      log.error("[WECOM] 发送失败: status={}", response.getStatusCode());
+      log.error(I18n.message("message.log.other.WECOM_status_{}.2799ea"), response.getStatusCode());
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
-      log.error("[WECOM] 发送异常: reason={}", e.getMessage(), e);
+      log.error(I18n.message("message.log.other.WECOM_reason_{}.9a0e71"), e.getMessage(), e);
       return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);

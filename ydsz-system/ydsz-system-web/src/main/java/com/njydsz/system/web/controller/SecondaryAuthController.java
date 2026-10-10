@@ -69,7 +69,7 @@ public class SecondaryAuthController {
   @Data
   public static class SecondaryAuthRequest {
     /** 当前登录用户明文密码（HTTPS 传输） */
-    @NotBlank(message = "密码不能为空")
+    @NotBlank(message = "{system.dto.secondaryAuth.password.required}")
     private String password;
 
     /** 认证场景（如 config-edit / dict-delete），后端审计用 */

@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.receipt;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -75,9 +76,9 @@ public class ReceiptServiceImpl implements ReceiptService {
             dto.getLogId(), dto.getReceiptType(), entity.getReceiptTime());
       } catch (Exception e) {
         // 日志不存在时仅记录，不影响回执落库
-        log.warn("[Receipt] 更新日志回执失败: logId={} err={}", dto.getLogId(), e.getMessage(), e);
+        log.warn(I18n.message("message.log.other.Receipt_logId_{}_err_{}.0fe3ca"), dto.getLogId(), e.getMessage(), e);
       }
-      log.info("[Receipt] 回执落库: logId={} type={}", dto.getLogId(), dto.getReceiptType());
+      log.info(I18n.message("message.log.other.Receipt_logId_{}_type_{}.17f312"), dto.getLogId(), dto.getReceiptType());
     }
   }
 

@@ -1,7 +1,5 @@
 package com.njydsz.agent.domain.dto;
 
-import java.io.Serial;
-import java.io.Serializable;
 
 import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,9 +16,8 @@ import lombok.Data;
  */
 @Data
 @Schema(description = "保存对话记忆请求")
-public class SaveMemoryRequest implements Serializable {
+public class SaveMemoryRequest {
 
-  @Serial private static final long serialVersionUID = 1L;
 
   /** 消息角色（SYSTEM/USER/ASSISTANT/TOOL） */
   @NotBlank(message = "消息角色不能为空")

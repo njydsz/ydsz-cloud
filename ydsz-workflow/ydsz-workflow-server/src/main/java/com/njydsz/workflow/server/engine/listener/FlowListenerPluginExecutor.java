@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.workflow.server.engine.FlowEventContext;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 流程监听器插件执行器
@@ -46,7 +47,7 @@ public class FlowListenerPluginExecutor {
       // Also register by class name for flexibility
       this.pluginMap.put(plugin.getClass().getName(), plugin);
     }
-    log.info("[FlowListener] 已注册 {} 个监听器插件", plugins.size());
+    log.info(I18n.message("workflow.listener.plugin.registered", new Object[]{plugins.size()}));
   }
 
   /**
@@ -84,14 +85,13 @@ public class FlowListenerPluginExecutor {
     for (FlowListenerConfig config : matched) {
       FlowListenerPlugin plugin = pluginMap.get(config.getPluginName());
       if (plugin == null) {
-        log.warn("[FlowListener] 未找到监听器插件: node={} plugin={}", nodeCode, config.getPluginName());
+        log.warn(I18n.message("workflow.listener.plugin.not.found", new Object[]{nodeCode, config.getPluginName()}));
         continue;
       }
       try {
         dispatch(plugin, eventType, instanceId, taskId, nodeCode, variables, ctx);
       } catch (Exception e) {
-        log.warn("[FlowListener] 监听器执行失败: node={} plugin={} err={}",
-            nodeCode, config.getPluginName(), e.getMessage());
+        log.warn(I18n.message("workflow.listener.plugin.dispatch.failed", new Object[]{nodeCode, config.getPluginName(), e.getMessage()}));
       }
     }
   }
@@ -132,7 +132,7 @@ public class FlowListenerPluginExecutor {
         plugin.onInstanceRejected(instanceId, null, ctx);
       case INSTANCE_TERMINATED ->
         plugin.onInstanceTerminated(instanceId, null, ctx);
-      default -> log.debug("[FlowListener] 未处理的事件类型: {}", eventType);
+        default -> log.debug(I18n.message("workflow.listener.plugin.unhandled.event", new Object[]{eventType}));
     }
   }
 

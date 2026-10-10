@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * Webhook 告警通知渠道（P2 告警通知扩展）。
@@ -89,7 +90,7 @@ public class WebhookAlertNotificationChannel implements AlertNotificationChannel
       HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
       restTemplate.postForObject(webhookUrl, request, String.class);
 
-      log.info("Webhook 告警通知发送成功: alertId={}, type={}", alert.id(), alert.alertType());
+      log.info(I18n.message("userinfo.Webhook.告警通知发送成功.alertId=.type=", new Object[]{alert.id(), alert.alertType()}));
     } catch (Exception e) {
       // 告警通知失败不应影响主流程，仅记录日志
       log.warn("Webhook 告警通知发送失败: alertId={}, url={}, error={}",
@@ -164,7 +165,7 @@ public class WebhookAlertNotificationChannel implements AlertNotificationChannel
       String data = timestamp + "\n" + signingSecret;
       return DigestUtils.hmacSha256Base64(data, signingSecret);
     } catch (Exception e) {
-      log.warn("生成 HMAC 签名失败: {}", e.getMessage());
+      log.warn(I18n.message("userinfo.生成.HMAC.签名失败", new Object[]{e.getMessage()}));
       return "";
     }
   }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.config.hotreload.ConfigChangeListener;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 系统模块配置变更监听器（P0-1：接入统一 ConfigChangeBridge）
@@ -77,25 +78,25 @@ public class SystemConfigChangeListener implements ConfigChangeListener {
       return;
     }
 
-    log.info("[System] 配置变更通知: key={}, {} -> {}", key, oldValue, newValue);
+    log.info(I18n.message("system.config.reload.notice", new Object[]{key, oldValue, newValue}));
 
     // 缓存 TTL 变更 → 清理对应本地缓存（使用精确键名相等匹配，避免 contains 子串匹配歧义）
     if (key.equals(CONFIG_CACHE_TTL_KEY)) {
-      evictCacheByName(SystemCacheConstants.SYSTEM_CONFIG_CACHE, "配置");
+      evictCacheByName(SystemCacheConstants.SYSTEM_CONFIG_CACHE);
       return;
     }
     if (key.equals(DICT_CACHE_TTL_KEY)) {
-      evictCacheByName(SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE, "字典");
+      evictCacheByName(SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE);
       return;
     }
     if (key.equals(VARIABLE_CACHE_TTL_KEY)) {
-      evictCacheByName(SystemCacheConstants.SYSTEM_VARIABLE_CACHE, "变量");
+      evictCacheByName(SystemCacheConstants.SYSTEM_VARIABLE_CACHE);
       return;
     }
 
     // 跨实例缓存失效开关变更 → 日志提示
     if (CROSS_INSTANCE_CONFIG_KEY.equals(key)) {
-      log.info("[System] 跨实例缓存失效开关变更: {} -> {}，请确认 Redis Pub/Sub 频道已正确配置", oldValue, newValue);
+      log.info(I18n.message("system.cache.cross_instance.notice", new Object[]{oldValue, newValue}));
     }
   }
 
@@ -105,13 +106,13 @@ public class SystemConfigChangeListener implements ConfigChangeListener {
    * @param cacheName Spring Cache 名称
    * @param cacheLabel 缓存中文标签（用于日志）
    */
-  private void evictCacheByName(String cacheName, String cacheLabel) {
+  private void evictCacheByName(String cacheName) {
     Cache cache = cacheManager.getCache(cacheName);
     if (cache != null) {
       cache.clear();
-      log.info("[System] {} 缓存 TTL 变更，已清理 {} 缓存", cacheLabel, cacheName);
+      log.info(I18n.message("system.cache.evict.done", new Object[]{cacheName, cacheName}));
     } else {
-      log.warn("[System] {} 缓存 {} 不存在，跳过清理", cacheLabel, cacheName);
+      log.warn(I18n.message("system.cache.evict.notfound", new Object[]{cacheName, cacheName}));
     }
   }
 

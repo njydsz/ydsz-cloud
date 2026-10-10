@@ -39,6 +39,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.domain.vo.WebAuthnChallengeVO;
 import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
 import com.njydsz.userinfo.server.config.WebAuthnProperties;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * WebAuthn/Passkey 无密码认证服务（P3-2 通行 Key 增强）。
@@ -167,7 +168,7 @@ public class WebAuthnService {
         "userVerification", "preferred"));
     options.put("attestation", "none");
 
-    log.debug("Passkey 注册选项已生成（discoverable credential）: userId={}", userId);
+    log.debug(I18n.message("userinfo.Passkey.注册选项已生成.discoverable.credential.userId=", new Object[]{userId}));
     return options;
   }
 
@@ -201,7 +202,7 @@ public class WebAuthnService {
     options.put("rpId", webAuthnProperties.getRelyingPartyId());
     options.put("allowCredentials", List.of()); // P3-2: 空列表，浏览器自动发现 Passkey
 
-    log.debug("Passkey 认证选项已生成（usernameless）");
+    log.debug(I18n.message("userinfo.Passkey.认证选项已生成.usernameless"));
     return options;
   }
 
@@ -266,7 +267,7 @@ public class WebAuthnService {
         "userVerification", "preferred"));
     options.put("attestation", "none");
 
-    log.debug("WebAuthn 注册选项已生成: userId={}", userId);
+    log.debug(I18n.message("userinfo.WebAuthn.注册选项已生成.userId=", new Object[]{userId}));
     return options;
   }
 
@@ -345,7 +346,7 @@ public class WebAuthnService {
       options.put("allowCredentials", allowCredentials);
     }
 
-    log.debug("WebAuthn 认证选项已生成: userId={}", userId);
+    log.debug(I18n.message("userinfo.WebAuthn.认证选项已生成.userId=", new Object[]{userId}));
     return options;
   }
 
@@ -586,8 +587,8 @@ public class WebAuthnService {
   private void logWebAuthnFailure(WebAuthnCredentialVO credential, Exception e) {
     String credentialId = credential.getCredentialId()
         .substring(0, Math.min(CREDENTIAL_LOG_PREFIX_LENGTH, credential.getCredentialId().length()));
-    log.warn("WebAuthn 签名验证失败: credentialId={}, error={}", credentialId, e.getMessage());
-    log.error("WebAuthn 签名验证异常: credentialId={}, error={}", credentialId, e.getMessage(), e);
+    log.warn(I18n.message("userinfo.WebAuthn.签名验证失败.credentialId=.error=", new Object[]{credentialId, e.getMessage()}));
+    log.error(I18n.message("userinfo.WebAuthn.签名验证异常.credentialId=.error=", new Object[]{credentialId, e.getMessage()}), e);
   }
 
   /**
@@ -607,7 +608,7 @@ public class WebAuthnService {
 
     // signCount = 0 表示认证器不支持计数器，跳过检测
     if (newSignCount == 0) {
-      log.debug("WebAuthn 认证器不支持计数器（signCount=0），跳过克隆检测");
+      log.debug(I18n.message("userinfo.WebAuthn.认证器不支持计数器.signCount=0.跳过克隆检测"));
       return;
     }
 
@@ -620,7 +621,7 @@ public class WebAuthnService {
       throw new BusinessException(UserInfoExceptionCode.WEBAUTHN_SIGNATURE_INVALID);
     }
 
-    log.debug("WebAuthn signCount 验证通过: previous={}, new={}", previousSignCount, newSignCount);
+    log.debug(I18n.message("userinfo.WebAuthn.signCount.验证通过.previous=.new=", new Object[]{previousSignCount, newSignCount}));
   }
 
   /**

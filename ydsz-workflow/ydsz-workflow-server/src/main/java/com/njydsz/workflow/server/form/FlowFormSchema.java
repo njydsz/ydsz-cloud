@@ -1,7 +1,5 @@
 package com.njydsz.workflow.server.form;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -21,12 +19,12 @@ import lombok.Data;
  *     "title": "采购申请表",
  *     "description": "请填写采购申请信息",
  *     "fields": [
- *       {"fieldKey": "title", "label": "采购标题", "fieldType": "text", "required": true},
- *       {"fieldKey": "amount", "label": "采购金额", "fieldType": "money", "required": true, "currency": "CNY"},
- *       {"fieldKey": "items", "label": "采购明细", "fieldType": "sub_form",
+ *      {"fieldKey": "title", "label": "采购标题", "fieldType": "text", "required": true},
+ *      {"fieldKey": "amount", "label": "采购金额", "fieldType": "money", "required": true, "currency": "CNY"},
+ *      {"fieldKey": "items", "label": "采购明细", "fieldType": "sub_form",
  *        "subFields": [
- *          {"fieldKey": "name", "label": "物品名称", "fieldType": "text", "required": true},
- *          {"fieldKey": "qty", "label": "数量", "fieldType": "number", "required": true}
+ *         {"fieldKey": "name", "label": "物品名称", "fieldType": "text", "required": true},
+ *         {"fieldKey": "qty", "label": "数量", "fieldType": "number", "required": true}
  *        ], "minRows": 1, "maxRows": 20}
  *     ]
  *   }
@@ -37,9 +35,7 @@ import lombok.Data;
  * @author ydsz-team
  */
 @Data
-public class FlowFormSchema implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FlowFormSchema {
 
   /** 表单标题 */
   private String title;

@@ -1,6 +1,7 @@
 package com.njydsz.message.server.service.impl.batch;
 
-import java.time.LocalDateTime;
+
+import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -165,7 +166,7 @@ public class AggregateServiceImpl implements AggregateService {
       }
     }
     if (sent > 0) {
-      log.info("[Aggregate] flushDue 发送 {} 个到期批次", sent);
+      log.info(I18n.message("message.log.other.Aggregate_flushDue_{}.203d5c"), sent);
     }
     return sent;
   }
@@ -194,7 +195,7 @@ public class AggregateServiceImpl implements AggregateService {
         sent++;
       }
     }
-    log.info("[Aggregate] flushByGroup 发送 {} 个批次: group={} receiver={}", sent, group, receiver);
+    log.info(I18n.message("message.log.other.Aggregate_flushByGroup_{}_group_{}_receiver_{}.0b0c13"), sent, group, receiver);
     return sent;
   }
 
@@ -227,7 +228,7 @@ public class AggregateServiceImpl implements AggregateService {
         msgAggregateRepository.updateStatus(
             batch.getId(), AggregateBatchStatusEnum.READY.name(), AggregateBatchStatusEnum.SENDING.name());
     if (claimed == 0) {
-      log.debug("[Aggregate] 批次已被其他实例占有,跳过: id={}", batch.getId());
+      log.debug(I18n.message("message.log.other.Aggregate_id_{}.4f2bd3"), batch.getId());
       return false;
     }
     batch.setBatchStatus(AggregateBatchStatusEnum.SENDING.name());
@@ -261,7 +262,7 @@ public class AggregateServiceImpl implements AggregateService {
       revertToReady(batch.getId());
       return false;
     } catch (Exception e) {
-      log.error("[Aggregate] 批次发送异常,回退 READY: id={} err={}", batch.getId(), e.getMessage(), e);
+      log.error(I18n.message("message.log.other.Aggregate_READY_id_{}_err_{}.972035"), batch.getId(), e.getMessage(), e);
       revertToReady(batch.getId());
       return false;
     }

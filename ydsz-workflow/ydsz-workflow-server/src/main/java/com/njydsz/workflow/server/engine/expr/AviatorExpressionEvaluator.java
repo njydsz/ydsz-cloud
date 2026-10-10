@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 工作流内置 Aviator 表达式求值器（安全加固版）。
@@ -73,8 +74,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
     // 注意：Aviator 5.4.3 没有 MAX_LENGTH 选项，表达式长度限制由调用方控制
     // 关闭追踪（生产环境不需要）
     this.instance.setOption(Options.TRACE_EVAL, false);
-    log.info("[Flow][Aviator] 安全加固求值器已初始化（禁用 NewInstance/Module 反射特性，MAX_LENGTH={}）",
-        MAX_EXPRESSION_LENGTH);
+    log.info(I18n.message("workflow.aviator.init", new Object[]{MAX_EXPRESSION_LENGTH}));
   }
 
   /** {@inheritDoc} */
@@ -93,7 +93,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
       }
       return result != null;
     } catch (Exception e) {
-      log.warn("[Flow][Aviator] 布尔表达式求值失败: expr='{}' err={}", expression, e.getMessage());
+      log.warn(I18n.message("workflow.aviator.bool.eval.failed", new Object[]{expression, e.getMessage()}));
       return false;
     }
   }
@@ -107,7 +107,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
     try {
       return execute(expression, variables);
     } catch (Exception e) {
-      log.warn("[Flow][Aviator] 表达式求值失败: expr='{}' err={}", expression, e.getMessage());
+      log.warn(I18n.message("workflow.aviator.expr.eval.failed", new Object[]{expression, e.getMessage()}));
       return null;
     }
   }

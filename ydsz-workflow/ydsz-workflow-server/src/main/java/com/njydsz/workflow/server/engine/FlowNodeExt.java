@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * FlowNode ext JSON 字段提取工具。
@@ -298,7 +299,7 @@ public final class FlowNodeExt {
       Map<String, Object> map = YdszJson.parseMap(ext);
       return map != null ? map : Collections.emptyMap();
     } catch (Exception e) {
-      log.warn("[FlowNodeExt] 解析 ext JSON 失败: err={}", e.getMessage());
+      log.warn(I18n.message("workflow.engine.nodeExt.parse.failed", new Object[]{e.getMessage()}));
       return Collections.emptyMap();
     }
   }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 验证码服务（手机/邮箱验证码发送与校验）。
@@ -79,7 +80,7 @@ public class VerifyCodeService {
     } catch (BusinessException e) {
       throw e;
     } catch (Exception e) {
-      log.warn("读取验证码频率限制异常: target={}, error={}", target, e.getMessage());
+      log.warn(I18n.message("userinfo.读取验证码频率限制异常.target=.error=", new Object[]{target, e.getMessage()}));
     }
 
     // 生成 6 位随机验证码
@@ -90,9 +91,9 @@ public class VerifyCodeService {
     try {
       redisStringOps.set(codeKey, code, codeTtl);
       redisStringOps.set(limitKey, "1", limitTtl);
-      log.info("验证码已生成: type={}, targetType={}, target={}", type, targetType, target);
+      log.info(I18n.message("userinfo.验证码已生成.type=.targetType=.target=", new Object[]{type, targetType, target}));
     } catch (Exception e) {
-      log.error("存储验证码异常: type={}, target={}, error={}", type, target, e.getMessage());
+      log.error(I18n.message("userinfo.存储验证码异常.type=.target=.error=", new Object[]{type, target, e.getMessage()}));
       throw new BusinessException(UserInfoExceptionCode.VERIFY_CODE_INVALID);
     }
   }
@@ -113,7 +114,7 @@ public class VerifyCodeService {
     try {
       String storedCode = redisStringOps.get(codeKey, String.class);
       if (storedCode == null) {
-        log.warn("验证码不存在或已过期: type={}, target={}", type, target);
+        log.warn(I18n.message("userinfo.验证码不存在或已过期.type=.target=", new Object[]{type, target}));
         return false;
       }
       boolean matched = storedCode.equals(code);
@@ -123,7 +124,7 @@ public class VerifyCodeService {
       }
       return matched;
     } catch (Exception e) {
-      log.warn("校验验证码异常: type={}, target={}, error={}", type, target, e.getMessage());
+      log.warn(I18n.message("userinfo.校验验证码异常.type=.target=.error=", new Object[]{type, target, e.getMessage()}));
       return false;
     }
   }

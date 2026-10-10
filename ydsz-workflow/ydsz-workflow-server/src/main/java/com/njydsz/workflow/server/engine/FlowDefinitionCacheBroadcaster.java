@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.service.ops.RedisPubSubOps;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.workflow.server.config.FlowProperties;
 
@@ -87,10 +88,10 @@ public class FlowDefinitionCacheBroadcaster {
           if (sourceNodeId.equals(source)) {
             return;
           }
-          log.info("[FlowCache] 收到集群缓存失效广播: definitionId={} source={}", definitionId, source);
+          log.info(I18n.message("workflow.cache.broadcaster.received", new Object[]{definitionId, source}));
           cacheService.evictLocal(definitionId);
         });
-    log.info("[FlowCache] 流程定义缓存失效监听已启动: channel={} node={}", CHANNEL, sourceNodeId);
+    log.info(I18n.message("workflow.cache.broadcaster.started", new Object[]{CHANNEL, sourceNodeId}));
   }
 
   /**
@@ -107,7 +108,7 @@ public class FlowDefinitionCacheBroadcaster {
       redisPubSubOps.publish(CHANNEL, message);
     } catch (Exception e) {
       // 广播失败不影响本地操作，仅记录日志
-      log.warn("[FlowCache] 缓存失效广播失败: definitionId={} err={}", definitionId, e.getMessage());
+      log.warn(I18n.message("workflow.cache.broadcaster.failed", new Object[]{definitionId, e.getMessage()}));
     }
   }
 }

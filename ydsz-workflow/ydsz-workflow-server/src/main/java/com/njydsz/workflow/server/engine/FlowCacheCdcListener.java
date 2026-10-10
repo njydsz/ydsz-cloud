@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.engine;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.locales.util.I18n;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -42,16 +43,14 @@ public class FlowCacheCdcListener {
   @EventListener
   public void onCacheInvalidate(FlowCacheInvalidateEvent event) {
     if (event == null || event.getDefinitionId() == null) {
-      log.warn("[FlowCacheCdc] 收到无效缓存失效事件");
+      log.warn(I18n.message("workflow.cache.cdc.invalid.event", new Object[]{}));
       return;
     }
     try {
-      log.info("[FlowCacheCdc] 缓存失效: definitionId={} source={}",
-          event.getDefinitionId(), event.getSource());
+      log.info(I18n.message("workflow.cache.cdc.evict", new Object[]{event.getDefinitionId(), event.getSource()}));
       cacheService.evict(event.getDefinitionId());
     } catch (Exception e) {
-      log.warn("[FlowCacheCdc] 缓存失效处理异常 definitionId={}: {}",
-          event.getDefinitionId(), e.getMessage());
+      log.warn(I18n.message("workflow.cache.cdc.evict.failed", new Object[]{event.getDefinitionId(), e.getMessage()}));
     }
   }
 }
