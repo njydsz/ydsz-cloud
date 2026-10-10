@@ -153,9 +153,9 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_definition_agent_type ON ydsz_agt_defini
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_definition_tenant_is_deleted ON ydsz_agt_definition (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
-    trace_id                 VARCHAR(64)             ,
-    conversation_id          VARCHAR(64)              NOT NULL,
-    agent_id                 VARCHAR(64)              NOT NULL,
+    trace_id                 VARCHAR(36)             ,
+    conversation_id          VARCHAR(36)              NOT NULL,
+    agent_id                 VARCHAR(36)              NOT NULL,
     status                   VARCHAR(32)              NOT NULL,
     total_duration_ms        BIGINT                   DEFAULT NULL,
     -- MpBaseEntity 继承字段
@@ -188,7 +188,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_trace_status ON ydsz_agt_trace (st
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_tenant_is_deleted ON ydsz_agt_trace (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
-    trace_id                 VARCHAR(64)              NOT NULL,
+    trace_id                 VARCHAR(36)              NOT NULL,
     step_index               INTEGER                  NOT NULL,
     step_type                VARCHAR(32)              NOT NULL,
     content                  TEXT                     DEFAULT NULL,
@@ -232,8 +232,8 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_step_tenant ON ydsz_agt_trace_step
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     id                       VARCHAR(36)
-    conversation_id          VARCHAR(64)              DEFAULT NULL,
-    trace_id                 VARCHAR(64)              DEFAULT NULL,
+    conversation_id          VARCHAR(36)              DEFAULT NULL,
+    trace_id                 VARCHAR(36)              DEFAULT NULL,
     step_description         VARCHAR(512)             DEFAULT NULL,
     context_json             TEXT                     DEFAULT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'PENDING',
@@ -292,7 +292,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_approval_approval_tenant ON ydsz_agt_app
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
     id                       VARCHAR(36)
-    conversation_id          VARCHAR(64)              NOT NULL,
+    conversation_id          VARCHAR(36)              NOT NULL,
     model_name               VARCHAR(64)              NOT NULL,
     prompt_tokens            BIGINT                   NOT NULL DEFAULT 0,
     completion_tokens        BIGINT                   NOT NULL DEFAULT 0,
@@ -343,7 +343,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_token_usage_tenant_is_deleted ON ydsz_ag
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_document_chunk (
     id                       VARCHAR(36) NOT NULL
-    document_id              VARCHAR(64)              NOT NULL,
+    document_id              VARCHAR(36)              NOT NULL,
     content                  TEXT                     NOT NULL,
     embedding                BYTEA                    DEFAULT NULL,
     chunk_index              INTEGER                  DEFAULT NULL,
@@ -456,7 +456,7 @@ EXECUTE FUNCTION fn_ydsz_agt_token_usage_set_updated_at();
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_user_profile (
-    user_id                 VARCHAR(32)    NOT NULL,
+    user_id                  VARCHAR(36)    NOT NULL,
     preferred_language      VARCHAR(32)    DEFAULT NULL,
     interested_domains      TEXT           DEFAULT NULL,
     domain_frequency        TEXT           DEFAULT NULL,
@@ -469,7 +469,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_user_profile (
     CONSTRAINT pk_ydsz_agt_user_profile PRIMARY KEY (user_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER        NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64)    NOT NULL DEFAULT '0',
+    tenant_id                VARCHAR(36)    NOT NULL DEFAULT '0',
     is_deleted SMALLINT       NOT NULL DEFAULT 0,
     created_by VARCHAR(36) DEFAULT NULL,
     created_at TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -509,9 +509,9 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_user_profile_last_interaction_at ON ydsz
 CREATE TABLE IF NOT EXISTS ydsz_agt_insight_report (
     id                       VARCHAR(36)              NOT NULL,
     CONSTRAINT pk_ydsz_agt_insight_report PRIMARY KEY (id),
-    report_id               VARCHAR(64)    NOT NULL,
-    user_id                 VARCHAR(64)    NOT NULL,
-    conversation_id         VARCHAR(64)    DEFAULT NULL,
+    report_id                VARCHAR(36)    NOT NULL,
+    user_id                  VARCHAR(36)    NOT NULL,
+    conversation_id          VARCHAR(36)    DEFAULT NULL,
     title                   VARCHAR(256)   NOT NULL,
     query                   TEXT           DEFAULT NULL,
     data_source_type        VARCHAR(32)    DEFAULT NULL,
@@ -526,7 +526,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_insight_report (
     CONSTRAINT uk_ydsz_agt_insight_report_report_id UNIQUE (report_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER        NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64)    NOT NULL DEFAULT '0',
+    tenant_id                VARCHAR(36)    NOT NULL DEFAULT '0',
     is_deleted SMALLINT       NOT NULL DEFAULT 0,
     created_by VARCHAR(36) DEFAULT NULL,
     created_at TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -613,7 +613,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_dag_workflow (
     status          VARCHAR(32) DEFAULT NULL,
     sort INTEGER DEFAULT 0,
     revision INTEGER     NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(64) NOT NULL DEFAULT '0',
+    tenant_id                VARCHAR(36) NOT NULL DEFAULT '0',
     is_deleted SMALLINT NOT NULL DEFAULT 0,
     created_by VARCHAR(64),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -655,7 +655,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_async_task (
     id                       VARCHAR(36) NOT NULL
     task_type                VARCHAR(64)              NOT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'PENDING',
-    user_id                  VARCHAR(64)              DEFAULT NULL,
+    user_id                  VARCHAR(36)              DEFAULT NULL,
     input_payload            TEXT                     DEFAULT NULL,
     output_payload           TEXT                     DEFAULT NULL,
     error_message            VARCHAR(1024)            DEFAULT NULL,
@@ -664,7 +664,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_async_task (
     max_retry                INTEGER                  NOT NULL DEFAULT 3,
     next_retry_at            TIMESTAMP                DEFAULT NULL,
     timeout_seconds          BIGINT                   DEFAULT NULL,
-    worker_id                VARCHAR(128)             DEFAULT NULL,
+    worker_id                VARCHAR(36)             DEFAULT NULL,
     started_at               TIMESTAMP                DEFAULT NULL,
     completed_at             TIMESTAMP                DEFAULT NULL,
     expire_at                TIMESTAMP                DEFAULT NULL,

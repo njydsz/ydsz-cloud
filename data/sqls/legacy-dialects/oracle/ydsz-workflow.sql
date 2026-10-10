@@ -39,7 +39,7 @@ CREATE TABLE ydsz_flow_category (
     id                       VARCHAR2(36 CHAR)
     category_code            VARCHAR2(64 CHAR)        NOT NULL,
     category_name            VARCHAR2(128 CHAR)       NOT NULL,
-    parent_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
+    parent_id                VARCHAR2(36 CHAR) DEFAULT NULL
     sort_num                 NUMBER(10)               NOT NULL DEFAULT 0,
     icon                     VARCHAR2(128 CHAR)       DEFAULT NULL,
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE ydsz_flow_definition (
     listener_path            VARCHAR2(128 CHAR)       DEFAULT NULL,
     ext                      CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_flow_definition_ext CHECK (ext IS JSON),
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     canary_percent           NUMBER(10)               NOT NULL DEFAULT 0,
     canary_status            VARCHAR2(32 CHAR)        DEFAULT NULL,
     canary_strategy          VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -155,7 +155,7 @@ CREATE TABLE ydsz_flow_template (
     bpmn_xml                 CLOB                    ,
     form_path                VARCHAR2(1024 CHAR)      DEFAULT NULL,
     use_count                NUMBER(10)               NOT NULL DEFAULT 0,
-    parent_template_id       VARCHAR2(32 CHAR)        DEFAULT NULL,
+    parent_template_id       VARCHAR2(36 CHAR) DEFAULT NULL
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     version_label            VARCHAR2(32 CHAR)        DEFAULT NULL,
     inherit_type             VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -204,7 +204,7 @@ CREATE INDEX idx_ydsz_flow_template_tenant_is_deleted ON ydsz_flow_template (ten
 
 CREATE TABLE ydsz_flow_node (
     id                       VARCHAR2(36 CHAR)
-    definition_id            VARCHAR2(32 CHAR)        NOT NULL,
+    definition_id            VARCHAR2(36 CHAR) NOT NULL
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     node_type                NUMBER(10)               NOT NULL,
     node_code                VARCHAR2(64 CHAR)        NOT NULL,
@@ -216,7 +216,7 @@ CREATE TABLE ydsz_flow_node (
     ext                      CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_flow_node_ext CHECK (ext IS JSON),
     form_fields_config       CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_flow_node_form_fields_config CHECK (form_fields_config IS JSON),
     sla_config               CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_flow_node_sla_config CHECK (sla_config IS JSON),
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_node PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_node_definition_node_code UNIQUE (definition_id, node_code),
@@ -259,7 +259,7 @@ CREATE INDEX idx_ydsz_flow_node_tenant_is_deleted ON ydsz_flow_node (tenant_id, 
 
 CREATE TABLE ydsz_flow_skip (
     id                       VARCHAR2(36 CHAR)
-    definition_id            VARCHAR2(32 CHAR)        NOT NULL,
+    definition_id            VARCHAR2(36 CHAR) NOT NULL
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     skip_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     skip_type                VARCHAR2(32 CHAR)        NOT NULL,
@@ -271,7 +271,7 @@ CREATE TABLE ydsz_flow_skip (
     coordinate_next          CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_flow_skip_coordinate_next CHECK (coordinate_next IS JSON),
     skip_list                CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_flow_skip_skip_list CHECK (skip_list IS JSON),
     ext                      CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_flow_skip_ext CHECK (ext IS JSON),
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_skip PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -358,13 +358,13 @@ CREATE TABLE ydsz_flow_instance (
     id                       VARCHAR2(36 CHAR)
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     flow_name                VARCHAR2(128 CHAR)       NOT NULL,
-    definition_id            VARCHAR2(32 CHAR)        NOT NULL,
+    definition_id            VARCHAR2(36 CHAR) NOT NULL
     flow_version             VARCHAR2(32 CHAR)        NOT NULL,
     business_type            VARCHAR2(64 CHAR)        NOT NULL,
-    business_id              VARCHAR2(64 CHAR)        NOT NULL,
+    business_id              VARCHAR2(36 CHAR) NOT NULL
     business_no              VARCHAR2(64 CHAR)        DEFAULT NULL,
     title                    VARCHAR2(128 CHAR)       DEFAULT NULL,
-    initiator_id             VARCHAR2(32 CHAR)        NOT NULL,
+    initiator_id             VARCHAR2(36 CHAR) NOT NULL
     initiator_name           VARCHAR2(64 CHAR)        DEFAULT NULL,
     current_node_code        VARCHAR2(64 CHAR)        DEFAULT NULL,
     current_node_name        VARCHAR2(128 CHAR)       DEFAULT NULL,
@@ -374,9 +374,9 @@ CREATE TABLE ydsz_flow_instance (
     start_at                 TIMESTAMP                DEFAULT NULL,
     end_at                   TIMESTAMP                DEFAULT NULL,
     duration_ms              NUMBER(19)               DEFAULT NULL,
-    parent_instance_id       VARCHAR2(32 CHAR)        DEFAULT NULL,
+    parent_instance_id       VARCHAR2(36 CHAR) DEFAULT NULL
     parent_node_code         VARCHAR2(64 CHAR)        DEFAULT NULL,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     due_at                   TIMESTAMP                DEFAULT NULL,
     reject_reason            VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -432,21 +432,21 @@ CREATE INDEX idx_ydsz_flow_instance_tenant_is_deleted ON ydsz_flow_instance (ten
 
 CREATE TABLE ydsz_flow_run_task (
     id                       VARCHAR2(36 CHAR)
-    instance_id              VARCHAR2(32 CHAR)        NOT NULL,
+    instance_id              VARCHAR2(36 CHAR) NOT NULL
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
-    definition_id            VARCHAR2(32 CHAR)        NOT NULL,
+    definition_id            VARCHAR2(36 CHAR) NOT NULL
     node_code                VARCHAR2(64 CHAR)        NOT NULL,
     node_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     node_type                NUMBER(10)               DEFAULT NULL,
     business_type            VARCHAR2(64 CHAR)        DEFAULT NULL,
-    business_id              VARCHAR2(64 CHAR)        DEFAULT NULL,
+    business_id              VARCHAR2(36 CHAR) DEFAULT NULL
     business_no              VARCHAR2(64 CHAR)        DEFAULT NULL,
     flow_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     title                    VARCHAR2(128 CHAR)       DEFAULT NULL,
-    assignor_id              VARCHAR2(32 CHAR)        DEFAULT NULL,
+    assignor_id              VARCHAR2(36 CHAR) DEFAULT NULL
     assignor_name            VARCHAR2(64 CHAR)        DEFAULT NULL,
     assignee_type            VARCHAR2(32 CHAR)        DEFAULT NULL,
-    assignee_id              VARCHAR2(64 CHAR)        NOT NULL,
+    assignee_id              VARCHAR2(36 CHAR) NOT NULL
     assignee_name            VARCHAR2(64 CHAR)        DEFAULT NULL,
     permission_flag          VARCHAR2(512 CHAR)       DEFAULT NULL,
     perform_type             VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -471,7 +471,7 @@ CREATE TABLE ydsz_flow_run_task (
     -- GAP-P0 幂等修复: iter_var 非空占位（对齐 MySQL 版），保证 uk 约束对非 FOREACH 任务生效
     -- （Oracle 唯一约束视 NULL 为互异值，若允许 NULL 则重复任务无法被约束拦截）
     iter_var                 VARCHAR2(128 CHAR)       DEFAULT '' NOT NULL,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_run_task PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_run_task_instance_node_assignee UNIQUE (instance_id, node_code, assignee_id, iter_var),
@@ -540,18 +540,18 @@ CREATE INDEX idx_ydsz_flow_run_task_tenant_is_deleted ON ydsz_flow_run_task (ten
 
 CREATE TABLE ydsz_flow_user (
     id                       VARCHAR2(36 CHAR)
-    task_id                  VARCHAR2(32 CHAR)        NOT NULL,
-    instance_id              VARCHAR2(32 CHAR)        NOT NULL,
+    task_id                  VARCHAR2(36 CHAR) NOT NULL
+    instance_id              VARCHAR2(36 CHAR) NOT NULL
     node_code                VARCHAR2(64 CHAR)        NOT NULL,
     user_type                VARCHAR2(32 CHAR)        DEFAULT NULL,
-    user_id                  VARCHAR2(64 CHAR)        NOT NULL,
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
     user_name                VARCHAR2(64 CHAR)        DEFAULT NULL,
     processed                NUMBER(10)               NOT NULL DEFAULT 0,
     process_at               TIMESTAMP                DEFAULT NULL,
     comment                  VARCHAR2(512 CHAR)       DEFAULT NULL,
     weight                   NUMBER(10)               NOT NULL DEFAULT 1,
     sign_type                VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ORIGINAL',
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_user PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_user_task_user UNIQUE (task_id, user_id, sign_type),
@@ -593,19 +593,19 @@ CREATE INDEX idx_ydsz_flow_user_tenant_is_deleted ON ydsz_flow_user (tenant_id, 
 
 CREATE TABLE ydsz_flow_timer (
     id                       VARCHAR2(36 CHAR)
-    instance_id              VARCHAR2(32 CHAR)        NOT NULL,
-    definition_id            VARCHAR2(32 CHAR)        NOT NULL,
+    instance_id              VARCHAR2(36 CHAR) NOT NULL
+    definition_id            VARCHAR2(36 CHAR) NOT NULL
     flow_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
     node_code                VARCHAR2(64 CHAR)        NOT NULL,
     node_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     timer_type               VARCHAR2(32 CHAR)        NOT NULL,
-    boundary_task_id         VARCHAR2(32 CHAR)        DEFAULT NULL,
+    boundary_task_id         VARCHAR2(36 CHAR) DEFAULT NULL
     fire_at                  TIMESTAMP                NOT NULL,
     cycle                    VARCHAR2(64 CHAR)        DEFAULT NULL,
     timer_status             VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'PENDING',
     fired_at                 TIMESTAMP                DEFAULT NULL,
     cancel_reason            VARCHAR2(512 CHAR)       DEFAULT NULL,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_timer PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -649,21 +649,21 @@ CREATE INDEX idx_ydsz_flow_timer_tenant_is_deleted ON ydsz_flow_timer (tenant_id
 
 CREATE TABLE ydsz_flow_event_subscription (
     id                       VARCHAR2(36 CHAR)
-    instance_id              VARCHAR2(32 CHAR)        NOT NULL,
-    definition_id            VARCHAR2(32 CHAR)        NOT NULL,
+    instance_id              VARCHAR2(36 CHAR) NOT NULL
+    definition_id            VARCHAR2(36 CHAR) NOT NULL
     flow_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
     node_code                VARCHAR2(64 CHAR)        NOT NULL,
     node_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     event_type               VARCHAR2(32 CHAR)        NOT NULL,
     event_ref                VARCHAR2(64 CHAR)        NOT NULL,
     correlation_key          VARCHAR2(64 CHAR)        DEFAULT NULL,
-    boundary_task_id         VARCHAR2(32 CHAR)        DEFAULT NULL,
+    boundary_task_id         VARCHAR2(36 CHAR) DEFAULT NULL
     subscription_status      VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'WAITING',
     payload                  CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_flow_event_subscription_payload CHECK (payload IS JSON),
     triggered_at             TIMESTAMP                DEFAULT NULL,
     trigger_source           VARCHAR2(32 CHAR)        DEFAULT NULL,
     cancel_reason            VARCHAR2(512 CHAR)       DEFAULT NULL,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_event_subscription PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -710,20 +710,20 @@ CREATE INDEX idx_ydsz_flow_event_subscription_tenant_is_deleted ON ydsz_flow_eve
 
 CREATE TABLE ydsz_flow_his_task (
     id                       VARCHAR2(36 CHAR)
-    instance_id              VARCHAR2(32 CHAR)        NOT NULL,
-    task_id                  VARCHAR2(32 CHAR)        NOT NULL,
+    instance_id              VARCHAR2(36 CHAR) NOT NULL
+    task_id                  VARCHAR2(36 CHAR) NOT NULL
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
-    definition_id            VARCHAR2(32 CHAR)        NOT NULL,
+    definition_id            VARCHAR2(36 CHAR) NOT NULL
     node_code                VARCHAR2(64 CHAR)        NOT NULL,
     node_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     node_type                NUMBER(10)               DEFAULT NULL,
     business_type            VARCHAR2(64 CHAR)        DEFAULT NULL,
-    business_id              VARCHAR2(64 CHAR)        DEFAULT NULL,
+    business_id              VARCHAR2(36 CHAR) DEFAULT NULL
     business_no              VARCHAR2(64 CHAR)        DEFAULT NULL,
     flow_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     title                    VARCHAR2(128 CHAR)       DEFAULT NULL,
     assignee_type            VARCHAR2(32 CHAR)        DEFAULT NULL,
-    assignee_id              VARCHAR2(64 CHAR)        DEFAULT NULL,
+    assignee_id              VARCHAR2(36 CHAR) DEFAULT NULL
     assignee_name            VARCHAR2(64 CHAR)        DEFAULT NULL,
     perform_type             VARCHAR2(32 CHAR)        DEFAULT NULL,
     approve_count            NUMBER(10)               DEFAULT NULL,
@@ -735,7 +735,7 @@ CREATE TABLE ydsz_flow_his_task (
     finish_at                TIMESTAMP                DEFAULT NULL,
     effective_time           TIMESTAMP                DEFAULT NULL,
     duration_ms              NUMBER(19)               DEFAULT NULL,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     iter_var                 VARCHAR2(128 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_his_task PRIMARY KEY (id),
@@ -797,13 +797,13 @@ CREATE TABLE ydsz_flow_his_instance (
     id                       VARCHAR2(36 CHAR)
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     flow_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
-    definition_id            VARCHAR2(32 CHAR)        NOT NULL,
+    definition_id            VARCHAR2(36 CHAR) NOT NULL
     flow_version             VARCHAR2(32 CHAR)        DEFAULT NULL,
     business_type            VARCHAR2(64 CHAR)        NOT NULL,
-    business_id              VARCHAR2(64 CHAR)        NOT NULL,
+    business_id              VARCHAR2(36 CHAR) NOT NULL
     business_no              VARCHAR2(64 CHAR)        DEFAULT NULL,
     title                    VARCHAR2(128 CHAR)       DEFAULT NULL,
-    initiator_id             VARCHAR2(32 CHAR)        NOT NULL,
+    initiator_id             VARCHAR2(36 CHAR) NOT NULL
     initiator_name           VARCHAR2(64 CHAR)        DEFAULT NULL,
     current_node_code        VARCHAR2(64 CHAR)        DEFAULT NULL,
     current_node_name        VARCHAR2(128 CHAR)       DEFAULT NULL,
@@ -814,7 +814,7 @@ CREATE TABLE ydsz_flow_his_instance (
     end_at                   TIMESTAMP                DEFAULT NULL,
     duration_ms              NUMBER(19)               DEFAULT NULL,
     archived_at              TIMESTAMP                DEFAULT NULL,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_his_instance PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_his_instance_business_type_id UNIQUE (business_type, business_id),
@@ -864,17 +864,17 @@ CREATE INDEX idx_ydsz_flow_his_instance_end_at ON ydsz_flow_his_instance (end_at
 
 CREATE TABLE ydsz_flow_comment (
     id                       VARCHAR2(36 CHAR)
-    instance_id              VARCHAR2(32 CHAR)        NOT NULL,
-    task_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
+    instance_id              VARCHAR2(36 CHAR) NOT NULL
+    task_id                  VARCHAR2(36 CHAR) DEFAULT NULL
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
-    user_id                  VARCHAR2(32 CHAR)        NOT NULL,
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
     user_name                VARCHAR2(64 CHAR)        DEFAULT NULL,
     content                  VARCHAR2(2000 CHAR)      NOT NULL,
     type                     VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'COMMENT',
-    parent_comment_id        VARCHAR2(32 CHAR)        DEFAULT NULL,
-    reply_to_user_id         VARCHAR2(32 CHAR)        DEFAULT NULL,
+    parent_comment_id        VARCHAR2(36 CHAR) DEFAULT NULL
+    reply_to_user_id         VARCHAR2(36 CHAR) DEFAULT NULL
     reply_to_user_name       VARCHAR2(64 CHAR)        DEFAULT NULL,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_comment PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -915,7 +915,7 @@ CREATE INDEX idx_ydsz_flow_comment_tenant_is_deleted ON ydsz_flow_comment (tenan
 
 CREATE TABLE ydsz_flow_quick_comment (
     id                       VARCHAR2(36 CHAR)
-    user_id                  VARCHAR2(32 CHAR)        NOT NULL,
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
     content                  VARCHAR2(500 CHAR)       NOT NULL,
     comment_type             VARCHAR2(32 CHAR)        DEFAULT NULL,
     sort_num                 NUMBER(10)               NOT NULL DEFAULT 0,
@@ -957,23 +957,23 @@ CREATE INDEX idx_ydsz_flow_quick_comment_tenant_is_deleted ON ydsz_flow_quick_co
 
 CREATE TABLE ydsz_flow_cc (
     id                       VARCHAR2(36 CHAR)
-    instance_id              VARCHAR2(32 CHAR)        NOT NULL,
-    task_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
+    instance_id              VARCHAR2(36 CHAR) NOT NULL
+    task_id                  VARCHAR2(36 CHAR) DEFAULT NULL
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
     node_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     flow_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     business_key             VARCHAR2(64 CHAR)        DEFAULT NULL,
-    cc_user_id               VARCHAR2(32 CHAR)        NOT NULL,
+    cc_user_id               VARCHAR2(36 CHAR) NOT NULL
     cc_user_name             VARCHAR2(64 CHAR)        DEFAULT NULL,
     cc_type                  VARCHAR2(32 CHAR)        NOT NULL,
-    trigger_user_id          VARCHAR2(32 CHAR)        DEFAULT NULL,
+    trigger_user_id          VARCHAR2(36 CHAR) DEFAULT NULL
     trigger_user_name        VARCHAR2(64 CHAR)        DEFAULT NULL,
     title                    VARCHAR2(128 CHAR)       DEFAULT NULL,
     content                  VARCHAR2(512 CHAR)       DEFAULT NULL,
     read_status              VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'UNREAD',
     read_at                  TIMESTAMP                DEFAULT NULL,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_cc PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -1026,7 +1026,7 @@ CREATE TABLE ydsz_flow_cc_rule (
     rule_type                VARCHAR2(32 CHAR)        NOT NULL,
     rule_target              VARCHAR2(512 CHAR)       DEFAULT NULL,
     is_enabled                  NUMBER(10)               NOT NULL DEFAULT 1,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_cc_rule PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -1062,8 +1062,8 @@ CREATE INDEX idx_ydsz_flow_cc_rule_tenant_is_deleted ON ydsz_flow_cc_rule (tenan
 
 CREATE TABLE ydsz_flow_attachment (
     id                       VARCHAR2(36 CHAR)
-    instance_id              VARCHAR2(32 CHAR)        NOT NULL,
-    task_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
+    instance_id              VARCHAR2(36 CHAR) NOT NULL
+    task_id                  VARCHAR2(36 CHAR) DEFAULT NULL
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
     biz_type                 VARCHAR2(32 CHAR)        NOT NULL,
     file_name                VARCHAR2(255 CHAR)       NOT NULL,
@@ -1072,11 +1072,11 @@ CREATE TABLE ydsz_flow_attachment (
     content_type             VARCHAR2(128 CHAR)       DEFAULT NULL,
     storage_key              VARCHAR2(512 CHAR)       NOT NULL,
     storage_type             VARCHAR2(32 CHAR)        NOT NULL,
-    uploader_id              VARCHAR2(32 CHAR)        NOT NULL,
+    uploader_id              VARCHAR2(36 CHAR) NOT NULL
     uploader_name            VARCHAR2(64 CHAR)        DEFAULT NULL,
     download_url             VARCHAR2(1024 CHAR)      DEFAULT NULL,
     md5                      VARCHAR2(64 CHAR)        DEFAULT NULL,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_attachment PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -1122,9 +1122,9 @@ CREATE INDEX idx_ydsz_flow_attachment_tenant_is_deleted ON ydsz_flow_attachment 
 
 CREATE TABLE ydsz_flow_delegate_auth (
     id                       VARCHAR2(36 CHAR)
-    owner_user_id            VARCHAR2(32 CHAR)        NOT NULL,
+    owner_user_id            VARCHAR2(36 CHAR) NOT NULL
     owner_user_name          VARCHAR2(64 CHAR)        DEFAULT NULL,
-    delegate_user_id         VARCHAR2(32 CHAR)        NOT NULL,
+    delegate_user_id         VARCHAR2(36 CHAR) NOT NULL
     delegate_user_name       VARCHAR2(64 CHAR)        DEFAULT NULL,
     scope_type               VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -1134,7 +1134,7 @@ CREATE TABLE ydsz_flow_delegate_auth (
     end_time                 TIMESTAMP                NOT NULL,
     auth_status              VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
     reason                   VARCHAR2(512 CHAR)       DEFAULT NULL,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_delegate_auth PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -1178,7 +1178,7 @@ CREATE INDEX idx_ydsz_flow_delegate_auth_tenant_is_deleted ON ydsz_flow_delegate
 
 CREATE TABLE ydsz_flow_admin_role (
     id                       VARCHAR2(36 CHAR)
-    user_id                  VARCHAR2(32 CHAR)        NOT NULL,
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
     role_code                VARCHAR2(64 CHAR)        NOT NULL,
     is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     granted_by               VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -1219,22 +1219,22 @@ CREATE INDEX idx_ydsz_flow_admin_role_tenant_is_deleted ON ydsz_flow_admin_role 
 
 CREATE TABLE ydsz_flow_audit_log (
     id                       VARCHAR2(36 CHAR)
-    instance_id              VARCHAR2(32 CHAR)        NOT NULL,
-    task_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
+    instance_id              VARCHAR2(36 CHAR) NOT NULL
+    task_id                  VARCHAR2(36 CHAR) DEFAULT NULL
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     business_type            VARCHAR2(64 CHAR)        DEFAULT NULL,
-    business_id              VARCHAR2(64 CHAR)        DEFAULT NULL,
+    business_id              VARCHAR2(36 CHAR) DEFAULT NULL
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
     node_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     action                   VARCHAR2(32 CHAR)        NOT NULL,
-    operator_id              VARCHAR2(32 CHAR)        NOT NULL,
+    operator_id              VARCHAR2(36 CHAR) NOT NULL
     operator_name            VARCHAR2(64 CHAR)        DEFAULT NULL,
-    target_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
+    target_id                VARCHAR2(36 CHAR) DEFAULT NULL
     target_name              VARCHAR2(64 CHAR)        DEFAULT NULL,
     comment                  VARCHAR2(512 CHAR)       DEFAULT NULL,
     comment_type             VARCHAR2(32 CHAR)        DEFAULT NULL,
     operated_at              TIMESTAMP                NOT NULL,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_flow_audit_log PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,

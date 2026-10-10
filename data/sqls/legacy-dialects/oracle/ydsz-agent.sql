@@ -148,9 +148,9 @@ CREATE INDEX idx_ydsz_agt_definition_agent_type ON ydsz_agt_definition (agent_ty
 CREATE INDEX idx_ydsz_agt_definition_tenant_is_deleted ON ydsz_agt_definition (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_agt_trace (
-    trace_id                 VARCHAR2(64 CHAR)       ,
-    conversation_id          VARCHAR2(64 CHAR)        NOT NULL,
-    agent_id                 VARCHAR2(64 CHAR)        NOT NULL,
+    trace_id                 VARCHAR2(36 CHAR)
+    conversation_id          VARCHAR2(36 CHAR) NOT NULL
+    agent_id                 VARCHAR2(36 CHAR) NOT NULL
     status                   VARCHAR2(32 CHAR)        NOT NULL,
     total_duration_ms        NUMBER(19)               DEFAULT NULL,
     CONSTRAINT pk_ydsz_agt_trace PRIMARY KEY (trace_id),
@@ -176,7 +176,7 @@ CREATE INDEX idx_ydsz_agt_trace_trace_agent ON ydsz_agt_trace (agent_id);
 CREATE INDEX idx_ydsz_agt_trace_trace_status ON ydsz_agt_trace (status);
 
 CREATE TABLE ydsz_agt_trace_step (
-    trace_id                 VARCHAR2(64 CHAR)        NOT NULL,
+    trace_id                 VARCHAR2(36 CHAR) NOT NULL
     step_index               NUMBER(10)               NOT NULL,
     step_type                VARCHAR2(32 CHAR)        NOT NULL,
     content                  CLOB                     DEFAULT NULL,
@@ -210,8 +210,8 @@ CREATE INDEX idx_ydsz_agt_trace_step_trace_step_cost ON ydsz_agt_trace_step (cos
 
 CREATE TABLE ydsz_agt_approval (
     id                       VARCHAR2(36 CHAR)
-    conversation_id          VARCHAR2(64 CHAR)        DEFAULT NULL,
-    trace_id                 VARCHAR2(64 CHAR)        DEFAULT NULL,
+    conversation_id          VARCHAR2(36 CHAR) DEFAULT NULL
+    trace_id                 VARCHAR2(36 CHAR) DEFAULT NULL
     step_description         VARCHAR2(512 CHAR)       DEFAULT NULL,
     context_json             CLOB                     DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'PENDING',
@@ -253,7 +253,7 @@ CREATE INDEX idx_ydsz_agt_approval_approval_tenant ON ydsz_agt_approval (tenant_
 
 CREATE TABLE ydsz_agt_token_usage (
     id                       VARCHAR2(36 CHAR)
-    conversation_id          VARCHAR2(64 CHAR)        NOT NULL,
+    conversation_id          VARCHAR2(36 CHAR) NOT NULL
     model_name               VARCHAR2(64 CHAR)        NOT NULL,
     prompt_tokens            NUMBER(19)               NOT NULL DEFAULT 0,
     completion_tokens        NUMBER(19)               NOT NULL DEFAULT 0,

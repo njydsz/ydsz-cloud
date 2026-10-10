@@ -135,7 +135,7 @@ CREATE INDEX idx_ydsz_job_main_tenant_is_deleted ON ydsz_job_main (tenant_id, is
 
 CREATE TABLE ydsz_job_glue (
     id                       VARCHAR2(36 CHAR)
-    job_id                   VARCHAR2(32 CHAR)        NOT NULL,
+    job_id                   VARCHAR2(36 CHAR) NOT NULL
     source_code              CLOB                     NOT NULL,
     language                 VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'GROOVY',
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
@@ -173,8 +173,8 @@ CREATE INDEX idx_ydsz_job_glue_tenant_is_deleted ON ydsz_job_glue (tenant_id, is
 
 CREATE TABLE ydsz_job_task (
     id                       VARCHAR2(36 CHAR)
-    job_id                   VARCHAR2(32 CHAR)        NOT NULL,
-    log_id                   VARCHAR2(32 CHAR)        NOT NULL,
+    job_id                   VARCHAR2(36 CHAR) NOT NULL
+    log_id                   VARCHAR2(36 CHAR) NOT NULL
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
     task_name                VARCHAR2(128 CHAR)       NOT NULL,
     task_params              CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_task_task_params CHECK (task_params IS JSON),
@@ -182,7 +182,7 @@ CREATE TABLE ydsz_job_task (
     task_status              VARCHAR2(32 CHAR)        NOT NULL,
     result                   CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_task_result CHECK (result IS JSON),
     error_message            CLOB                     DEFAULT NULL,
-    exec_node_id             VARCHAR2(64 CHAR)        DEFAULT NULL,
+    exec_node_id             VARCHAR2(36 CHAR) DEFAULT NULL
     retry_count              NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_job_task PRIMARY KEY (id),
@@ -224,7 +224,7 @@ CREATE INDEX idx_ydsz_job_task_tenant_is_deleted ON ydsz_job_task (tenant_id, is
 
 CREATE TABLE ydsz_job_node (
     id                       VARCHAR2(36 CHAR)
-    node_id                  VARCHAR2(64 CHAR)        NOT NULL,
+    node_id                  VARCHAR2(36 CHAR) NOT NULL
     app_name                 VARCHAR2(128 CHAR)       DEFAULT NULL,
     host                     VARCHAR2(128 CHAR)       NOT NULL,
     port                     NUMBER(10)               NOT NULL,
@@ -273,7 +273,7 @@ CREATE INDEX idx_ydsz_job_node_tenant_is_deleted ON ydsz_job_node (tenant_id, is
 
 CREATE TABLE ydsz_job_history (
     id                       VARCHAR2(36 CHAR)
-    job_id                   VARCHAR2(32 CHAR)        NOT NULL,
+    job_id                   VARCHAR2(36 CHAR) NOT NULL
     version                  NUMBER(10)               NOT NULL,
     snapshot                 CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_history_snapshot CHECK (snapshot IS JSON),
     change_type              VARCHAR2(32 CHAR)        NOT NULL,
@@ -324,8 +324,8 @@ CREATE INDEX idx_ydsz_job_history_jh_changed_at ON ydsz_job_history (changed_at)
 
 CREATE TABLE ydsz_job_artifact (
     id                       VARCHAR2(36 CHAR)
-    job_id                   VARCHAR2(32 CHAR)        NOT NULL,
-    log_id                   VARCHAR2(32 CHAR)        NOT NULL,
+    job_id                   VARCHAR2(36 CHAR) NOT NULL
+    log_id                   VARCHAR2(36 CHAR) NOT NULL
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
     artifact_name            VARCHAR2(128 CHAR)       NOT NULL,
     artifact_type            VARCHAR2(32 CHAR)        NOT NULL,
@@ -422,7 +422,7 @@ CREATE INDEX idx_ydsz_job_webhook_tenant_is_deleted ON ydsz_job_webhook (tenant_
 CREATE TABLE ydsz_job_alert_rule (
     id                       VARCHAR2(36 CHAR)
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
-    job_id                   VARCHAR2(32 CHAR)        DEFAULT NULL,
+    job_id                   VARCHAR2(36 CHAR) DEFAULT NULL
     job_key                  VARCHAR2(64 CHAR)        DEFAULT NULL,
     alert_type               VARCHAR2(32 CHAR)        NOT NULL,
     alert_level              VARCHAR2(32 CHAR)        NOT NULL,
@@ -572,7 +572,7 @@ CREATE INDEX idx_ydsz_job_dag_tenant_is_deleted ON ydsz_job_dag (tenant_id, is_d
 
 CREATE TABLE ydsz_job_dag_version (
     id                       VARCHAR2(36 CHAR)
-    dag_id                   VARCHAR2(32 CHAR)        NOT NULL,
+    dag_id                   VARCHAR2(36 CHAR) NOT NULL
     dag_key                  VARCHAR2(64 CHAR)        NOT NULL,
     version                  NUMBER(10)               NOT NULL,
     dag_definition           CLOB                     NOT NULL CONSTRAINT ck_ydsz_job_dag_version_dag_definition CHECK (dag_definition IS JSON),
@@ -621,12 +621,12 @@ CREATE INDEX idx_ydsz_job_dag_version_tenant_is_deleted ON ydsz_job_dag_version 
 
 CREATE TABLE ydsz_job_dag_instance (
     id                       VARCHAR2(36 CHAR)
-    dag_id                   VARCHAR2(32 CHAR)        NOT NULL,
+    dag_id                   VARCHAR2(36 CHAR) NOT NULL
     dag_key                  VARCHAR2(64 CHAR)        NOT NULL,
     instance_status          VARCHAR2(32 CHAR)        NOT NULL,
     trigger_type             VARCHAR2(32 CHAR)        DEFAULT NULL,
     trigger_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    trigger_trace_id         VARCHAR2(64 CHAR)        DEFAULT NULL,
+    trigger_trace_id         VARCHAR2(36 CHAR) DEFAULT NULL
     context_json             CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_dag_instance_context_json CHECK (context_json IS JSON),
     started_at               TIMESTAMP                DEFAULT NULL,
     finished_at              TIMESTAMP                DEFAULT NULL,
@@ -683,12 +683,12 @@ CREATE INDEX idx_ydsz_job_dag_instance_tenant_is_deleted ON ydsz_job_dag_instanc
 
 CREATE TABLE ydsz_job_dag_node_instance (
     id                       VARCHAR2(36 CHAR)
-    dag_instance_id          VARCHAR2(32 CHAR)        NOT NULL,
-    dag_id                   VARCHAR2(32 CHAR)        NOT NULL,
-    job_id                   VARCHAR2(32 CHAR)        NOT NULL,
+    dag_instance_id          VARCHAR2(36 CHAR) NOT NULL
+    dag_id                   VARCHAR2(36 CHAR) NOT NULL
+    job_id                   VARCHAR2(36 CHAR) NOT NULL
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
     node_status              VARCHAR2(32 CHAR)        DEFAULT NULL,
-    log_id                   VARCHAR2(32 CHAR)        DEFAULT NULL,
+    log_id                   VARCHAR2(36 CHAR) DEFAULT NULL
     retry_count              NUMBER(10)               DEFAULT NULL,
     max_retries              NUMBER(10)               DEFAULT NULL,
     started_at               TIMESTAMP                DEFAULT NULL,
@@ -739,7 +739,7 @@ CREATE INDEX idx_ydsz_job_dag_node_instance_tenant_is_deleted ON ydsz_job_dag_no
 
 CREATE TABLE ydsz_job_log (
     id                       VARCHAR2(36 CHAR)
-    job_id                   VARCHAR2(32 CHAR)        NOT NULL,
+    job_id                   VARCHAR2(36 CHAR) NOT NULL
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
     start_time               TIMESTAMP                DEFAULT NULL,
     end_time                 TIMESTAMP                DEFAULT NULL,
@@ -747,11 +747,11 @@ CREATE TABLE ydsz_job_log (
     error_message            CLOB                     DEFAULT NULL,
     params_json              CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_log_params_json CHECK (params_json IS JSON),
     result_json              CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_log_result_json CHECK (result_json IS JSON),
-    trace_id                 VARCHAR2(64 CHAR)        DEFAULT NULL,
+    trace_id                 VARCHAR2(36 CHAR) DEFAULT NULL
     trigger_type             VARCHAR2(32 CHAR)        DEFAULT NULL,
     lock_holder              VARCHAR2(64 CHAR)        DEFAULT NULL,
-    exec_node_id             VARCHAR2(64 CHAR)        DEFAULT NULL,
-    exec_thread_id           NUMBER(19)               DEFAULT NULL,
+    exec_node_id             VARCHAR2(36 CHAR) DEFAULT NULL
+    exec_thread_id           VARCHAR2(36 CHAR) DEFAULT NULL
     shard_index              NUMBER(10)               DEFAULT NULL,
     shard_total              NUMBER(10)               DEFAULT NULL,
     slow                       NUMBER(1)                NOT NULL DEFAULT 0,
@@ -808,7 +808,7 @@ CREATE INDEX idx_ydsz_job_log_jl_trace_id ON ydsz_job_log (trace_id);
 
 CREATE TABLE ydsz_job_log_content (
     id                       VARCHAR2(36 CHAR)
-    log_id                   VARCHAR2(32 CHAR)        NOT NULL,
+    log_id                   VARCHAR2(36 CHAR) NOT NULL
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
     line_no                  NUMBER(10)               NOT NULL,
     log_level                VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -838,7 +838,7 @@ CREATE INDEX idx_ydsz_job_log_content_jlc_job_key ON ydsz_job_log_content (job_k
 
 CREATE TABLE ydsz_job_daily_stats (
     id                       VARCHAR2(36 CHAR)
-    job_id                   VARCHAR2(32 CHAR)        NOT NULL,
+    job_id                   VARCHAR2(36 CHAR) NOT NULL
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
     stats_date               DATE                     NOT NULL,
     fire_count               NUMBER(19)               NOT NULL DEFAULT 0,
@@ -882,9 +882,9 @@ CREATE TABLE ydsz_job_alert_dispatch (
     id                       VARCHAR2(36 CHAR)
     alert_code               VARCHAR2(64 CHAR)        NOT NULL,
     source_type              VARCHAR2(32 CHAR)        NOT NULL,
-    rule_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
+    rule_id                  VARCHAR2(36 CHAR) DEFAULT NULL
     rule_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
-    job_id                   VARCHAR2(32 CHAR)        DEFAULT NULL,
+    job_id                   VARCHAR2(36 CHAR) DEFAULT NULL
     job_key                  VARCHAR2(64 CHAR)        DEFAULT NULL,
     alert_type               VARCHAR2(32 CHAR)        DEFAULT NULL,
     alert_level              VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -893,8 +893,8 @@ CREATE TABLE ydsz_job_alert_dispatch (
     channels                 VARCHAR2(256 CHAR)       DEFAULT NULL,
     alert_status             VARCHAR2(32 CHAR)        DEFAULT NULL,
     error_message            CLOB                     DEFAULT NULL,
-    trace_id                 VARCHAR2(64 CHAR)        DEFAULT NULL,
-    trigger_log_id           VARCHAR2(32 CHAR)        DEFAULT NULL,
+    trace_id                 VARCHAR2(36 CHAR) DEFAULT NULL
+    trigger_log_id           VARCHAR2(36 CHAR) DEFAULT NULL
     CONSTRAINT pk_ydsz_job_alert_dispatch PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_job_alert_dispatch_ad_alert_code UNIQUE (alert_code),
     sort NUMBER DEFAULT 0,

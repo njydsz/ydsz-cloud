@@ -30,7 +30,7 @@
 CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
     id                       VARCHAR(36) NOT NULL
     aggregate_type           VARCHAR(128)             NOT NULL,
-    aggregate_id             VARCHAR(128)             NOT NULL,
+    aggregate_id             VARCHAR(36)             NOT NULL,
     event_type               VARCHAR(128)             NOT NULL,
     payload                  TEXT                     NOT NULL,
     status                   VARCHAR(15)              NOT NULL DEFAULT 'PENDING' CONSTRAINT ck_ydsz_comm_outbox_status CHECK (status IN ('PENDING', 'PROCESSING', 'SENT', 'DEAD_LETTER')),
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
     error_message            TEXT                    ,
     schema_version           INTEGER                 NOT NULL DEFAULT 1,
     compressed               BOOLEAN                 NOT NULL DEFAULT FALSE,
-    trace_id                 VARCHAR(64)             ,
+    trace_id                 VARCHAR(36)             ,
     idempotency_key          VARCHAR(64)             ,
     sent_at                  TIMESTAMP(3)            ,
     CONSTRAINT pk_ydsz_comm_outbox PRIMARY KEY (id),
@@ -90,7 +90,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_comm_outbox_aggregate ON ydsz_comm_outbox (a
 
 CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
     id                       VARCHAR(36) PRIMARY KEY
-    aggregate_id    VARCHAR(128)    NOT NULL,
+    aggregate_id             VARCHAR(36)    NOT NULL,
     aggregate_type  VARCHAR(128)    DEFAULT NULL,
     event_type      VARCHAR(256)    NOT NULL,
     payload         TEXT            NOT NULL,
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
     retry_count     INT             NOT NULL DEFAULT 0,
     max_retries     INT             NOT NULL DEFAULT 5,
     idempotency_key VARCHAR(128)    DEFAULT NULL,
-    trace_id        VARCHAR(64)     DEFAULT NULL,
+    trace_id                 VARCHAR(36)     DEFAULT NULL,
     schema_version  INT             NOT NULL DEFAULT 1,
     compressed      BOOLEAN         NOT NULL DEFAULT FALSE,
     sent_at         TIMESTAMP       DEFAULT NULL,
@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_search_dead_letter (
     id                       VARCHAR(36)              NOT NULL,
     operation                VARCHAR(20)              NOT NULL,
     doc_type                 VARCHAR(64)              DEFAULT NULL,
-    document_id              VARCHAR(128)             DEFAULT NULL,
+    document_id              VARCHAR(36)             DEFAULT NULL,
     document_json            TEXT                     DEFAULT NULL,
     error_msg                TEXT                     DEFAULT NULL,
     retry_count              INTEGER                  NOT NULL DEFAULT 0,
@@ -185,7 +185,7 @@ EXECUTE FUNCTION fn_ydsz_comm_outbox_set_updated_at();
 CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
     id                       VARCHAR(36) NOT NULL
     app_key                  VARCHAR(64)              NOT NULL DEFAULT '',
-    operator_id              VARCHAR(64)              DEFAULT NULL,
+    operator_id              VARCHAR(36)              DEFAULT NULL,
     operator_name            VARCHAR(64)              DEFAULT NULL,
     audit_type               SMALLINT                 NOT NULL DEFAULT 1,
     action                   SMALLINT                 NOT NULL DEFAULT 99,
@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
     diff_after_snapshot      TEXT                     DEFAULT NULL,
     error_message            VARCHAR(512)             DEFAULT NULL,
     cost_time                BIGINT                   DEFAULT 0,
-    trace_id                 VARCHAR(64)              DEFAULT NULL,
+    trace_id                 VARCHAR(36)              DEFAULT NULL,
     operation_time           TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_comm_audit_log PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,

@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_script (
     is_enabled       TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（1=启用，0=停用）',
     scope            VARCHAR(128)    DEFAULT NULL COMMENT '适用范围',
     version          INT             NOT NULL DEFAULT 1 COMMENT '版本号',
-    provider_trace_id VARCHAR(64)    DEFAULT NULL COMMENT '供应商侧追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '供应商侧追踪 ID' DEFAULT NULL
     status           VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_rule_code (rule_code),
@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
     is_enabled        TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（1=启用，0=停用）',
     scope             VARCHAR(128)    DEFAULT NULL COMMENT '适用范围',
     version           INT             NOT NULL DEFAULT 1 COMMENT '版本号',
-    provider_trace_id VARCHAR(64)     DEFAULT NULL COMMENT '供应商侧追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '供应商侧追踪 ID' DEFAULT NULL
     status            VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_rule_code (rule_code),
@@ -207,7 +207,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
     is_enabled        TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（1=启用，0=停用）',
     scope             VARCHAR(128)    DEFAULT NULL COMMENT '适用范围（如 ALL / PROJECT_TYPE:CONSTRUCTION）',
     version           INT             NOT NULL DEFAULT 1 COMMENT '版本号',
-    provider_trace_id VARCHAR(64)     DEFAULT NULL COMMENT '供应商侧追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '供应商侧追踪 ID' DEFAULT NULL
     status            VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_rule_code (rule_code),
@@ -419,7 +419,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_version_history (
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_execution_trace (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    trace_id         VARCHAR(64)     NOT NULL COMMENT '追踪 ID（同一批次评估共享）',
+    trace_id VARCHAR(36) NOT NULL COMMENT '追踪 ID（同一批次评估共享）'
     rule_code        VARCHAR(64)     NOT NULL COMMENT '规则编码',
     rule_name        VARCHAR(128)    DEFAULT NULL COMMENT '规则名称',
     scenario         VARCHAR(64)     DEFAULT NULL COMMENT '业务场景',

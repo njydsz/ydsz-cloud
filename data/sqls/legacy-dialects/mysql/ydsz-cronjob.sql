@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_glue (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
+    job_id VARCHAR(36) NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）'
     source_code           TEXT            NOT NULL COMMENT '源代码（Groovy/Python/Shell/JavaScript 脚本内容）',
     language              VARCHAR(32)     NOT NULL DEFAULT 'GROOVY' COMMENT '语言: GROOVY(默认)/PYTHON/SHELL/JAVASCRIPT/JAVA',
     version               INT             NOT NULL DEFAULT 1 COMMENT '版本号（从 1 递增）',
@@ -101,8 +101,8 @@ CREATE TABLE IF NOT EXISTS ydsz_job_glue (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_task (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
-    log_id                VARCHAR(32)     NOT NULL COMMENT '执行日志 ID（关联 ydsz_job_log.id）',
+    job_id VARCHAR(36) NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）'
+    log_id VARCHAR(36) NOT NULL COMMENT '执行日志 ID（关联 ydsz_job_log.id）'
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余，便于查询）',
     task_name             VARCHAR(128)    NOT NULL COMMENT '子任务名称（root task 为 "root"）',
     task_params           JSON            DEFAULT NULL COMMENT '子任务参数 JSON',
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_task (
     task_status           VARCHAR(32)     NOT NULL COMMENT '执行状态: PENDING 待执行 / RUNNING 执行中 / SUCCESS 成功 / FAILED 失败',
     result                JSON            DEFAULT NULL COMMENT '执行结果 JSON（ProcessResult.result 序列化后的字符串）',
     error_message         TEXT            DEFAULT NULL COMMENT '错误信息（失败时填充）',
-    exec_node_id          VARCHAR(64)     DEFAULT NULL COMMENT '执行节点 ID（hostname:port）',
+    exec_node_id VARCHAR(36) COMMENT '执行节点 ID（hostname:port）' DEFAULT NULL
     retry_count           INT             NOT NULL DEFAULT 0 COMMENT '重试次数（默认 0，每次重试递增）',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_task (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_node (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    node_id               VARCHAR(64)     NOT NULL COMMENT '节点 ID（hostname:port 或 hostname:pid）',
+    node_id VARCHAR(36) NOT NULL COMMENT '节点 ID（hostname:port 或 hostname:pid）'
     app_name              VARCHAR(128)    DEFAULT NULL COMMENT '应用名称',
     host                  VARCHAR(128)    NOT NULL COMMENT '主机名',
     port                  INT             NOT NULL COMMENT '端口',
@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_node (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_history (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
+    job_id VARCHAR(36) NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）'
     version               INT             NOT NULL COMMENT '版本号（对应更新前的 job.version）',
     snapshot              JSON            DEFAULT NULL COMMENT '完整 Job JSON 快照（变更后状态; DELETE 时为 NULL）',
     change_type           VARCHAR(32)     NOT NULL COMMENT '变更类型: CREATE / UPDATE / DELETE',
@@ -202,8 +202,8 @@ CREATE TABLE IF NOT EXISTS ydsz_job_history (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_artifact (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID',
-    log_id                VARCHAR(32)     NOT NULL COMMENT '执行日志 ID',
+    job_id VARCHAR(36) NOT NULL COMMENT '任务 ID'
+    log_id VARCHAR(36) NOT NULL COMMENT '执行日志 ID'
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余）',
     artifact_name         VARCHAR(128)    NOT NULL COMMENT '产物名称',
     artifact_type         VARCHAR(32)     NOT NULL COMMENT '产物类型: FILE / REPORT / DATA / LOG',
@@ -263,7 +263,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_webhook (
 CREATE TABLE IF NOT EXISTS ydsz_job_alert_rule (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_name             VARCHAR(128)    NOT NULL COMMENT '规则名称',
-    job_id                VARCHAR(32)     DEFAULT NULL COMMENT '关联任务 ID（NULL 表示全局规则）',
+    job_id VARCHAR(36) COMMENT '关联任务 ID（NULL 表示全局规则）' DEFAULT NULL
     job_key               VARCHAR(64)     DEFAULT NULL COMMENT '任务 KEY 冗余（NULL 表示全局规则）',
     alert_type            VARCHAR(32)     NOT NULL COMMENT '告警类型: FAIL / TIMEOUT / SLOW / FAIL_RATE / DURATION_P95',
     alert_level           VARCHAR(32)     NOT NULL COMMENT '告警级别: INFO / WARN / ERROR / CRITICAL',
@@ -353,7 +353,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_version (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    dag_id                VARCHAR(32)     NOT NULL COMMENT 'DAG ID（关联 ydsz_job_dag.id）',
+    dag_id VARCHAR(36) NOT NULL COMMENT 'DAG ID（关联 ydsz_job_dag.id）'
     dag_key               VARCHAR(64)     NOT NULL COMMENT 'DAG KEY（冗余字段，便于查询）',
     version               INT             NOT NULL COMMENT '版本号（从 1 递增）',
     dag_definition        JSON            NOT NULL COMMENT 'DAG 定义 JSON 快照',
@@ -383,12 +383,12 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_version (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    dag_id                VARCHAR(32)     NOT NULL COMMENT 'DAG 定义 ID',
+    dag_id VARCHAR(36) NOT NULL COMMENT 'DAG 定义 ID'
     dag_key               VARCHAR(64)     NOT NULL COMMENT 'DAG KEY（冗余，便于查询）',
     instance_status       VARCHAR(32)     NOT NULL COMMENT '实例状态: PENDING/RUNNING/SUCCESS/FAILED/PARTIAL_SUCCESS/PAUSED/CANCELED',
     trigger_type          VARCHAR(32)     DEFAULT NULL COMMENT '触发类型: MANUAL/CRON/DEPENDENT',
     trigger_by            VARCHAR(64)     DEFAULT NULL COMMENT '触发人（MANUAL 时为用户 ID）',
-    trigger_trace_id      VARCHAR(64)     DEFAULT NULL COMMENT '触发 traceId（用于链路追踪）',
+    trigger_trace_id VARCHAR(36) COMMENT '触发 traceId（用于链路追踪）' DEFAULT NULL
     context_json          JSON            DEFAULT NULL COMMENT 'DAG 实例级上下文 JSON（跨节点传参）',
     started_at            DATETIME        DEFAULT NULL COMMENT '开始时间',
     finished_at           DATETIME        DEFAULT NULL COMMENT '结束时间',
@@ -421,12 +421,12 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    dag_instance_id       VARCHAR(32)     NOT NULL COMMENT 'DAG 实例 ID',
-    dag_id                VARCHAR(32)     NOT NULL COMMENT 'DAG 定义 ID',
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID',
+    dag_instance_id VARCHAR(36) NOT NULL COMMENT 'DAG 实例 ID'
+    dag_id VARCHAR(36) NOT NULL COMMENT 'DAG 定义 ID'
+    job_id VARCHAR(36) NOT NULL COMMENT '任务 ID'
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余）',
     node_status           VARCHAR(32)     DEFAULT NULL COMMENT '节点状态: PENDING/RUNNING/SUCCESS/FAILED/SKIPPED/RETRYING',
-    log_id                VARCHAR(32)     DEFAULT NULL COMMENT '关联的任务执行日志 ID（ydsz_job_log.id）',
+    log_id VARCHAR(36) COMMENT '关联的任务执行日志 ID（ydsz_job_log.id）' DEFAULT NULL
     retry_count           INT             DEFAULT NULL COMMENT '节点级重试次数',
     max_retries           INT             DEFAULT NULL COMMENT '节点级最大重试次数',
     started_at            DATETIME        DEFAULT NULL COMMENT '节点开始时间',
@@ -457,7 +457,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_log (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID',
+    job_id VARCHAR(36) NOT NULL COMMENT '任务 ID'
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY',
     start_time            DATETIME        DEFAULT NULL COMMENT '开始时间',
     end_time              DATETIME        DEFAULT NULL COMMENT '结束时间',
@@ -465,11 +465,11 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log (
     error_message         TEXT            DEFAULT NULL COMMENT '错误信息',
     params_json           JSON            DEFAULT NULL COMMENT '参数 JSON',
     result_json           JSON            DEFAULT NULL COMMENT '结果 JSON',
-    trace_id              VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    trace_id VARCHAR(36) COMMENT '链路追踪 ID' DEFAULT NULL
     trigger_type          VARCHAR(32)     DEFAULT NULL COMMENT '触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发',
     lock_holder           VARCHAR(64)     DEFAULT NULL COMMENT '持锁者标识（hostname:pid，用于超时后安全释放分布式锁）',
-    exec_node_id          VARCHAR(64)     DEFAULT NULL COMMENT '执行节点 ID（hostname:port，用于故障转移时定位任务所在节点）',
-    exec_thread_id        BIGINT          DEFAULT NULL COMMENT '执行线程 ID（用于超时强制中断时定位执行线程）',
+    exec_node_id VARCHAR(36) COMMENT '执行节点 ID（hostname:port，用于故障转移时定位任务所在节点）' DEFAULT NULL
+    exec_thread_id VARCHAR(36) COMMENT '执行线程 ID（用于超时强制中断时定位执行线程）' DEFAULT NULL
     shard_index           INT             DEFAULT NULL COMMENT '分片索引（非分片任务为 NULL；分片任务为 0-based 索引）',
     shard_total           INT             DEFAULT NULL COMMENT '分片总数（非分片任务为 NULL）',
     slow                   TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '慢任务标记（0=非慢 / 1=慢）',
@@ -506,7 +506,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_log_content (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    log_id                VARCHAR(32)     NOT NULL COMMENT '任务执行日志 ID（关联 ydsz_job_log.id）',
+    log_id VARCHAR(36) NOT NULL COMMENT '任务执行日志 ID（关联 ydsz_job_log.id）'
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余，避免连表查询）',
     line_no               INT             NOT NULL COMMENT '行号（从 1 递增）',
     log_level             VARCHAR(32)     DEFAULT NULL COMMENT '日志级别：DEBUG / INFO / WARN / ERROR',
@@ -530,7 +530,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log_content (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_daily_stats (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID',
+    job_id VARCHAR(36) NOT NULL COMMENT '任务 ID'
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余）',
     stats_date            DATE            NOT NULL COMMENT '统计日期',
     fire_count            BIGINT          NOT NULL DEFAULT 0 COMMENT '当日触发次数',
@@ -564,9 +564,9 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_dispatch (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     alert_code            VARCHAR(64)     NOT NULL COMMENT '预警编码（cronjob 自动生成: CRONJOB-{timestamp}-{ruleId}）',
     source_type           VARCHAR(32)     NOT NULL COMMENT '触发源类型（cronjob 告警固定为 CRONJOB）',
-    rule_id               VARCHAR(32)     DEFAULT NULL COMMENT '规则 ID（映射到 rule_id）',
+    rule_id VARCHAR(36) COMMENT '规则 ID（映射到 rule_id）' DEFAULT NULL
     rule_name             VARCHAR(128)    DEFAULT NULL COMMENT '规则名称（映射到 title）',
-    job_id                VARCHAR(32)     DEFAULT NULL COMMENT '任务 ID（NULL 表示全局告警; 映射到 source_id）',
+    job_id VARCHAR(36) COMMENT '任务 ID（NULL 表示全局告警; 映射到 source_id）' DEFAULT NULL
     job_key               VARCHAR(64)     DEFAULT NULL COMMENT '任务 KEY（冗余）',
     alert_type            VARCHAR(32)     DEFAULT NULL COMMENT '告警类型: FAIL / TIMEOUT / SLOW / FAIL_RATE / DURATION_P95',
     alert_level           VARCHAR(32)     DEFAULT NULL COMMENT '告警级别: INFO / WARN / ERROR / CRITICAL',
@@ -575,8 +575,8 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_dispatch (
     channels              VARCHAR(256)    DEFAULT NULL COMMENT '实际发送通道（逗号分隔: INAPP,EMAIL,DINGTALK）',
     alert_status          VARCHAR(32)     DEFAULT NULL COMMENT '告警状态: PENDING / SUCCESS / PARTIAL / FAILED / *_RECOVERY',
     error_message         TEXT            DEFAULT NULL COMMENT '错误信息（部分通道失败时记录; 映射到 fail_reason）',
-    trace_id              VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（映射到 provider_trace_id）',
-    trigger_log_id        VARCHAR(32)     DEFAULT NULL COMMENT '触发该告警的任务日志 ID（关联 ydsz_job_log.id）',
+    trace_id VARCHAR(36) COMMENT '链路追踪 ID（映射到 provider_trace_id）' DEFAULT NULL
+    trigger_log_id VARCHAR(36) COMMENT '触发该告警的任务日志 ID（关联 ydsz_job_log.id）' DEFAULT NULL
     CONSTRAINT uk_ad_alert_code UNIQUE (alert_code),
     INDEX idx_ad_rule_id (rule_id),
     INDEX idx_ad_job_id (job_id),
@@ -627,7 +627,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_outbox (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    dag_instance_id       VARCHAR(32)     NOT NULL COMMENT 'DAG 实例 ID（关联 ydsz_job_dag_instance.id）',
+    dag_instance_id VARCHAR(36) NOT NULL COMMENT 'DAG 实例 ID（关联 ydsz_job_dag_instance.id）'
     node_key              VARCHAR(128)    NOT NULL COMMENT '节点 KEY',
     result_json           JSON            DEFAULT NULL COMMENT '节点执行结果 JSON（单次写入，避免行锁竞争）',
     CONSTRAINT uk_dci_instance_node UNIQUE (dag_instance_id, node_key),
@@ -652,10 +652,10 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_webhook_retry (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键（雪花 ID）'
-    webhook_id            VARCHAR(64)     NOT NULL COMMENT 'Webhook 订阅 ID（关联 ydsz_job_webhook.id）',
+    webhook_id VARCHAR(36) NOT NULL COMMENT 'Webhook 订阅 ID（关联 ydsz_job_webhook.id）'
     event_type            VARCHAR(32)     NOT NULL COMMENT '事件类型: TASK_STARTED/TASK_SUCCESS/TASK_FAILED/TASK_TIMEOUT/DAG_COMPLETED',
     job_key               VARCHAR(128)    DEFAULT NULL COMMENT '任务 KEY',
-    log_id                VARCHAR(64)     DEFAULT NULL COMMENT '任务执行日志 ID',
+    log_id VARCHAR(36) COMMENT '任务执行日志 ID' DEFAULT NULL
     callback_url          VARCHAR(512)    NOT NULL COMMENT '请求 URL',
     http_method           VARCHAR(16)     DEFAULT 'POST' COMMENT '请求方法',
     headers               TEXT            DEFAULT NULL COMMENT '请求头 JSON',
@@ -804,7 +804,7 @@ DELIMITER ;
 CREATE TABLE IF NOT EXISTS ydsz_job_event_store (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     aggregate_type        VARCHAR(64)     NOT NULL COMMENT '聚合根类型',
-    aggregate_id          VARCHAR(32)     NOT NULL COMMENT '聚合根 ID',
+    aggregate_id VARCHAR(36) NOT NULL COMMENT '聚合根 ID'
     event_type            VARCHAR(64)     NOT NULL COMMENT '事件类型',
     event_data            MEDIUMTEXT      NOT NULL COMMENT '事件数据 JSON',
     event_version         INT             NOT NULL DEFAULT 1 COMMENT '事件版本号',

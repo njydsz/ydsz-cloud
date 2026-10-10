@@ -92,12 +92,12 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_notification (
     level           VARCHAR(32)     NOT NULL DEFAULT 'INFO' COMMENT '通知级别: INFO 提示 / WARN 警告 / ERROR 错误 / URGENT 紧急',
     category        VARCHAR(32)     NOT NULL DEFAULT 'SYSTEM' COMMENT 'is_system 系统 / WORKFLOW 流程 / ALERT 告警 / TO_DO 待办 / ANNOUNCE 公告',
     priority        VARCHAR(32)     NOT NULL DEFAULT 'NORMAL' COMMENT '发送优先级: LOW / NORMAL / HIGH / URGENT',
-    sender_id       VARCHAR(32)     DEFAULT NULL COMMENT '发送人用户 ID',
-    receiver_id     VARCHAR(32)     NOT NULL COMMENT '接收人用户 ID',
+    sender_id VARCHAR(36) COMMENT '发送人用户 ID' DEFAULT NULL
+    receiver_id VARCHAR(36) NOT NULL COMMENT '接收人用户 ID'
     biz_type        VARCHAR(64)     DEFAULT NULL COMMENT '业务类型',
-    biz_id          VARCHAR(64)     DEFAULT NULL COMMENT '业务单据 ID',
+    biz_id VARCHAR(36) COMMENT '业务单据 ID' DEFAULT NULL
     message_group   VARCHAR(64)     DEFAULT NULL COMMENT '消息分组（同组消息合并展示）',
-    batch_id        VARCHAR(64)     DEFAULT NULL COMMENT '批次 ID（关联 ydsz_msg_batch.batch_id）',
+    batch_id VARCHAR(36) COMMENT '批次 ID（关联 ydsz_msg_batch.batch_id）' DEFAULT NULL
     action_url      VARCHAR(1024)   DEFAULT NULL COMMENT '跳转链接',
     action_text     VARCHAR(128)    DEFAULT NULL COMMENT '跳转文案',
     icon            VARCHAR(255)    DEFAULT NULL COMMENT '图标',
@@ -130,9 +130,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_notification (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    user_id           VARCHAR(32)   NOT NULL COMMENT '用户 ID（关联 ydsz_employee.id）',
+    user_id VARCHAR(36) NOT NULL COMMENT '用户 ID（关联 ydsz_employee.id）'
     channel_type      VARCHAR(32)   NOT NULL COMMENT '通道类型: SMS/EMAIL/PUSH/DINGTALK/WECOM/FEISHU 等',
-    channel_user_id   VARCHAR(128)  NOT NULL COMMENT '通道用户标识（手机号/邮箱/IM userId/企微userId/个推cid）',
+    channel_user_id VARCHAR(36) NOT NULL COMMENT '通道用户标识（手机号/邮箱/IM userId/企微userId/个推cid）'
     verified          TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '是否已验证: 0 未验证 / 1 已验证',
     is_primary        TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '是否主绑定: 0 否 / 1 是（同通道多绑定时优先使用主绑定）',
     extra             JSON          DEFAULT NULL COMMENT '扩展字段（JSON，如 deviceToken / openId 等）',
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_subscription (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    user_id           VARCHAR(32)   NOT NULL COMMENT '用户 ID',
+    user_id VARCHAR(36) NOT NULL COMMENT '用户 ID'
     topic_code        VARCHAR(64)   NOT NULL COMMENT '主题编码（如 RISK_ALERT / CONTRACT_APPROVAL / APPROVAL_TODO）',
     channel           VARCHAR(32)   NOT NULL COMMENT '通道',
     status            VARCHAR(32)   NOT NULL DEFAULT 'SUBSCRIBED' COMMENT '订阅状态: SUBSCRIBED 已订阅 / UNSUBSCRIBED 已退订',
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_subscription (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_preference (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    user_id           VARCHAR(32)   NOT NULL COMMENT '用户 ID（关联 ydsz_employee.id）',
+    user_id VARCHAR(36) NOT NULL COMMENT '用户 ID（关联 ydsz_employee.id）'
     channel           VARCHAR(32)   NOT NULL COMMENT '通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU',
     biz_type          VARCHAR(64)   NOT NULL DEFAULT '__DEFAULT__' COMMENT '业务类型（__DEFAULT__ 表示该通道全局默认偏好）',
     is_enabled           TINYINT(1)    NOT NULL DEFAULT 1 COMMENT '是否启用该通道: 0 关闭 / 1 开启（关闭后不发送）',
@@ -313,7 +313,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_tenant_config (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_batch (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    batch_id          VARCHAR(64)   NOT NULL COMMENT '批次 ID（业务侧生成，全局唯一）',
+    batch_id VARCHAR(36) NOT NULL COMMENT '批次 ID（业务侧生成，全局唯一）'
     batch_name        VARCHAR(128)  DEFAULT NULL COMMENT '批次名称',
     channel           VARCHAR(32)   NOT NULL COMMENT '发送通道',
     template_code     VARCHAR(64)   DEFAULT NULL COMMENT '模板编码',
@@ -327,7 +327,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_batch (
     error_message     VARCHAR(512)  DEFAULT NULL COMMENT '错误信息',
     started_at        DATETIME      DEFAULT NULL COMMENT '开始处理时间',
     completed_at      DATETIME      DEFAULT NULL COMMENT '完成时间',
-    sender_id         VARCHAR(32)   DEFAULT NULL COMMENT '触发发送的用户 ID',
+    sender_id VARCHAR(36) COMMENT '触发发送的用户 ID' DEFAULT NULL
     payload           JSON          DEFAULT NULL COMMENT '消息请求列表 JSON（断点续传恢复用）',
     is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     CONSTRAINT uk_batch_id UNIQUE (batch_id),
@@ -378,7 +378,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_aggregate (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_offline (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    user_id         VARCHAR(32)     NOT NULL COMMENT '接收人用户 ID',
+    user_id VARCHAR(36) NOT NULL COMMENT '接收人用户 ID'
     msg_type        VARCHAR(32)     DEFAULT NULL COMMENT '消息类型标签（如 NOTIFICATION / ALERT）',
     payload         JSON            NOT NULL COMMENT '消息内容（JSON）',
     msg_timestamp   BIGINT          DEFAULT NULL COMMENT '消息时间戳（毫秒）',
@@ -405,7 +405,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_log (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     channel           VARCHAR(32)   NOT NULL COMMENT '发送通道（SMS/EMAIL/PUSH/INAPP/WEBHOOK/HMAC/HMAC_WORK/WECOM/WECOM_APP/POST/WX_MINI/ALIPAY_MINI）',
     biz_type          VARCHAR(64)   DEFAULT NULL COMMENT '业务类型',
-    biz_id            VARCHAR(64)   DEFAULT NULL COMMENT '业务单据 ID',
+    biz_id VARCHAR(36) COMMENT '业务单据 ID' DEFAULT NULL
     receiver          VARCHAR(128)  DEFAULT NULL COMMENT '接收人（手机号/邮箱/通道用户标识等）',
     template_code     VARCHAR(64)   DEFAULT NULL COMMENT '模板编码',
     template_params   JSON          DEFAULT NULL COMMENT '模板参数（JSON）',
@@ -413,10 +413,10 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_log (
     status            VARCHAR(32)   NOT NULL DEFAULT 'PENDING' COMMENT '发送状态: PENDING 待发送 / SENDING 发送中 / SUCCESS 成功 / FAILED 失败 / RETRY 重试中 / DEAD 死信 / RECALLED 已撤回 / SCHEDULED 定时 / SKIPPED 跳过',
     error_message     TEXT          COMMENT '失败错误信息',
     priority          VARCHAR(32)   NOT NULL DEFAULT 'NORMAL' COMMENT '发送优先级: LOW / NORMAL / HIGH / URGENT',
-    sender_id         VARCHAR(32)   DEFAULT NULL COMMENT '发送人用户 ID',
+    sender_id VARCHAR(36) COMMENT '发送人用户 ID' DEFAULT NULL
     message_group     VARCHAR(64)   DEFAULT NULL COMMENT '消息分组',
-    batch_id          VARCHAR(64)   DEFAULT NULL COMMENT '批次 ID（关联 ydsz_msg_batch.batch_id）',
-    route_rule_id     VARCHAR(32)   DEFAULT NULL COMMENT '命中的路由规则 ID（关联 ydsz_msg_route_rule.id）',
+    batch_id VARCHAR(36) COMMENT '批次 ID（关联 ydsz_msg_batch.batch_id）' DEFAULT NULL
+    route_rule_id VARCHAR(36) COMMENT '命中的路由规则 ID（关联 ydsz_msg_route_rule.id）' DEFAULT NULL
     canary            TINYINT(1)    DEFAULT 0 COMMENT '是否命中灰度: 0 否 / 1 是',
     canary_key        VARCHAR(128)  DEFAULT NULL COMMENT '灰度实验标识（关联 ydsz_msg_canary.canary_key）',
     dedup_key         VARCHAR(128)  DEFAULT NULL COMMENT '幂等去重键',
@@ -426,14 +426,14 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_log (
     receipt_at        DATETIME      DEFAULT NULL COMMENT '回执时间',
     retry_count       INT           NOT NULL DEFAULT 0 COMMENT '重试次数',
     next_retry_at     DATETIME      DEFAULT NULL COMMENT '下次重试时间',
-    provider_trace_id VARCHAR(128)  DEFAULT NULL COMMENT '服务商追踪/回执 ID',
+    provider_trace_id VARCHAR(36) COMMENT '服务商追踪/回执 ID' DEFAULT NULL
     cost_ms           BIGINT        DEFAULT NULL COMMENT '发送耗时（毫秒）',
     cost              DECIMAL(20,6) DEFAULT NULL COMMENT '发送费用',
-    trace_id          VARCHAR(64)   DEFAULT NULL COMMENT '链路追踪 ID（跨服务链路串联）',
-    msg_id            VARCHAR(64)   DEFAULT NULL COMMENT '消息 ID（全局唯一，串联轨迹/反馈链路）',
+    trace_id VARCHAR(36) COMMENT '链路追踪 ID（跨服务链路串联）' DEFAULT NULL
+    msg_id VARCHAR(36) COMMENT '消息 ID（全局唯一，串联轨迹/反馈链路）' DEFAULT NULL
     topic             VARCHAR(128)  DEFAULT NULL COMMENT '订阅主题编码',
     reconsume_times   INT           DEFAULT NULL COMMENT 'MQ 重新消费次数',
-    parent_msg_id     VARCHAR(64)   DEFAULT NULL COMMENT '父消息 ID（级联消息溯源）',
+    parent_msg_id VARCHAR(36) COMMENT '父消息 ID（级联消息溯源）' DEFAULT NULL
     scheduled_at      DATETIME      DEFAULT NULL COMMENT '定时发送时间',
     is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_status_created (status, created_at),
@@ -461,8 +461,8 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_log (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_receipt (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    log_id            VARCHAR(32)   NOT NULL COMMENT '关联 ydsz_msg_log.id',
-    provider_trace_id VARCHAR(128)  DEFAULT NULL COMMENT '三方服务商回执 ID',
+    log_id VARCHAR(36) NOT NULL COMMENT '关联 ydsz_msg_log.id'
+    provider_trace_id VARCHAR(36) COMMENT '三方服务商回执 ID' DEFAULT NULL
     receipt_type      VARCHAR(32)   NOT NULL COMMENT '回执类型: DELIVERED 送达 / READ 已读 / CLICKED 点击 / FAILED 失败',
     receipt_time      DATETIME      NOT NULL COMMENT '回执时间',
     provider_code     VARCHAR(64)   DEFAULT NULL COMMENT '供应商编码',
@@ -488,14 +488,14 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_receipt (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_trace (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    msg_id          VARCHAR(64)     NOT NULL COMMENT '消息 ID（关联 ydsz_msg_log.msg_id）',
-    trace_id        VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（关联 ydsz_msg_log.trace_id，用于跨服务链路串联）',
+    msg_id VARCHAR(36) NOT NULL COMMENT '消息 ID（关联 ydsz_msg_log.msg_id）'
+    trace_id VARCHAR(36) COMMENT '链路追踪 ID（关联 ydsz_msg_log.trace_id，用于跨服务链路串联）' DEFAULT NULL
     node            VARCHAR(64)     NOT NULL COMMENT '轨迹节点类型（RECEIVED/CHANNEL_CHECK/ROUTE_MATCHED/CANARY_HIT/SUBSCRIPTION_CHECK/PREFERENCE_CHECK/DEDUP_CHECK/RATE_LIMIT_CHECK/TEMPLATE_LOADED/TEMPLATE_RENDERED/SENSITIVE_FILTERED/PERSISTED/SCHEDULED/AGGREGATED/DISPATCH_START/DISPATCH_SUCCESS/FALLBACK/RETRY/SEND_FAILED/RECEIPT_RECEIVED/RECALLED/CASCADE_SENT）',
     status          VARCHAR(32)     NOT NULL COMMENT '节点状态: SUCCESS / FAILED / SKIPPED / PENDING',
     channel         VARCHAR(32)     DEFAULT NULL COMMENT '通道（节点关联的通道，部分节点如 RECEIVED 无通道则为 NULL）',
     receiver        VARCHAR(128)    DEFAULT NULL COMMENT '接收人（脱敏后的）',
     biz_type        VARCHAR(64)     DEFAULT NULL COMMENT '业务类型',
-    biz_id          VARCHAR(64)     DEFAULT NULL COMMENT '业务单据 ID',
+    biz_id VARCHAR(36) COMMENT '业务单据 ID' DEFAULT NULL
     template_code   VARCHAR(64)     DEFAULT NULL COMMENT '模板编码',
     cost_ms         BIGINT          DEFAULT NULL COMMENT '节点耗时（毫秒）',
     message         VARCHAR(512)    DEFAULT NULL COMMENT '节点描述 / 错误信息',
@@ -520,9 +520,9 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_trace (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_feedback (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    msg_id            VARCHAR(64)   NOT NULL COMMENT '消息 ID（关联 ydsz_msg_log.msg_id）',
-    notification_id   VARCHAR(32)   DEFAULT NULL COMMENT '站内通知 ID（关联 ydsz_msg_notification.id，可为 NULL）',
-    user_id           VARCHAR(32)   NOT NULL COMMENT '用户 ID',
+    msg_id VARCHAR(36) NOT NULL COMMENT '消息 ID（关联 ydsz_msg_log.msg_id）'
+    notification_id VARCHAR(36) COMMENT '站内通知 ID（关联 ydsz_msg_notification.id，可为 NULL）' DEFAULT NULL
+    user_id VARCHAR(36) NOT NULL COMMENT '用户 ID'
     channel           VARCHAR(32)   DEFAULT NULL COMMENT '通道',
     biz_type          VARCHAR(64)   DEFAULT NULL COMMENT '业务类型',
     rating            INT           NOT NULL COMMENT '评分: 1-5 分（1=非常不满意, 5=非常满意）',
@@ -549,7 +549,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_feedback (
 CREATE TABLE IF NOT EXISTS ydsz_msg_outbox (
     id VARCHAR(36) PRIMARY KEY COMMENT '事件唯一 ID（Snowflake）'
     aggregate_type    VARCHAR(128)  NOT NULL COMMENT '聚合根类型',
-    aggregate_id      VARCHAR(128)  NOT NULL COMMENT '聚合根 ID',
+    aggregate_id VARCHAR(36) NOT NULL COMMENT '聚合根 ID'
     event_type        VARCHAR(128)  NOT NULL COMMENT '事件类型',
     payload           JSON          NOT NULL COMMENT '事件负载（JSON）',
     status            VARCHAR(32)   NOT NULL DEFAULT 'PENDING' COMMENT '发布状态: PENDING 待发布 / PROCESSING 发布中 / SENT 已发布 / DEAD_LETTER 死信',

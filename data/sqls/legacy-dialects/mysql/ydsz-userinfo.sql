@@ -22,13 +22,13 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user (
     avatar          VARCHAR(1024)   DEFAULT NULL COMMENT '头像 URL',
     status          VARCHAR(32)     NOT NULL DEFAULT '1' COMMENT 'is_enabled/DISABLED/PENDING/SUSPENDED/RESIGNED 生命周期值）',
     user_type       VARCHAR(32)     DEFAULT NULL COMMENT '用户类型（PLATFORM/ISV/TENANT_ADMIN/REGULAR 等）',
-    company_id      VARCHAR(32)     DEFAULT NULL COMMENT '所属公司 ID（关联 ydsz_idm_org_company.id）',
+    company_id VARCHAR(36) COMMENT '所属公司 ID（关联 ydsz_idm_org_company.id）' DEFAULT NULL
     last_login_at   DATETIME        DEFAULT NULL COMMENT '最近登录时间',
     last_login_ip   VARCHAR(64)     DEFAULT NULL COMMENT '最近登录 IP',
     login_fail_count INT            NOT NULL DEFAULT 0 COMMENT '连续登录失败次数（达到阈值触发账号锁定）',
     locked_until    DATETIME        DEFAULT NULL COMMENT '账号锁定截止时间（解锁后自动清零 login_fail_count）',
-    dept_id         VARCHAR(32)     DEFAULT NULL COMMENT '所属部门 ID（关联 ydsz_idm_org_department.id，支持 dept: 审批人展开）',
-    leader_id       VARCHAR(32)     DEFAULT NULL COMMENT '直属上级用户 ID（关联 ydsz_idm_account_user.id，支持 leader: 审批人展开）',
+    dept_id VARCHAR(36) COMMENT '所属部门 ID（关联 ydsz_idm_org_department.id，支持 dept: 审批人展开）' DEFAULT NULL
+    leader_id VARCHAR(36) COMMENT '直属上级用户 ID（关联 ydsz_idm_account_user.id，支持 leader: 审批人展开）' DEFAULT NULL
     position_code   VARCHAR(32)     DEFAULT NULL COMMENT '岗位编码（如 PM/DEV/QA/SA，支持 position: 审批人展开）',
     ban_type        VARCHAR(32)     DEFAULT NULL COMMENT '封禁类型（TEMPORARY/PERMANENT，NULL 表示未封禁）',
     ban_reason      VARCHAR(512)    DEFAULT NULL COMMENT '封禁原因',
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_org_company (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     company_name    VARCHAR(128)    NOT NULL COMMENT '公司名称（前端展示）',
     company_code    VARCHAR(64)     NOT NULL COMMENT '公司编码（业务侧引用，全局唯一，建议格式 COMP_XXX）',
-    parent_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '上级公司 ID（支持集团-子公司多级架构，"0"=顶级公司）',
+    parent_id VARCHAR(36) NOT NULL COMMENT '上级公司 ID（支持集团-子公司多级架构，"0"=顶级公司）' DEFAULT '0'
     contact_person  VARCHAR(64)     DEFAULT NULL COMMENT '联系人姓名',
     contact_phone   VARCHAR(128)    DEFAULT NULL COMMENT '联系电话',
     address         VARCHAR(512)    DEFAULT NULL COMMENT '注册地址',
@@ -76,11 +76,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_org_company (
 -- 部门表（组织架构部门节点，无限级树形结构）
 CREATE TABLE IF NOT EXISTS ydsz_idm_org_department (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    parent_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '父部门 ID（根节点为 "0"，支持无限级树形结构）',
+    parent_id VARCHAR(36) NOT NULL COMMENT '父部门 ID（根节点为 "0"，支持无限级树形结构）' DEFAULT '0'
     dept_name       VARCHAR(128)    NOT NULL COMMENT '部门名称（前端展示）',
     dept_code       VARCHAR(64)     NOT NULL COMMENT '部门编码（业务侧引用，全局唯一，建议格式 DEPT_XXX）',
     description     VARCHAR(512)    DEFAULT NULL COMMENT '部门描述（说明部门职责与归属）',
-    leader_id       VARCHAR(32)     DEFAULT NULL COMMENT '部门负责人用户 ID（关联 ydsz_idm_account_user.id，支持 leader: 审批人展开）',
+    leader_id VARCHAR(36) COMMENT '部门负责人用户 ID（关联 ydsz_idm_account_user.id，支持 leader: 审批人展开）' DEFAULT NULL
     status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled/DISABLED，禁用后部门下用户无法被分配新角色）',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     CONSTRAINT uk_dept_code UNIQUE (dept_code),
@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_role (
 -- 菜单/权限表（RBAC 最细粒度权限点：目录/菜单/按钮，无限级树形结构）
 CREATE TABLE IF NOT EXISTS ydsz_idm_menu (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    parent_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '父菜单 ID（根节点为 "0"，支持无限级树形结构）',
+    parent_id VARCHAR(36) NOT NULL COMMENT '父菜单 ID（根节点为 "0"，支持无限级树形结构）' DEFAULT '0'
     menu_name       VARCHAR(128)    NOT NULL COMMENT '菜单名称（前端展示）',
     menu_code       VARCHAR(64)     NOT NULL COMMENT '菜单编码（业务侧引用，全局唯一）',
     menu_type       VARCHAR(32)     NOT NULL COMMENT '菜单类型（DIR=目录/MENU=菜单/BUTTON=按钮）',
@@ -193,8 +193,8 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_language (
 -- 用户-角色关联表（RBAC 多对多中间表，用户多角色权限取并集）
 CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_role (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（关联 ydsz_idm_account_user.id）',
-    role_id         VARCHAR(32)     NOT NULL COMMENT '角色 ID（关联 ydsz_idm_role.id）',
+    user_id VARCHAR(36) NOT NULL COMMENT '用户 ID（关联 ydsz_idm_account_user.id）'
+    role_id VARCHAR(36) NOT NULL COMMENT '角色 ID（关联 ydsz_idm_role.id）'
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_user_id (user_id),
@@ -212,8 +212,8 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_role (
 -- 用户-岗位关联表（用户可兼任多岗位，主岗位由 ydsz_idm_account_user.position_code 维护）
 CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_post (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（关联 ydsz_idm_account_user.id）',
-    post_id         VARCHAR(32)     NOT NULL COMMENT '岗位 ID（关联 ydsz_idm_post.id）',
+    user_id VARCHAR(36) NOT NULL COMMENT '用户 ID（关联 ydsz_idm_account_user.id）'
+    post_id VARCHAR(36) NOT NULL COMMENT '岗位 ID（关联 ydsz_idm_post.id）'
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_user_id (user_id),
@@ -231,8 +231,8 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_post (
 -- 用户-部门关联表（支持兼岗，一个用户仅一个主部门由 Service 层事务保证）
 CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_dept (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（关联 ydsz_idm_account_user.id）',
-    dept_id         VARCHAR(32)     NOT NULL COMMENT '部门 ID（关联 ydsz_idm_org_department.id）',
+    user_id VARCHAR(36) NOT NULL COMMENT '用户 ID（关联 ydsz_idm_account_user.id）'
+    dept_id VARCHAR(36) NOT NULL COMMENT '部门 ID（关联 ydsz_idm_org_department.id）'
     is_primary      TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否主部门（1=是，0=否，一个用户只能有一个主部门，由 Service 层事务保证）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
@@ -251,8 +251,8 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_dept (
 -- 公司-部门关联表（组织结构维度：一个部门可被多个公司共享）
 CREATE TABLE IF NOT EXISTS ydsz_idm_org_company_dept (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    company_id      VARCHAR(32)     NOT NULL COMMENT '公司 ID（关联 ydsz_idm_org_company.id）',
-    dept_id         VARCHAR(32)     NOT NULL COMMENT '部门 ID（关联 ydsz_idm_org_department.id）',
+    company_id VARCHAR(36) NOT NULL COMMENT '公司 ID（关联 ydsz_idm_org_company.id）'
+    dept_id VARCHAR(36) NOT NULL COMMENT '部门 ID（关联 ydsz_idm_org_department.id）'
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_company_id (company_id),
@@ -270,9 +270,9 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_org_company_dept (
 -- 角色-权限关联表（permission_id 实际指向 ydsz_idm_menu.id，按钮级权限 menu_id 可为空）
 CREATE TABLE IF NOT EXISTS ydsz_idm_role_permission (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    role_id         VARCHAR(32)     NOT NULL COMMENT '角色 ID（关联 ydsz_idm_role.id）',
-    permission_id   VARCHAR(32)     NOT NULL COMMENT '权限 ID（实际指向 ydsz_idm_menu.id，语义上为权限点而非菜单节点）',
-    menu_id         VARCHAR(32)     DEFAULT NULL COMMENT '关联菜单 ID（可空，纯按钮级权限无对应菜单节点）',
+    role_id VARCHAR(36) NOT NULL COMMENT '角色 ID（关联 ydsz_idm_role.id）'
+    permission_id VARCHAR(36) NOT NULL COMMENT '权限 ID（实际指向 ydsz_idm_menu.id，语义上为权限点而非菜单节点）'
+    menu_id VARCHAR(36) COMMENT '关联菜单 ID（可空，纯按钮级权限无对应菜单节点）' DEFAULT NULL
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_role_id (role_id),
@@ -295,7 +295,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_role_permission (
 -- 用户登录历史表（记录每次登录尝试，用于安全审计/异常登录检测，建议保留 90 天）
 CREATE TABLE IF NOT EXISTS ydsz_idm_account_login_history (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    user_id         VARCHAR(32)     DEFAULT NULL COMMENT '用户 ID（关联 ydsz_idm_account_user.id）',
+    user_id VARCHAR(36) COMMENT '用户 ID（关联 ydsz_idm_account_user.id）' DEFAULT NULL
     username        VARCHAR(64)     DEFAULT NULL COMMENT '用户名（冗余存储，即使用户被删除也可追溯）',
     login_ip        VARCHAR(64)     DEFAULT NULL COMMENT '登录 IP 地址',
     login_result    VARCHAR(32)     NOT NULL COMMENT '登录结果（SUCCESS/FAILED）',
@@ -318,7 +318,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_login_history (
 -- 密码历史表（防止短期内重复使用旧密码，仅保留最近 N 条记录）
 CREATE TABLE IF NOT EXISTS ydsz_idm_account_password_history (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（关联 ydsz_idm_account_user.id）',
+    user_id VARCHAR(36) NOT NULL COMMENT '用户 ID（关联 ydsz_idm_account_user.id）'
     password_hash   VARCHAR(255)    NOT NULL COMMENT 'BCrypt 加密后的历史密码哈希',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标记（0=未删除，1=已删除，用于软删除兼容）',
     INDEX idx_user_id_created_at (user_id, created_at),
@@ -397,7 +397,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_social_client (
     id VARCHAR(36) PRIMARY KEY COMMENT '配置 ID（UUID）',
     platform VARCHAR(32) NOT NULL COMMENT '平台标识（GITHUB/DINGTALK/ENTERPRISE_WECHAT/FEISHU 等）',
     platform_name VARCHAR(64) DEFAULT NULL COMMENT '平台显示名称',
-    app_id VARCHAR(128) NOT NULL COMMENT '应用 ID（平台分配的 appId）',
+    app_id VARCHAR(36) NOT NULL COMMENT '应用 ID（平台分配的 appId）'
     app_secret VARCHAR(256) NOT NULL COMMENT '应用密钥（BCrypt 加密存储）',
     scope VARCHAR(256) DEFAULT NULL COMMENT 'OAuth2 授权范围（scope）',
     redirect_uri VARCHAR(512) DEFAULT NULL COMMENT '授权回调地址（redirectUri）',
@@ -435,7 +435,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_social_client (
 CREATE TABLE IF NOT EXISTS ydsz_idm_identity_saml_config (
     id VARCHAR(36) PRIMARY KEY COMMENT '配置 ID（UUID）',
     name VARCHAR(64) NOT NULL COMMENT 'IdP 显示名称',
-    entity_id VARCHAR(512) NOT NULL COMMENT 'IdP Entity ID（SAML 协议中 IdP 的唯一标识 URI）',
+    entity_id VARCHAR(36) NOT NULL COMMENT 'IdP Entity ID（SAML 协议中 IdP 的唯一标识 URI）'
     sso_url VARCHAR(512) DEFAULT NULL COMMENT 'IdP SSO 端点 URL',
     certificate TEXT DEFAULT NULL COMMENT 'IdP 公钥证书（PEM 格式，用于验证 SAML Response 签名）',
     email_attribute VARCHAR(64) DEFAULT 'email' COMMENT '用户邮箱对应的 SAML Attribute 名称',
@@ -471,7 +471,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_identity_saml_config (
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_identity_oauth2_application (
     id VARCHAR(36) PRIMARY KEY COMMENT '应用 ID（UUID）',
-    client_id VARCHAR(128) NOT NULL COMMENT '客户端 ID（唯一标识）',
+    client_id VARCHAR(36) NOT NULL COMMENT '客户端 ID（唯一标识）'
     client_name VARCHAR(256) NOT NULL COMMENT '应用名称',
     client_secret VARCHAR(256) NOT NULL COMMENT '客户端密钥（BCrypt 加密存储）',
     client_type VARCHAR(16) NOT NULL COMMENT 'is_public',
@@ -501,10 +501,10 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_identity_oauth2_application (
 -- 社交账号绑定表（用户与第三方社交平台的绑定关系，令牌 AES-256-GCM 加密存储）
 CREATE TABLE IF NOT EXISTS ydsz_idm_auth_social_account (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    user_id         VARCHAR(32)     NOT NULL COMMENT '关联用户 ID（关联 ydsz_idm_account_user.id）',
+    user_id VARCHAR(36) NOT NULL COMMENT '关联用户 ID（关联 ydsz_idm_account_user.id）'
     platform        VARCHAR(32)     NOT NULL COMMENT '平台标识（WECHAT/DINGTALK/ENTERPRISE_WECHAT/GITHUB）',
-    open_id         VARCHAR(128)    NOT NULL COMMENT '平台用户唯一标识',
-    union_id        VARCHAR(128)    DEFAULT NULL COMMENT '平台统一应用标识（可选，微信系平台返回）',
+    open_id VARCHAR(36) NOT NULL COMMENT '平台用户唯一标识'
+    union_id VARCHAR(36) COMMENT '平台统一应用标识（可选，微信系平台返回）' DEFAULT NULL
     nickname        VARCHAR(128)    DEFAULT NULL COMMENT '社交昵称（平台侧显示名）',
     avatar_url      VARCHAR(1024)   DEFAULT NULL COMMENT '头像 URL',
     access_token    VARCHAR(1024)   DEFAULT NULL COMMENT '访问令牌（AES-256-GCM 加密存储，密文不可用于条件查询）',
@@ -575,8 +575,8 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_identity_security_alert (
 -- WebAuthn 凭证表（用户注册的公钥凭证，用于 FIDO2 无密码认证）
 CREATE TABLE IF NOT EXISTS ydsz_idm_auth_credential (
     id              VARCHAR(36)    NOT NULL PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    credential_id   VARCHAR(512)    NOT NULL COMMENT '凭证 ID（Base64URL 编码）',
-    user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（关联 ydsz_idm_account_user.id）',
+    credential_id VARCHAR(36) NOT NULL COMMENT '凭证 ID（Base64URL 编码）'
+    user_id VARCHAR(36) NOT NULL COMMENT '用户 ID（关联 ydsz_idm_account_user.id）'
     public_key      VARCHAR(1024)   NOT NULL COMMENT '公钥（COSE 密钥格式，Base64URL 编码）',
     sign_count      BIGINT          NOT NULL DEFAULT 0 COMMENT '签名计数器（防克隆检测）',
     credential_type VARCHAR(32)     DEFAULT NULL COMMENT 'is_public-key）',

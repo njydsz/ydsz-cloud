@@ -199,13 +199,13 @@ CREATE TABLE "public"."ydsz_agt_document_chunk" (
                                                     "document_title" character varying(256) DEFAULT NULL::character varying,
                                                     "source" character varying(128) DEFAULT NULL::character varying,
                                                     "metadata" jsonb,
+                                                    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
                                                     "sort" integer DEFAULT 0,
                                                     "status" integer DEFAULT 1,
                                                     "revision" integer DEFAULT 0,
                                                     "tenant_id" character varying(36) DEFAULT NULL::character varying,
                                                     "is_deleted" smallint NOT NULL DEFAULT 0,
                                                     "created_by" character varying(36) DEFAULT NULL::character varying,
-                                                    "created_at" timestamp with time zone NOT NULL DEFAULT now(),
                                                     "updated_by" character varying(36) DEFAULT NULL::character varying,
                                                     "updated_at" timestamp without time zone DEFAULT now(),
                                                     CONSTRAINT "pk_ydsz_agt_document_chunk" PRIMARY KEY (id)
@@ -329,8 +329,8 @@ CREATE INDEX "idx_ydsz_agt_prompt_template_category" ON "public"."ydsz_agt_promp
 CREATE INDEX "idx_ydsz_agt_prompt_template_tenant_is_deleted" ON "public"."ydsz_agt_prompt_template" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST);
 
 INSERT INTO "public"."ydsz_agt_prompt_template" ("id", "template_code", "template_name", "content", "description", "category", "current_version", "status", "is_ab_test_enabled", "ab_target_version", "ab_traffic_percent", "sort", "revision", "tenant_id", "is_deleted", "created_by", "created_at", "updated_by", "updated_at") VALUES
-                                                                                                                                                                                                                                                                                                                                        ('100000000000000001', 'DEFAULT_SYSTEM', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', '1', NULL, FALSE, NULL, NULL, '0', '0', '0', '0', NULL, '2026-10-09 16:53:48.96863', NULL, '2026-10-09 16:53:48.96863'),
-                                                                                                                                                                                                                                                                                                                                        ('100000000000000003', 'REACT_SYSTEM', 'ReAct Agent Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', 'ReAct 模式下的工具调用助手 Prompt', 'system', '1', NULL, FALSE, NULL, NULL, '0', '0', '0', '0', NULL, '2026-10-09 16:53:48.97419', NULL, '2026-10-09 16:53:48.97419');
+                                                                                                                                                                                                                                                                                                                                        ('100000000000000001', 'DEFAULT_SYSTEM', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', '1', NULL, 0, NULL, NULL, '0', '0', '0', '0', NULL, '2026-10-09 16:53:48.96863', NULL, '2026-10-09 16:53:48.96863'),
+                                                                                                                                                                                                                                                                                                                                        ('100000000000000003', 'REACT_SYSTEM', 'ReAct Agent Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', 'ReAct 模式下的工具调用助手 Prompt', 'system', '1', NULL, 0, NULL, NULL, '0', '0', '0', '0', NULL, '2026-10-09 16:53:48.97419', NULL, '2026-10-09 16:53:48.97419');
 
 DROP TABLE IF EXISTS "public"."ydsz_agt_prompt_version" CASCADE;
 
@@ -1269,9 +1269,9 @@ CREATE INDEX "idx_ydsz_file_space_tenant_sort" ON "public"."ydsz_file_space" USI
 DROP TABLE IF EXISTS "public"."ydsz_file_space_member" CASCADE;
 
 CREATE TABLE "public"."ydsz_file_space_member" (
-                                                   "id" character varying(32) NOT NULL,
-                                                   "space_id" character varying(32) NOT NULL,
-                                                   "user_id" character varying(64) NOT NULL,
+                                                   "id" character varying(36) NOT NULL,
+                                                   "space_id" character varying(36) NOT NULL,
+                                                   "user_id" character varying(36) NOT NULL,
                                                    "role" character varying(32) NOT NULL,
                                                    "joined_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                    "sort" integer DEFAULT 0,
@@ -1477,9 +1477,9 @@ CREATE INDEX "idx_ydsz_file_trash_item_tenant_is_deleted" ON "public"."ydsz_file
 DROP TABLE IF EXISTS "public"."ydsz_file_user_favorite" CASCADE;
 
 CREATE TABLE "public"."ydsz_file_user_favorite" (
-                                                    "id" character varying(32) NOT NULL,
-                                                    "user_id" character varying(64) NOT NULL,
-                                                    "node_id" character varying(64) NOT NULL,
+                                                    "id" character varying(36) NOT NULL,
+                                                    "user_id" character varying(36) NOT NULL,
+                                                    "node_id" character varying(36) NOT NULL,
                                                     "deleted_time" timestamp without time zone,
                                                     "sort" integer NOT NULL DEFAULT 0,
                                                     "status" integer DEFAULT 1,
@@ -1511,9 +1511,9 @@ CREATE INDEX "idx_ydsz_file_user_favorite_user_sort" ON "public"."ydsz_file_user
 DROP TABLE IF EXISTS "public"."ydsz_file_user_recent" CASCADE;
 
 CREATE TABLE "public"."ydsz_file_user_recent" (
-                                                  "id" character varying(32) NOT NULL,
-                                                  "user_id" character varying(64) NOT NULL,
-                                                  "node_id" character varying(64) NOT NULL,
+                                                  "id" character varying(36) NOT NULL,
+                                                  "user_id" character varying(36) NOT NULL,
+                                                  "node_id" character varying(36) NOT NULL,
                                                   "access_type" character varying(32) NOT NULL DEFAULT 'view'::character varying,
                                                   "accessed_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                   "sort" integer DEFAULT 0,
@@ -1547,8 +1547,8 @@ CREATE INDEX "idx_ydsz_file_user_recent_user_accessed" ON "public"."ydsz_file_us
 DROP TABLE IF EXISTS "public"."ydsz_flow_admin_role" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_admin_role" (
-                                                 "id" character varying(32) NOT NULL,
-                                                 "user_id" character varying(32) NOT NULL,
+                                                 "id" character varying(36) NOT NULL,
+                                                 "user_id" character varying(36) NOT NULL,
                                                  "role_code" character varying(64) NOT NULL,
                                                  "is_enabled" smallint NOT NULL DEFAULT 1,
                                                  "granted_by" character varying(32) DEFAULT NULL::character varying,
@@ -1588,7 +1588,7 @@ CREATE INDEX "idx_ydsz_flow_admin_role_tenant_is_deleted" ON "public"."ydsz_flow
 DROP TABLE IF EXISTS "public"."ydsz_flow_archive_cursor" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_archive_cursor" (
-                                                     "id" character varying(32) NOT NULL,
+                                                     "id" character varying(36) NOT NULL,
                                                      "archive_type" character varying(32) NOT NULL,
                                                      "cursor_value" character varying(64) NOT NULL,
                                                      "cursor_data" jsonb,
@@ -1611,9 +1611,9 @@ CREATE UNIQUE INDEX "uk_ydsz_flow_archive_cursor_type_tenant" ON "public"."ydsz_
 DROP TABLE IF EXISTS "public"."ydsz_flow_attachment" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_attachment" (
-                                                 "id" character varying(32) NOT NULL,
-                                                 "instance_id" character varying(32) NOT NULL,
-                                                 "task_id" character varying(32) DEFAULT NULL::character varying,
+                                                 "id" character varying(36) NOT NULL,
+                                                 "instance_id" character varying(36) NOT NULL,
+                                                 "task_id" character varying(36) DEFAULT NULL::character varying,
                                                  "node_code" character varying(64) DEFAULT NULL::character varying,
                                                  "biz_type" character varying(32) NOT NULL,
                                                  "file_name" character varying(255) NOT NULL,
@@ -1622,11 +1622,11 @@ CREATE TABLE "public"."ydsz_flow_attachment" (
                                                  "content_type" character varying(128) DEFAULT NULL::character varying,
                                                  "storage_key" character varying(512) NOT NULL,
                                                  "storage_type" character varying(32) NOT NULL,
-                                                 "uploader_id" character varying(32) NOT NULL,
+                                                 "uploader_id" character varying(36) NOT NULL,
                                                  "uploader_name" character varying(64) DEFAULT NULL::character varying,
                                                  "download_url" character varying(1024) DEFAULT NULL::character varying,
                                                  "md5" character varying(64) DEFAULT NULL::character varying,
-                                                 "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                                 "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                                  "status" character varying(32) DEFAULT NULL::character varying,
                                                  "sort" integer DEFAULT 0,
                                                  "revision" integer NOT NULL DEFAULT 0,
@@ -1671,27 +1671,27 @@ CREATE INDEX "idx_ydsz_flow_attachment_tenant_is_deleted" ON "public"."ydsz_flow
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log" (
-                                                "id" character varying(32) NOT NULL,
-                                                "instance_id" character varying(32) NOT NULL,
-                                                "task_id" character varying(32) DEFAULT NULL::character varying,
+                                                "id" character varying(36) NOT NULL,
+                                                "instance_id" character varying(36) NOT NULL,
+                                                "task_id" character varying(36) DEFAULT NULL::character varying,
                                                 "flow_code" character varying(64) NOT NULL,
                                                 "business_type" character varying(64) DEFAULT NULL::character varying,
-                                                "business_id" character varying(64) DEFAULT NULL::character varying,
+                                                "business_id" character varying(36) DEFAULT NULL::character varying,
                                                 "node_code" character varying(64) DEFAULT NULL::character varying,
                                                 "node_name" character varying(128) DEFAULT NULL::character varying,
                                                 "action" character varying(32) NOT NULL,
-                                                "operator_id" character varying(32) NOT NULL,
+                                                "operator_id" character varying(36) NOT NULL,
                                                 "operator_name" character varying(64) DEFAULT NULL::character varying,
-                                                "target_id" character varying(32) DEFAULT NULL::character varying,
+                                                "target_id" character varying(36) DEFAULT NULL::character varying,
                                                 "target_name" character varying(64) DEFAULT NULL::character varying,
                                                 "comment" character varying(512) DEFAULT NULL::character varying,
                                                 "comment_type" character varying(32) DEFAULT NULL::character varying,
                                                 "operated_at" timestamp without time zone NOT NULL,
-                                                "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                                "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                                 "status" character varying(32) DEFAULT NULL::character varying,
                                                 "sort" integer DEFAULT 0,
                                                 "revision" integer NOT NULL DEFAULT 0,
-                                                "tenant_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+                                                "tenant_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
                                                 "is_deleted" smallint NOT NULL DEFAULT 0,
                                                 "created_by" character varying(64) DEFAULT NULL::character varying,
                                                 "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1718,7 +1718,7 @@ CREATE INDEX "idx_ydsz_flow_audit_log_tenant_is_deleted" ON "public"."ydsz_flow_
 DROP TABLE IF EXISTS "public"."ydsz_flow_auto_trigger" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_auto_trigger" (
-                                                   "id" character varying(32) NOT NULL,
+                                                   "id" character varying(36) NOT NULL,
                                                    "source_flow_code" character varying(64) NOT NULL,
                                                    "target_flow_code" character varying(64) NOT NULL,
                                                    "condition_expression" character varying(512) DEFAULT NULL::character varying,
@@ -1759,10 +1759,10 @@ CREATE INDEX "idx_ydsz_flow_auto_trigger_tenant_is_deleted" ON "public"."ydsz_fl
 DROP TABLE IF EXISTS "public"."ydsz_flow_category" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_category" (
-                                               "id" character varying(32) NOT NULL,
+                                               "id" character varying(36) NOT NULL,
                                                "category_code" character varying(64) NOT NULL,
                                                "category_name" character varying(128) NOT NULL,
-                                               "parent_id" character varying(32) DEFAULT NULL::character varying,
+                                               "parent_id" character varying(36) DEFAULT NULL::character varying,
                                                "icon" character varying(128) DEFAULT NULL::character varying,
                                                "remark" character varying(512) DEFAULT NULL::character varying,
                                                "status" character varying(32) DEFAULT NULL::character varying,
@@ -1799,24 +1799,24 @@ CREATE INDEX "idx_ydsz_flow_category_tenant_is_deleted" ON "public"."ydsz_flow_c
 DROP TABLE IF EXISTS "public"."ydsz_flow_cc" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_cc" (
-                                         "id" character varying(32) NOT NULL,
-                                         "instance_id" character varying(32) NOT NULL,
-                                         "task_id" character varying(32) DEFAULT NULL::character varying,
+                                         "id" character varying(36) NOT NULL,
+                                         "instance_id" character varying(36) NOT NULL,
+                                         "task_id" character varying(36) DEFAULT NULL::character varying,
                                          "node_code" character varying(64) DEFAULT NULL::character varying,
                                          "node_name" character varying(128) DEFAULT NULL::character varying,
                                          "flow_code" character varying(64) NOT NULL,
                                          "flow_name" character varying(128) DEFAULT NULL::character varying,
                                          "business_key" character varying(64) DEFAULT NULL::character varying,
-                                         "cc_user_id" character varying(32) NOT NULL,
+                                         "cc_user_id" character varying(36) NOT NULL,
                                          "cc_user_name" character varying(64) DEFAULT NULL::character varying,
                                          "cc_type" character varying(32) NOT NULL,
-                                         "trigger_user_id" character varying(32) DEFAULT NULL::character varying,
+                                         "trigger_user_id" character varying(36) DEFAULT NULL::character varying,
                                          "trigger_user_name" character varying(64) DEFAULT NULL::character varying,
                                          "title" character varying(128) DEFAULT NULL::character varying,
                                          "content" character varying(512) DEFAULT NULL::character varying,
                                          "read_status" character varying(32) NOT NULL DEFAULT 'UNREAD'::character varying,
                                          "read_at" timestamp without time zone,
-                                         "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                         "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                          "status" character varying(32) DEFAULT NULL::character varying,
                                          "sort" integer DEFAULT 0,
                                          "revision" integer NOT NULL DEFAULT 0,
@@ -1863,13 +1863,13 @@ CREATE INDEX "idx_ydsz_flow_cc_tenant_is_deleted" ON "public"."ydsz_flow_cc" USI
 DROP TABLE IF EXISTS "public"."ydsz_flow_cc_rule" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_cc_rule" (
-                                              "id" character varying(32) NOT NULL,
+                                              "id" character varying(36) NOT NULL,
                                               "flow_code" character varying(64) DEFAULT NULL::character varying,
                                               "node_code" character varying(64) DEFAULT NULL::character varying,
                                               "rule_type" character varying(32) NOT NULL,
                                               "rule_target" character varying(512) DEFAULT NULL::character varying,
                                               "is_enabled" integer NOT NULL DEFAULT 1,
-                                              "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                              "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                               "status" character varying(32) DEFAULT NULL::character varying,
                                               "sort" integer DEFAULT 0,
                                               "revision" integer NOT NULL DEFAULT 0,
@@ -1904,18 +1904,18 @@ CREATE INDEX "idx_ydsz_flow_cc_rule_tenant_is_deleted" ON "public"."ydsz_flow_cc
 DROP TABLE IF EXISTS "public"."ydsz_flow_comment" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_comment" (
-                                              "id" character varying(32) NOT NULL,
-                                              "instance_id" character varying(32) NOT NULL,
-                                              "task_id" character varying(32) DEFAULT NULL::character varying,
+                                              "id" character varying(36) NOT NULL,
+                                              "instance_id" character varying(36) NOT NULL,
+                                              "task_id" character varying(36) DEFAULT NULL::character varying,
                                               "node_code" character varying(64) DEFAULT NULL::character varying,
-                                              "user_id" character varying(32) NOT NULL,
+                                              "user_id" character varying(36) NOT NULL,
                                               "user_name" character varying(64) DEFAULT NULL::character varying,
                                               "content" character varying(2000) NOT NULL,
                                               "type" character varying(32) NOT NULL DEFAULT 'COMMENT'::character varying,
-                                              "parent_comment_id" character varying(32) DEFAULT NULL::character varying,
-                                              "reply_to_user_id" character varying(32) DEFAULT NULL::character varying,
+                                              "parent_comment_id" character varying(36) DEFAULT NULL::character varying,
+                                              "reply_to_user_id" character varying(36) DEFAULT NULL::character varying,
                                               "reply_to_user_name" character varying(64) DEFAULT NULL::character varying,
-                                              "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                              "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                               "status" character varying(32) DEFAULT NULL::character varying,
                                               "sort" integer DEFAULT 0,
                                               "revision" integer NOT NULL DEFAULT 0,
@@ -1955,7 +1955,7 @@ CREATE INDEX "idx_ydsz_flow_comment_tenant_is_deleted" ON "public"."ydsz_flow_co
 DROP TABLE IF EXISTS "public"."ydsz_flow_definition" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_definition" (
-                                                 "id" character varying(32) NOT NULL,
+                                                 "id" character varying(36) NOT NULL,
                                                  "flow_code" character varying(64) NOT NULL,
                                                  "flow_name" character varying(128) NOT NULL,
                                                  "category" character varying(64) DEFAULT NULL::character varying,
@@ -1969,7 +1969,7 @@ CREATE TABLE "public"."ydsz_flow_definition" (
                                                  "listener_path" character varying(128) DEFAULT NULL::character varying,
                                                  "ext" jsonb,
                                                  "description" character varying(512) DEFAULT NULL::character varying,
-                                                 "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                                 "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                                  "canary_percent" integer NOT NULL DEFAULT 0,
                                                  "canary_status" character varying(32) DEFAULT NULL::character varying,
                                                  "canary_strategy" character varying(32) DEFAULT NULL::character varying,
@@ -2024,10 +2024,10 @@ CREATE INDEX "idx_ydsz_flow_definition_tenant_is_deleted" ON "public"."ydsz_flow
 DROP TABLE IF EXISTS "public"."ydsz_flow_delegate_auth" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_delegate_auth" (
-                                                    "id" character varying(32) NOT NULL,
-                                                    "owner_user_id" character varying(32) NOT NULL,
+                                                    "id" character varying(36) NOT NULL,
+                                                    "owner_user_id" character varying(36) NOT NULL,
                                                     "owner_user_name" character varying(64) DEFAULT NULL::character varying,
-                                                    "delegate_user_id" character varying(32) NOT NULL,
+                                                    "delegate_user_id" character varying(36) NOT NULL,
                                                     "delegate_user_name" character varying(64) DEFAULT NULL::character varying,
                                                     "scope_type" character varying(32) NOT NULL,
                                                     "flow_code" character varying(64) DEFAULT NULL::character varying,
@@ -2037,7 +2037,7 @@ CREATE TABLE "public"."ydsz_flow_delegate_auth" (
                                                     "end_time" timestamp without time zone NOT NULL,
                                                     "auth_status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
                                                     "reason" character varying(512) DEFAULT NULL::character varying,
-                                                    "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                                    "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                                     "status" character varying(32) DEFAULT NULL::character varying,
                                                     "sort" integer DEFAULT 0,
                                                     "revision" integer NOT NULL DEFAULT 0,
@@ -2080,22 +2080,22 @@ CREATE INDEX "idx_ydsz_flow_delegate_auth_tenant_is_deleted" ON "public"."ydsz_f
 DROP TABLE IF EXISTS "public"."ydsz_flow_event_subscription" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_event_subscription" (
-                                                         "id" character varying(32) NOT NULL,
-                                                         "instance_id" character varying(32) NOT NULL,
-                                                         "definition_id" character varying(32) NOT NULL,
+                                                         "id" character varying(36) NOT NULL,
+                                                         "instance_id" character varying(36) NOT NULL,
+                                                         "definition_id" character varying(36) NOT NULL,
                                                          "flow_code" character varying(64) DEFAULT NULL::character varying,
                                                          "node_code" character varying(64) NOT NULL,
                                                          "node_name" character varying(128) DEFAULT NULL::character varying,
                                                          "event_type" character varying(32) NOT NULL,
                                                          "event_ref" character varying(64) NOT NULL,
                                                          "correlation_key" character varying(64) DEFAULT NULL::character varying,
-                                                         "boundary_task_id" character varying(32) DEFAULT NULL::character varying,
+                                                         "boundary_task_id" character varying(36) DEFAULT NULL::character varying,
                                                          "subscription_status" character varying(32) NOT NULL DEFAULT 'WAITING'::character varying,
                                                          "payload" jsonb,
                                                          "triggered_at" timestamp without time zone,
                                                          "trigger_source" character varying(32) DEFAULT NULL::character varying,
                                                          "cancel_reason" character varying(512) DEFAULT NULL::character varying,
-                                                         "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                                         "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                                          "status" character varying(32) DEFAULT NULL::character varying,
                                                          "sort" integer DEFAULT 0,
                                                          "revision" integer NOT NULL DEFAULT 0,
@@ -2142,16 +2142,16 @@ CREATE INDEX "idx_ydsz_flow_event_subscription_tenant_is_deleted" ON "public"."y
 DROP TABLE IF EXISTS "public"."ydsz_flow_his_instance" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_his_instance" (
-                                                   "id" character varying(32) NOT NULL,
+                                                   "id" character varying(36) NOT NULL,
                                                    "flow_code" character varying(64) NOT NULL,
                                                    "flow_name" character varying(128) DEFAULT NULL::character varying,
-                                                   "definition_id" character varying(32) NOT NULL,
+                                                   "definition_id" character varying(36) NOT NULL,
                                                    "flow_version" character varying(32) DEFAULT NULL::character varying,
                                                    "business_type" character varying(64) NOT NULL,
-                                                   "business_id" character varying(64) NOT NULL,
+                                                   "business_id" character varying(36) NOT NULL,
                                                    "business_no" character varying(64) DEFAULT NULL::character varying,
                                                    "title" character varying(128) DEFAULT NULL::character varying,
-                                                   "initiator_id" character varying(32) NOT NULL,
+                                                   "initiator_id" character varying(36) NOT NULL,
                                                    "initiator_name" character varying(64) DEFAULT NULL::character varying,
                                                    "current_node_code" character varying(64) DEFAULT NULL::character varying,
                                                    "current_node_name" character varying(128) DEFAULT NULL::character varying,
@@ -2162,7 +2162,7 @@ CREATE TABLE "public"."ydsz_flow_his_instance" (
                                                    "end_at" timestamp without time zone,
                                                    "duration_ms" bigint,
                                                    "archived_at" timestamp without time zone,
-                                                   "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                                   "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                                    "status" character varying(32) DEFAULT NULL::character varying,
                                                    "sort" integer DEFAULT 0,
                                                    "revision" integer NOT NULL DEFAULT 0,
@@ -2213,21 +2213,21 @@ CREATE INDEX "idx_ydsz_flow_his_instance_tenant_is_deleted" ON "public"."ydsz_fl
 DROP TABLE IF EXISTS "public"."ydsz_flow_his_task" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_his_task" (
-                                               "id" character varying(32) NOT NULL,
-                                               "instance_id" character varying(32) NOT NULL,
-                                               "task_id" character varying(32) NOT NULL,
+                                               "id" character varying(36) NOT NULL,
+                                               "instance_id" character varying(36) NOT NULL,
+                                               "task_id" character varying(36) NOT NULL,
                                                "flow_code" character varying(64) NOT NULL,
-                                               "definition_id" character varying(32) NOT NULL,
+                                               "definition_id" character varying(36) NOT NULL,
                                                "node_code" character varying(64) NOT NULL,
                                                "node_name" character varying(128) DEFAULT NULL::character varying,
                                                "node_type" integer,
                                                "business_type" character varying(64) DEFAULT NULL::character varying,
-                                               "business_id" character varying(64) DEFAULT NULL::character varying,
+                                               "business_id" character varying(36) DEFAULT NULL::character varying,
                                                "business_no" character varying(64) DEFAULT NULL::character varying,
                                                "flow_name" character varying(128) DEFAULT NULL::character varying,
                                                "title" character varying(128) DEFAULT NULL::character varying,
                                                "assignee_type" character varying(32) DEFAULT NULL::character varying,
-                                               "assignee_id" character varying(64) DEFAULT NULL::character varying,
+                                               "assignee_id" character varying(36) DEFAULT NULL::character varying,
                                                "assignee_name" character varying(64) DEFAULT NULL::character varying,
                                                "perform_type" character varying(32) DEFAULT NULL::character varying,
                                                "approve_count" integer,
@@ -2239,7 +2239,7 @@ CREATE TABLE "public"."ydsz_flow_his_task" (
                                                "finish_at" timestamp without time zone,
                                                "effective_time" timestamp without time zone,
                                                "duration_ms" bigint,
-                                               "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                               "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                                "iter_var" character varying(128) DEFAULT NULL::character varying,
                                                "status" character varying(32) DEFAULT NULL::character varying,
                                                "sort" integer DEFAULT 0,
@@ -2299,7 +2299,7 @@ CREATE INDEX "idx_ydsz_flow_his_task_tenant_is_deleted" ON "public"."ydsz_flow_h
 DROP TABLE IF EXISTS "public"."ydsz_flow_idempotent" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_idempotent" (
-                                                 "id" character varying(32) NOT NULL,
+                                                 "id" character varying(36) NOT NULL,
                                                  "scope" character varying(64) NOT NULL,
                                                  "key_hash" character varying(64) NOT NULL,
                                                  "key_raw" character varying(512) DEFAULT NULL::character varying,
@@ -2335,16 +2335,16 @@ CREATE UNIQUE INDEX "uk_ydsz_flow_idempotent_scope_hash" ON "public"."ydsz_flow_
 DROP TABLE IF EXISTS "public"."ydsz_flow_instance" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_instance" (
-                                               "id" character varying(32) NOT NULL,
+                                               "id" character varying(36) NOT NULL,
                                                "flow_code" character varying(64) NOT NULL,
                                                "flow_name" character varying(128) NOT NULL,
-                                               "definition_id" character varying(32) NOT NULL,
+                                               "definition_id" character varying(36) NOT NULL,
                                                "flow_version" character varying(32) NOT NULL,
                                                "business_type" character varying(64) NOT NULL,
-                                               "business_id" character varying(64) NOT NULL,
+                                               "business_id" character varying(36) NOT NULL,
                                                "business_no" character varying(64) DEFAULT NULL::character varying,
                                                "title" character varying(128) DEFAULT NULL::character varying,
-                                               "initiator_id" character varying(32) NOT NULL,
+                                               "initiator_id" character varying(36) NOT NULL,
                                                "initiator_name" character varying(64) DEFAULT NULL::character varying,
                                                "current_node_code" character varying(64) DEFAULT NULL::character varying,
                                                "current_node_name" character varying(128) DEFAULT NULL::character varying,
@@ -2354,9 +2354,9 @@ CREATE TABLE "public"."ydsz_flow_instance" (
                                                "start_at" timestamp without time zone,
                                                "end_at" timestamp without time zone,
                                                "duration_ms" bigint,
-                                               "parent_instance_id" character varying(32) DEFAULT NULL::character varying,
+                                               "parent_instance_id" character varying(36) DEFAULT NULL::character varying,
                                                "parent_node_code" character varying(64) DEFAULT NULL::character varying,
-                                               "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                               "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                                "due_at" timestamp without time zone,
                                                "reject_reason" character varying(512) DEFAULT NULL::character varying,
                                                "status" character varying(32) DEFAULT NULL::character varying,
@@ -2413,8 +2413,8 @@ CREATE INDEX "idx_ydsz_flow_instance_tenant_is_deleted" ON "public"."ydsz_flow_i
 DROP TABLE IF EXISTS "public"."ydsz_flow_node" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_node" (
-                                           "id" character varying(32) NOT NULL,
-                                           "definition_id" character varying(32) NOT NULL,
+                                           "id" character varying(36) NOT NULL,
+                                           "definition_id" character varying(36) NOT NULL,
                                            "flow_code" character varying(64) NOT NULL,
                                            "node_type" integer NOT NULL,
                                            "node_code" character varying(64) NOT NULL,
@@ -2426,7 +2426,7 @@ CREATE TABLE "public"."ydsz_flow_node" (
                                            "ext" jsonb,
                                            "form_fields_config" jsonb,
                                            "sla_config" jsonb,
-                                           "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                           "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                            "status" character varying(32) DEFAULT NULL::character varying,
                                            "sort" integer DEFAULT 0,
                                            "revision" integer NOT NULL DEFAULT 0,
@@ -2468,8 +2468,8 @@ CREATE INDEX "idx_ydsz_flow_node_tenant_is_deleted" ON "public"."ydsz_flow_node"
 DROP TABLE IF EXISTS "public"."ydsz_flow_quick_comment" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_quick_comment" (
-                                                    "id" character varying(32) NOT NULL,
-                                                    "user_id" character varying(32) NOT NULL,
+                                                    "id" character varying(36) NOT NULL,
+                                                    "user_id" character varying(36) NOT NULL,
                                                     "content" character varying(500) NOT NULL,
                                                     "comment_type" character varying(32) DEFAULT NULL::character varying,
                                                     "sort_num" integer NOT NULL DEFAULT 0,
@@ -2510,22 +2510,22 @@ CREATE INDEX "idx_ydsz_flow_quick_comment_user_id" ON "public"."ydsz_flow_quick_
 DROP TABLE IF EXISTS "public"."ydsz_flow_run_task" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_run_task" (
-                                               "id" character varying(32) NOT NULL,
-                                               "instance_id" character varying(32) NOT NULL,
+                                               "id" character varying(36) NOT NULL,
+                                               "instance_id" character varying(36) NOT NULL,
                                                "flow_code" character varying(64) NOT NULL,
-                                               "definition_id" character varying(32) NOT NULL,
+                                               "definition_id" character varying(36) NOT NULL,
                                                "node_code" character varying(64) NOT NULL,
                                                "node_name" character varying(128) DEFAULT NULL::character varying,
                                                "node_type" integer,
                                                "business_type" character varying(64) DEFAULT NULL::character varying,
-                                               "business_id" character varying(64) DEFAULT NULL::character varying,
+                                               "business_id" character varying(36) DEFAULT NULL::character varying,
                                                "business_no" character varying(64) DEFAULT NULL::character varying,
                                                "flow_name" character varying(128) DEFAULT NULL::character varying,
                                                "title" character varying(128) DEFAULT NULL::character varying,
-                                               "assignor_id" character varying(32) DEFAULT NULL::character varying,
+                                               "assignor_id" character varying(36) DEFAULT NULL::character varying,
                                                "assignor_name" character varying(64) DEFAULT NULL::character varying,
                                                "assignee_type" character varying(32) DEFAULT NULL::character varying,
-                                               "assignee_id" character varying(64) NOT NULL,
+                                               "assignee_id" character varying(36) NOT NULL,
                                                "assignee_name" character varying(64) DEFAULT NULL::character varying,
                                                "permission_flag" character varying(512) DEFAULT NULL::character varying,
                                                "perform_type" character varying(32) DEFAULT NULL::character varying,
@@ -2548,7 +2548,7 @@ CREATE TABLE "public"."ydsz_flow_run_task" (
                                                "sla_action" character varying(32) DEFAULT NULL::character varying,
                                                "sla_escalated" integer NOT NULL DEFAULT 0,
                                                "iter_var" character varying(128) NOT NULL DEFAULT ''::character varying,
-                                               "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                               "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                                "status" character varying(32) DEFAULT NULL::character varying,
                                                "sort" integer DEFAULT 0,
                                                "revision" integer NOT NULL DEFAULT 0,
@@ -2618,8 +2618,8 @@ CREATE INDEX "idx_ydsz_flow_run_task_tenant_is_deleted" ON "public"."ydsz_flow_r
 DROP TABLE IF EXISTS "public"."ydsz_flow_skip" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_skip" (
-                                           "id" character varying(32) NOT NULL,
-                                           "definition_id" character varying(32) NOT NULL,
+                                           "id" character varying(36) NOT NULL,
+                                           "definition_id" character varying(36) NOT NULL,
                                            "flow_code" character varying(64) NOT NULL,
                                            "skip_name" character varying(128) DEFAULT NULL::character varying,
                                            "skip_type" character varying(32) NOT NULL,
@@ -2631,7 +2631,7 @@ CREATE TABLE "public"."ydsz_flow_skip" (
                                            "coordinate_next" jsonb,
                                            "skip_list" jsonb,
                                            "ext" jsonb,
-                                           "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                           "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                            "status" character varying(32) DEFAULT NULL::character varying,
                                            "sort" integer DEFAULT 0,
                                            "revision" integer NOT NULL DEFAULT 0,
@@ -2674,7 +2674,7 @@ CREATE INDEX "idx_ydsz_flow_skip_tenant_is_deleted" ON "public"."ydsz_flow_skip"
 DROP TABLE IF EXISTS "public"."ydsz_flow_template" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_template" (
-                                               "id" character varying(32) NOT NULL,
+                                               "id" character varying(36) NOT NULL,
                                                "template_code" character varying(64) NOT NULL,
                                                "template_name" character varying(128) NOT NULL,
                                                "category" character varying(32) DEFAULT NULL::character varying,
@@ -2683,7 +2683,7 @@ CREATE TABLE "public"."ydsz_flow_template" (
                                                "bpmn_xml" text,
                                                "form_path" character varying(1024) DEFAULT NULL::character varying,
                                                "use_count" integer NOT NULL DEFAULT 0,
-                                               "parent_template_id" character varying(32) DEFAULT NULL::character varying,
+                                               "parent_template_id" character varying(36) DEFAULT NULL::character varying,
                                                "version" integer NOT NULL DEFAULT 1,
                                                "version_label" character varying(32) DEFAULT NULL::character varying,
                                                "inherit_type" character varying(32) DEFAULT NULL::character varying,
@@ -2731,20 +2731,20 @@ CREATE INDEX "idx_ydsz_flow_template_tenant_is_deleted" ON "public"."ydsz_flow_t
 DROP TABLE IF EXISTS "public"."ydsz_flow_timer" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_timer" (
-                                            "id" character varying(32) NOT NULL,
-                                            "instance_id" character varying(32) NOT NULL,
-                                            "definition_id" character varying(32) NOT NULL,
+                                            "id" character varying(36) NOT NULL,
+                                            "instance_id" character varying(36) NOT NULL,
+                                            "definition_id" character varying(36) NOT NULL,
                                             "flow_code" character varying(64) DEFAULT NULL::character varying,
                                             "node_code" character varying(64) NOT NULL,
                                             "node_name" character varying(128) DEFAULT NULL::character varying,
                                             "timer_type" character varying(32) NOT NULL,
-                                            "boundary_task_id" character varying(32) DEFAULT NULL::character varying,
+                                            "boundary_task_id" character varying(36) DEFAULT NULL::character varying,
                                             "fire_at" timestamp without time zone NOT NULL,
                                             "cycle" character varying(64) DEFAULT NULL::character varying,
                                             "timer_status" character varying(32) NOT NULL DEFAULT 'PENDING'::character varying,
                                             "fired_at" timestamp without time zone,
                                             "cancel_reason" character varying(512) DEFAULT NULL::character varying,
-                                            "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                            "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                             "status" character varying(32) DEFAULT NULL::character varying,
                                             "sort" integer DEFAULT 0,
                                             "revision" integer NOT NULL DEFAULT 0,
@@ -2787,19 +2787,19 @@ CREATE INDEX "idx_ydsz_flow_timer_timer_status" ON "public"."ydsz_flow_timer" US
 DROP TABLE IF EXISTS "public"."ydsz_flow_user" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_user" (
-                                           "id" character varying(32) NOT NULL,
-                                           "task_id" character varying(32) NOT NULL,
-                                           "instance_id" character varying(32) NOT NULL,
+                                           "id" character varying(36) NOT NULL,
+                                           "task_id" character varying(36) NOT NULL,
+                                           "instance_id" character varying(36) NOT NULL,
                                            "node_code" character varying(64) NOT NULL,
                                            "user_type" character varying(32) DEFAULT NULL::character varying,
-                                           "user_id" character varying(64) NOT NULL,
+                                           "user_id" character varying(36) NOT NULL,
                                            "user_name" character varying(64) DEFAULT NULL::character varying,
                                            "processed" integer NOT NULL DEFAULT 0,
                                            "process_at" timestamp without time zone,
                                            "comment" character varying(512) DEFAULT NULL::character varying,
                                            "weight" integer NOT NULL DEFAULT 1,
                                            "sign_type" character varying(32) NOT NULL DEFAULT 'ORIGINAL'::character varying,
-                                           "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                           "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                            "status" character varying(32) DEFAULT NULL::character varying,
                                            "sort" integer DEFAULT 0,
                                            "revision" integer NOT NULL DEFAULT 0,
@@ -2915,8 +2915,8 @@ INSERT INTO "public"."ydsz_gen_template_group" ("id", "name", "description", "is
 DROP TABLE IF EXISTS "public"."ydsz_idm_account_login_history" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_account_login_history" (
-                                                           "id" character varying(32) NOT NULL,
-                                                           "user_id" character varying(32) DEFAULT NULL::character varying,
+                                                           "id" character varying(36) NOT NULL,
+                                                           "user_id" character varying(36) DEFAULT NULL::character varying,
                                                            "username" character varying(64) DEFAULT NULL::character varying,
                                                            "login_ip" character varying(64) DEFAULT NULL::character varying,
                                                            "login_result" character varying(32) NOT NULL,
@@ -2949,8 +2949,8 @@ CREATE INDEX "idx_ydsz_idm_account_login_history_user_id_created_at" ON "public"
 DROP TABLE IF EXISTS "public"."ydsz_idm_account_password_history" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_account_password_history" (
-                                                              "id" character varying(32) NOT NULL,
-                                                              "user_id" character varying(32) NOT NULL,
+                                                              "id" character varying(36) NOT NULL,
+                                                              "user_id" character varying(36) NOT NULL,
                                                               "password_hash" character varying(255) NOT NULL,
                                                               "sort" integer DEFAULT 0,
                                                               "status" integer DEFAULT 1,
@@ -2975,7 +2975,7 @@ CREATE INDEX "idx_ydsz_idm_account_password_history_user_id_created_at" ON "publ
 DROP TABLE IF EXISTS "public"."ydsz_idm_account_user" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_account_user" (
-                                                  "id" character varying(32) NOT NULL,
+                                                  "id" character varying(36) NOT NULL,
                                                   "username" character varying(64) NOT NULL,
                                                   "password" character varying(255) NOT NULL,
                                                   "real_name" character varying(512) DEFAULT NULL::character varying,
@@ -2984,13 +2984,13 @@ CREATE TABLE "public"."ydsz_idm_account_user" (
                                                   "avatar" character varying(1024) DEFAULT NULL::character varying,
                                                   "status" character varying(32) NOT NULL DEFAULT '1'::character varying,
                                                   "user_type" character varying(32) DEFAULT NULL::character varying,
-                                                  "company_id" character varying(32) DEFAULT NULL::character varying,
+                                                  "company_id" character varying(36) DEFAULT NULL::character varying,
                                                   "last_login_at" timestamp without time zone,
                                                   "last_login_ip" character varying(64) DEFAULT NULL::character varying,
                                                   "login_fail_count" integer NOT NULL DEFAULT 0,
                                                   "locked_until" timestamp without time zone,
-                                                  "dept_id" character varying(32) DEFAULT NULL::character varying,
-                                                  "leader_id" character varying(32) DEFAULT NULL::character varying,
+                                                  "dept_id" character varying(36) DEFAULT NULL::character varying,
+                                                  "leader_id" character varying(36) DEFAULT NULL::character varying,
                                                   "position_code" character varying(32) DEFAULT NULL::character varying,
                                                   "ban_type" character varying(32) DEFAULT NULL::character varying,
                                                   "ban_reason" character varying(512) DEFAULT NULL::character varying,
@@ -3046,9 +3046,9 @@ CREATE INDEX "idx_ydsz_idm_account_user_tenant_is_deleted" ON "public"."ydsz_idm
 DROP TABLE IF EXISTS "public"."ydsz_idm_account_user_dept" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_account_user_dept" (
-                                                       "id" character varying(32) NOT NULL,
-                                                       "user_id" character varying(32) NOT NULL,
-                                                       "dept_id" character varying(32) NOT NULL,
+                                                       "id" character varying(36) NOT NULL,
+                                                       "user_id" character varying(36) NOT NULL,
+                                                       "dept_id" character varying(36) NOT NULL,
                                                        "is_primary" smallint NOT NULL DEFAULT 0,
                                                        "status" character varying(32) DEFAULT NULL::character varying,
                                                        "sort" integer DEFAULT 0,
@@ -3081,7 +3081,7 @@ CREATE INDEX "idx_ydsz_idm_account_user_dept_user_id" ON "public"."ydsz_idm_acco
 DROP TABLE IF EXISTS "public"."ydsz_idm_account_user_language" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_account_user_language" (
-                                                           "id" character varying(32) NOT NULL,
+                                                           "id" character varying(36) NOT NULL,
                                                            "language_code" character varying(32) NOT NULL,
                                                            "language_name" character varying(128) NOT NULL,
                                                            "is_default" smallint NOT NULL DEFAULT 0,
@@ -3116,9 +3116,9 @@ CREATE INDEX "idx_ydsz_idm_account_user_language_tenant_is_deleted" ON "public".
 DROP TABLE IF EXISTS "public"."ydsz_idm_account_user_post" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_account_user_post" (
-                                                       "id" character varying(32) NOT NULL,
-                                                       "user_id" character varying(32) NOT NULL,
-                                                       "post_id" character varying(32) NOT NULL,
+                                                       "id" character varying(36) NOT NULL,
+                                                       "user_id" character varying(36) NOT NULL,
+                                                       "post_id" character varying(36) NOT NULL,
                                                        "status" character varying(32) DEFAULT NULL::character varying,
                                                        "sort" integer DEFAULT 0,
                                                        "revision" integer NOT NULL DEFAULT 0,
@@ -3149,9 +3149,9 @@ CREATE INDEX "idx_ydsz_idm_account_user_post_user_id" ON "public"."ydsz_idm_acco
 DROP TABLE IF EXISTS "public"."ydsz_idm_account_user_role" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_account_user_role" (
-                                                       "id" character varying(32) NOT NULL,
-                                                       "user_id" character varying(32) NOT NULL,
-                                                       "role_id" character varying(32) NOT NULL,
+                                                       "id" character varying(36) NOT NULL,
+                                                       "user_id" character varying(36) NOT NULL,
+                                                       "role_id" character varying(36) NOT NULL,
                                                        "status" character varying(32) DEFAULT NULL::character varying,
                                                        "sort" integer DEFAULT 0,
                                                        "revision" integer NOT NULL DEFAULT 0,
@@ -3230,8 +3230,8 @@ DROP TABLE IF EXISTS "public"."ydsz_idm_auth_credential" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_auth_credential" (
                                                      "id" character varying(36) NOT NULL,
-                                                     "credential_id" character varying(512) NOT NULL,
-                                                     "user_id" character varying(32) NOT NULL,
+                                                     "credential_id" character varying(36) NOT NULL,
+                                                     "user_id" character varying(36) NOT NULL,
                                                      "public_key" character varying(1024) NOT NULL,
                                                      "sign_count" bigint NOT NULL DEFAULT 0,
                                                      "credential_type" character varying(32) DEFAULT NULL::character varying,
@@ -3276,7 +3276,7 @@ CREATE INDEX "idx_ydsz_idm_auth_credential_user_id" ON "public"."ydsz_idm_auth_c
 DROP TABLE IF EXISTS "public"."ydsz_idm_auth_policy" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_auth_policy" (
-                                                 "id" character varying(64) NOT NULL,
+                                                 "id" character varying(36) NOT NULL,
                                                  "name" character varying(64) NOT NULL,
                                                  "password_min_length" integer DEFAULT 8,
                                                  "is_password_require_uppercase" smallint NOT NULL DEFAULT 1,
@@ -3320,16 +3320,16 @@ COMMENT ON COLUMN "public"."ydsz_idm_auth_policy"."created_at" IS '创建时间'
 COMMENT ON COLUMN "public"."ydsz_idm_auth_policy"."updated_by" IS '更新者用户 ID';
 COMMENT ON COLUMN "public"."ydsz_idm_auth_policy"."updated_at" IS '更新时间';
 
-INSERT INTO "public"."ydsz_idm_auth_policy" ("id", "name", "password_min_length", "is_password_require_uppercase", "is_password_require_digit", "is_mfa_enabled", "is_captcha_enabled", "allowed_identity_providers", "max_sessions_per_user", "session_timeout_seconds", "remark", "status", "sort", "revision", "tenant_id", "is_deleted", "created_by", "created_at", "updated_by", "updated_at") VALUES ('default-policy-001', '全局默认认证策略', '8', TRUE, TRUE, FALSE, TRUE, 'LOCAL', '3', '7200', '系统全局默认策略，租户未配置时继承', NULL, '0', '0', NULL, '0', NULL, '2026-10-09 17:02:38.13348', NULL, '2026-10-09 17:02:38.13348');
+INSERT INTO "public"."ydsz_idm_auth_policy" ("id", "name", "password_min_length", "is_password_require_uppercase", "is_password_require_digit", "is_mfa_enabled", "is_captcha_enabled", "allowed_identity_providers", "max_sessions_per_user", "session_timeout_seconds", "remark", "status", "sort", "revision", "tenant_id", "is_deleted", "created_by", "created_at", "updated_by", "updated_at") VALUES ('default-policy-001', '全局默认认证策略', '8', 1, 1, 0, 1, 'LOCAL', '3', '7200', '系统全局默认策略，租户未配置时继承', NULL, '0', '0', NULL, '0', NULL, '2026-10-09 17:02:38.13348', NULL, '2026-10-09 17:02:38.13348');
 
 DROP TABLE IF EXISTS "public"."ydsz_idm_auth_social_account" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_auth_social_account" (
-                                                         "id" character varying(32) NOT NULL,
-                                                         "user_id" character varying(32) NOT NULL,
+                                                         "id" character varying(36) NOT NULL,
+                                                         "user_id" character varying(36) NOT NULL,
                                                          "platform" character varying(32) NOT NULL,
-                                                         "open_id" character varying(128) NOT NULL,
-                                                         "union_id" character varying(128) DEFAULT NULL::character varying,
+                                                         "open_id" character varying(36) NOT NULL,
+                                                         "union_id" character varying(36) DEFAULT NULL::character varying,
                                                          "nickname" character varying(128) DEFAULT NULL::character varying,
                                                          "avatar_url" character varying(1024) DEFAULT NULL::character varying,
                                                          "access_token" character varying(1024) DEFAULT NULL::character varying,
@@ -3372,10 +3372,10 @@ CREATE INDEX "idx_ydsz_idm_auth_social_account_user_id" ON "public"."ydsz_idm_au
 DROP TABLE IF EXISTS "public"."ydsz_idm_auth_social_client" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_auth_social_client" (
-                                                        "id" character varying(64) NOT NULL,
+                                                        "id" character varying(36) NOT NULL,
                                                         "platform" character varying(32) NOT NULL,
                                                         "platform_name" character varying(64) DEFAULT NULL::character varying,
-                                                        "app_id" character varying(128) NOT NULL,
+                                                        "app_id" character varying(36) NOT NULL,
                                                         "app_secret" character varying(256) NOT NULL,
                                                         "scope" character varying(256) DEFAULT NULL::character varying,
                                                         "redirect_uri" character varying(512) DEFAULT NULL::character varying,
@@ -3416,8 +3416,8 @@ CREATE INDEX "idx_ydsz_idm_auth_social_client_tenant_is_deleted" ON "public"."yd
 DROP TABLE IF EXISTS "public"."ydsz_idm_identity_oauth2_application" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_identity_oauth2_application" (
-                                                                 "id" character varying(64) NOT NULL,
-                                                                 "client_id" character varying(128) NOT NULL,
+                                                                 "id" character varying(36) NOT NULL,
+                                                                 "client_id" character varying(36) NOT NULL,
                                                                  "client_name" character varying(256) NOT NULL,
                                                                  "client_secret" character varying(256) NOT NULL,
                                                                  "client_type" character varying(16) NOT NULL,
@@ -3463,9 +3463,9 @@ CREATE INDEX "idx_ydsz_idm_identity_oauth2_application_tenant_is_deleted" ON "pu
 DROP TABLE IF EXISTS "public"."ydsz_idm_identity_saml_config" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_identity_saml_config" (
-                                                          "id" character varying(64) NOT NULL,
+                                                          "id" character varying(36) NOT NULL,
                                                           "name" character varying(64) NOT NULL,
-                                                          "entity_id" character varying(512) NOT NULL,
+                                                          "entity_id" character varying(36) NOT NULL,
                                                           "sso_url" character varying(512) DEFAULT NULL::character varying,
                                                           "certificate" text,
                                                           "email_attribute" character varying(64) DEFAULT 'email'::character varying,
@@ -3507,10 +3507,10 @@ CREATE INDEX "idx_ydsz_idm_identity_saml_config_tenant_is_deleted" ON "public"."
 DROP TABLE IF EXISTS "public"."ydsz_idm_identity_security_alert" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_identity_security_alert" (
-                                                             "id" character varying(64) NOT NULL,
+                                                             "id" character varying(36) NOT NULL,
                                                              "alert_type" character varying(32) NOT NULL,
                                                              "risk_level" character varying(16) NOT NULL,
-                                                             "user_id" character varying(64) DEFAULT NULL::character varying,
+                                                             "user_id" character varying(36) DEFAULT NULL::character varying,
                                                              "username" character varying(128) DEFAULT NULL::character varying,
                                                              "source_ip" character varying(64) DEFAULT NULL::character varying,
                                                              "title" character varying(256) NOT NULL,
@@ -3556,8 +3556,8 @@ CREATE INDEX "idx_ydsz_idm_identity_security_alert_user_id" ON "public"."ydsz_id
 DROP TABLE IF EXISTS "public"."ydsz_idm_menu" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_menu" (
-                                          "id" character varying(32) NOT NULL,
-                                          "parent_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+                                          "id" character varying(36) NOT NULL,
+                                          "parent_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
                                           "menu_name" character varying(128) NOT NULL,
                                           "menu_code" character varying(64) NOT NULL,
                                           "menu_type" character varying(32) NOT NULL,
@@ -3605,10 +3605,10 @@ CREATE INDEX "idx_ydsz_idm_menu_tenant_is_deleted" ON "public"."ydsz_idm_menu" U
 DROP TABLE IF EXISTS "public"."ydsz_idm_org_company" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_org_company" (
-                                                 "id" character varying(32) NOT NULL,
+                                                 "id" character varying(36) NOT NULL,
                                                  "company_name" character varying(128) NOT NULL,
                                                  "company_code" character varying(64) NOT NULL,
-                                                 "parent_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+                                                 "parent_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
                                                  "contact_person" character varying(64) DEFAULT NULL::character varying,
                                                  "contact_phone" character varying(128) DEFAULT NULL::character varying,
                                                  "address" character varying(512) DEFAULT NULL::character varying,
@@ -3646,9 +3646,9 @@ CREATE INDEX "idx_ydsz_idm_org_company_tenant_is_deleted" ON "public"."ydsz_idm_
 DROP TABLE IF EXISTS "public"."ydsz_idm_org_company_dept" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_org_company_dept" (
-                                                      "id" character varying(32) NOT NULL,
-                                                      "company_id" character varying(32) NOT NULL,
-                                                      "dept_id" character varying(32) NOT NULL,
+                                                      "id" character varying(36) NOT NULL,
+                                                      "company_id" character varying(36) NOT NULL,
+                                                      "dept_id" character varying(36) NOT NULL,
                                                       "status" character varying(32) DEFAULT NULL::character varying,
                                                       "sort" integer DEFAULT 0,
                                                       "revision" integer NOT NULL DEFAULT 0,
@@ -3679,12 +3679,12 @@ CREATE INDEX "idx_ydsz_idm_org_company_dept_tenant_is_deleted" ON "public"."ydsz
 DROP TABLE IF EXISTS "public"."ydsz_idm_org_department" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_org_department" (
-                                                    "id" character varying(32) NOT NULL,
-                                                    "parent_id" character varying(32) NOT NULL DEFAULT '0'::character varying,
+                                                    "id" character varying(36) NOT NULL,
+                                                    "parent_id" character varying(36) NOT NULL DEFAULT '0'::character varying,
                                                     "dept_name" character varying(128) NOT NULL,
                                                     "dept_code" character varying(64) NOT NULL,
                                                     "description" character varying(512) DEFAULT NULL::character varying,
-                                                    "leader_id" character varying(32) DEFAULT NULL::character varying,
+                                                    "leader_id" character varying(36) DEFAULT NULL::character varying,
                                                     "status" character varying(32) NOT NULL DEFAULT 'ENABLED'::character varying,
                                                     "sort" integer NOT NULL DEFAULT 0,
                                                     "revision" integer NOT NULL DEFAULT 0,
@@ -3720,7 +3720,7 @@ CREATE INDEX "idx_ydsz_idm_org_department_tenant_is_deleted" ON "public"."ydsz_i
 DROP TABLE IF EXISTS "public"."ydsz_idm_post" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_post" (
-                                          "id" character varying(32) NOT NULL,
+                                          "id" character varying(36) NOT NULL,
                                           "post_name" character varying(128) NOT NULL,
                                           "post_code" character varying(64) NOT NULL,
                                           "description" character varying(512) DEFAULT NULL::character varying,
@@ -3755,7 +3755,7 @@ CREATE INDEX "idx_ydsz_idm_post_tenant_is_deleted" ON "public"."ydsz_idm_post" U
 DROP TABLE IF EXISTS "public"."ydsz_idm_role" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_role" (
-                                          "id" character varying(32) NOT NULL,
+                                          "id" character varying(36) NOT NULL,
                                           "role_code" character varying(64) NOT NULL,
                                           "role_name" character varying(128) NOT NULL,
                                           "description" character varying(512) DEFAULT NULL::character varying,
@@ -3794,10 +3794,10 @@ CREATE INDEX "idx_ydsz_idm_role_tenant_is_deleted" ON "public"."ydsz_idm_role" U
 DROP TABLE IF EXISTS "public"."ydsz_idm_role_permission" CASCADE;
 
 CREATE TABLE "public"."ydsz_idm_role_permission" (
-                                                     "id" character varying(32) NOT NULL,
-                                                     "role_id" character varying(32) NOT NULL,
-                                                     "permission_id" character varying(32) NOT NULL,
-                                                     "menu_id" character varying(32) DEFAULT NULL::character varying,
+                                                     "id" character varying(36) NOT NULL,
+                                                     "role_id" character varying(36) NOT NULL,
+                                                     "permission_id" character varying(36) NOT NULL,
+                                                     "menu_id" character varying(36) DEFAULT NULL::character varying,
                                                      "status" character varying(32) DEFAULT NULL::character varying,
                                                      "sort" integer DEFAULT 0,
                                                      "revision" integer NOT NULL DEFAULT 0,
@@ -3830,12 +3830,12 @@ CREATE INDEX "idx_ydsz_idm_role_permission_tenant_is_deleted" ON "public"."ydsz_
 DROP TABLE IF EXISTS "public"."ydsz_job_alert_dispatch" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_alert_dispatch" (
-                                                    "id" character varying(32) NOT NULL,
+                                                    "id" character varying(36) NOT NULL,
                                                     "alert_code" character varying(64) NOT NULL,
                                                     "source_type" character varying(32) NOT NULL,
-                                                    "rule_id" character varying(32) DEFAULT NULL::character varying,
+                                                    "rule_id" character varying(36) DEFAULT NULL::character varying,
                                                     "rule_name" character varying(128) DEFAULT NULL::character varying,
-                                                    "job_id" character varying(32) DEFAULT NULL::character varying,
+                                                    "job_id" character varying(36) DEFAULT NULL::character varying,
                                                     "job_key" character varying(64) DEFAULT NULL::character varying,
                                                     "alert_type" character varying(32) DEFAULT NULL::character varying,
                                                     "alert_level" character varying(32) DEFAULT NULL::character varying,
@@ -3844,8 +3844,8 @@ CREATE TABLE "public"."ydsz_job_alert_dispatch" (
                                                     "channels" character varying(256) DEFAULT NULL::character varying,
                                                     "alert_status" character varying(32) DEFAULT NULL::character varying,
                                                     "error_message" text,
-                                                    "trace_id" character varying(64) DEFAULT NULL::character varying,
-                                                    "trigger_log_id" character varying(32) DEFAULT NULL::character varying,
+                                                    "trace_id" character varying(36) DEFAULT NULL::character varying,
+                                                    "trigger_log_id" character varying(36) DEFAULT NULL::character varying,
                                                     "sort" integer DEFAULT 0,
                                                     "status" integer DEFAULT 1,
                                                     "revision" integer DEFAULT 0,
@@ -3883,9 +3883,9 @@ CREATE INDEX "idx_ydsz_job_alert_dispatch_ad_source_status" ON "public"."ydsz_jo
 DROP TABLE IF EXISTS "public"."ydsz_job_alert_rule" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_alert_rule" (
-                                                "id" character varying(32) NOT NULL,
+                                                "id" character varying(36) NOT NULL,
                                                 "rule_name" character varying(128) NOT NULL,
-                                                "job_id" character varying(32) DEFAULT NULL::character varying,
+                                                "job_id" character varying(36) DEFAULT NULL::character varying,
                                                 "job_key" character varying(64) DEFAULT NULL::character varying,
                                                 "alert_type" character varying(32) NOT NULL,
                                                 "alert_level" character varying(32) NOT NULL,
@@ -3938,9 +3938,9 @@ CREATE INDEX "idx_ydsz_job_alert_rule_tenant_is_deleted" ON "public"."ydsz_job_a
 DROP TABLE IF EXISTS "public"."ydsz_job_artifact" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_artifact" (
-                                              "id" character varying(32) NOT NULL,
-                                              "job_id" character varying(32) NOT NULL,
-                                              "log_id" character varying(32) NOT NULL,
+                                              "id" character varying(36) NOT NULL,
+                                              "job_id" character varying(36) NOT NULL,
+                                              "log_id" character varying(36) NOT NULL,
                                               "job_key" character varying(64) NOT NULL,
                                               "artifact_name" character varying(128) NOT NULL,
                                               "artifact_type" character varying(32) NOT NULL,
@@ -3988,7 +3988,7 @@ CREATE INDEX "idx_ydsz_job_artifact_tenant_is_deleted" ON "public"."ydsz_job_art
 DROP TABLE IF EXISTS "public"."ydsz_job_dag" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_dag" (
-                                         "id" character varying(32) NOT NULL,
+                                         "id" character varying(36) NOT NULL,
                                          "dag_key" character varying(64) NOT NULL,
                                          "dag_name" character varying(128) NOT NULL,
                                          "dag_definition" jsonb NOT NULL,
@@ -4049,8 +4049,8 @@ CREATE INDEX "idx_ydsz_job_dag_tenant_is_deleted" ON "public"."ydsz_job_dag" USI
 DROP TABLE IF EXISTS "public"."ydsz_job_dag_context" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_dag_context" (
-                                                 "id" character varying(32) NOT NULL,
-                                                 "dag_instance_id" character varying(32) NOT NULL,
+                                                 "id" character varying(36) NOT NULL,
+                                                 "dag_instance_id" character varying(36) NOT NULL,
                                                  "node_key" character varying(128) NOT NULL,
                                                  "result_json" text,
                                                  "sort" integer DEFAULT 0,
@@ -4079,13 +4079,13 @@ CREATE INDEX "idx_ydsz_job_dag_context_instance" ON "public"."ydsz_job_dag_conte
 DROP TABLE IF EXISTS "public"."ydsz_job_dag_instance" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_dag_instance" (
-                                                  "id" character varying(32) NOT NULL,
-                                                  "dag_id" character varying(32) NOT NULL,
+                                                  "id" character varying(36) NOT NULL,
+                                                  "dag_id" character varying(36) NOT NULL,
                                                   "dag_key" character varying(64) NOT NULL,
                                                   "instance_status" character varying(32) NOT NULL,
                                                   "trigger_type" character varying(32) DEFAULT NULL::character varying,
                                                   "trigger_by" character varying(64) DEFAULT NULL::character varying,
-                                                  "trigger_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                                  "trigger_trace_id" character varying(36) DEFAULT NULL::character varying,
                                                   "context_json" jsonb,
                                                   "started_at" timestamp without time zone,
                                                   "finished_at" timestamp without time zone,
@@ -4141,13 +4141,13 @@ CREATE INDEX "idx_ydsz_job_dag_instance_tenant_is_deleted" ON "public"."ydsz_job
 DROP TABLE IF EXISTS "public"."ydsz_job_dag_node_instance" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_dag_node_instance" (
-                                                       "id" character varying(32) NOT NULL,
-                                                       "dag_instance_id" character varying(32) NOT NULL,
-                                                       "dag_id" character varying(32) NOT NULL,
-                                                       "job_id" character varying(32) NOT NULL,
+                                                       "id" character varying(36) NOT NULL,
+                                                       "dag_instance_id" character varying(36) NOT NULL,
+                                                       "dag_id" character varying(36) NOT NULL,
+                                                       "job_id" character varying(36) NOT NULL,
                                                        "job_key" character varying(64) NOT NULL,
                                                        "node_status" character varying(32) DEFAULT NULL::character varying,
-                                                       "log_id" character varying(32) DEFAULT NULL::character varying,
+                                                       "log_id" character varying(36) DEFAULT NULL::character varying,
                                                        "retry_count" integer,
                                                        "max_retries" integer,
                                                        "started_at" timestamp without time zone,
@@ -4197,8 +4197,8 @@ CREATE INDEX "idx_ydsz_job_dag_node_instance_tenant_is_deleted" ON "public"."yds
 DROP TABLE IF EXISTS "public"."ydsz_job_dag_version" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_dag_version" (
-                                                 "id" character varying(32) NOT NULL,
-                                                 "dag_id" character varying(32) NOT NULL,
+                                                 "id" character varying(36) NOT NULL,
+                                                 "dag_id" character varying(36) NOT NULL,
                                                  "dag_key" character varying(64) NOT NULL,
                                                  "version" integer NOT NULL,
                                                  "dag_definition" jsonb NOT NULL,
@@ -4246,8 +4246,8 @@ CREATE INDEX "idx_ydsz_job_dag_version_tenant_is_deleted" ON "public"."ydsz_job_
 DROP TABLE IF EXISTS "public"."ydsz_job_daily_stats" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_daily_stats" (
-                                                 "id" character varying(32) NOT NULL,
-                                                 "job_id" character varying(32) NOT NULL,
+                                                 "id" character varying(36) NOT NULL,
+                                                 "job_id" character varying(36) NOT NULL,
                                                  "job_key" character varying(64) NOT NULL,
                                                  "stats_date" date NOT NULL,
                                                  "fire_count" bigint NOT NULL DEFAULT 0,
@@ -4289,9 +4289,9 @@ CREATE INDEX "idx_ydsz_job_daily_stats_jds_stats_date" ON "public"."ydsz_job_dai
 DROP TABLE IF EXISTS "public"."ydsz_job_event_store" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_event_store" (
-                                                 "id" character varying(32) NOT NULL,
+                                                 "id" character varying(36) NOT NULL,
                                                  "aggregate_type" character varying(64) NOT NULL,
-                                                 "aggregate_id" character varying(32) NOT NULL,
+                                                 "aggregate_id" character varying(36) NOT NULL,
                                                  "event_type" character varying(128) NOT NULL,
                                                  "payload" text,
                                                  "operator" character varying(64) DEFAULT NULL::character varying,
@@ -4322,8 +4322,8 @@ CREATE INDEX "idx_ydsz_job_event_store_occurred" ON "public"."ydsz_job_event_sto
 DROP TABLE IF EXISTS "public"."ydsz_job_glue" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_glue" (
-                                          "id" character varying(32) NOT NULL,
-                                          "job_id" character varying(32) NOT NULL,
+                                          "id" character varying(36) NOT NULL,
+                                          "job_id" character varying(36) NOT NULL,
                                           "source_code" text NOT NULL,
                                           "language" character varying(32) NOT NULL DEFAULT 'GROOVY'::character varying,
                                           "version" integer NOT NULL DEFAULT 1,
@@ -4360,8 +4360,8 @@ CREATE INDEX "idx_ydsz_job_glue_tenant_is_deleted" ON "public"."ydsz_job_glue" U
 DROP TABLE IF EXISTS "public"."ydsz_job_history" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_history" (
-                                             "id" character varying(32) NOT NULL,
-                                             "job_id" character varying(32) NOT NULL,
+                                             "id" character varying(36) NOT NULL,
+                                             "job_id" character varying(36) NOT NULL,
                                              "version" integer NOT NULL,
                                              "snapshot" jsonb,
                                              "change_type" character varying(32) NOT NULL,
@@ -4411,8 +4411,8 @@ CREATE INDEX "idx_ydsz_job_history_jh_job_id" ON "public"."ydsz_job_history" USI
 DROP TABLE IF EXISTS "public"."ydsz_job_log" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_log" (
-                                         "id" character varying(32) NOT NULL,
-                                         "job_id" character varying(32) NOT NULL,
+                                         "id" character varying(36) NOT NULL,
+                                         "job_id" character varying(36) NOT NULL,
                                          "job_key" character varying(64) NOT NULL,
                                          "start_time" timestamp without time zone,
                                          "end_time" timestamp without time zone,
@@ -4420,10 +4420,10 @@ CREATE TABLE "public"."ydsz_job_log" (
                                          "error_message" text,
                                          "params_json" jsonb,
                                          "result_json" jsonb,
-                                         "trace_id" character varying(64) DEFAULT NULL::character varying,
+                                         "trace_id" character varying(36) DEFAULT NULL::character varying,
                                          "trigger_type" character varying(32) DEFAULT NULL::character varying,
                                          "lock_holder" character varying(64) DEFAULT NULL::character varying,
-                                         "exec_node_id" character varying(64) DEFAULT NULL::character varying,
+                                         "exec_node_id" character varying(36) DEFAULT NULL::character varying,
                                          "exec_thread_id" bigint,
                                          "shard_index" integer,
                                          "shard_total" integer,
@@ -4481,8 +4481,8 @@ CREATE INDEX "idx_ydsz_job_log_job_key_status_created" ON "public"."ydsz_job_log
 DROP TABLE IF EXISTS "public"."ydsz_job_log_content" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_log_content" (
-                                                 "id" character varying(32) NOT NULL,
-                                                 "log_id" character varying(32) NOT NULL,
+                                                 "id" character varying(36) NOT NULL,
+                                                 "log_id" character varying(36) NOT NULL,
                                                  "job_key" character varying(64) NOT NULL,
                                                  "line_no" integer NOT NULL,
                                                  "log_level" character varying(32) DEFAULT NULL::character varying,
@@ -4512,7 +4512,7 @@ CREATE INDEX "idx_ydsz_job_log_content_jlc_job_key" ON "public"."ydsz_job_log_co
 DROP TABLE IF EXISTS "public"."ydsz_job_main" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_main" (
-                                          "id" character varying(32) NOT NULL,
+                                          "id" character varying(36) NOT NULL,
                                           "job_name" character varying(128) NOT NULL,
                                           "job_group" character varying(128) DEFAULT NULL::character varying,
                                           "job_key" character varying(64) NOT NULL,
@@ -4613,8 +4613,8 @@ CREATE INDEX "idx_ydsz_job_tenant_is_deleted" ON "public"."ydsz_job_main" USING 
 DROP TABLE IF EXISTS "public"."ydsz_job_node" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_node" (
-                                          "id" character varying(32) NOT NULL,
-                                          "node_id" character varying(64) NOT NULL,
+                                          "id" character varying(36) NOT NULL,
+                                          "node_id" character varying(36) NOT NULL,
                                           "app_name" character varying(128) DEFAULT NULL::character varying,
                                           "host" character varying(128) NOT NULL,
                                           "port" integer NOT NULL,
@@ -4702,9 +4702,9 @@ CREATE INDEX "idx_ydsz_job_outbox_jo_status_retry" ON "public"."ydsz_job_outbox"
 DROP TABLE IF EXISTS "public"."ydsz_job_task" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_task" (
-                                          "id" character varying(32) NOT NULL,
-                                          "job_id" character varying(32) NOT NULL,
-                                          "log_id" character varying(32) NOT NULL,
+                                          "id" character varying(36) NOT NULL,
+                                          "job_id" character varying(36) NOT NULL,
+                                          "log_id" character varying(36) NOT NULL,
                                           "job_key" character varying(64) NOT NULL,
                                           "task_name" character varying(128) NOT NULL,
                                           "task_params" jsonb,
@@ -4712,7 +4712,7 @@ CREATE TABLE "public"."ydsz_job_task" (
                                           "task_status" character varying(32) NOT NULL,
                                           "result" jsonb,
                                           "error_message" text,
-                                          "exec_node_id" character varying(64) DEFAULT NULL::character varying,
+                                          "exec_node_id" character varying(36) DEFAULT NULL::character varying,
                                           "retry_count" integer NOT NULL DEFAULT 0,
                                           "status" character varying(32) DEFAULT NULL::character varying,
                                           "sort" integer DEFAULT 0,
@@ -4753,7 +4753,7 @@ CREATE INDEX "idx_ydsz_job_task_tenant_is_deleted" ON "public"."ydsz_job_task" U
 DROP TABLE IF EXISTS "public"."ydsz_job_tenant_quota" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_tenant_quota" (
-                                                  "id" character varying(32) NOT NULL,
+                                                  "id" character varying(36) NOT NULL,
                                                   "max_jobs" integer,
                                                   "max_concurrent" integer,
                                                   "max_daily_executions" integer,
@@ -4788,7 +4788,7 @@ COMMENT ON COLUMN "public"."ydsz_job_tenant_quota"."updated_at" IS '最后更新
 DROP TABLE IF EXISTS "public"."ydsz_job_webhook" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_webhook" (
-                                             "id" character varying(32) NOT NULL,
+                                             "id" character varying(36) NOT NULL,
                                              "name" character varying(128) NOT NULL,
                                              "event_type" character varying(64) NOT NULL,
                                              "job_key" character varying(64) DEFAULT NULL::character varying,
@@ -4835,11 +4835,11 @@ CREATE INDEX "idx_ydsz_job_webhook_tenant_is_deleted" ON "public"."ydsz_job_webh
 DROP TABLE IF EXISTS "public"."ydsz_job_webhook_retry" CASCADE;
 
 CREATE TABLE "public"."ydsz_job_webhook_retry" (
-                                                   "id" character varying(32) NOT NULL,
-                                                   "webhook_id" character varying(32) NOT NULL,
+                                                   "id" character varying(36) NOT NULL,
+                                                   "webhook_id" character varying(36) NOT NULL,
                                                    "event_type" character varying(128) NOT NULL,
                                                    "job_key" character varying(64) DEFAULT NULL::character varying,
-                                                   "log_id" character varying(32) DEFAULT NULL::character varying,
+                                                   "log_id" character varying(36) DEFAULT NULL::character varying,
                                                    "callback_url" character varying(1024) NOT NULL,
                                                    "http_method" character varying(10) NOT NULL DEFAULT 'POST'::character varying,
                                                    "headers" jsonb,
@@ -4886,7 +4886,7 @@ CREATE INDEX "idx_ydsz_job_webhook_retry_webhook" ON "public"."ydsz_job_webhook_
 DROP TABLE IF EXISTS "public"."ydsz_msg_aggregate" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_aggregate" (
-                                               "id" character varying(32) NOT NULL,
+                                               "id" character varying(36) NOT NULL,
                                                "aggregate_group" character varying(64) NOT NULL,
                                                "receiver" character varying(128) NOT NULL,
                                                "channel" character varying(32) NOT NULL,
@@ -4936,8 +4936,8 @@ CREATE INDEX "idx_ydsz_msg_aggregate_tenant_is_deleted" ON "public"."ydsz_msg_ag
 DROP TABLE IF EXISTS "public"."ydsz_msg_batch" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_batch" (
-                                           "id" character varying(32) NOT NULL,
-                                           "batch_id" character varying(64) NOT NULL,
+                                           "id" character varying(36) NOT NULL,
+                                           "batch_id" character varying(36) NOT NULL,
                                            "batch_name" character varying(128) DEFAULT NULL::character varying,
                                            "channel" character varying(32) NOT NULL,
                                            "template_code" character varying(64) DEFAULT NULL::character varying,
@@ -4951,7 +4951,7 @@ CREATE TABLE "public"."ydsz_msg_batch" (
                                            "error_message" character varying(512) DEFAULT NULL::character varying,
                                            "started_at" timestamp without time zone,
                                            "completed_at" timestamp without time zone,
-                                           "sender_id" character varying(32) DEFAULT NULL::character varying,
+                                           "sender_id" character varying(36) DEFAULT NULL::character varying,
                                            "priority" character varying(32) NOT NULL DEFAULT 'NORMAL'::character varying,
                                            "payload" jsonb,
                                            "sort" integer DEFAULT 0,
@@ -4998,7 +4998,7 @@ CREATE INDEX "idx_ydsz_msg_batch_tenant_is_deleted" ON "public"."ydsz_msg_batch"
 DROP TABLE IF EXISTS "public"."ydsz_msg_canary" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_canary" (
-                                            "id" character varying(32) NOT NULL,
+                                            "id" character varying(36) NOT NULL,
                                             "canary_key" character varying(128) NOT NULL,
                                             "experiment_name" character varying(128) NOT NULL,
                                             "template_code" character varying(64) NOT NULL,
@@ -5045,10 +5045,10 @@ CREATE INDEX "idx_ydsz_msg_canary_tenant_is_deleted" ON "public"."ydsz_msg_canar
 DROP TABLE IF EXISTS "public"."ydsz_msg_feedback" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_feedback" (
-                                              "id" character varying(32) NOT NULL,
-                                              "msg_id" character varying(64) NOT NULL,
-                                              "notification_id" character varying(32) DEFAULT NULL::character varying,
-                                              "user_id" character varying(32) NOT NULL,
+                                              "id" character varying(36) NOT NULL,
+                                              "msg_id" character varying(36) NOT NULL,
+                                              "notification_id" character varying(36) DEFAULT NULL::character varying,
+                                              "user_id" character varying(36) NOT NULL,
                                               "channel" character varying(32) DEFAULT NULL::character varying,
                                               "biz_type" character varying(64) DEFAULT NULL::character varying,
                                               "rating" integer NOT NULL,
@@ -5090,10 +5090,10 @@ CREATE INDEX "idx_ydsz_msg_feedback_user_id" ON "public"."ydsz_msg_feedback" USI
 DROP TABLE IF EXISTS "public"."ydsz_msg_log" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_log" (
-                                         "id" character varying(32) NOT NULL,
+                                         "id" character varying(36) NOT NULL,
                                          "channel" character varying(32) NOT NULL,
                                          "biz_type" character varying(64) DEFAULT NULL::character varying,
-                                         "biz_id" character varying(64) DEFAULT NULL::character varying,
+                                         "biz_id" character varying(36) DEFAULT NULL::character varying,
                                          "receiver" character varying(128) DEFAULT NULL::character varying,
                                          "template_code" character varying(64) DEFAULT NULL::character varying,
                                          "template_params" jsonb,
@@ -5101,10 +5101,10 @@ CREATE TABLE "public"."ydsz_msg_log" (
                                          "status" character varying(32) NOT NULL DEFAULT 'PENDING'::character varying,
                                          "error_message" text,
                                          "priority" character varying(32) NOT NULL DEFAULT 'NORMAL'::character varying,
-                                         "sender_id" character varying(32) DEFAULT NULL::character varying,
+                                         "sender_id" character varying(36) DEFAULT NULL::character varying,
                                          "message_group" character varying(64) DEFAULT NULL::character varying,
-                                         "batch_id" character varying(64) DEFAULT NULL::character varying,
-                                         "route_rule_id" character varying(32) DEFAULT NULL::character varying,
+                                         "batch_id" character varying(36) DEFAULT NULL::character varying,
+                                         "route_rule_id" character varying(36) DEFAULT NULL::character varying,
                                          "canary" smallint DEFAULT 0,
                                          "canary_key" character varying(128) DEFAULT NULL::character varying,
                                          "dedup_key" character varying(128) DEFAULT NULL::character varying,
@@ -5114,14 +5114,14 @@ CREATE TABLE "public"."ydsz_msg_log" (
                                          "receipt_at" timestamp without time zone,
                                          "retry_count" integer NOT NULL DEFAULT 0,
                                          "next_retry_at" timestamp without time zone,
-                                         "provider_trace_id" character varying(128) DEFAULT NULL::character varying,
+                                         "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                          "cost_ms" bigint,
                                          "cost" numeric(20,6) DEFAULT NULL::numeric,
-                                         "trace_id" character varying(64) DEFAULT NULL::character varying,
-                                         "msg_id" character varying(64) DEFAULT NULL::character varying,
+                                         "trace_id" character varying(36) DEFAULT NULL::character varying,
+                                         "msg_id" character varying(36) DEFAULT NULL::character varying,
                                          "topic" character varying(128) DEFAULT NULL::character varying,
                                          "reconsume_times" integer,
-                                         "parent_msg_id" character varying(64) DEFAULT NULL::character varying,
+                                         "parent_msg_id" character varying(36) DEFAULT NULL::character varying,
                                          "scheduled_at" timestamp without time zone,
                                          "sort" integer DEFAULT 0,
                                          "revision" integer DEFAULT 0,
@@ -5189,18 +5189,18 @@ CREATE INDEX "idx_ydsz_msg_log_trace_id" ON "public"."ydsz_msg_log" USING btree 
 DROP TABLE IF EXISTS "public"."ydsz_msg_notification" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_notification" (
-                                                  "id" character varying(32) NOT NULL,
+                                                  "id" character varying(36) NOT NULL,
                                                   "title" character varying(255) NOT NULL,
                                                   "content" text,
                                                   "level" character varying(32) NOT NULL DEFAULT 'INFO'::character varying,
                                                   "category" character varying(32) NOT NULL DEFAULT 'SYSTEM'::character varying,
                                                   "priority" character varying(32) NOT NULL DEFAULT 'NORMAL'::character varying,
-                                                  "sender_id" character varying(32) DEFAULT NULL::character varying,
-                                                  "receiver_id" character varying(32) NOT NULL,
+                                                  "sender_id" character varying(36) DEFAULT NULL::character varying,
+                                                  "receiver_id" character varying(36) NOT NULL,
                                                   "biz_type" character varying(64) DEFAULT NULL::character varying,
-                                                  "biz_id" character varying(64) DEFAULT NULL::character varying,
+                                                  "biz_id" character varying(36) DEFAULT NULL::character varying,
                                                   "message_group" character varying(64) DEFAULT NULL::character varying,
-                                                  "batch_id" character varying(64) DEFAULT NULL::character varying,
+                                                  "batch_id" character varying(36) DEFAULT NULL::character varying,
                                                   "action_url" character varying(1024) DEFAULT NULL::character varying,
                                                   "action_text" character varying(128) DEFAULT NULL::character varying,
                                                   "icon" character varying(255) DEFAULT NULL::character varying,
@@ -5262,8 +5262,8 @@ CREATE INDEX "idx_ydsz_msg_notification_tenant_is_deleted" ON "public"."ydsz_msg
 DROP TABLE IF EXISTS "public"."ydsz_msg_offline" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_offline" (
-                                             "id" character varying(32) NOT NULL,
-                                             "user_id" character varying(32) NOT NULL,
+                                             "id" character varying(36) NOT NULL,
+                                             "user_id" character varying(36) NOT NULL,
                                              "msg_type" character varying(32) DEFAULT NULL::character varying,
                                              "payload" jsonb NOT NULL,
                                              "msg_timestamp" bigint,
@@ -5303,9 +5303,9 @@ CREATE INDEX "idx_ydsz_msg_offline_user_status" ON "public"."ydsz_msg_offline" U
 DROP TABLE IF EXISTS "public"."ydsz_msg_outbox" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_outbox" (
-                                            "id" character varying(32) NOT NULL,
+                                            "id" character varying(36) NOT NULL,
                                             "aggregate_type" character varying(128) NOT NULL,
-                                            "aggregate_id" character varying(128) NOT NULL,
+                                            "aggregate_id" character varying(36) NOT NULL,
                                             "event_type" character varying(128) NOT NULL,
                                             "payload" jsonb NOT NULL,
                                             "status" character varying(32) NOT NULL DEFAULT 'PENDING'::character varying,
@@ -5340,8 +5340,8 @@ CREATE INDEX "idx_ydsz_msg_outbox_tenant_status" ON "public"."ydsz_msg_outbox" U
 DROP TABLE IF EXISTS "public"."ydsz_msg_preference" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_preference" (
-                                                "id" character varying(32) NOT NULL,
-                                                "user_id" character varying(32) NOT NULL,
+                                                "id" character varying(36) NOT NULL,
+                                                "user_id" character varying(36) NOT NULL,
                                                 "channel" character varying(32) NOT NULL,
                                                 "biz_type" character varying(64) NOT NULL DEFAULT '__DEFAULT__'::character varying,
                                                 "is_enabled" smallint NOT NULL DEFAULT 1,
@@ -5394,9 +5394,9 @@ CREATE INDEX "idx_ydsz_msg_preference_tenant_is_deleted" ON "public"."ydsz_msg_p
 DROP TABLE IF EXISTS "public"."ydsz_msg_receipt" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_receipt" (
-                                             "id" character varying(32) NOT NULL,
-                                             "log_id" character varying(32) NOT NULL,
-                                             "provider_trace_id" character varying(128) DEFAULT NULL::character varying,
+                                             "id" character varying(36) NOT NULL,
+                                             "log_id" character varying(36) NOT NULL,
+                                             "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                              "receipt_type" character varying(32) NOT NULL,
                                              "receipt_time" timestamp without time zone NOT NULL,
                                              "provider_code" character varying(64) DEFAULT NULL::character varying,
@@ -5438,7 +5438,7 @@ CREATE INDEX "idx_ydsz_msg_receipt_tenant_is_deleted" ON "public"."ydsz_msg_rece
 DROP TABLE IF EXISTS "public"."ydsz_msg_route_rule" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_route_rule" (
-                                                "id" character varying(32) NOT NULL,
+                                                "id" character varying(36) NOT NULL,
                                                 "rule_code" character varying(64) NOT NULL,
                                                 "rule_name" character varying(128) NOT NULL,
                                                 "biz_type" character varying(64) DEFAULT NULL::character varying,
@@ -5486,8 +5486,8 @@ CREATE INDEX "idx_ydsz_msg_route_rule_tenant_is_deleted" ON "public"."ydsz_msg_r
 DROP TABLE IF EXISTS "public"."ydsz_msg_subscription" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_subscription" (
-                                                  "id" character varying(32) NOT NULL,
-                                                  "user_id" character varying(32) NOT NULL,
+                                                  "id" character varying(36) NOT NULL,
+                                                  "user_id" character varying(36) NOT NULL,
                                                   "topic_code" character varying(64) NOT NULL,
                                                   "channel" character varying(32) NOT NULL,
                                                   "status" character varying(32) NOT NULL DEFAULT 'SUBSCRIBED'::character varying,
@@ -5527,7 +5527,7 @@ CREATE INDEX "idx_ydsz_msg_subscription_topic_code" ON "public"."ydsz_msg_subscr
 DROP TABLE IF EXISTS "public"."ydsz_msg_template" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_template" (
-                                              "id" character varying(32) NOT NULL,
+                                              "id" character varying(36) NOT NULL,
                                               "template_code" character varying(64) NOT NULL,
                                               "channel" character varying(32) NOT NULL,
                                               "locale" character varying(16) DEFAULT 'zh-CN'::character varying,
@@ -5590,7 +5590,7 @@ CREATE INDEX "idx_ydsz_msg_template_tenant_is_deleted" ON "public"."ydsz_msg_tem
 DROP TABLE IF EXISTS "public"."ydsz_msg_template_version" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_template_version" (
-                                                      "id" character varying(32) NOT NULL,
+                                                      "id" character varying(36) NOT NULL,
                                                       "template_code" character varying(64) NOT NULL,
                                                       "version" integer NOT NULL,
                                                       "content" text NOT NULL,
@@ -5632,7 +5632,7 @@ CREATE INDEX "idx_ydsz_msg_template_version_tenant_is_deleted" ON "public"."ydsz
 DROP TABLE IF EXISTS "public"."ydsz_msg_tenant_config" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_tenant_config" (
-                                                   "id" character varying(32) NOT NULL,
+                                                   "id" character varying(36) NOT NULL,
                                                    "tenant_name" character varying(128) DEFAULT NULL::character varying,
                                                    "daily_limit" bigint,
                                                    "hourly_limit" bigint,
@@ -5663,15 +5663,15 @@ COMMENT ON COLUMN "public"."ydsz_msg_tenant_config"."tenant_id" IS '租户 ID';
 DROP TABLE IF EXISTS "public"."ydsz_msg_trace" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_trace" (
-                                           "id" character varying(32) NOT NULL,
-                                           "msg_id" character varying(64) NOT NULL,
-                                           "trace_id" character varying(64) DEFAULT NULL::character varying,
+                                           "id" character varying(36) NOT NULL,
+                                           "msg_id" character varying(36) NOT NULL,
+                                           "trace_id" character varying(36) DEFAULT NULL::character varying,
                                            "node" character varying(64) NOT NULL,
                                            "status" character varying(32) NOT NULL,
                                            "channel" character varying(32) DEFAULT NULL::character varying,
                                            "receiver" character varying(128) DEFAULT NULL::character varying,
                                            "biz_type" character varying(64) DEFAULT NULL::character varying,
-                                           "biz_id" character varying(64) DEFAULT NULL::character varying,
+                                           "biz_id" character varying(36) DEFAULT NULL::character varying,
                                            "template_code" character varying(64) DEFAULT NULL::character varying,
                                            "cost_ms" bigint,
                                            "message" character varying(512) DEFAULT NULL::character varying,
@@ -5710,10 +5710,10 @@ CREATE INDEX "idx_ydsz_msg_trace_trace_id" ON "public"."ydsz_msg_trace" USING bt
 DROP TABLE IF EXISTS "public"."ydsz_msg_user_channel" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_user_channel" (
-                                                  "id" character varying(32) NOT NULL,
-                                                  "user_id" character varying(32) NOT NULL,
+                                                  "id" character varying(36) NOT NULL,
+                                                  "user_id" character varying(36) NOT NULL,
                                                   "channel_type" character varying(32) NOT NULL,
-                                                  "channel_user_id" character varying(128) NOT NULL,
+                                                  "channel_user_id" character varying(36) NOT NULL,
                                                   "verified" smallint NOT NULL DEFAULT 0,
                                                   "is_primary" smallint NOT NULL DEFAULT 0,
                                                   "extra" jsonb,
@@ -5751,7 +5751,7 @@ CREATE INDEX "idx_ydsz_msg_user_channel_tenant_is_deleted" ON "public"."ydsz_msg
 DROP TABLE IF EXISTS "public"."ydsz_msg_variable_source" CASCADE;
 
 CREATE TABLE "public"."ydsz_msg_variable_source" (
-                                                     "id" character varying(32) NOT NULL,
+                                                     "id" character varying(36) NOT NULL,
                                                      "template_code" character varying(64) NOT NULL,
                                                      "variable_name" character varying(64) NOT NULL,
                                                      "source_type" character varying(32) NOT NULL,
@@ -5791,7 +5791,7 @@ CREATE INDEX "idx_ydsz_msg_variable_source_tenant_is_deleted" ON "public"."ydsz_
 DROP TABLE IF EXISTS "public"."ydsz_rule_ab_policy" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_ab_policy" (
-                                                "id" character varying(32) NOT NULL,
+                                                "id" character varying(36) NOT NULL,
                                                 "rule_code" character varying(64) NOT NULL,
                                                 "is_auto_rollback_enabled" smallint NOT NULL DEFAULT 0,
                                                 "rollback_action" character varying(32) DEFAULT NULL::character varying,
@@ -5839,7 +5839,7 @@ CREATE INDEX "idx_ydsz_rule_ab_policy_tenant_is_deleted" ON "public"."ydsz_rule_
 DROP TABLE IF EXISTS "public"."ydsz_rule_ab_rollback" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_ab_rollback" (
-                                                  "id" character varying(32) NOT NULL,
+                                                  "id" character varying(36) NOT NULL,
                                                   "rule_code" character varying(64) NOT NULL,
                                                   "trigger_reason" character varying(32) NOT NULL,
                                                   "error_rate" numeric(20,6) DEFAULT NULL::numeric,
@@ -5882,7 +5882,7 @@ CREATE INDEX "idx_ydsz_rule_ab_rollback_tenant_is_deleted" ON "public"."ydsz_rul
 DROP TABLE IF EXISTS "public"."ydsz_rule_canary_bucket" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_canary_bucket" (
-                                                    "id" character varying(32) NOT NULL,
+                                                    "id" character varying(36) NOT NULL,
                                                     "rule_code" character varying(64) NOT NULL,
                                                     "bucket_type" character varying(32) NOT NULL,
                                                     "bucket_count" bigint NOT NULL DEFAULT 0,
@@ -5919,7 +5919,7 @@ CREATE INDEX "idx_ydsz_rule_canary_bucket_tenant_is_deleted" ON "public"."ydsz_r
 DROP TABLE IF EXISTS "public"."ydsz_rule_chain_graph" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_chain_graph" (
-                                                  "id" character varying(32) NOT NULL,
+                                                  "id" character varying(36) NOT NULL,
                                                   "rule_code" character varying(64) NOT NULL,
                                                   "name" character varying(128) NOT NULL,
                                                   "description" character varying(512) DEFAULT NULL::character varying,
@@ -5959,7 +5959,7 @@ CREATE INDEX "idx_ydsz_rule_chain_graph_tenant_is_deleted" ON "public"."ydsz_rul
 DROP TABLE IF EXISTS "public"."ydsz_rule_decision_table" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_decision_table" (
-                                                     "id" character varying(32) NOT NULL,
+                                                     "id" character varying(36) NOT NULL,
                                                      "table_code" character varying(64) NOT NULL,
                                                      "table_name" character varying(128) NOT NULL,
                                                      "description" character varying(512) DEFAULT NULL::character varying,
@@ -6012,7 +6012,7 @@ CREATE INDEX "idx_ydsz_rule_decision_table_tenant_is_deleted" ON "public"."ydsz_
 DROP TABLE IF EXISTS "public"."ydsz_rule_decision_tree" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_decision_tree" (
-                                                    "id" character varying(32) NOT NULL,
+                                                    "id" character varying(36) NOT NULL,
                                                     "rule_code" character varying(64) NOT NULL,
                                                     "rule_name" character varying(128) NOT NULL,
                                                     "category" character varying(64) DEFAULT NULL::character varying,
@@ -6022,7 +6022,7 @@ CREATE TABLE "public"."ydsz_rule_decision_tree" (
                                                     "is_enabled" smallint NOT NULL DEFAULT 1,
                                                     "scope" character varying(128) DEFAULT NULL::character varying,
                                                     "version" integer NOT NULL DEFAULT 1,
-                                                    "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                                    "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                                     "status" character varying(32) DEFAULT NULL::character varying,
                                                     "sort" integer DEFAULT 0,
                                                     "revision" integer NOT NULL DEFAULT 0,
@@ -6060,7 +6060,7 @@ CREATE INDEX "idx_ydsz_rule_decision_tree_tenant_is_deleted" ON "public"."ydsz_r
 DROP TABLE IF EXISTS "public"."ydsz_rule_def" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_def" (
-                                          "id" character varying(32) NOT NULL,
+                                          "id" character varying(36) NOT NULL,
                                           "rule_code" character varying(64) NOT NULL,
                                           "rule_name" character varying(128) NOT NULL,
                                           "category" character varying(64) DEFAULT NULL::character varying,
@@ -6142,7 +6142,7 @@ CREATE INDEX "idx_ydsz_rule_def_tenant_is_deleted" ON "public"."ydsz_rule_def" U
 DROP TABLE IF EXISTS "public"."ydsz_rule_dependency" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_dependency" (
-                                                 "id" character varying(32) NOT NULL,
+                                                 "id" character varying(36) NOT NULL,
                                                  "rule_code" character varying(64) NOT NULL,
                                                  "depends_on_rule_code" character varying(64) NOT NULL,
                                                  "dependency_type" character varying(32) NOT NULL,
@@ -6181,8 +6181,8 @@ CREATE INDEX "idx_ydsz_rule_dependency_tenant_is_deleted" ON "public"."ydsz_rule
 DROP TABLE IF EXISTS "public"."ydsz_rule_execution_trace" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_execution_trace" (
-                                                      "id" character varying(32) NOT NULL,
-                                                      "trace_id" character varying(64) NOT NULL,
+                                                      "id" character varying(36) NOT NULL,
+                                                      "trace_id" character varying(36) NOT NULL,
                                                       "rule_code" character varying(64) NOT NULL,
                                                       "rule_name" character varying(128) DEFAULT NULL::character varying,
                                                       "scenario" character varying(64) DEFAULT NULL::character varying,
@@ -6225,7 +6225,7 @@ CREATE INDEX "idx_ydsz_rule_execution_trace_trace_id" ON "public"."ydsz_rule_exe
 DROP TABLE IF EXISTS "public"."ydsz_rule_pack" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_pack" (
-                                           "id" character varying(32) NOT NULL,
+                                           "id" character varying(36) NOT NULL,
                                            "pack_code" character varying(64) NOT NULL,
                                            "pack_version" character varying(32) NOT NULL,
                                            "pack_name" character varying(128) NOT NULL,
@@ -6283,7 +6283,7 @@ CREATE INDEX "idx_ydsz_rule_pack_tenant_is_deleted" ON "public"."ydsz_rule_pack"
 DROP TABLE IF EXISTS "public"."ydsz_rule_pack_install" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_pack_install" (
-                                                   "id" character varying(32) NOT NULL,
+                                                   "id" character varying(36) NOT NULL,
                                                    "installed_by" character varying(64) DEFAULT NULL::character varying,
                                                    "installed_at" timestamp without time zone,
                                                    "status" character varying(32) DEFAULT NULL::character varying,
@@ -6318,7 +6318,7 @@ CREATE INDEX "idx_ydsz_rule_pack_install_tenant_is_deleted" ON "public"."ydsz_ru
 DROP TABLE IF EXISTS "public"."ydsz_rule_scorecard" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_scorecard" (
-                                                "id" character varying(32) NOT NULL,
+                                                "id" character varying(36) NOT NULL,
                                                 "rule_code" character varying(64) NOT NULL,
                                                 "rule_name" character varying(128) NOT NULL,
                                                 "category" character varying(64) DEFAULT NULL::character varying,
@@ -6331,7 +6331,7 @@ CREATE TABLE "public"."ydsz_rule_scorecard" (
                                                 "is_enabled" smallint NOT NULL DEFAULT 1,
                                                 "scope" character varying(128) DEFAULT NULL::character varying,
                                                 "version" integer NOT NULL DEFAULT 1,
-                                                "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                                "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                                 "status" character varying(32) DEFAULT NULL::character varying,
                                                 "sort" integer DEFAULT 0,
                                                 "revision" integer NOT NULL DEFAULT 0,
@@ -6373,7 +6373,7 @@ CREATE INDEX "idx_ydsz_rule_scorecard_tenant_is_deleted" ON "public"."ydsz_rule_
 DROP TABLE IF EXISTS "public"."ydsz_rule_script" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_script" (
-                                             "id" character varying(32) NOT NULL,
+                                             "id" character varying(36) NOT NULL,
                                              "rule_code" character varying(64) NOT NULL,
                                              "rule_name" character varying(128) NOT NULL,
                                              "category" character varying(64) DEFAULT NULL::character varying,
@@ -6385,7 +6385,7 @@ CREATE TABLE "public"."ydsz_rule_script" (
                                              "is_enabled" smallint NOT NULL DEFAULT 1,
                                              "scope" character varying(128) DEFAULT NULL::character varying,
                                              "version" integer NOT NULL DEFAULT 1,
-                                             "provider_trace_id" character varying(64) DEFAULT NULL::character varying,
+                                             "provider_trace_id" character varying(36) DEFAULT NULL::character varying,
                                              "status" character varying(32) DEFAULT NULL::character varying,
                                              "sort" integer DEFAULT 0,
                                              "revision" integer NOT NULL DEFAULT 0,
@@ -6425,7 +6425,7 @@ CREATE INDEX "idx_ydsz_rule_script_tenant_is_deleted" ON "public"."ydsz_rule_scr
 DROP TABLE IF EXISTS "public"."ydsz_rule_template" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_template" (
-                                               "id" character varying(32) NOT NULL,
+                                               "id" character varying(36) NOT NULL,
                                                "template_code" character varying(64) NOT NULL,
                                                "template_name" character varying(128) NOT NULL,
                                                "category" character varying(64) DEFAULT NULL::character varying,
@@ -6480,7 +6480,7 @@ CREATE INDEX "idx_ydsz_rule_template_tenant_is_deleted" ON "public"."ydsz_rule_t
 DROP TABLE IF EXISTS "public"."ydsz_rule_variable_def" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_variable_def" (
-                                                   "id" character varying(32) NOT NULL,
+                                                   "id" character varying(36) NOT NULL,
                                                    "var_name" character varying(128) NOT NULL,
                                                    "var_type" character varying(32) DEFAULT NULL::character varying,
                                                    "description" character varying(512) DEFAULT NULL::character varying,
@@ -6523,7 +6523,7 @@ CREATE INDEX "idx_ydsz_rule_variable_def_tenant_is_deleted" ON "public"."ydsz_ru
 DROP TABLE IF EXISTS "public"."ydsz_rule_version_history" CASCADE;
 
 CREATE TABLE "public"."ydsz_rule_version_history" (
-                                                      "id" character varying(32) NOT NULL,
+                                                      "id" character varying(36) NOT NULL,
                                                       "rule_code" character varying(64) NOT NULL,
                                                       "version" integer NOT NULL,
                                                       "definition_json" jsonb,
@@ -6553,7 +6553,7 @@ CREATE INDEX "idx_ydsz_rule_version_history_rule_version" ON "public"."ydsz_rule
 DROP TABLE IF EXISTS "public"."ydsz_sys_api_permission" CASCADE;
 
 CREATE TABLE "public"."ydsz_sys_api_permission" (
-                                                    "id" character varying(32) NOT NULL,
+                                                    "id" character varying(36) NOT NULL,
                                                     "api_code" character varying(128) NOT NULL,
                                                     "api_name" character varying(256) DEFAULT NULL::character varying,
                                                     "http_method" character varying(10) DEFAULT NULL::character varying,
@@ -6596,7 +6596,7 @@ CREATE INDEX "idx_ydsz_sys_api_permission_tenant_deleted" ON "public"."ydsz_sys_
 DROP TABLE IF EXISTS "public"."ydsz_sys_app_info" CASCADE;
 
 CREATE TABLE "public"."ydsz_sys_app_info" (
-                                              "id" character varying(32) NOT NULL,
+                                              "id" character varying(36) NOT NULL,
                                               "app_code" character varying(64) NOT NULL,
                                               "app_name" character varying(128) NOT NULL,
                                               "app_key" character varying(64) NOT NULL,
@@ -6641,7 +6641,7 @@ CREATE INDEX "idx_ydsz_sys_app_info_tenant_deleted" ON "public"."ydsz_sys_app_in
 DROP TABLE IF EXISTS "public"."ydsz_sys_config" CASCADE;
 
 CREATE TABLE "public"."ydsz_sys_config" (
-                                            "id" character varying(32) NOT NULL,
+                                            "id" character varying(36) NOT NULL,
                                             "config_group" character varying(64) NOT NULL,
                                             "config_key" character varying(128) NOT NULL,
                                             "config_value" text,
@@ -6691,11 +6691,11 @@ INSERT INTO "public"."ydsz_sys_config" ("id", "config_group", "config_key", "con
 DROP TABLE IF EXISTS "public"."ydsz_sys_dict_item" CASCADE;
 
 CREATE TABLE "public"."ydsz_sys_dict_item" (
-                                               "id" character varying(32) NOT NULL,
+                                               "id" character varying(36) NOT NULL,
                                                "type_code" character varying(64) NOT NULL,
                                                "item_code" character varying(64) NOT NULL,
                                                "item_value" character varying(128) NOT NULL,
-                                               "parent_id" character varying(32) DEFAULT NULL::character varying,
+                                               "parent_id" character varying(36) DEFAULT NULL::character varying,
                                                "description" character varying(512) DEFAULT NULL::character varying,
                                                "ext_json" jsonb,
                                                "status" character varying(32) DEFAULT NULL::character varying,
@@ -6743,7 +6743,7 @@ INSERT INTO "public"."ydsz_sys_dict_item" ("id", "type_code", "item_code", "item
 DROP TABLE IF EXISTS "public"."ydsz_sys_dict_type" CASCADE;
 
 CREATE TABLE "public"."ydsz_sys_dict_type" (
-                                               "id" character varying(32) NOT NULL,
+                                               "id" character varying(36) NOT NULL,
                                                "type_code" character varying(64) NOT NULL,
                                                "type_name" character varying(128) NOT NULL,
                                                "description" character varying(512) DEFAULT NULL::character varying,
@@ -6783,7 +6783,7 @@ INSERT INTO "public"."ydsz_sys_dict_type" ("id", "type_code", "type_name", "desc
 DROP TABLE IF EXISTS "public"."ydsz_sys_entity_version" CASCADE;
 
 CREATE TABLE "public"."ydsz_sys_entity_version" (
-                                                    "id" character varying(32) NOT NULL,
+                                                    "id" character varying(36) NOT NULL,
                                                     "resource_type" character varying(32) NOT NULL,
                                                     "resource_key" character varying(128) NOT NULL,
                                                     "resource_group" character varying(64) DEFAULT NULL::character varying,
@@ -6825,13 +6825,13 @@ CREATE INDEX "idx_ydsz_sys_entity_version_tenant_deleted" ON "public"."ydsz_sys_
 DROP TABLE IF EXISTS "public"."ydsz_sys_tenant" CASCADE;
 
 CREATE TABLE "public"."ydsz_sys_tenant" (
-                                            "id" character varying(32) NOT NULL,
+                                            "id" character varying(36) NOT NULL,
                                             "tenant_code" character varying(64) NOT NULL,
                                             "tenant_name" character varying(128) NOT NULL,
                                             "contact_name" character varying(64) DEFAULT NULL::character varying,
                                             "contact_phone" character varying(32) DEFAULT NULL::character varying,
                                             "contact_email" character varying(128) DEFAULT NULL::character varying,
-                                            "plan_id" character varying(32) DEFAULT NULL::character varying,
+                                            "plan_id" character varying(36) DEFAULT NULL::character varying,
                                             "expire_at" timestamp without time zone,
                                             "datasource_key" character varying(64) DEFAULT NULL::character varying,
                                             "remark" character varying(512) DEFAULT NULL::character varying,
@@ -6872,7 +6872,7 @@ CREATE INDEX "idx_ydsz_sys_tenant_tenant_deleted" ON "public"."ydsz_sys_tenant" 
 DROP TABLE IF EXISTS "public"."ydsz_sys_tenant_plan" CASCADE;
 
 CREATE TABLE "public"."ydsz_sys_tenant_plan" (
-                                                 "id" character varying(32) NOT NULL,
+                                                 "id" character varying(36) NOT NULL,
                                                  "plan_code" character varying(64) NOT NULL,
                                                  "plan_name" character varying(128) NOT NULL,
                                                  "description" text,
@@ -6916,9 +6916,9 @@ INSERT INTO "public"."ydsz_sys_tenant_plan" ("id", "plan_code", "plan_name", "de
 DROP TABLE IF EXISTS "public"."ydsz_sys_tenant_plan_menu" CASCADE;
 
 CREATE TABLE "public"."ydsz_sys_tenant_plan_menu" (
-                                                      "id" character varying(32) NOT NULL,
-                                                      "plan_id" character varying(32) NOT NULL,
-                                                      "menu_id" character varying(64) NOT NULL,
+                                                      "id" character varying(36) NOT NULL,
+                                                      "plan_id" character varying(36) NOT NULL,
+                                                      "menu_id" character varying(36) NOT NULL,
                                                       "status" character varying(32) DEFAULT NULL::character varying,
                                                       "sort" integer DEFAULT 0,
                                                       "revision" integer NOT NULL DEFAULT 0,
@@ -6948,7 +6948,7 @@ CREATE INDEX "idx_ydsz_sys_tenant_plan_menu_tenant_deleted" ON "public"."ydsz_sy
 DROP TABLE IF EXISTS "public"."ydsz_sys_variable" CASCADE;
 
 CREATE TABLE "public"."ydsz_sys_variable" (
-                                              "id" character varying(32) NOT NULL,
+                                              "id" character varying(36) NOT NULL,
                                               "variable_key" character varying(128) NOT NULL,
                                               "variable_value" text,
                                               "value_type" character varying(32) NOT NULL,
@@ -6984,7 +6984,7 @@ CREATE INDEX "idx_ydsz_sys_variable_tenant_deleted" ON "public"."ydsz_sys_variab
 DROP TABLE IF EXISTS "public"."ydsz_system_config_approval" CASCADE;
 
 CREATE TABLE "public"."ydsz_system_config_approval" (
-                                                        "id" character varying(32) NOT NULL,
+                                                        "id" character varying(36) NOT NULL,
                                                         "resource_type" character varying(32) NOT NULL,
                                                         "resource_key" character varying(128) NOT NULL,
                                                         "resource_group" character varying(128) DEFAULT NULL::character varying,
@@ -6992,7 +6992,7 @@ CREATE TABLE "public"."ydsz_system_config_approval" (
                                                         "before_json" text,
                                                         "after_json" text,
                                                         "status" character varying(16) NOT NULL DEFAULT 'PENDING'::character varying,
-                                                        "submitter_id" character varying(32) DEFAULT NULL::character varying,
+                                                        "submitter_id" character varying(36) DEFAULT NULL::character varying,
                                                         "submitted_at" timestamp without time zone,
                                                         "reason" character varying(512) DEFAULT NULL::character varying,
                                                         "rejection_reason" character varying(512) DEFAULT NULL::character varying,

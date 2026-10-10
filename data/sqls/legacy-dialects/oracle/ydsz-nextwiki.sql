@@ -26,7 +26,7 @@
 
 CREATE TABLE ydsz_file_file_node (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    parent_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    parent_id                VARCHAR2(36 CHAR) NOT NULL DEFAULT '0'
     name                     VARCHAR2(255 CHAR)       NOT NULL,
     node_type                VARCHAR2(32 CHAR)        NOT NULL,
     suffix                   VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -100,7 +100,7 @@ CREATE INDEX idx_ydsz_file_file_node_storage_class ON ydsz_file_file_node (node_
 
 CREATE TABLE ydsz_file_file_version (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
+    file_node_id             VARCHAR2(36 CHAR) NOT NULL
     version_number           NUMBER(10)               NOT NULL,
     storage_key              VARCHAR2(1024 CHAR)      DEFAULT NULL,
     size                     NUMBER(19)               NOT NULL DEFAULT 0,
@@ -182,8 +182,8 @@ CREATE INDEX idx_ydsz_file_tag_tenant_is_deleted ON ydsz_file_tag (tenant_id, is
 
 CREATE TABLE ydsz_file_file_tag (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
-    tag_id                   VARCHAR2(32 CHAR)        NOT NULL,
+    file_node_id             VARCHAR2(36 CHAR) NOT NULL
+    tag_id                   VARCHAR2(36 CHAR) NOT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_file_tag PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_file_tag_file_node_tag UNIQUE (file_node_id, tag_id),
@@ -215,9 +215,9 @@ CREATE INDEX idx_ydsz_file_file_tag_tenant_is_deleted ON ydsz_file_file_tag (ten
 
 CREATE TABLE ydsz_file_file_comment (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
+    file_node_id             VARCHAR2(36 CHAR) NOT NULL
     content                  CLOB                     NOT NULL,
-    parent_comment_id        VARCHAR2(32 CHAR)        DEFAULT NULL,
+    parent_comment_id        VARCHAR2(36 CHAR) DEFAULT NULL
     is_resolved                 NUMBER(1)                NOT NULL DEFAULT 0,
     position                 CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_file_file_comment_position CHECK (position IS JSON),
     is_edited                   NUMBER(1)                NOT NULL DEFAULT 0,
@@ -256,9 +256,9 @@ CREATE INDEX idx_ydsz_file_file_comment_tenant_is_deleted ON ydsz_file_file_comm
 
 CREATE TABLE ydsz_file_file_acl (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
+    file_node_id             VARCHAR2(36 CHAR) NOT NULL
     grantee_type             VARCHAR2(32 CHAR)        NOT NULL,
-    grantee_id               VARCHAR2(64 CHAR)        NOT NULL,
+    grantee_id               VARCHAR2(36 CHAR) NOT NULL
     permission_mask          NUMBER(10)               NOT NULL DEFAULT 0,
     is_inherited                NUMBER(1)                NOT NULL DEFAULT 1,
     is_owner                    NUMBER(1)                NOT NULL DEFAULT 0,
@@ -297,7 +297,7 @@ CREATE INDEX idx_ydsz_file_file_acl_tenant_is_deleted ON ydsz_file_file_acl (ten
 
 CREATE TABLE ydsz_file_share_link (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
+    file_node_id             VARCHAR2(36 CHAR) NOT NULL
     share_code               VARCHAR2(64 CHAR)        NOT NULL,
     extract_code             VARCHAR2(8 CHAR)         DEFAULT NULL,
     share_type               VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'view',
@@ -349,9 +349,9 @@ CREATE INDEX idx_ydsz_file_share_link_tenant_is_deleted ON ydsz_file_share_link 
 
 CREATE TABLE ydsz_file_share_recipient (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    share_id                 VARCHAR2(32 CHAR)        NOT NULL,
+    share_id                 VARCHAR2(36 CHAR) NOT NULL
     recipient_type           VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'USER',
-    recipient_id             VARCHAR2(64 CHAR)        NOT NULL,
+    recipient_id             VARCHAR2(36 CHAR) NOT NULL
     recipient_name           VARCHAR2(128 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ACTIVE',
     viewed_at                TIMESTAMP                DEFAULT NULL,
@@ -389,10 +389,10 @@ CREATE INDEX idx_ydsz_file_share_recipient_tenant_is_deleted ON ydsz_file_share_
 
 CREATE TABLE ydsz_file_share_access_log (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    share_id                 VARCHAR2(32 CHAR)        NOT NULL,
+    share_id                 VARCHAR2(36 CHAR) NOT NULL
     share_code               VARCHAR2(64 CHAR)        NOT NULL,
-    file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
-    visitor_id               VARCHAR2(64 CHAR)        DEFAULT NULL,
+    file_node_id             VARCHAR2(36 CHAR) NOT NULL
+    visitor_id               VARCHAR2(36 CHAR) DEFAULT NULL
     visitor_name             VARCHAR2(128 CHAR)       DEFAULT NULL,
     visitor_ip               VARCHAR2(64 CHAR)        DEFAULT NULL,
     user_agent               VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -442,10 +442,10 @@ CREATE INDEX idx_ydsz_file_share_access_log_tenant_is_deleted ON ydsz_file_share
 
 CREATE TABLE ydsz_file_share_access_log_archive (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    share_id                 VARCHAR2(32 CHAR)        NOT NULL,
+    share_id                 VARCHAR2(36 CHAR) NOT NULL
     share_code               VARCHAR2(64 CHAR)        NOT NULL,
-    file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
-    visitor_id               VARCHAR2(64 CHAR)        DEFAULT NULL,
+    file_node_id             VARCHAR2(36 CHAR) NOT NULL
+    visitor_id               VARCHAR2(36 CHAR) DEFAULT NULL
     visitor_name             VARCHAR2(128 CHAR)       DEFAULT NULL,
     visitor_ip               VARCHAR2(64 CHAR)        DEFAULT NULL,
     user_agent               VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -493,7 +493,7 @@ CREATE TABLE ydsz_file_space (
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     icon_url                 VARCHAR2(1024 CHAR)      DEFAULT NULL,
     cover_url                VARCHAR2(1024 CHAR)      DEFAULT NULL,
-    owner_id                 VARCHAR2(64 CHAR)        NOT NULL,
+    owner_id                 VARCHAR2(36 CHAR) NOT NULL
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'active',
     visibility               VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'private',
     member_count             NUMBER(10)               NOT NULL DEFAULT 1,
@@ -541,8 +541,8 @@ CREATE INDEX idx_ydsz_file_space_tenant_is_deleted ON ydsz_file_space (tenant_id
 
 CREATE TABLE ydsz_file_space_member (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    space_id                 VARCHAR2(32 CHAR)        NOT NULL,
-    user_id                  VARCHAR2(64 CHAR)        NOT NULL,
+    space_id                 VARCHAR2(36 CHAR) NOT NULL
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
     role                     VARCHAR2(32 CHAR)        NOT NULL,
     joined_at                TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_file_space_member PRIMARY KEY (id),
@@ -621,10 +621,10 @@ CREATE INDEX idx_ydsz_file_space_template_tenant_is_deleted ON ydsz_file_space_t
 
 CREATE TABLE ydsz_file_trash_item (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
+    file_node_id             VARCHAR2(36 CHAR) NOT NULL
     original_name            VARCHAR2(255 CHAR)       NOT NULL,
     original_path            VARCHAR2(1024 CHAR)      DEFAULT NULL,
-    original_parent_id       VARCHAR2(32 CHAR)        DEFAULT NULL,
+    original_parent_id       VARCHAR2(36 CHAR) DEFAULT NULL
     node_type                VARCHAR2(32 CHAR)        NOT NULL,
     size                     NUMBER(19)               NOT NULL DEFAULT 0,
     deleted_time             TIMESTAMP                NOT NULL,
@@ -667,7 +667,7 @@ CREATE INDEX idx_ydsz_file_trash_item_tenant_is_deleted ON ydsz_file_trash_item 
 
 CREATE TABLE ydsz_file_search_index (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
+    file_node_id             VARCHAR2(36 CHAR) NOT NULL
     name                     VARCHAR2(255 CHAR)       NOT NULL,
     path                     VARCHAR2(1024 CHAR)      DEFAULT NULL,
     content                  CLOB                    ,
@@ -713,8 +713,8 @@ CREATE INDEX idx_ydsz_file_search_index_tenant_is_deleted ON ydsz_file_search_in
 
 CREATE TABLE ydsz_file_user_favorite (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    user_id                  VARCHAR2(64 CHAR)        NOT NULL,
-    node_id                  VARCHAR2(64 CHAR)        NOT NULL,
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
+    node_id                  VARCHAR2(36 CHAR) NOT NULL
     deleted_time             TIMESTAMP                DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_user_favorite PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_user_favorite_user_node UNIQUE (user_id, node_id),
@@ -747,8 +747,8 @@ CREATE INDEX idx_ydsz_file_user_favorite_tenant_is_deleted ON ydsz_file_user_fav
 
 CREATE TABLE ydsz_file_user_recent (
     id                       VARCHAR2(36 CHAR) NOT NULL
-    user_id                  VARCHAR2(64 CHAR)        NOT NULL,
-    node_id                  VARCHAR2(64 CHAR)        NOT NULL,
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
+    node_id                  VARCHAR2(36 CHAR) NOT NULL
     access_type              VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'view',
     accessed_at              TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_file_user_recent PRIMARY KEY (id),
@@ -782,7 +782,7 @@ CREATE INDEX idx_ydsz_file_user_recent_tenant_is_deleted ON ydsz_file_user_recen
 CREATE TABLE ydsz_file_storage_quota (
     id                       VARCHAR2(36 CHAR) NOT NULL
     scope_type               VARCHAR2(32 CHAR)        NOT NULL,
-    scope_id                 VARCHAR2(64 CHAR)        NOT NULL,
+    scope_id                 VARCHAR2(36 CHAR) NOT NULL
     quota_limit              NUMBER(19)               NOT NULL DEFAULT 0,
     quota_used               NUMBER(19)               NOT NULL DEFAULT 0,
     file_count_limit         NUMBER(10)               DEFAULT NULL,

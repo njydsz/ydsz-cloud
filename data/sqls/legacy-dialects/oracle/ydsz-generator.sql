@@ -94,7 +94,7 @@ COMMENT ON COLUMN ydsz_gen_template_group.updated_at IS '更新时间';
 
 CREATE TABLE ydsz_gen_template (
     id                       VARCHAR2(36 CHAR),
-    group_id                 NUMBER(19)               NOT NULL,
+    group_id                 VARCHAR2(36 CHAR) NOT NULL
     file_name                VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(255 CHAR)       DEFAULT NULL,
     content                  CLOB                     NOT NULL,
@@ -143,8 +143,8 @@ CREATE INDEX idx_ydsz_gen_template_group ON ydsz_gen_template (group_id);
 CREATE TABLE ydsz_gen_history (
     id                       VARCHAR2(36 CHAR),
     module_name              VARCHAR2(64 CHAR)        NOT NULL,
-    datasource_id            NUMBER(19)               NOT NULL,
-    template_group_id        NUMBER(19)               NOT NULL,
+    datasource_id            VARCHAR2(36 CHAR) NOT NULL
+    template_group_id        VARCHAR2(36 CHAR) NOT NULL
     table_count              NUMBER(10)               NOT NULL DEFAULT 0,
     file_count               NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(16 CHAR)        NOT NULL DEFAULT 'RUNNING',
@@ -190,7 +190,7 @@ CREATE INDEX idx_ydsz_gen_history_started ON ydsz_gen_history (started_at);
 
 CREATE TABLE ydsz_gen_history_file (
     id                       VARCHAR2(36 CHAR),
-    history_id               NUMBER(19)               NOT NULL,
+    history_id               VARCHAR2(36 CHAR) NOT NULL
     file_path                VARCHAR2(512 CHAR)       NOT NULL,
     original_backup_path     VARCHAR2(512 CHAR)       DEFAULT NULL,
     file_hash                CHAR(32)                 DEFAULT NULL,
@@ -225,7 +225,7 @@ CREATE INDEX idx_ydsz_gen_history_file_history ON ydsz_gen_history_file (history
 
 CREATE TABLE ydsz_gen_table_meta (
     id                       VARCHAR2(36 CHAR),
-    datasource_id            NUMBER(19)               NOT NULL,
+    datasource_id            VARCHAR2(36 CHAR) NOT NULL
     table_name               VARCHAR2(128 CHAR)       NOT NULL,
     comment                  VARCHAR2(255 CHAR)       DEFAULT NULL,
     alias_name               VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -263,7 +263,7 @@ CREATE INDEX idx_ydsz_gen_table_meta_datasource ON ydsz_gen_table_meta (datasour
 
 CREATE TABLE ydzs_gen_column_meta (
     id                       VARCHAR2(36 CHAR),
-    table_meta_id            NUMBER(19)               NOT NULL,
+    table_meta_id            VARCHAR2(36 CHAR) NOT NULL
     column_name              VARCHAR2(128 CHAR)       NOT NULL,
     data_type                VARCHAR2(64 CHAR)        NOT NULL,
     column_size              NUMBER(10)               DEFAULT NULL,

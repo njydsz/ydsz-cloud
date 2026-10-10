@@ -91,9 +91,9 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
 -- Agent 执行链路表（实体：AgentTrace，独立主键 trace_id，无公共基类列）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
-    trace_id            VARCHAR(64)     PRIMARY KEY COMMENT '链路唯一 ID（主键，业务生成非自增）',
-    conversation_id     VARCHAR(64)     NOT NULL COMMENT '所属对话 ID',
-    agent_id            VARCHAR(64)     NOT NULL COMMENT 'Agent 类型标识（CHAT/REACT/RAG/PLAN_EXECUTE/SUPERVISOR）',
+    trace_id VARCHAR(36) PRIMARY KEY COMMENT '链路唯一 ID（主键，业务生成非自增）'
+    conversation_id VARCHAR(36) NOT NULL COMMENT '所属对话 ID'
+    agent_id VARCHAR(36) NOT NULL COMMENT 'Agent 类型标识（CHAT/REACT/RAG/PLAN_EXECUTE/SUPERVISOR）'
     status              VARCHAR(32)     NOT NULL COMMENT '执行状态（RUNNING/SUCCESS/FAILED/MAX_ITERATIONS/GUARDRAIL_REJECTED）',
     total_duration_ms   BIGINT          DEFAULT NULL COMMENT '总耗时（毫秒）',
 
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
 -- Agent 执行链路步骤表（实体：AgentTraceStep；已合并 V2__trace_step_cost.sql 的 cost 列）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
-    trace_id        VARCHAR(64)     NOT NULL COMMENT '链路 ID（关联 ydsz_agt_trace.trace_id）',
+    trace_id VARCHAR(36) NOT NULL COMMENT '链路 ID（关联 ydsz_agt_trace.trace_id）'
     step_index      INT             NOT NULL COMMENT '步骤序号（从 0 开始递增）',
     step_type       VARCHAR(32)     NOT NULL COMMENT '步骤类型（LLM_CALL/TOOL_CALL/THOUGHT/OBSERVATION/ROUTE/LLM_CALL_ERROR）',
     content         TEXT            DEFAULT NULL COMMENT '步骤内容描述',
@@ -148,8 +148,8 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     id VARCHAR(36) PRIMARY KEY COMMENT '审批请求 ID（主键，业务生成非自增）'
-    conversation_id     VARCHAR(64)     DEFAULT NULL COMMENT '所属对话 ID',
-    trace_id            VARCHAR(64)     DEFAULT NULL COMMENT '执行链路 ID',
+    conversation_id VARCHAR(36) COMMENT '所属对话 ID' DEFAULT NULL
+    trace_id VARCHAR(36) COMMENT '执行链路 ID' DEFAULT NULL
     step_description    VARCHAR(512)    DEFAULT NULL COMMENT '待审批步骤的业务描述',
     context_json        TEXT            DEFAULT NULL COMMENT '审批上下文（JSON 字符串，含用户输入、已有结果等）',
     status              VARCHAR(32)     NOT NULL DEFAULT 'PENDING' COMMENT '审批状态（PENDING/APPROVED/REJECTED/EXPIRED）',
@@ -178,7 +178,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    conversation_id     VARCHAR(64)     NOT NULL COMMENT '所属对话 ID（关联 ydsz_agent_conversation）',
+    conversation_id VARCHAR(36) NOT NULL COMMENT '所属对话 ID（关联 ydsz_agent_conversation）'
     model_name          VARCHAR(64)     NOT NULL COMMENT '使用的模型标识',
     prompt_tokens       BIGINT          NOT NULL DEFAULT 0 COMMENT '提示词 Token 数',
     completion_tokens   BIGINT          NOT NULL DEFAULT 0 COMMENT '补全 Token 数',

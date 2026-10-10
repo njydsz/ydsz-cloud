@@ -32,7 +32,7 @@
 CREATE TABLE ydsz_comm_outbox (
     id                       VARCHAR2(36 CHAR) NOT NULL
     aggregate_type           VARCHAR2(128 CHAR)       NOT NULL,
-    aggregate_id             VARCHAR2(128 CHAR)       NOT NULL,
+    aggregate_id             VARCHAR2(36 CHAR) NOT NULL
     event_type               VARCHAR2(128 CHAR)       NOT NULL,
     payload                  CLOB                     NOT NULL,
     status                   VARCHAR2(15 CHAR)        NOT NULL DEFAULT 'PENDING' CONSTRAINT ck_ydsz_comm_outbox_status CHECK (status IN ('PENDING', 'PROCESSING', 'SENT', 'DEAD_LETTER')),
@@ -40,8 +40,8 @@ CREATE TABLE ydsz_comm_outbox (
     max_retries              NUMBER(10)               NOT NULL DEFAULT 5,
     next_retry_at            TIMESTAMP(3)            ,
     error_message            CLOB                    ,
-    trace_id                 VARCHAR2(64 CHAR)       ,
-    deduplication_id         VARCHAR2(64 CHAR)       ,
+    trace_id                 VARCHAR2(36 CHAR)
+    deduplication_id         VARCHAR2(36 CHAR)
     sent_at                  TIMESTAMP(3)            ,
     CONSTRAINT pk_ydsz_comm_outbox PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -84,7 +84,7 @@ CREATE TABLE ydsz_comm_search_dead_letter (
     id                       VARCHAR2(36 CHAR),
     operation                VARCHAR2(20 CHAR)        NOT NULL,
     doc_type                 VARCHAR2(64 CHAR)        DEFAULT NULL,
-    document_id              VARCHAR2(128 CHAR)       DEFAULT NULL,
+    document_id              VARCHAR2(36 CHAR) DEFAULT NULL
     document_json            CLOB                     DEFAULT NULL,
     error_msg                CLOB                     DEFAULT NULL,
     retry_count              NUMBER(10)               NOT NULL DEFAULT 0,
@@ -127,7 +127,7 @@ CREATE INDEX idx_ydsz_comm_search_dead_letter_dlq_doc_type ON ydsz_comm_search_d
 CREATE TABLE ydsz_comm_audit_log (
     id                       VARCHAR2(36 CHAR) NOT NULL
     app_key                  VARCHAR2(64 CHAR)        NOT NULL DEFAULT '',
-    operator_id              VARCHAR2(64 CHAR)        DEFAULT NULL,
+    operator_id              VARCHAR2(36 CHAR) DEFAULT NULL
     operator_name            VARCHAR2(64 CHAR)        DEFAULT NULL,
     audit_type               NUMBER(5)                NOT NULL DEFAULT 1,
     action                   NUMBER(5)                NOT NULL DEFAULT 99,
@@ -141,7 +141,7 @@ CREATE TABLE ydsz_comm_audit_log (
     diff_after_snapshot      CLOB                     DEFAULT NULL,
     error_message            VARCHAR2(512 CHAR)       DEFAULT NULL,
     cost_time                NUMBER(19)               DEFAULT 0,
-    trace_id                 VARCHAR2(64 CHAR)        DEFAULT NULL,
+    trace_id                 VARCHAR2(36 CHAR) DEFAULT NULL
     operation_time           TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_comm_audit_log PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,

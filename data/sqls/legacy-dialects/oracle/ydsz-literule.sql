@@ -217,7 +217,7 @@ CREATE TABLE ydsz_rule_script (
     is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     scope                    VARCHAR2(128 CHAR)       DEFAULT NULL,
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_script PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -320,7 +320,7 @@ CREATE TABLE ydsz_rule_decision_tree (
     is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     scope                    VARCHAR2(128 CHAR)       DEFAULT NULL,
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_decision_tree PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -371,7 +371,7 @@ CREATE TABLE ydsz_rule_scorecard (
     is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     scope                    VARCHAR2(128 CHAR)       DEFAULT NULL,
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
-    provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
+    provider_trace_id        VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_scorecard PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -743,7 +743,7 @@ CREATE INDEX idx_ydsz_rule_version_history_rule_version ON ydsz_rule_version_his
 
 CREATE TABLE ydsz_rule_execution_trace (
     id                       VARCHAR2(36 CHAR)
-    trace_id                 VARCHAR2(64 CHAR)        NOT NULL,
+    trace_id                 VARCHAR2(36 CHAR) NOT NULL
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     rule_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     scenario                 VARCHAR2(64 CHAR)        DEFAULT NULL,

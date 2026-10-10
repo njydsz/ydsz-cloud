@@ -215,7 +215,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_script (
     is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
     scope                    VARCHAR(128)             DEFAULT NULL,
     version                  INTEGER                  NOT NULL DEFAULT 1,
-    provider_trace_id        VARCHAR(64)              DEFAULT NULL,
+    provider_trace_id        VARCHAR(36)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_script PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
@@ -318,7 +318,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
     is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
     scope                    VARCHAR(128)             DEFAULT NULL,
     version                  INTEGER                  NOT NULL DEFAULT 1,
-    provider_trace_id        VARCHAR(64)              DEFAULT NULL,
+    provider_trace_id        VARCHAR(36)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_decision_tree PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
@@ -369,7 +369,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
     is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
     scope                    VARCHAR(128)             DEFAULT NULL,
     version                  INTEGER                  NOT NULL DEFAULT 1,
-    provider_trace_id        VARCHAR(64)              DEFAULT NULL,
+    provider_trace_id        VARCHAR(36)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_scorecard PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
@@ -742,7 +742,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_version_history_rule_version ON ydsz_ru
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_execution_trace (
     id                       VARCHAR(36)
-    trace_id                 VARCHAR(64)              NOT NULL,
+    trace_id                 VARCHAR(36)              NOT NULL,
     rule_code                VARCHAR(64)              NOT NULL,
     rule_name                VARCHAR(128)             DEFAULT NULL,
     scenario                 VARCHAR(64)              DEFAULT NULL,

@@ -137,7 +137,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_main_status_is_deleted_next_fire
 
 CREATE TABLE IF NOT EXISTS ydsz_job_glue (
     id                       VARCHAR(36)
-    job_id                   VARCHAR(32)              NOT NULL,
+    job_id                   VARCHAR(36)              NOT NULL,
     source_code              TEXT                     NOT NULL,
     language                 VARCHAR(32)              NOT NULL DEFAULT 'GROOVY',
     version                  INTEGER                  NOT NULL DEFAULT 1,
@@ -175,8 +175,8 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_glue_tenant_is_deleted ON ydsz_job_glue 
 
 CREATE TABLE IF NOT EXISTS ydsz_job_task (
     id                       VARCHAR(36)
-    job_id                   VARCHAR(32)              NOT NULL,
-    log_id                   VARCHAR(32)              NOT NULL,
+    job_id                   VARCHAR(36)              NOT NULL,
+    log_id                   VARCHAR(36)              NOT NULL,
     job_key                  VARCHAR(64)              NOT NULL,
     task_name                VARCHAR(128)             NOT NULL,
     task_params              JSONB                    DEFAULT NULL,
@@ -184,7 +184,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_task (
     task_status              VARCHAR(32)              NOT NULL,
     result                   JSONB                    DEFAULT NULL,
     error_message            TEXT                     DEFAULT NULL,
-    exec_node_id             VARCHAR(64)              DEFAULT NULL,
+    exec_node_id             VARCHAR(36)              DEFAULT NULL,
     retry_count              INTEGER                  NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_job_task PRIMARY KEY (id),
@@ -226,7 +226,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_task_tenant_is_deleted ON ydsz_job_task 
 
 CREATE TABLE IF NOT EXISTS ydsz_job_node (
     id                       VARCHAR(36)
-    node_id                  VARCHAR(64)              NOT NULL,
+    node_id                  VARCHAR(36)              NOT NULL,
     app_name                 VARCHAR(128)             DEFAULT NULL,
     host                     VARCHAR(128)             NOT NULL,
     port                     INTEGER                  NOT NULL,
@@ -279,7 +279,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_node_tenant_is_deleted ON ydsz_job_node 
 
 CREATE TABLE IF NOT EXISTS ydsz_job_history (
     id                       VARCHAR(36)
-    job_id                   VARCHAR(32)              NOT NULL,
+    job_id                   VARCHAR(36)              NOT NULL,
     version                  INTEGER                  NOT NULL,
     snapshot                 JSONB                    DEFAULT NULL,
     change_type              VARCHAR(32)              NOT NULL,
@@ -330,8 +330,8 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_history_jh_changed_at ON ydsz_job_histor
 
 CREATE TABLE IF NOT EXISTS ydsz_job_artifact (
     id                       VARCHAR(36)
-    job_id                   VARCHAR(32)              NOT NULL,
-    log_id                   VARCHAR(32)              NOT NULL,
+    job_id                   VARCHAR(36)              NOT NULL,
+    log_id                   VARCHAR(36)              NOT NULL,
     job_key                  VARCHAR(64)              NOT NULL,
     artifact_name            VARCHAR(128)             NOT NULL,
     artifact_type            VARCHAR(32)              NOT NULL,
@@ -428,7 +428,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_webhook_tenant_is_deleted ON ydsz_job_we
 CREATE TABLE IF NOT EXISTS ydsz_job_alert_rule (
     id                       VARCHAR(36)
     rule_name                VARCHAR(128)             NOT NULL,
-    job_id                   VARCHAR(32)              DEFAULT NULL,
+    job_id                   VARCHAR(36)              DEFAULT NULL,
     job_key                  VARCHAR(64)              DEFAULT NULL,
     alert_type               VARCHAR(32)              NOT NULL,
     alert_level              VARCHAR(32)              NOT NULL,
@@ -578,7 +578,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_tenant_is_deleted ON ydsz_job_dag (t
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_version (
     id                       VARCHAR(36)
-    dag_id                   VARCHAR(32)              NOT NULL,
+    dag_id                   VARCHAR(36)              NOT NULL,
     dag_key                  VARCHAR(64)              NOT NULL,
     version                  INTEGER                  NOT NULL,
     dag_definition           JSONB                    NOT NULL,
@@ -627,12 +627,12 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_version_tenant_is_deleted ON ydsz_jo
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance (
     id                       VARCHAR(36)
-    dag_id                   VARCHAR(32)              NOT NULL,
+    dag_id                   VARCHAR(36)              NOT NULL,
     dag_key                  VARCHAR(64)              NOT NULL,
     instance_status          VARCHAR(32)              NOT NULL,
     trigger_type             VARCHAR(32)              DEFAULT NULL,
     trigger_by               VARCHAR(64)              DEFAULT NULL,
-    trigger_trace_id         VARCHAR(64)              DEFAULT NULL,
+    trigger_trace_id         VARCHAR(36)              DEFAULT NULL,
     context_json             JSONB                    DEFAULT NULL,
     started_at               TIMESTAMP                DEFAULT NULL,
     finished_at              TIMESTAMP                DEFAULT NULL,
@@ -689,12 +689,12 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_instance_tenant_is_deleted ON ydsz_j
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance (
     id                       VARCHAR(36)
-    dag_instance_id          VARCHAR(32)              NOT NULL,
-    dag_id                   VARCHAR(32)              NOT NULL,
-    job_id                   VARCHAR(32)              NOT NULL,
+    dag_instance_id          VARCHAR(36)              NOT NULL,
+    dag_id                   VARCHAR(36)              NOT NULL,
+    job_id                   VARCHAR(36)              NOT NULL,
     job_key                  VARCHAR(64)              NOT NULL,
     node_status              VARCHAR(32)              DEFAULT NULL,
-    log_id                   VARCHAR(32)              DEFAULT NULL,
+    log_id                   VARCHAR(36)              DEFAULT NULL,
     retry_count              INTEGER                  DEFAULT NULL,
     max_retries              INTEGER                  DEFAULT NULL,
     started_at               TIMESTAMP                DEFAULT NULL,
@@ -745,7 +745,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_node_instance_tenant_is_deleted ON y
 
 CREATE TABLE IF NOT EXISTS ydsz_job_log (
     id                       VARCHAR(36)
-    job_id                   VARCHAR(32)              NOT NULL,
+    job_id                   VARCHAR(36)              NOT NULL,
     job_key                  VARCHAR(64)              NOT NULL,
     start_time               TIMESTAMP                DEFAULT NULL,
     end_time                 TIMESTAMP                DEFAULT NULL,
@@ -753,10 +753,10 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log (
     error_message            TEXT                     DEFAULT NULL,
     params_json              JSONB                    DEFAULT NULL,
     result_json              JSONB                    DEFAULT NULL,
-    trace_id                 VARCHAR(64)              DEFAULT NULL,
+    trace_id                 VARCHAR(36)              DEFAULT NULL,
     trigger_type             VARCHAR(32)              DEFAULT NULL,
     lock_holder              VARCHAR(64)              DEFAULT NULL,
-    exec_node_id             VARCHAR(64)              DEFAULT NULL,
+    exec_node_id             VARCHAR(36)              DEFAULT NULL,
     exec_thread_id           BIGINT                   DEFAULT NULL,
     shard_index              INTEGER                  DEFAULT NULL,
     shard_total              INTEGER                  DEFAULT NULL,
@@ -818,7 +818,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_log_job_key_status_created
 
 CREATE TABLE IF NOT EXISTS ydsz_job_log_content (
     id                       VARCHAR(36)
-    log_id                   VARCHAR(32)              NOT NULL,
+    log_id                   VARCHAR(36)              NOT NULL,
     job_key                  VARCHAR(64)              NOT NULL,
     line_no                  INTEGER                  NOT NULL,
     log_level                VARCHAR(32)              DEFAULT NULL,
@@ -849,7 +849,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_log_content_jlc_job_key ON ydsz_job_log_
 
 CREATE TABLE IF NOT EXISTS ydsz_job_daily_stats (
     id                       VARCHAR(36)
-    job_id                   VARCHAR(32)              NOT NULL,
+    job_id                   VARCHAR(36)              NOT NULL,
     job_key                  VARCHAR(64)              NOT NULL,
     stats_date               DATE                     NOT NULL,
     fire_count               BIGINT                   NOT NULL DEFAULT 0,
@@ -894,9 +894,9 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_dispatch (
     id                       VARCHAR(36)
     alert_code               VARCHAR(64)              NOT NULL,
     source_type              VARCHAR(32)              NOT NULL,
-    rule_id                  VARCHAR(32)              DEFAULT NULL,
+    rule_id                  VARCHAR(36)              DEFAULT NULL,
     rule_name                VARCHAR(128)             DEFAULT NULL,
-    job_id                   VARCHAR(32)              DEFAULT NULL,
+    job_id                   VARCHAR(36)              DEFAULT NULL,
     job_key                  VARCHAR(64)              DEFAULT NULL,
     alert_type               VARCHAR(32)              DEFAULT NULL,
     alert_level              VARCHAR(32)              DEFAULT NULL,
@@ -905,8 +905,8 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_dispatch (
     channels                 VARCHAR(256)             DEFAULT NULL,
     alert_status             VARCHAR(32)              DEFAULT NULL,
     error_message            TEXT                     DEFAULT NULL,
-    trace_id                 VARCHAR(64)              DEFAULT NULL,
-    trigger_log_id           VARCHAR(32)              DEFAULT NULL,
+    trace_id                 VARCHAR(36)              DEFAULT NULL,
+    trigger_log_id           VARCHAR(36)              DEFAULT NULL,
     sort INTEGER DEFAULT 0,
     status INTEGER DEFAULT 1,
     revision INTEGER DEFAULT 0,
@@ -985,7 +985,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_outbox_jo_status_created ON ydsz_job_out
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
     id                       VARCHAR(36) NOT NULL
-    dag_instance_id          VARCHAR(32)              NOT NULL,
+    dag_instance_id          VARCHAR(36)              NOT NULL,
     node_key                 VARCHAR(128)             NOT NULL,
     result_json              TEXT                     DEFAULT NULL,
     sort INTEGER DEFAULT 0,
@@ -1020,7 +1020,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_context_instance ON ydsz_job_dag_con
 CREATE TABLE IF NOT EXISTS ydsz_job_event_store (
     id                       VARCHAR(36) NOT NULL
     aggregate_type           VARCHAR(64)              NOT NULL,
-    aggregate_id             VARCHAR(32)              NOT NULL,
+    aggregate_id             VARCHAR(36)              NOT NULL,
     event_type               VARCHAR(128)             NOT NULL,
     payload                  TEXT                     DEFAULT NULL,
     operator                 VARCHAR(64)              DEFAULT NULL,
@@ -1056,10 +1056,10 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_event_store_occurred ON ydsz_job_event_s
 
 CREATE TABLE IF NOT EXISTS ydsz_job_webhook_retry (
     id                       VARCHAR(36) NOT NULL
-    webhook_id               VARCHAR(32)              NOT NULL,
+    webhook_id               VARCHAR(36)              NOT NULL,
     event_type               VARCHAR(128)             NOT NULL,
     job_key                  VARCHAR(64)              DEFAULT NULL,
-    log_id                   VARCHAR(32)              DEFAULT NULL,
+    log_id                   VARCHAR(36)              DEFAULT NULL,
     callback_url             VARCHAR(1024)            NOT NULL,
     http_method              VARCHAR(10)              NOT NULL DEFAULT 'POST',
     headers                  JSONB                    DEFAULT NULL,

@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
 
     -- ========== 聚合根信息 ==========
     aggregate_type      VARCHAR(128)    NOT NULL COMMENT '聚合根类型（如 Order, User）',
-    aggregate_id        VARCHAR(128)    NOT NULL COMMENT '聚合根 ID',
+    aggregate_id VARCHAR(36) NOT NULL COMMENT '聚合根 ID'
 
     -- ========== 事件信息 ==========
     event_type          VARCHAR(128)    NOT NULL COMMENT '事件类型（如 OrderCreated）',
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
     compressed          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT 'payload 是否 GZIP 压缩存储',
 
     -- ========== 上下文 ==========
-    trace_id            VARCHAR(64)              COMMENT '链路追踪 ID',
+    trace_id VARCHAR(36) COMMENT '链路追踪 ID'
     idempotency_key     VARCHAR(64)              COMMENT '幂等去重 ID',
 
     -- ========== 时间戳 ==========
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
 
 CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
     id              VARCHAR(36)     PRIMARY KEY,
-    aggregate_id    VARCHAR(128)    NOT NULL,
+    aggregate_id VARCHAR(36) NOT NULL
     aggregate_type  VARCHAR(128)    DEFAULT NULL,
     event_type      VARCHAR(256)    NOT NULL,
     payload         MEDIUMTEXT      NOT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
     retry_count     INT             NOT NULL DEFAULT 0,
     max_retries     INT             NOT NULL DEFAULT 5,
     idempotency_key VARCHAR(128)    DEFAULT NULL,
-    trace_id        VARCHAR(64)     DEFAULT NULL,
+    trace_id VARCHAR(36) DEFAULT NULL
     schema_version  INT             NOT NULL DEFAULT 1,
     compressed      TINYINT(1)      NOT NULL DEFAULT 0,
     sent_at         DATETIME        DEFAULT NULL,
@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_search_dead_letter (
     id            VARCHAR(36)  NOT NULL COMMENT '主键 ID（Snowflake）',
     operation     VARCHAR(20)  NOT NULL COMMENT '索引操作类型：UPSERT / DELETE / BULK',
     doc_type      VARCHAR(64)  DEFAULT NULL COMMENT '实体类型（project/wiki/user 等）',
-    document_id   VARCHAR(128) DEFAULT NULL COMMENT '文档主键（DELETE 操作时使用）',
+    document_id VARCHAR(36) COMMENT '文档主键（DELETE 操作时使用）' DEFAULT NULL
     document_json TEXT         DEFAULT NULL COMMENT '文档 JSON（UPSERT/BULK 操作时使用）',
     error_msg     TEXT         DEFAULT NULL COMMENT '最后一次失败原因（截断 2000 字符）',
     retry_count   INT          NOT NULL DEFAULT 0 COMMENT '已重试次数，达到 5 次升级为 DISCARDED',
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_search_dead_letter (
 CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
     id                       VARCHAR(36)     NOT NULL  COMMENT '审计记录唯一标识（雪花算法生成）',
     app_key                  VARCHAR(64)     NOT NULL DEFAULT ''  COMMENT '应用标识（区分不同微服务的审计记录）',
-    operator_id              VARCHAR(64)     DEFAULT NULL  COMMENT '操作人 ID（来自 RequestContext 透传）',
+    operator_id VARCHAR(36) COMMENT '操作人 ID（来自 RequestContext 透传）' DEFAULT NULL
     operator_name            VARCHAR(64)     DEFAULT NULL  COMMENT '操作人姓名（便于直接展示）',
     audit_type               SMALLINT        NOT NULL DEFAULT 1  COMMENT '审计类型编码（1=操作/2=登录/3=数据/4=权限/5=配置/6=文件/7=接口/8=系统）',
     action                   SMALLINT        NOT NULL DEFAULT 99  COMMENT '操作行为编码（1=新增/2=修改/3=删除/4=查询/5=导入/6=导出/7=上传/8=下载/99=其他）',
@@ -170,7 +170,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
     diff_after_snapshot      TEXT            DEFAULT NULL  COMMENT '变更后快照 JSON（仅 @Audit(recordDiff=true) 时写入）',
     error_message            VARCHAR(512)    DEFAULT NULL  COMMENT '异常信息（业务方法抛异常时记录）',
     cost_time                BIGINT          DEFAULT 0  COMMENT '执行耗时（毫秒）',
-    trace_id                 VARCHAR(64)     DEFAULT NULL  COMMENT '链路追踪 ID（独立列，支持索引查询）',
+    trace_id VARCHAR(36) COMMENT '链路追踪 ID（独立列，支持索引查询）' DEFAULT NULL
     operation_time           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '操作时间（业务方法执行时刻）',
     PRIMARY KEY (id),
     -- 核心查询：按操作时间降序分页

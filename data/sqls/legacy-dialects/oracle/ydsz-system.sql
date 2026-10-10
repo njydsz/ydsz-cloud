@@ -32,7 +32,7 @@ CREATE TABLE ydsz_sys_tenant (
     contact_name             VARCHAR2(64 CHAR)        DEFAULT NULL,
     contact_phone            VARCHAR2(32 CHAR)        DEFAULT NULL,
     contact_email            VARCHAR2(128 CHAR)       DEFAULT NULL,
-    plan_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
+    plan_id                  VARCHAR2(36 CHAR) DEFAULT NULL
     expire_at                TIMESTAMP                DEFAULT NULL,
     datasource_key           VARCHAR2(64 CHAR)        DEFAULT NULL,
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -113,8 +113,8 @@ CREATE INDEX idx_ydsz_sys_tenant_plan_tenant_is_deleted ON ydsz_sys_tenant_plan 
 
 CREATE TABLE ydsz_sys_tenant_plan_menu (
     id                       VARCHAR2(36 CHAR)
-    plan_id                  VARCHAR2(32 CHAR)        NOT NULL,
-    menu_id                  VARCHAR2(64 CHAR)        NOT NULL,
+    plan_id                  VARCHAR2(36 CHAR) NOT NULL
+    menu_id                  VARCHAR2(36 CHAR) NOT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_sys_tenant_plan_menu PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_sys_tenant_plan_menu_plan_menu UNIQUE (plan_id, menu_id),
@@ -182,7 +182,7 @@ CREATE TABLE ydsz_sys_dict_item (
     type_code                VARCHAR2(64 CHAR)        NOT NULL,
     item_code                VARCHAR2(64 CHAR)        NOT NULL,
     item_value               VARCHAR2(128 CHAR)       NOT NULL,
-    parent_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
+    parent_id                VARCHAR2(36 CHAR) DEFAULT NULL
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     ext_json                 CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_sys_dict_item_ext_json CHECK (ext_json IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,

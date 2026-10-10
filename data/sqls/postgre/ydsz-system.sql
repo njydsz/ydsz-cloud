@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant (
     contact_name             VARCHAR(64)              DEFAULT NULL,
     contact_phone            VARCHAR(32)              DEFAULT NULL,
     contact_email            VARCHAR(128)             DEFAULT NULL,
-    plan_id                  VARCHAR(32)              DEFAULT NULL,
+    plan_id                  VARCHAR(36)              DEFAULT NULL,
     expire_at                TIMESTAMP                DEFAULT NULL,
     datasource_key           VARCHAR(64)              DEFAULT NULL,
     remark                   VARCHAR(512)             DEFAULT NULL,
@@ -111,8 +111,8 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_plan_tenant_deleted ON ydsz_sys_t
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan_menu (
     id                       VARCHAR(36)
-    plan_id                  VARCHAR(32)              NOT NULL,
-    menu_id                  VARCHAR(64)              NOT NULL,
+    plan_id                  VARCHAR(36)              NOT NULL,
+    menu_id                  VARCHAR(36)              NOT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_sys_tenant_plan_menu PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_sys_tenant_plan_menu_plan_menu UNIQUE (plan_id, menu_id),
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
     type_code                VARCHAR(64)              NOT NULL,
     item_code                VARCHAR(64)              NOT NULL,
     item_value               VARCHAR(128)             NOT NULL,
-    parent_id                VARCHAR(32)              DEFAULT NULL,
+    parent_id                VARCHAR(36)              DEFAULT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
     ext_json                 JSONB                    DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
@@ -582,7 +582,7 @@ CREATE TABLE IF NOT EXISTS ydsz_system_config_approval (
     before_json              TEXT                     DEFAULT NULL,
     after_json               TEXT                     DEFAULT NULL,
     status                   VARCHAR(16)              NOT NULL DEFAULT 'PENDING',
-    submitter_id             VARCHAR(32)              DEFAULT NULL,
+    submitter_id             VARCHAR(36)              DEFAULT NULL,
     submitted_at             TIMESTAMP                DEFAULT NULL,
     reason                   VARCHAR(512)             DEFAULT NULL,
     rejection_reason         VARCHAR(512)             DEFAULT NULL,

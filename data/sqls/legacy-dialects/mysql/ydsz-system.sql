@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant (
     contact_name    VARCHAR(64)     DEFAULT NULL COMMENT '联系人姓名',
     contact_phone   VARCHAR(32)     DEFAULT NULL COMMENT '联系电话（脱敏返回）',
     contact_email   VARCHAR(128)    DEFAULT NULL COMMENT '联系邮箱（脱敏返回）',
-    plan_id         VARCHAR(32)     DEFAULT NULL COMMENT '关联套餐 ID（ydsz_sys_tenant_plan.id）',
+    plan_id VARCHAR(36) COMMENT '关联套餐 ID（ydsz_sys_tenant_plan.id）' DEFAULT NULL
     expire_at       DATETIME        DEFAULT NULL COMMENT '订阅到期时间（到期后租户被自动锁定/降级）',
     datasource_key  VARCHAR(64)     DEFAULT NULL COMMENT '独立数据源标识（ISOLATE_DB 模式下使用）',
     remark          VARCHAR(512)    DEFAULT NULL COMMENT '备注',
@@ -60,8 +60,8 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan (
 -- 租户套餐菜单关联表（套餐与菜单权限多对多关联）
 CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan_menu (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    plan_id         VARCHAR(32)     NOT NULL COMMENT '套餐 ID（ydsz_sys_tenant_plan.id）',
-    menu_id         VARCHAR(64)     NOT NULL COMMENT '菜单 ID（ydsz_menu.id 或权限码 ydsz:xxx）',
+    plan_id VARCHAR(36) NOT NULL COMMENT '套餐 ID（ydsz_sys_tenant_plan.id）'
+    menu_id VARCHAR(36) NOT NULL COMMENT '菜单 ID（ydsz_menu.id 或权限码 ydsz:xxx）'
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     CONSTRAINT uk_plan_menu UNIQUE (plan_id, menu_id),
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
     type_code       VARCHAR(64)     NOT NULL COMMENT '所属字典类型编码（逻辑外键 → ydsz_sys_dict_type.type_code）',
     item_code       VARCHAR(64)     NOT NULL COMMENT '字典项编码（同 typeCode 内唯一）',
     item_value      VARCHAR(128)    NOT NULL COMMENT '字典项真实值（业务代码引用的枚举值，如 "PAID"）',
-    parent_id       VARCHAR(32)     DEFAULT NULL COMMENT '父级字典项 ID（支持树形字典，如行政区划）',
+    parent_id VARCHAR(36) COMMENT '父级字典项 ID（支持树形字典，如行政区划）' DEFAULT NULL
     description     VARCHAR(512)    DEFAULT NULL COMMENT '字典项描述',
     ext_json        JSON            DEFAULT NULL COMMENT '扩展属性 JSON（承载自定义属性，如色值、图标、URL 等）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',

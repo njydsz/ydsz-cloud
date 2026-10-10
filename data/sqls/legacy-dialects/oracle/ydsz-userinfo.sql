@@ -36,13 +36,13 @@ CREATE TABLE ydsz_idm_account_user (
     avatar                   VARCHAR2(1024 CHAR)      DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT '1',
     user_type                VARCHAR2(32 CHAR)        DEFAULT NULL,
-    company_id               VARCHAR2(32 CHAR)        DEFAULT NULL,
+    company_id               VARCHAR2(36 CHAR) DEFAULT NULL
     last_login_at            TIMESTAMP                DEFAULT NULL,
     last_login_ip            VARCHAR2(64 CHAR)        DEFAULT NULL,
     login_fail_count         NUMBER(10)               NOT NULL DEFAULT 0,
     locked_until             TIMESTAMP                DEFAULT NULL,
-    dept_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
-    leader_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
+    dept_id                  VARCHAR2(36 CHAR) DEFAULT NULL
+    leader_id                VARCHAR2(36 CHAR) DEFAULT NULL
     position_code            VARCHAR2(32 CHAR)        DEFAULT NULL,
     ban_type                 VARCHAR2(32 CHAR)        DEFAULT NULL,
     ban_reason               VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE ydsz_idm_org_company (
     id                       VARCHAR2(36 CHAR)
     company_name             VARCHAR2(128 CHAR)       NOT NULL,
     company_code             VARCHAR2(64 CHAR)        NOT NULL,
-    parent_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    parent_id                VARCHAR2(36 CHAR) NOT NULL DEFAULT '0'
     contact_person           VARCHAR2(64 CHAR)        DEFAULT NULL,
     contact_phone            VARCHAR2(128 CHAR)       DEFAULT NULL,
     address                  VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -140,11 +140,11 @@ CREATE INDEX idx_ydsz_idm_org_company_tenant_is_deleted ON ydsz_idm_org_company 
 
 CREATE TABLE ydsz_idm_org_department (
     id                       VARCHAR2(36 CHAR)
-    parent_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    parent_id                VARCHAR2(36 CHAR) NOT NULL DEFAULT '0'
     dept_name                VARCHAR2(128 CHAR)       NOT NULL,
     dept_code                VARCHAR2(64 CHAR)        NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
-    leader_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
+    leader_id                VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
     CONSTRAINT pk_ydsz_idm_org_department PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_idm_org_department_dept_code UNIQUE (dept_code),
@@ -220,7 +220,7 @@ CREATE INDEX idx_ydsz_idm_role_tenant_is_deleted ON ydsz_idm_role (tenant_id, is
 
 CREATE TABLE ydsz_idm_menu (
     id                       VARCHAR2(36 CHAR)
-    parent_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    parent_id                VARCHAR2(36 CHAR) NOT NULL DEFAULT '0'
     menu_name                VARCHAR2(128 CHAR)       NOT NULL,
     menu_code                VARCHAR2(64 CHAR)        NOT NULL,
     menu_type                VARCHAR2(32 CHAR)        NOT NULL,
@@ -339,8 +339,8 @@ CREATE INDEX idx_ydsz_idm_account_user_language_tenant_is_deleted ON ydsz_idm_ac
 
 CREATE TABLE ydsz_idm_account_user_role (
     id                       VARCHAR2(36 CHAR)
-    user_id                  VARCHAR2(32 CHAR)        NOT NULL,
-    role_id                  VARCHAR2(32 CHAR)        NOT NULL,
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
+    role_id                  VARCHAR2(36 CHAR) NOT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_idm_account_user_role PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -372,8 +372,8 @@ CREATE INDEX idx_ydsz_idm_account_user_role_tenant_is_deleted ON ydsz_idm_accoun
 
 CREATE TABLE ydsz_idm_account_user_post (
     id                       VARCHAR2(36 CHAR)
-    user_id                  VARCHAR2(32 CHAR)        NOT NULL,
-    post_id                  VARCHAR2(32 CHAR)        NOT NULL,
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
+    post_id                  VARCHAR2(36 CHAR) NOT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_idm_account_user_post PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -405,8 +405,8 @@ CREATE INDEX idx_ydsz_idm_account_user_post_tenant_is_deleted ON ydsz_idm_accoun
 
 CREATE TABLE ydsz_idm_account_user_dept (
     id                       VARCHAR2(36 CHAR)
-    user_id                  VARCHAR2(32 CHAR)        NOT NULL,
-    dept_id                  VARCHAR2(32 CHAR)        NOT NULL,
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
+    dept_id                  VARCHAR2(36 CHAR) NOT NULL
     is_primary               NUMBER(1)                NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_idm_account_user_dept PRIMARY KEY (id),
@@ -440,8 +440,8 @@ CREATE INDEX idx_ydsz_idm_account_user_dept_tenant_is_deleted ON ydsz_idm_accoun
 
 CREATE TABLE ydsz_idm_org_company_dept (
     id                       VARCHAR2(36 CHAR)
-    company_id               VARCHAR2(32 CHAR)        NOT NULL,
-    dept_id                  VARCHAR2(32 CHAR)        NOT NULL,
+    company_id               VARCHAR2(36 CHAR) NOT NULL
+    dept_id                  VARCHAR2(36 CHAR) NOT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_idm_org_company_dept PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -473,9 +473,9 @@ CREATE INDEX idx_ydsz_idm_org_company_dept_tenant_is_deleted ON ydsz_idm_org_com
 
 CREATE TABLE ydsz_idm_role_permission (
     id                       VARCHAR2(36 CHAR)
-    role_id                  VARCHAR2(32 CHAR)        NOT NULL,
-    permission_id            VARCHAR2(32 CHAR)        NOT NULL,
-    menu_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
+    role_id                  VARCHAR2(36 CHAR) NOT NULL
+    permission_id            VARCHAR2(36 CHAR) NOT NULL
+    menu_id                  VARCHAR2(36 CHAR) DEFAULT NULL
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_idm_role_permission PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -509,7 +509,7 @@ CREATE INDEX idx_ydsz_idm_role_permission_tenant_is_deleted ON ydsz_idm_role_per
 
 CREATE TABLE ydsz_idm_account_login_history (
     id                       VARCHAR2(36 CHAR)
-    user_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
+    user_id                  VARCHAR2(36 CHAR) DEFAULT NULL
     username                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     login_ip                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     login_result             VARCHAR2(32 CHAR)        NOT NULL,
@@ -543,7 +543,7 @@ CREATE INDEX idx_ydsz_idm_account_login_history_created_at ON ydsz_idm_account_l
 
 CREATE TABLE ydsz_idm_account_password_history (
     id                       VARCHAR2(36 CHAR)
-    user_id                  VARCHAR2(32 CHAR)        NOT NULL,
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
     password_hash            VARCHAR2(255 CHAR)       NOT NULL,
     CONSTRAINT pk_ydsz_idm_account_password_history PRIMARY KEY (id),
     sort NUMBER DEFAULT 0,
@@ -627,7 +627,7 @@ CREATE TABLE ydsz_idm_auth_social_client (
     id                       VARCHAR2(36 CHAR)
     platform                 VARCHAR2(32 CHAR)        NOT NULL,
     platform_name            VARCHAR2(64 CHAR)        DEFAULT NULL,
-    app_id                   VARCHAR2(128 CHAR)       NOT NULL,
+    app_id                   VARCHAR2(36 CHAR) NOT NULL
     app_secret               VARCHAR2(256 CHAR)       NOT NULL,
     scope                    VARCHAR2(256 CHAR)       DEFAULT NULL,
     redirect_uri             VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -670,7 +670,7 @@ CREATE INDEX idx_ydsz_idm_auth_social_client_tenant_is_deleted ON ydsz_idm_auth_
 CREATE TABLE ydsz_idm_identity_saml_config (
     id                       VARCHAR2(36 CHAR)
     name                     VARCHAR2(64 CHAR)        NOT NULL,
-    entity_id                VARCHAR2(512 CHAR)       NOT NULL,
+    entity_id                VARCHAR2(36 CHAR) NOT NULL
     sso_url                  VARCHAR2(512 CHAR)       DEFAULT NULL,
     certificate              CLOB                     DEFAULT NULL,
     email_attribute          VARCHAR2(64 CHAR)        DEFAULT 'email',
@@ -713,7 +713,7 @@ CREATE INDEX idx_ydsz_idm_identity_saml_config_tenant_is_deleted ON ydsz_idm_ide
 
 CREATE TABLE ydsz_idm_identity_oauth2_application (
     id                       VARCHAR2(36 CHAR)
-    client_id                VARCHAR2(128 CHAR)       NOT NULL,
+    client_id                VARCHAR2(36 CHAR) NOT NULL
     client_name              VARCHAR2(256 CHAR)       NOT NULL,
     client_secret            VARCHAR2(256 CHAR)       NOT NULL,
     client_type              VARCHAR2(16 CHAR)        NOT NULL,
@@ -760,10 +760,10 @@ CREATE INDEX idx_ydsz_idm_identity_oauth2_application_tenant_is_deleted ON ydsz_
 
 CREATE TABLE ydsz_idm_auth_social_account (
     id                       VARCHAR2(36 CHAR)
-    user_id                  VARCHAR2(32 CHAR)        NOT NULL,
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
     platform                 VARCHAR2(32 CHAR)        NOT NULL,
-    open_id                  VARCHAR2(128 CHAR)       NOT NULL,
-    union_id                 VARCHAR2(128 CHAR)       DEFAULT NULL,
+    open_id                  VARCHAR2(36 CHAR) NOT NULL
+    union_id                 VARCHAR2(36 CHAR) DEFAULT NULL
     nickname                 VARCHAR2(128 CHAR)       DEFAULT NULL,
     avatar_url               VARCHAR2(1024 CHAR)      DEFAULT NULL,
     access_token             VARCHAR2(1024 CHAR)      DEFAULT NULL,
@@ -809,7 +809,7 @@ CREATE TABLE ydsz_idm_identity_security_alert (
     id                       VARCHAR2(36 CHAR)
     alert_type               VARCHAR2(32 CHAR)        NOT NULL,
     risk_level               VARCHAR2(16 CHAR)        NOT NULL,
-    user_id                  VARCHAR2(64 CHAR)        DEFAULT NULL,
+    user_id                  VARCHAR2(36 CHAR) DEFAULT NULL
     username                 VARCHAR2(128 CHAR)       DEFAULT NULL,
     source_ip                VARCHAR2(64 CHAR)        DEFAULT NULL,
     title                    VARCHAR2(256 CHAR)       NOT NULL,
@@ -856,8 +856,8 @@ CREATE INDEX idx_ydsz_idm_identity_security_alert_tenant_is_deleted ON ydsz_idm_
 
 CREATE TABLE ydsz_idm_auth_credential (
     id                       VARCHAR2(36 CHAR),
-    credential_id            VARCHAR2(512 CHAR)       NOT NULL,
-    user_id                  VARCHAR2(32 CHAR)        NOT NULL,
+    credential_id            VARCHAR2(36 CHAR) NOT NULL
+    user_id                  VARCHAR2(36 CHAR) NOT NULL
     public_key               VARCHAR2(1024 CHAR)      NOT NULL,
     sign_count               NUMBER(19)               NOT NULL DEFAULT 0,
     credential_type          VARCHAR2(32 CHAR)        DEFAULT NULL,

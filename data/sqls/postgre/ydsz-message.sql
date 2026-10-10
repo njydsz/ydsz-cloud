@@ -147,12 +147,12 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_notification (
     level                    VARCHAR(32)              NOT NULL DEFAULT 'INFO',
     category                 VARCHAR(32)              NOT NULL DEFAULT 'SYSTEM',
     priority                 VARCHAR(32)              NOT NULL DEFAULT 'NORMAL',
-    sender_id                VARCHAR(32)              DEFAULT NULL,
-    receiver_id              VARCHAR(32)              NOT NULL,
+    sender_id                VARCHAR(36)              DEFAULT NULL,
+    receiver_id              VARCHAR(36)              NOT NULL,
     biz_type                 VARCHAR(64)              DEFAULT NULL,
-    biz_id                   VARCHAR(64)              DEFAULT NULL,
+    biz_id                   VARCHAR(36)              DEFAULT NULL,
     message_group            VARCHAR(64)              DEFAULT NULL,
-    batch_id                 VARCHAR(64)              DEFAULT NULL,
+    batch_id                 VARCHAR(36)              DEFAULT NULL,
     action_url               VARCHAR(1024)            DEFAULT NULL,
     action_text              VARCHAR(128)             DEFAULT NULL,
     icon                     VARCHAR(255)             DEFAULT NULL,
@@ -215,9 +215,9 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_notification_tenant_is_deleted ON ydsz_m
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel (
     id                       VARCHAR(36)
-    user_id                  VARCHAR(32)              NOT NULL,
+    user_id                  VARCHAR(36)              NOT NULL,
     channel_type             VARCHAR(32)              NOT NULL,
-    channel_user_id          VARCHAR(128)             NOT NULL,
+    channel_user_id          VARCHAR(36)             NOT NULL,
     verified                 SMALLINT                 NOT NULL DEFAULT 0,
     is_primary               SMALLINT                 NOT NULL DEFAULT 0,
     extra                    JSONB                    DEFAULT NULL,
@@ -256,7 +256,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_user_channel_tenant_is_deleted ON ydsz_m
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_subscription (
     id                       VARCHAR(36)
-    user_id                  VARCHAR(32)              NOT NULL,
+    user_id                  VARCHAR(36)              NOT NULL,
     topic_code               VARCHAR(64)              NOT NULL,
     channel                  VARCHAR(32)              NOT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'SUBSCRIBED',
@@ -297,7 +297,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_subscription_tenant_is_deleted ON ydsz_m
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_preference (
     id                       VARCHAR(36)
-    user_id                  VARCHAR(32)              NOT NULL,
+    user_id                  VARCHAR(36)              NOT NULL,
     channel                  VARCHAR(32)              NOT NULL,
     biz_type                 VARCHAR(64)              NOT NULL DEFAULT '__DEFAULT__',
     is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
@@ -517,7 +517,7 @@ COMMENT ON COLUMN ydsz_msg_tenant_config.status IS '配置状态: ENABLED / DISA
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_batch (
     id                       VARCHAR(36)
-    batch_id                 VARCHAR(64)              NOT NULL,
+    batch_id                 VARCHAR(36)              NOT NULL,
     batch_name               VARCHAR(128)             DEFAULT NULL,
     channel                  VARCHAR(32)              NOT NULL,
     template_code            VARCHAR(64)              DEFAULT NULL,
@@ -531,7 +531,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_batch (
     error_message            VARCHAR(512)             DEFAULT NULL,
     started_at               TIMESTAMP                DEFAULT NULL,
     completed_at             TIMESTAMP                DEFAULT NULL,
-    sender_id                VARCHAR(32)              DEFAULT NULL,
+    sender_id                VARCHAR(36)              DEFAULT NULL,
     priority                 VARCHAR(32)              NOT NULL DEFAULT 'NORMAL',
     payload                  JSONB                    DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_batch PRIMARY KEY (id),
@@ -629,7 +629,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_aggregate_tenant_is_deleted ON ydsz_msg_
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_offline (
     id                       VARCHAR(36)
-    user_id                  VARCHAR(32)              NOT NULL,
+    user_id                  VARCHAR(36)              NOT NULL,
     msg_type                 VARCHAR(32)              DEFAULT NULL,
     payload                  JSONB                    NOT NULL,
     msg_timestamp            BIGINT                   DEFAULT NULL,
@@ -672,7 +672,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_log (
     id                       VARCHAR(36)
     channel                  VARCHAR(32)              NOT NULL,
     biz_type                 VARCHAR(64)              DEFAULT NULL,
-    biz_id                   VARCHAR(64)              DEFAULT NULL,
+    biz_id                   VARCHAR(36)              DEFAULT NULL,
     receiver                 VARCHAR(128)             DEFAULT NULL,
     template_code            VARCHAR(64)              DEFAULT NULL,
     template_params          JSONB                    DEFAULT NULL,
@@ -680,10 +680,10 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_log (
     status                   VARCHAR(32)              NOT NULL DEFAULT 'PENDING',
     error_message            TEXT                    ,
     priority                 VARCHAR(32)              NOT NULL DEFAULT 'NORMAL',
-    sender_id                VARCHAR(32)              DEFAULT NULL,
+    sender_id                VARCHAR(36)              DEFAULT NULL,
     message_group            VARCHAR(64)              DEFAULT NULL,
-    batch_id                 VARCHAR(64)              DEFAULT NULL,
-    route_rule_id            VARCHAR(32)              DEFAULT NULL,
+    batch_id                 VARCHAR(36)              DEFAULT NULL,
+    route_rule_id            VARCHAR(36)              DEFAULT NULL,
     canary                   SMALLINT                 DEFAULT 0,
     canary_key               VARCHAR(128)             DEFAULT NULL,
     dedup_key                VARCHAR(128)             DEFAULT NULL,
@@ -693,14 +693,14 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_log (
     receipt_at               TIMESTAMP                DEFAULT NULL,
     retry_count              INTEGER                  NOT NULL DEFAULT 0,
     next_retry_at            TIMESTAMP                DEFAULT NULL,
-    provider_trace_id        VARCHAR(128)             DEFAULT NULL,
+    provider_trace_id        VARCHAR(36)             DEFAULT NULL,
     cost_ms                  BIGINT                   DEFAULT NULL,
     cost                     NUMERIC(20,6)            DEFAULT NULL,
-    trace_id                 VARCHAR(64)              DEFAULT NULL,
-    msg_id                   VARCHAR(64)              DEFAULT NULL,
+    trace_id                 VARCHAR(36)              DEFAULT NULL,
+    msg_id                   VARCHAR(36)              DEFAULT NULL,
     topic                    VARCHAR(128)             DEFAULT NULL,
     reconsume_times          INTEGER                  DEFAULT NULL,
-    parent_msg_id            VARCHAR(64)              DEFAULT NULL,
+    parent_msg_id            VARCHAR(36)              DEFAULT NULL,
     scheduled_at             TIMESTAMP                DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_log PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
@@ -772,8 +772,8 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_tenant_is_deleted ON ydsz_msg_log (t
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_receipt (
     id                       VARCHAR(36)
-    log_id                   VARCHAR(32)              NOT NULL,
-    provider_trace_id        VARCHAR(128)             DEFAULT NULL,
+    log_id                   VARCHAR(36)              NOT NULL,
+    provider_trace_id        VARCHAR(36)             DEFAULT NULL,
     receipt_type             VARCHAR(32)              NOT NULL,
     receipt_time             TIMESTAMP                NOT NULL,
     provider_code            VARCHAR(64)              DEFAULT NULL,
@@ -816,14 +816,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_receipt_tenant_is_deleted ON ydsz_msg_re
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_trace (
     id                       VARCHAR(36)
-    msg_id                   VARCHAR(64)              NOT NULL,
-    trace_id                 VARCHAR(64)              DEFAULT NULL,
+    msg_id                   VARCHAR(36)              NOT NULL,
+    trace_id                 VARCHAR(36)              DEFAULT NULL,
     node                     VARCHAR(64)              NOT NULL,
     status                   VARCHAR(32)              NOT NULL,
     channel                  VARCHAR(32)              DEFAULT NULL,
     receiver                 VARCHAR(128)             DEFAULT NULL,
     biz_type                 VARCHAR(64)              DEFAULT NULL,
-    biz_id                   VARCHAR(64)              DEFAULT NULL,
+    biz_id                   VARCHAR(36)              DEFAULT NULL,
     template_code            VARCHAR(64)              DEFAULT NULL,
     cost_ms                  BIGINT                   DEFAULT NULL,
     message                  VARCHAR(512)             DEFAULT NULL,
@@ -863,9 +863,9 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_trace_event_at ON ydsz_msg_trace (event_
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_feedback (
     id                       VARCHAR(36)
-    msg_id                   VARCHAR(64)              NOT NULL,
-    notification_id          VARCHAR(32)              DEFAULT NULL,
-    user_id                  VARCHAR(32)              NOT NULL,
+    msg_id                   VARCHAR(36)              NOT NULL,
+    notification_id          VARCHAR(36)              DEFAULT NULL,
+    user_id                  VARCHAR(36)              NOT NULL,
     channel                  VARCHAR(32)              DEFAULT NULL,
     biz_type                 VARCHAR(64)              DEFAULT NULL,
     rating                   INTEGER                  NOT NULL,
@@ -909,7 +909,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_feedback_tenant_is_deleted ON ydsz_msg_f
 CREATE TABLE IF NOT EXISTS ydsz_msg_outbox (
     id                       VARCHAR(36)
     aggregate_type           VARCHAR(128)             NOT NULL,
-    aggregate_id             VARCHAR(128)             NOT NULL,
+    aggregate_id             VARCHAR(36)             NOT NULL,
     event_type               VARCHAR(128)             NOT NULL,
     payload                  JSONB                    NOT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'PENDING',

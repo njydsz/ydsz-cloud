@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_category (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     category_code   VARCHAR(64)     NOT NULL COMMENT '分类编码（唯一，业务语义，建议 snake_case）',
     category_name   VARCHAR(128)    NOT NULL COMMENT '分类名称（前端展示）',
-    parent_id       VARCHAR(32)     DEFAULT NULL COMMENT '父分类 ID（支持多级树形结构，顶级为 NULL）',
+    parent_id VARCHAR(36) COMMENT '父分类 ID（支持多级树形结构，顶级为 NULL）' DEFAULT NULL
     sort_num        INT             NOT NULL DEFAULT 0 COMMENT '排序号（越小越靠前）',
     icon            VARCHAR(128)    DEFAULT NULL COMMENT '图标（前端展示用，如 Element Plus icon 名称）',
     remark          VARCHAR(512)    DEFAULT NULL COMMENT '备注（说明分类的业务用途）',
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_definition (
     listener_path       VARCHAR(128)    DEFAULT NULL COMMENT '监听器 Spring Bean 路径（如 projectFlowListener）',
     ext                 JSON            DEFAULT NULL COMMENT '扩展字段 JSON（业务侧自定义元数据：超时配置/抄送规则/审批人默认值等）',
     description         VARCHAR(512)    DEFAULT NULL COMMENT '流程描述（说明流程的业务用途与适用场景）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（跨系统全链路追踪，与 ydsz_provider_trace_id 协议对齐）',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID（跨系统全链路追踪，与 ydsz_provider_trace_id 协议对齐）' DEFAULT NULL
     canary_percent      INT             NOT NULL DEFAULT 0 COMMENT '灰度比例 0-100（0=全量稳定版，100=全量灰度版，1-99 按策略切流）',
     canary_status       VARCHAR(32)     DEFAULT NULL COMMENT '灰度状态（NONE=未启用，CANARYING=灰度中，PROMOTED=已全量，ROLLED_BACK=已回滚）',
     canary_strategy     VARCHAR(32)     DEFAULT NULL COMMENT '灰度切流策略（USER_HASH=按发起人取模，RANDOM=随机，WHITELIST=白名单）',
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_template (
     bpmn_xml            LONGTEXT        COMMENT 'BPMN 2.0 XML 流程定义（<bpmn:definitions>...</bpmn:definitions>）',
     form_path           VARCHAR(1024)   DEFAULT NULL COMMENT '默认表单路径（导入后默认关联的审批表单）',
     use_count           INT             NOT NULL DEFAULT 0 COMMENT '使用次数（被导入到流程定义的累计计数，用于热门度排序）',
-    parent_template_id  VARCHAR(32)     DEFAULT NULL COMMENT '父模板 ID（跨模板继承关系，STANDALONE 时为 NULL）',
+    parent_template_id VARCHAR(36) COMMENT '父模板 ID（跨模板继承关系，STANDALONE 时为 NULL）' DEFAULT NULL
     version             INT             NOT NULL DEFAULT 1 COMMENT '模板版本号（从 1 开始单调递增，同一 templateCode 下唯一）',
     version_label       VARCHAR(32)     DEFAULT NULL COMMENT '版本标签（如 26.10.01 / 26.10.01-rc1，可选可读标识）',
     inherit_type        VARCHAR(32)     DEFAULT NULL COMMENT '继承类型（STANDALONE=独立，CLONE=克隆，INHERIT=继承）',
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_template (
 -- 流程节点表（流程定义中的节点：开始/审批/网关/结束/子流程/抄送）
 CREATE TABLE IF NOT EXISTS ydsz_flow_node (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    definition_id       VARCHAR(32)     NOT NULL COMMENT '所属流程定义 ID（关联 ydsz_flow_definition.id）',
+    definition_id VARCHAR(36) NOT NULL COMMENT '所属流程定义 ID（关联 ydsz_flow_definition.id）'
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码（冗余字段，避免 JOIN 流程定义）',
     node_type           INT             NOT NULL COMMENT '节点类型（0=开始，1=审批，2=网关，3=结束，4=子流程，5=抄送）',
     node_code           VARCHAR(64)     NOT NULL COMMENT '节点编码（流程内唯一，用于 SpEL 引用与跳转）',
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_node (
     ext                 JSON            DEFAULT NULL COMMENT '扩展字段 JSON（priority/emptyStrategy/collection/votePassRate/userWeights/autoDedup/freeJump）',
     form_fields_config  JSON            DEFAULT NULL COMMENT '表单字段权限配置 JSON（{"fieldKey":"EDIT|READONLY|HIDDEN",...}）',
     sla_config          JSON            DEFAULT NULL COMMENT 'SLA 超时配置 JSON（{"timeoutMinutes":120,"action":"REMIND|ESCALATE|AUTO_PASS|AUTO_REJECT",...}）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（关联 MDC traceId，用于跨服务追踪）',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID（关联 MDC traceId，用于跨服务追踪）' DEFAULT NULL
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     CONSTRAINT uk_definition_node_code UNIQUE (definition_id, node_code),
@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_node (
 -- 节点跳转关联表（流程图有向边，对应 BPMN sequenceFlow）
 CREATE TABLE IF NOT EXISTS ydsz_flow_skip (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    definition_id       VARCHAR(32)     NOT NULL COMMENT '所属流程定义 ID',
+    definition_id VARCHAR(36) NOT NULL COMMENT '所属流程定义 ID'
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码（冗余字段）',
     skip_name           VARCHAR(128)    DEFAULT NULL COMMENT '跳转名称（线上标签，如「同意」「金额 > 1万」）',
     skip_type           VARCHAR(32)     NOT NULL COMMENT '跳转类型（FlowSkipType 枚举名，如 PASS/REJECT）',
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_skip (
     coordinate_next     JSON            DEFAULT NULL COMMENT '下一节点坐标 JSON（设计器渲染终点）',
     skip_list           JSON            DEFAULT NULL COMMENT '跳转路由集合 JSON',
     ext                 JSON            DEFAULT NULL COMMENT '扩展字段 JSON（存储 sourceRef / sequenceFlowId 等 BPMN 派生信息）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID' DEFAULT NULL
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_definition_id (definition_id),
@@ -204,13 +204,13 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_instance (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码（业务侧使用，如 project_initiation）',
     flow_name           VARCHAR(128)    NOT NULL COMMENT '流程名称（冗余，避免 JOIN 流程定义）',
-    definition_id       VARCHAR(32)     NOT NULL COMMENT '流程定义 ID（关联 ydsz_flow_definition.id）',
+    definition_id VARCHAR(36) NOT NULL COMMENT '流程定义 ID（关联 ydsz_flow_definition.id）'
     flow_version        VARCHAR(32)     NOT NULL COMMENT '流程版本（关联 ydsz_flow_definition.flow_version）',
     business_type       VARCHAR(64)     NOT NULL COMMENT '业务类型（如 PROJECT / CONTRACT / LEAVE）',
-    business_id         VARCHAR(64)     NOT NULL COMMENT '业务单据 ID（业务侧主键）',
+    business_id VARCHAR(36) NOT NULL COMMENT '业务单据 ID（业务侧主键）'
     business_no         VARCHAR(64)     DEFAULT NULL COMMENT '业务单据编号（业务侧编号，可读）',
     title               VARCHAR(128)    DEFAULT NULL COMMENT '流程标题（展示用，默认为「{业务类型}-{业务编号}」）',
-    initiator_id        VARCHAR(32)     NOT NULL COMMENT '发起人 ID（关联 ydsz_user_account.id）',
+    initiator_id VARCHAR(36) NOT NULL COMMENT '发起人 ID（关联 ydsz_user_account.id）'
     initiator_name      VARCHAR(64)     DEFAULT NULL COMMENT '发起人姓名（冗余）',
     current_node_code   VARCHAR(64)     DEFAULT NULL COMMENT '当前节点编码（流程图高亮 + 进度提示）',
     current_node_name   VARCHAR(128)    DEFAULT NULL COMMENT '当前节点名称（冗余）',
@@ -220,9 +220,9 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_instance (
     start_at            DATETIME        DEFAULT NULL COMMENT '启动时间',
     end_at              DATETIME        DEFAULT NULL COMMENT '结束时间（终态实例有值，活跃实例为 NULL）',
     duration_ms         BIGINT          DEFAULT NULL COMMENT '流程耗时（毫秒，endAt - startAt，结束时由引擎填充）',
-    parent_instance_id  VARCHAR(32)     DEFAULT NULL COMMENT '父流程实例 ID（子流程场景，可空）',
+    parent_instance_id VARCHAR(36) COMMENT '父流程实例 ID（子流程场景，可空）' DEFAULT NULL
     parent_node_code    VARCHAR(64)     DEFAULT NULL COMMENT '父流程中触发子流程的节点编码（可空）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（关联 MDC traceId，用于跨服务追踪）',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID（关联 MDC traceId，用于跨服务追踪）' DEFAULT NULL
     due_at              DATETIME        DEFAULT NULL COMMENT '子流程超时时间（超时自动终止子流程，可空）',
     reject_reason       VARCHAR(512)    DEFAULT NULL COMMENT '退回原因（最近一次 REJECT 操作的备注，重审时清空）',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
@@ -245,21 +245,21 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_instance (
 -- 待办任务运行表（我的待办核心查询表，任务完成后归档至 ydsz_flow_his_task）
 CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID（关联 ydsz_flow_instance.id）',
+    instance_id VARCHAR(36) NOT NULL COMMENT '流程实例 ID（关联 ydsz_flow_instance.id）'
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码（冗余字段）',
-    definition_id       VARCHAR(32)     NOT NULL COMMENT '流程定义 ID',
+    definition_id VARCHAR(36) NOT NULL COMMENT '流程定义 ID'
     node_code           VARCHAR(64)     NOT NULL COMMENT '节点编码',
     node_name           VARCHAR(128)    DEFAULT NULL COMMENT '节点名称（冗余）',
     node_type           INT             DEFAULT NULL COMMENT '节点类型（FlowNodeType.code）',
     business_type       VARCHAR(64)     DEFAULT NULL COMMENT '业务类型',
-    business_id         VARCHAR(64)     DEFAULT NULL COMMENT '业务单据 ID',
+    business_id VARCHAR(36) COMMENT '业务单据 ID' DEFAULT NULL
     business_no         VARCHAR(64)     DEFAULT NULL COMMENT '业务单据编号',
     flow_name           VARCHAR(128)    DEFAULT NULL COMMENT '流程名称（冗余）',
     title               VARCHAR(128)    DEFAULT NULL COMMENT '任务标题（默认为「{流程名}-{节点名}-{业务编号}」）',
-    assignor_id         VARCHAR(32)     DEFAULT NULL COMMENT '委托人 ID（委托操作产生，被委托人完成任务后回填）',
+    assignor_id VARCHAR(36) COMMENT '委托人 ID（委托操作产生，被委托人完成任务后回填）' DEFAULT NULL
     assignor_name       VARCHAR(64)     DEFAULT NULL COMMENT '委托人姓名（冗余）',
     assignee_type       VARCHAR(32)     DEFAULT NULL COMMENT '办理人类型（FlowAssigneeType 枚举名：USER/ROLE/DEPT/POST）',
-    assignee_id         VARCHAR(64)     NOT NULL COMMENT '办理人 ID（按 type 解析，USER 传 userId，ROLE 传 roleCode）',
+    assignee_id VARCHAR(36) NOT NULL COMMENT '办理人 ID（按 type 解析，USER 传 userId，ROLE 传 roleCode）'
     assignee_name       VARCHAR(64)     DEFAULT NULL COMMENT '办理人姓名（冗余）',
     permission_flag     VARCHAR(512)    DEFAULT NULL COMMENT '办理人权限标识（原始 SpEL 表达式，存档便于回溯）',
     perform_type        VARCHAR(32)     DEFAULT NULL COMMENT '会签类型（FlowPerformType 枚举名：OR=或签，PARALLEL=并行会签，WEIGHTED=票签）',
@@ -282,7 +282,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
     sla_action          VARCHAR(32)     DEFAULT NULL COMMENT '最终触发的 SLA 动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）',
     sla_escalated       INT             NOT NULL DEFAULT 0 COMMENT '是否已升级（0=否，1=是，避免重复升级）',
     iter_var            VARCHAR(128)    NOT NULL DEFAULT '' COMMENT 'FOREACH 节点当前迭代元素值（如 userId/deptId，非循环节点为空字符串）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID' DEFAULT NULL
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     CONSTRAINT uk_instance_node_assignee UNIQUE (instance_id, node_code, assignee_id, iter_var),
@@ -302,18 +302,18 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
 -- 流程任务-办理人关系表（会签多办理人、加签/减签多对多关系）
 CREATE TABLE IF NOT EXISTS ydsz_flow_user (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    task_id             VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_flow_run_task.id）',
-    instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID（冗余便于查询）',
+    task_id VARCHAR(36) NOT NULL COMMENT '任务 ID（关联 ydsz_flow_run_task.id）'
+    instance_id VARCHAR(36) NOT NULL COMMENT '流程实例 ID（冗余便于查询）'
     node_code           VARCHAR(64)     NOT NULL COMMENT '节点编码',
     user_type           VARCHAR(32)     DEFAULT NULL COMMENT '用户类型（USER=具体用户，ROLE=角色展开，DEPT=部门展开）',
-    user_id             VARCHAR(64)     NOT NULL COMMENT '用户/角色/部门 ID',
+    user_id VARCHAR(36) NOT NULL COMMENT '用户/角色/部门 ID'
     user_name           VARCHAR(64)     DEFAULT NULL COMMENT '用户姓名（冗余）',
     processed           INT             NOT NULL DEFAULT 0 COMMENT '是否已处理（0=否，1=是）',
     process_at          DATETIME        DEFAULT NULL COMMENT '处理时间',
     comment             VARCHAR(512)    DEFAULT NULL COMMENT '审批意见',
     weight              INT             NOT NULL DEFAULT 1 COMMENT '办理人权重（默认 1，可配置 2/3 等，用于加权会签）',
     sign_type           VARCHAR(32)     NOT NULL DEFAULT 'ORIGINAL' COMMENT '加签类型（ORIGINAL=原始审批人，BEFORE=前加签，AFTER=后加签，PARALLEL=并加签，ADD=追加处理人）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID' DEFAULT NULL
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     CONSTRAINT uk_task_user (task_id, user_id, sign_type),
@@ -331,19 +331,19 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_user (
 -- 工作流定时器表（中间定时器 / 边界定时器调度，对标 BPMN TimerEvent）
 CREATE TABLE IF NOT EXISTS ydsz_flow_timer (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID',
-    definition_id       VARCHAR(32)     NOT NULL COMMENT '流程定义 ID',
+    instance_id VARCHAR(36) NOT NULL COMMENT '流程实例 ID'
+    definition_id VARCHAR(36) NOT NULL COMMENT '流程定义 ID'
     flow_code           VARCHAR(64)     DEFAULT NULL COMMENT '流程编码（冗余）',
     node_code           VARCHAR(64)     NOT NULL COMMENT '节点编码',
     node_name           VARCHAR(128)    DEFAULT NULL COMMENT '节点名称（冗余）',
     timer_type          VARCHAR(32)     NOT NULL COMMENT '定时器类型（INTERMEDIATE=中间定时器，BOUNDARY=边界定时器）',
-    boundary_task_id    VARCHAR(32)     DEFAULT NULL COMMENT '边界定时器关联的 userTask ID（INTERMEDIATE 为 NULL）',
+    boundary_task_id VARCHAR(36) COMMENT '边界定时器关联的 userTask ID（INTERMEDIATE 为 NULL）' DEFAULT NULL
     fire_at             DATETIME        NOT NULL COMMENT '到点时间（cronjob 按 fire_at <= now() AND timer_status = PENDING 扫描）',
     cycle               VARCHAR(64)     DEFAULT NULL COMMENT 'CRON 表达式（循环定时器，可空）',
     timer_status        VARCHAR(32)     NOT NULL DEFAULT 'PENDING' COMMENT '状态（PENDING=待触发，FIRED=已触发，CANCELLED=已取消）',
     fired_at            DATETIME        DEFAULT NULL COMMENT '实际触发时间',
     cancel_reason       VARCHAR(512)    DEFAULT NULL COMMENT '取消原因（userTask 完成时关闭）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID' DEFAULT NULL
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_fire_at (fire_at),
@@ -362,21 +362,21 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_timer (
 -- 工作流事件订阅表（消息/错误/信号事件运行时等待，对标 BPMN CatchEvent）
 CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    instance_id             VARCHAR(32)     NOT NULL COMMENT '流程实例 ID',
-    definition_id           VARCHAR(32)     NOT NULL COMMENT '流程定义 ID',
+    instance_id VARCHAR(36) NOT NULL COMMENT '流程实例 ID'
+    definition_id VARCHAR(36) NOT NULL COMMENT '流程定义 ID'
     flow_code               VARCHAR(64)     DEFAULT NULL COMMENT '流程编码（冗余）',
     node_code               VARCHAR(64)     NOT NULL COMMENT '节点编码（事件捕获节点）',
     node_name               VARCHAR(128)    DEFAULT NULL COMMENT '节点名称（冗余）',
     event_type              VARCHAR(32)     NOT NULL COMMENT '事件类型（MESSAGE=消息，ERROR=错误，SIGNAL=信号）',
     event_ref               VARCHAR(64)     NOT NULL COMMENT '事件引用标识（messageRef / errorRef / signalRef）',
     correlation_key         VARCHAR(64)     DEFAULT NULL COMMENT '消息关联键（业务级匹配，SIGNAL 广播匹配时可空）',
-    boundary_task_id        VARCHAR(32)     DEFAULT NULL COMMENT '边界事件关联的 userTask ID（中间事件为 NULL）',
+    boundary_task_id VARCHAR(36) COMMENT '边界事件关联的 userTask ID（中间事件为 NULL）' DEFAULT NULL
     subscription_status     VARCHAR(32)     NOT NULL DEFAULT 'WAITING' COMMENT '订阅状态（WAITING=等待中，COMPLETED=已完成，CANCELLED=已取消）',
     payload                 JSON            DEFAULT NULL COMMENT '触发时携带的业务数据 JSON',
     triggered_at            DATETIME        DEFAULT NULL COMMENT '实际触发时间',
     trigger_source          VARCHAR(32)     DEFAULT NULL COMMENT '触发来源（API=外部系统调用，SERVICE_TASK=服务任务抛出，BOUNDARY=边界事件超时）',
     cancel_reason           VARCHAR(512)    DEFAULT NULL COMMENT '取消原因',
-    provider_trace_id       VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID' DEFAULT NULL
     status                  VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted                 TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_instance_id (instance_id),
@@ -400,20 +400,20 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
 -- 历史任务表（已完成任务归档，按月分区，审批历史查询表）
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID（归档时从 ydsz_flow_run_task.instance_id 复制）',
-    task_id             VARCHAR(32)     NOT NULL COMMENT '原始任务 ID（指向源 ydsz_flow_run_task.id，归档后源表清理前可关联）',
+    instance_id VARCHAR(36) NOT NULL COMMENT '流程实例 ID（归档时从 ydsz_flow_run_task.instance_id 复制）'
+    task_id VARCHAR(36) NOT NULL COMMENT '原始任务 ID（指向源 ydsz_flow_run_task.id，归档后源表清理前可关联）'
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码',
-    definition_id       VARCHAR(32)     NOT NULL COMMENT '流程定义 ID',
+    definition_id VARCHAR(36) NOT NULL COMMENT '流程定义 ID'
     node_code           VARCHAR(64)     NOT NULL COMMENT '节点编码',
     node_name           VARCHAR(128)    DEFAULT NULL COMMENT '节点名称（冗余）',
     node_type           INT             DEFAULT NULL COMMENT '节点类型（FlowNodeType.code）',
     business_type       VARCHAR(64)     DEFAULT NULL COMMENT '业务类型',
-    business_id         VARCHAR(64)     DEFAULT NULL COMMENT '业务单据 ID',
+    business_id VARCHAR(36) COMMENT '业务单据 ID' DEFAULT NULL
     business_no         VARCHAR(64)     DEFAULT NULL COMMENT '业务单据编号',
     flow_name           VARCHAR(128)    DEFAULT NULL COMMENT '流程名称（冗余）',
     title               VARCHAR(128)    DEFAULT NULL COMMENT '任务标题',
     assignee_type       VARCHAR(32)     DEFAULT NULL COMMENT '办理人类型（FlowAssigneeType 枚举名）',
-    assignee_id         VARCHAR(64)     DEFAULT NULL COMMENT '办理人 ID',
+    assignee_id VARCHAR(36) COMMENT '办理人 ID' DEFAULT NULL
     assignee_name       VARCHAR(64)     DEFAULT NULL COMMENT '办理人姓名（冗余）',
     perform_type        VARCHAR(32)     DEFAULT NULL COMMENT '会签类型（FlowPerformType 枚举名）',
     approve_count       INT             DEFAULT NULL COMMENT '会签所需通过人数',
@@ -425,7 +425,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
     finish_at           DATETIME        DEFAULT NULL COMMENT '完成时间（终态时刻）',
     effective_time      DATETIME        DEFAULT NULL COMMENT '生效时间（P2-1 穿越时空/补录审批，从源 task 复制，NULL=即时生效）',
     duration_ms         BIGINT          DEFAULT NULL COMMENT '耗时（毫秒）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（保留原始 trace 便于历史回溯）',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID（保留原始 trace 便于历史回溯）' DEFAULT NULL
     iter_var            VARCHAR(128)    DEFAULT NULL COMMENT 'FOREACH 迭代元素值（从源 task 复制，非循环节点为 NULL）',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
@@ -447,13 +447,13 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码',
     flow_name           VARCHAR(128)    DEFAULT NULL COMMENT '流程名称（冗余）',
-    definition_id       VARCHAR(32)     NOT NULL COMMENT '流程定义 ID',
+    definition_id VARCHAR(36) NOT NULL COMMENT '流程定义 ID'
     flow_version        VARCHAR(32)     DEFAULT NULL COMMENT '流程版本',
     business_type       VARCHAR(64)     NOT NULL COMMENT '业务类型',
-    business_id         VARCHAR(64)     NOT NULL COMMENT '业务单据 ID',
+    business_id VARCHAR(36) NOT NULL COMMENT '业务单据 ID'
     business_no         VARCHAR(64)     DEFAULT NULL COMMENT '业务单据编号',
     title               VARCHAR(128)    DEFAULT NULL COMMENT '流程标题',
-    initiator_id        VARCHAR(32)     NOT NULL COMMENT '发起人 ID',
+    initiator_id VARCHAR(36) NOT NULL COMMENT '发起人 ID'
     initiator_name      VARCHAR(64)     DEFAULT NULL COMMENT '发起人姓名（冗余）',
     current_node_code   VARCHAR(64)     DEFAULT NULL COMMENT '当前节点编码（终态时为结束节点编码）',
     current_node_name   VARCHAR(128)    DEFAULT NULL COMMENT '当前节点名称（冗余）',
@@ -464,7 +464,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
     end_at              DATETIME        DEFAULT NULL COMMENT '结束时间',
     duration_ms         BIGINT          DEFAULT NULL COMMENT '流程耗时（毫秒）',
     archived_at         DATETIME        DEFAULT NULL COMMENT '归档时间（由调度器在迁移时填充）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（保留原始 trace 便于历史回溯）',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID（保留原始 trace 便于历史回溯）' DEFAULT NULL
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     CONSTRAINT uk_business_type_id UNIQUE (business_type, business_id),
@@ -486,17 +486,17 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
 -- 流程评论表（审批人之间的沟通讨论，支持多级回复，可编辑删除）
 CREATE TABLE IF NOT EXISTS ydsz_flow_comment (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    instance_id         VARCHAR(32)     NOT NULL COMMENT '关联流程实例 ID',
-    task_id             VARCHAR(32)     DEFAULT NULL COMMENT '关联任务 ID（实例级评论可为空）',
+    instance_id VARCHAR(36) NOT NULL COMMENT '关联流程实例 ID'
+    task_id VARCHAR(36) COMMENT '关联任务 ID（实例级评论可为空）' DEFAULT NULL
     node_code           VARCHAR(64)     DEFAULT NULL COMMENT '关联节点编码（任务级评论时记录所在节点）',
-    user_id             VARCHAR(32)     NOT NULL COMMENT '评论人 ID',
+    user_id VARCHAR(36) NOT NULL COMMENT '评论人 ID'
     user_name           VARCHAR(64)     DEFAULT NULL COMMENT '评论人姓名（冗余）',
     content             VARCHAR(2000)   NOT NULL COMMENT '评论内容（TEXT 类型，最大长度 2000）',
     type                VARCHAR(32)     NOT NULL DEFAULT 'COMMENT' COMMENT '评论类型（COMMENT=普通评论，QUESTION=提问，REPLY=回复）',
-    parent_comment_id   VARCHAR(32)     DEFAULT NULL COMMENT '父评论 ID（一级评论为 NULL）',
-    reply_to_user_id    VARCHAR(32)     DEFAULT NULL COMMENT '被回复人 ID（回复某条评论时标记，一级评论为 NULL）',
+    parent_comment_id VARCHAR(36) COMMENT '父评论 ID（一级评论为 NULL）' DEFAULT NULL
+    reply_to_user_id VARCHAR(36) COMMENT '被回复人 ID（回复某条评论时标记，一级评论为 NULL）' DEFAULT NULL
     reply_to_user_name  VARCHAR(64)     DEFAULT NULL COMMENT '被回复人姓名（冗余）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID' DEFAULT NULL
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_instance_id (instance_id),
@@ -514,7 +514,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_comment (
 -- 审批常用语表（用户预设常用审批意见，按用户隔离）
 CREATE TABLE IF NOT EXISTS ydsz_flow_quick_comment (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（所属用户，常用语按用户隔离）',
+    user_id VARCHAR(36) NOT NULL COMMENT '用户 ID（所属用户，常用语按用户隔离）'
     content         VARCHAR(500)    NOT NULL COMMENT '常用语内容（审批意见文本，最大长度 500）',
     comment_type    VARCHAR(32)     DEFAULT NULL COMMENT '意见分类（AGREE=同意，DISAGREE=不同意，SUGGEST=建议，INQUIRE=询问，可空）',
     sort_num        INT             NOT NULL DEFAULT 0 COMMENT '排序号（越小越靠前，默认 0）',
@@ -538,23 +538,23 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_quick_comment (
 -- 流程抄送表（抄送中心通知记录，仅通知不阻塞流程）
 CREATE TABLE IF NOT EXISTS ydsz_flow_cc (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID',
-    task_id             VARCHAR(32)     DEFAULT NULL COMMENT '触发的任务 ID（CC 节点任务，可空）',
+    instance_id VARCHAR(36) NOT NULL COMMENT '流程实例 ID'
+    task_id VARCHAR(36) COMMENT '触发的任务 ID（CC 节点任务，可空）' DEFAULT NULL
     node_code           VARCHAR(64)     DEFAULT NULL COMMENT '触发抄送的节点编码',
     node_name           VARCHAR(128)    DEFAULT NULL COMMENT '节点名称（冗余）',
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码',
     flow_name           VARCHAR(128)    DEFAULT NULL COMMENT '流程名称（冗余）',
     business_key        VARCHAR(64)     DEFAULT NULL COMMENT '业务单据 ID',
-    cc_user_id          VARCHAR(32)     NOT NULL COMMENT '抄送接收人 ID',
+    cc_user_id VARCHAR(36) NOT NULL COMMENT '抄送接收人 ID'
     cc_user_name        VARCHAR(64)     DEFAULT NULL COMMENT '抄送接收人姓名（冗余）',
     cc_type             VARCHAR(32)     NOT NULL COMMENT '抄送类型（CC_NODE=CC 节点，MANUAL_CC=人工抄送，AUTO_CC=系统规则）',
-    trigger_user_id     VARCHAR(32)     DEFAULT NULL COMMENT 'is_system）',
+    trigger_user_id VARCHAR(36) COMMENT 'is_system）' DEFAULT NULL
     trigger_user_name   VARCHAR(64)     DEFAULT NULL COMMENT '触发抄送的人姓名（冗余）',
     title               VARCHAR(128)    DEFAULT NULL COMMENT '抄送标题',
     content             VARCHAR(512)    DEFAULT NULL COMMENT '抄送内容/意见（人工抄送时填写）',
     read_status         VARCHAR(32)     NOT NULL DEFAULT 'UNREAD' COMMENT '已读状态（UNREAD=未读，READ=已读）',
     read_at             DATETIME        DEFAULT NULL COMMENT '已读时间（标记 READ 时由后端填充）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID' DEFAULT NULL
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_cc_user_id (cc_user_id),
@@ -578,7 +578,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_cc_rule (
     rule_type           VARCHAR(32)     NOT NULL COMMENT '规则类型（USER=指定用户，ROLE=角色展开，DEPT=部门展开，SPEL=表达式动态解析）',
     rule_target         VARCHAR(512)    DEFAULT NULL COMMENT '规则目标（按 ruleType 解析：USER 传 userId / ROLE 传 roleCode / DEPT 传 deptId / SPEL 传表达式）',
     is_enabled             INT             NOT NULL DEFAULT 1 COMMENT '是否启用（0=禁用，1=启用）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID' DEFAULT NULL
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_flow_node (flow_code, node_code),
@@ -596,8 +596,8 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_cc_rule (
 -- 审批附件表（附件元数据统一落库，支持 MD5 秒传去重）
 CREATE TABLE IF NOT EXISTS ydsz_flow_attachment (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    instance_id         VARCHAR(32)     NOT NULL COMMENT '关联流程实例 ID',
-    task_id             VARCHAR(32)     DEFAULT NULL COMMENT '关联任务 ID（实例级附件可为空）',
+    instance_id VARCHAR(36) NOT NULL COMMENT '关联流程实例 ID'
+    task_id VARCHAR(36) COMMENT '关联任务 ID（实例级附件可为空）' DEFAULT NULL
     node_code           VARCHAR(64)     DEFAULT NULL COMMENT '关联节点编码',
     biz_type            VARCHAR(32)     NOT NULL COMMENT '附件业务类型（TASK=任务级，INSTANCE=实例级，COMMENT=评论）',
     file_name           VARCHAR(255)    NOT NULL COMMENT '原始文件名（含扩展名）',
@@ -606,11 +606,11 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_attachment (
     content_type        VARCHAR(128)    DEFAULT NULL COMMENT 'MIME 类型（如 image/jpeg / application/pdf）',
     storage_key         VARCHAR(512)    NOT NULL COMMENT '存储 key（OSS/COS/MinIO 对象 key 或本地相对路径）',
     storage_type        VARCHAR(32)     NOT NULL COMMENT '存储类型（OSS=阿里云，MINIO=自建对象存储，LOCAL=本地文件系统）',
-    uploader_id         VARCHAR(32)     NOT NULL COMMENT '上传人 ID',
+    uploader_id VARCHAR(36) NOT NULL COMMENT '上传人 ID'
     uploader_name       VARCHAR(64)     DEFAULT NULL COMMENT '上传人姓名（冗余）',
     download_url        VARCHAR(1024)   DEFAULT NULL COMMENT '临时下载地址（由签名接口刷新，避免长 URL 泄露）',
     md5                 VARCHAR(64)     DEFAULT NULL COMMENT '文件 MD5（去重/校验）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID' DEFAULT NULL
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_instance_id (instance_id),
@@ -633,9 +633,9 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_attachment (
 -- 流程委派代理表（长期授权规则，时间区间内匹配的待办自动转给代理人）
 CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_auth (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    owner_user_id           VARCHAR(32)     NOT NULL COMMENT '授权人（原办理人）ID',
+    owner_user_id VARCHAR(36) NOT NULL COMMENT '授权人（原办理人）ID'
     owner_user_name         VARCHAR(64)     DEFAULT NULL COMMENT '授权人姓名（冗余）',
-    delegate_user_id        VARCHAR(32)     NOT NULL COMMENT '被授权人（代理人）ID',
+    delegate_user_id VARCHAR(36) NOT NULL COMMENT '被授权人（代理人）ID'
     delegate_user_name      VARCHAR(64)     DEFAULT NULL COMMENT '被授权人姓名（冗余）',
     scope_type              VARCHAR(32)     NOT NULL COMMENT '匹配模式（ALL=所有流程，FLOW=指定流程，FLOW_NODE=指定流程节点，ROLE=指定角色）',
     flow_code               VARCHAR(64)     DEFAULT NULL COMMENT '流程编码（FLOW/FLOW_NODE 模式必填）',
@@ -645,7 +645,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_auth (
     end_time                DATETIME        NOT NULL COMMENT '生效结束时间',
     auth_status             VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled=生效中，DISABLED=手动停用，EXPIRED=已过期，REVOKED=已撤销）',
     reason                  VARCHAR(512)    DEFAULT NULL COMMENT '授权原因（如「出差 3 天」「部门调整」）',
-    provider_trace_id       VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID' DEFAULT NULL
     status                  VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted                 TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_owner_user_id (owner_user_id),
@@ -664,7 +664,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_auth (
 -- 流程管理员角色映射表（用户与流程管理员角色多对多，支持临时授权）
 CREATE TABLE IF NOT EXISTS ydsz_flow_admin_role (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID',
+    user_id VARCHAR(36) NOT NULL COMMENT '用户 ID'
     role_code       VARCHAR(64)     NOT NULL COMMENT '角色编码（FLOW_ADMIN=流程管理员，FLOW_DESIGNER=流程设计者，FLOW_AUDITOR=流程审计员）',
     is_enabled      TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（0=撤销授权但保留历史记录，1=启用中）',
     granted_by      VARCHAR(32)     DEFAULT NULL COMMENT '授权人 ID（NULL 表示系统预置角色）',
@@ -687,22 +687,22 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_admin_role (
 -- 流程审计日志表（全生命周期操作轨迹，只追加，禁止修改删除）
 CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log (
     id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
-    instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID',
-    task_id             VARCHAR(32)     DEFAULT NULL COMMENT '任务 ID（实例级操作可为空）',
+    instance_id VARCHAR(36) NOT NULL COMMENT '流程实例 ID'
+    task_id VARCHAR(36) COMMENT '任务 ID（实例级操作可为空）' DEFAULT NULL
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码',
     business_type       VARCHAR(64)     DEFAULT NULL COMMENT '业务类型',
-    business_id         VARCHAR(64)     DEFAULT NULL COMMENT '业务单据 ID',
+    business_id VARCHAR(36) COMMENT '业务单据 ID' DEFAULT NULL
     node_code           VARCHAR(64)     DEFAULT NULL COMMENT '节点编码',
     node_name           VARCHAR(128)    DEFAULT NULL COMMENT '节点名称（冗余）',
     action              VARCHAR(32)     NOT NULL COMMENT '操作类型（START/PASS/REJECT/TRANSFER/DELEGATE/COUNTERSIGN/RECALL/URGE/TERMINATE/SUSPEND/ACTIVATE/CLAIM）',
-    operator_id         VARCHAR(32)     NOT NULL COMMENT '操作人 ID',
+    operator_id VARCHAR(36) NOT NULL COMMENT '操作人 ID'
     operator_name       VARCHAR(64)     DEFAULT NULL COMMENT '操作人姓名（冗余）',
-    target_id           VARCHAR(32)     DEFAULT NULL COMMENT '目标人 ID（转办/委派/加签/抄送时使用）',
+    target_id VARCHAR(36) COMMENT '目标人 ID（转办/委派/加签/抄送时使用）' DEFAULT NULL
     target_name         VARCHAR(64)     DEFAULT NULL COMMENT '目标人姓名（冗余）',
     comment             VARCHAR(512)    DEFAULT NULL COMMENT '审批意见',
     comment_type        VARCHAR(32)     DEFAULT NULL COMMENT '审批意见分类（AGREE=同意，DISAGREE=不同意，SUGGEST=建议，INQUIRE=询问）',
     operated_at         DATETIME        NOT NULL COMMENT '操作时间（精确到毫秒）',
-    provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
+    provider_trace_id VARCHAR(36) COMMENT '链路追踪 ID' DEFAULT NULL
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     INDEX idx_instance_id (instance_id),

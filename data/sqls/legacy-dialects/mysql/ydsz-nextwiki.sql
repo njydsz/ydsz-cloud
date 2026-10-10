@@ -12,7 +12,7 @@
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    parent_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '父节点ID（根目录为 "0"）',
+    parent_id VARCHAR(36) NOT NULL COMMENT '父节点ID（根目录为 "0"）' DEFAULT '0'
     name            VARCHAR(255)    NOT NULL COMMENT '节点名称（文件名或目录名）',
     node_type       VARCHAR(32)     NOT NULL COMMENT 'is_folder / file',
     suffix          VARCHAR(64)     DEFAULT NULL COMMENT '文件扩展名（小写，不含点；文件夹为空）',
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_version (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    file_node_id    VARCHAR(32)     NOT NULL COMMENT '关联的文件节点ID',
+    file_node_id VARCHAR(36) NOT NULL COMMENT '关联的文件节点ID'
     version_number  INT             NOT NULL COMMENT '版本号（从 1 开始递增）',
     storage_key     VARCHAR(1024)   DEFAULT NULL COMMENT '该版本的存储对象键',
     size            BIGINT          NOT NULL DEFAULT 0 COMMENT '该版本的文件大小（字节）',
@@ -108,8 +108,8 @@ CREATE TABLE IF NOT EXISTS ydsz_file_tag (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_tag (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点ID',
-    tag_id          VARCHAR(32)     NOT NULL COMMENT '标签ID',
+    file_node_id VARCHAR(36) NOT NULL COMMENT '文件节点ID'
+    tag_id VARCHAR(36) NOT NULL COMMENT '标签ID'
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     PRIMARY KEY (id),
@@ -130,9 +130,9 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_tag (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_comment (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    file_node_id      VARCHAR(32)   NOT NULL COMMENT '关联的文件节点ID',
+    file_node_id VARCHAR(36) NOT NULL COMMENT '关联的文件节点ID'
     content           TEXT          NOT NULL COMMENT '评论内容',
-    parent_comment_id VARCHAR(32)   DEFAULT NULL COMMENT '父评论ID（用于回复，null 表示顶级评论）',
+    parent_comment_id VARCHAR(36) COMMENT '父评论ID（用于回复，null 表示顶级评论）' DEFAULT NULL
     is_resolved          TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '是否已解决（用于批注功能）',
     position          JSON          DEFAULT NULL COMMENT '评论位置信息（JSON，用于文档内定位批注）',
     is_edited            TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '是否被编辑过',
@@ -156,9 +156,9 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_comment (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_acl (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点ID',
+    file_node_id VARCHAR(36) NOT NULL COMMENT '文件节点ID'
     grantee_type    VARCHAR(32)     NOT NULL COMMENT '授权对象类型：user / role / group / tenant',
-    grantee_id      VARCHAR(64)     NOT NULL COMMENT '授权对象ID（用户ID / 角色ID / 组ID / 租户ID）',
+    grantee_id VARCHAR(36) NOT NULL COMMENT '授权对象ID（用户ID / 角色ID / 组ID / 租户ID）'
     permission_mask INT             NOT NULL DEFAULT 0 COMMENT '权限位掩码（read=1, write=2, delete=4, share=8, download=16）',
     is_inherited       TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否继承自父目录',
     is_owner           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为所有者（所有者拥有全部权限）',
@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_acl (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_share_link (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    file_node_id      VARCHAR(32)   NOT NULL COMMENT '关联的文件节点ID',
+    file_node_id VARCHAR(36) NOT NULL COMMENT '关联的文件节点ID'
     share_code        VARCHAR(64)   NOT NULL COMMENT '分享码（URL 中的唯一标识，UUID 生成）',
     extract_code      VARCHAR(8)    DEFAULT NULL COMMENT '提取码（4 位数字，访问时需要输入）',
     share_type        VARCHAR(32)   NOT NULL DEFAULT 'view' COMMENT '分享类型：view（仅查看）/ download（可下载）/ edit（可编辑）',
@@ -214,9 +214,9 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_link (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_share_recipient (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    share_id        VARCHAR(32)     NOT NULL COMMENT '分享链接 ID',
+    share_id VARCHAR(36) NOT NULL COMMENT '分享链接 ID'
     recipient_type  VARCHAR(32)     NOT NULL DEFAULT 'USER' COMMENT '接收者类型：USER/DEPT/ROLE',
-    recipient_id    VARCHAR(64)     NOT NULL COMMENT '接收者 ID',
+    recipient_id VARCHAR(36) NOT NULL COMMENT '接收者 ID'
     recipient_name  VARCHAR(128)    DEFAULT NULL COMMENT '接收者名称',
     status          VARCHAR(32)     NOT NULL DEFAULT 'ACTIVE' COMMENT 'is_active/VIEWED/REVOKED',
     viewed_at       DATETIME        DEFAULT NULL COMMENT '首次查看时间',
@@ -240,10 +240,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_recipient (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    share_id        VARCHAR(32)     NOT NULL COMMENT '分享链接 ID',
+    share_id VARCHAR(36) NOT NULL COMMENT '分享链接 ID'
     share_code      VARCHAR(64)     NOT NULL COMMENT '分享码',
-    file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点 ID',
-    visitor_id      VARCHAR(64)     DEFAULT NULL COMMENT '访问者用户 ID（匿名为空）',
+    file_node_id VARCHAR(36) NOT NULL COMMENT '文件节点 ID'
+    visitor_id VARCHAR(36) COMMENT '访问者用户 ID（匿名为空）' DEFAULT NULL
     visitor_name    VARCHAR(128)    DEFAULT NULL COMMENT '访问者名称',
     visitor_ip      VARCHAR(64)     DEFAULT NULL COMMENT '访问者 IP 地址',
     user_agent      VARCHAR(512)    DEFAULT NULL COMMENT '访问者 User-Agent',
@@ -273,10 +273,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log_archive (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    share_id        VARCHAR(32)     NOT NULL COMMENT '分享链接 ID',
+    share_id VARCHAR(36) NOT NULL COMMENT '分享链接 ID'
     share_code      VARCHAR(64)     NOT NULL COMMENT '分享码',
-    file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点 ID',
-    visitor_id      VARCHAR(64)     DEFAULT NULL COMMENT '访问者用户 ID（匿名为空）',
+    file_node_id VARCHAR(36) NOT NULL COMMENT '文件节点 ID'
+    visitor_id VARCHAR(36) COMMENT '访问者用户 ID（匿名为空）' DEFAULT NULL
     visitor_name    VARCHAR(128)    DEFAULT NULL COMMENT '访问者名称',
     visitor_ip      VARCHAR(64)     DEFAULT NULL COMMENT '访问者 IP 地址',
     user_agent      VARCHAR(512)    DEFAULT NULL COMMENT '访问者 User-Agent',
@@ -309,7 +309,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space (
     description     VARCHAR(512)    DEFAULT NULL COMMENT '空间描述',
     icon_url        VARCHAR(1024)   DEFAULT NULL COMMENT '空间图标 URL',
     cover_url       VARCHAR(1024)   DEFAULT NULL COMMENT '空间封面 URL',
-    owner_id        VARCHAR(64)     NOT NULL COMMENT '空间所有者（创建者）',
+    owner_id VARCHAR(36) NOT NULL COMMENT '空间所有者（创建者）'
     status          VARCHAR(32)     NOT NULL DEFAULT 'active' COMMENT 'is_deleted',
     visibility      VARCHAR(32)     NOT NULL DEFAULT 'private' COMMENT 'is_public',
     member_count    INT             NOT NULL DEFAULT 1 COMMENT '成员数量',
@@ -337,8 +337,8 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_space_member (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    space_id        VARCHAR(32)     NOT NULL COMMENT '空间ID',
-    user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
+    space_id VARCHAR(36) NOT NULL COMMENT '空间ID'
+    user_id VARCHAR(36) NOT NULL COMMENT '用户ID'
     role            VARCHAR(32)     NOT NULL COMMENT 'is_owner / admin / editor / viewer',
     joined_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '加入时间',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
@@ -390,10 +390,10 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space_template (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_trash_item (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    file_node_id        VARCHAR(32)   NOT NULL COMMENT '原文件节点ID',
+    file_node_id VARCHAR(36) NOT NULL COMMENT '原文件节点ID'
     original_name       VARCHAR(255)  NOT NULL COMMENT '原文件名',
     original_path       VARCHAR(1024) DEFAULT NULL COMMENT '原始路径',
-    original_parent_id  VARCHAR(32)   DEFAULT NULL COMMENT '原始父节点ID',
+    original_parent_id VARCHAR(36) COMMENT '原始父节点ID' DEFAULT NULL
     node_type           VARCHAR(32)   NOT NULL COMMENT 'is_folder / file',
     size                BIGINT        NOT NULL DEFAULT 0 COMMENT '文件大小（字节）',
     deleted_time        DATETIME      NOT NULL COMMENT '删除时间',
@@ -419,7 +419,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_trash_item (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_search_index (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    file_node_id    VARCHAR(32)     NOT NULL COMMENT '关联的文件节点ID',
+    file_node_id VARCHAR(36) NOT NULL COMMENT '关联的文件节点ID'
     name            VARCHAR(255)    NOT NULL COMMENT '文件名（用于搜索）',
     path            VARCHAR(1024)   DEFAULT NULL COMMENT '目录路径',
     content         LONGTEXT        COMMENT '索引内容（文件名 + 路径 + 提取的文本）',
@@ -447,8 +447,8 @@ CREATE TABLE IF NOT EXISTS ydsz_file_search_index (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_user_favorite (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
-    node_id         VARCHAR(64)     NOT NULL COMMENT '收藏的文件/目录节点ID',
+    user_id VARCHAR(36) NOT NULL COMMENT '用户ID'
+    node_id VARCHAR(36) NOT NULL COMMENT '收藏的文件/目录节点ID'
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     deleted_time    DATETIME        DEFAULT NULL COMMENT '删除时间',
     PRIMARY KEY (id),
@@ -470,8 +470,8 @@ CREATE TABLE IF NOT EXISTS ydsz_file_user_favorite (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_user_recent (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
-    user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
-    node_id         VARCHAR(64)     NOT NULL COMMENT '访问的文件/目录节点ID',
+    user_id VARCHAR(36) NOT NULL COMMENT '用户ID'
+    node_id VARCHAR(36) NOT NULL COMMENT '访问的文件/目录节点ID'
     access_type     VARCHAR(32)     NOT NULL DEFAULT 'view' COMMENT '访问类型：view / edit / download',
     accessed_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最近访问时间（排序字段）',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
@@ -496,7 +496,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_user_recent (
 CREATE TABLE IF NOT EXISTS ydsz_file_storage_quota (
     id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     scope_type      VARCHAR(32)     NOT NULL COMMENT '配额维度：user / tenant / project',
-    scope_id        VARCHAR(64)     NOT NULL COMMENT '维度ID（用户ID / 租户ID / 项目ID）',
+    scope_id VARCHAR(36) NOT NULL COMMENT '维度ID（用户ID / 租户ID / 项目ID）'
     quota_limit     BIGINT          NOT NULL DEFAULT 0 COMMENT '配额上限（字节）',
     quota_used      BIGINT          NOT NULL DEFAULT 0 COMMENT '已使用量（字节）',
     file_count_limit INT            DEFAULT NULL COMMENT '文件数量上限',
