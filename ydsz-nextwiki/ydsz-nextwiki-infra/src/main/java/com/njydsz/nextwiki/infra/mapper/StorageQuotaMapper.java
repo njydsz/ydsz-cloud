@@ -54,7 +54,7 @@ public interface StorageQuotaMapper extends BaseMapper<StorageQuota> {
    * @return 受影响行数（0 表示超配额未更新）
    */
   @Update(
-      "UPDATE nw_storage_quota SET quota_used = quota_used + #{bytesDelta}, "
+      "UPDATE ydsz_file_storage_quota SET quota_used = quota_used + #{bytesDelta}, "
           + "file_count_used = file_count_used + #{fileCountDelta}, updated_at = NOW() "
           + "WHERE scope_type = #{scopeType} AND scope_id = #{scopeId} "
           + "AND quota_used + #{bytesDelta} <= quota_limit "
@@ -75,7 +75,7 @@ public interface StorageQuotaMapper extends BaseMapper<StorageQuota> {
    * @return 受影响行数
    */
   @Update(
-      "UPDATE nw_storage_quota SET quota_used = GREATEST(quota_used - #{bytesDelta}, 0), "
+      "UPDATE ydsz_file_storage_quota SET quota_used = GREATEST(quota_used - #{bytesDelta}, 0), "
           + "file_count_used = GREATEST(file_count_used - #{fileCountDelta}, 0), updated_at = NOW() "
           + "WHERE scope_type = #{scopeType} AND scope_id = #{scopeId}")
   int subtractUsage(

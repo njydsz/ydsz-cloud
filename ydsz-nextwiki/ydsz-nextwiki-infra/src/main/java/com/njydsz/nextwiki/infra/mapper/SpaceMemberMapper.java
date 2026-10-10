@@ -11,7 +11,7 @@ import com.njydsz.nextwiki.domain.entity.SpaceMember;
 /**
  * 空间成员 Mapper
  *
- * <p>对应数据表 {@code nw_space_member}。
+ * <p>对应数据表 {@code ydsz_file_space_member}。
  *
  * @author ydsz-team
  * @since 26.10.01

@@ -444,7 +444,7 @@ public class ChatService {
     }
     TenantQuota quota = resolveTenantQuota();
     quotaService.preCheck(
-        tenantId, quota, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
+        tenantId, quota, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd().doubleValue());
   }
 
   /**

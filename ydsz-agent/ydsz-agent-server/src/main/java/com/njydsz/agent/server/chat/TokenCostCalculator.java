@@ -67,9 +67,8 @@ public class TokenCostCalculator {
     BigDecimal charRatio = properties.getMemory().getTokenCharRatio();
     int estimatedPromptTokens = Math.max(1, (int) Math.ceil(totalChars / charRatio.doubleValue()));
     BigDecimal unitPrice = resolveUnitPrice(request.getModel());
-    // CostEstimate 为 API 请求值对象，最终序列化为 JSON number；此处将 BigDecimal 单价转为 double 传入（API 边界转换）
     return CostEstimate.estimate(
-        estimatedPromptTokens, request.getMaxTokens(), request.getModel(), unitPrice.doubleValue());
+        estimatedPromptTokens, request.getMaxTokens(), request.getModel(), unitPrice);
   }
 
   /**
@@ -81,7 +80,7 @@ public class TokenCostCalculator {
    */
   public CostEstimate calculateActual(TokenUsage usage, String model) {
     BigDecimal unitPrice = resolveUnitPrice(model);
-    return CostEstimate.actual(usage, model, unitPrice.doubleValue());
+    return CostEstimate.actual(usage, model, unitPrice);
   }
 
   /**

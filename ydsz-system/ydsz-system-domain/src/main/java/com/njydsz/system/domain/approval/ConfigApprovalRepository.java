@@ -2,6 +2,8 @@ package com.njydsz.system.domain.approval;
 
 import java.util.List;
 
+import com.njydsz.system.domain.entity.ConfigApproval;
+
 /**
  * 配置变更审批单 Repository 接口。
  *

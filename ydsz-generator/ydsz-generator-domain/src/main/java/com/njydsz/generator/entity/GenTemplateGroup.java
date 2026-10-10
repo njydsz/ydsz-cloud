@@ -1,5 +1,6 @@
 package com.njydsz.generator.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -33,5 +34,6 @@ public class GenTemplateGroup extends MpBaseEntity<String> {
   /** 是否为系统分组（系统分组不可删除）。 */
   private Boolean isSystem;
   /** 是否激活为当前使用分组。 */
+  @TableField("is_active")
   private Boolean isActive;
 }

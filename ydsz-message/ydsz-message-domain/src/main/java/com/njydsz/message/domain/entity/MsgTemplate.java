@@ -3,6 +3,7 @@ package com.njydsz.message.domain.entity;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
@@ -31,6 +32,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@TableName("ydsz_msg_template")
 public class MsgTemplate extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;

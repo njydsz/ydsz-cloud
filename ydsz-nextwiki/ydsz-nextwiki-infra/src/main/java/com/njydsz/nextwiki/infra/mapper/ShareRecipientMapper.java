@@ -42,7 +42,7 @@ public interface ShareRecipientMapper extends BaseMapper<ShareRecipient> {
    * @return 受影响行数
    */
   @Update(
-      "UPDATE nw_share_recipient SET status = 'VIEWED', viewed_at = NOW(), "
+      "UPDATE ydsz_file_share_recipient SET status = 'VIEWED', viewed_at = NOW(), "
           + "updated_at = NOW() WHERE share_id = #{shareId} AND recipient_id = #{recipientId} "
           + "AND status = 'ACTIVE' AND deleted = 0")
   int markAsViewed(@Param("shareId") String shareId, @Param("recipientId") String recipientId);

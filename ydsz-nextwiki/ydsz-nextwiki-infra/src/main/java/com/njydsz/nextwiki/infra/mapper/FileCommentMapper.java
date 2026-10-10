@@ -14,7 +14,7 @@ import com.njydsz.nextwiki.domain.entity.FileComment;
 /**
  * 文件评论 Mapper
  *
- * <p>对应数据表 <code>nw_file_comment</code>。
+ * <p>对应数据表 <code>ydsz_file_file_comment</code>。
  *
  * <p>文件评论/回复/批注的持久化访问，支持按文件节点查询、按父评论查询回复、
  * 更新内容、删除（逻辑删除）、标记已解决。
@@ -36,7 +36,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    * @return 受影响行数
    */
   @Insert(
-      "INSERT INTO nw_file_comment (id, file_node_id, content, parent_comment_id, resolved, position, edited, "
+      "INSERT INTO ydsz_file_file_comment (id, file_node_id, content, parent_comment_id, resolved, position, edited, "
           + "created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id) "
           + "VALUES (#{id}, #{fileNodeId}, #{content}, #{parentCommentId}, #{resolved}, #{position}, #{edited}, "
           + "#{createdBy}, NOW(), #{updatedBy}, NOW(), 0, 0, #{tenantId})")
@@ -49,7 +49,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    * @return 评论实体（不存在时为 null）
    */
   @Select(
-      "SELECT * FROM nw_file_comment WHERE id = #{id} AND deleted = 0")
+      "SELECT * FROM ydsz_file_file_comment WHERE id = #{id} AND deleted = 0")
   FileComment selectFileCommentById(@Param("id") String id);
 
   /**
@@ -59,7 +59,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    * @return 顶级评论列表
    */
   @Select(
-      "SELECT * FROM nw_file_comment WHERE file_node_id = #{fileNodeId} AND deleted = 0 "
+      "SELECT * FROM ydsz_file_file_comment WHERE file_node_id = #{fileNodeId} AND deleted = 0 "
           + "AND parent_comment_id IS NULL ORDER BY created_at ASC")
   List<FileComment> selectFileCommentsByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
@@ -70,7 +70,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    * @return 回复列表
    */
   @Select(
-      "SELECT * FROM nw_file_comment WHERE parent_comment_id = #{parentCommentId} AND deleted = 0 "
+      "SELECT * FROM ydsz_file_file_comment WHERE parent_comment_id = #{parentCommentId} AND deleted = 0 "
           + "ORDER BY created_at ASC")
   List<FileComment> selectFileCommentReplies(@Param("parentCommentId") String parentCommentId);
 
@@ -81,7 +81,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    * @return 受影响行数
    */
   @Update(
-      "UPDATE nw_file_comment SET content = #{content}, edited = TRUE, updated_by = #{updatedBy}, "
+      "UPDATE ydsz_file_file_comment SET content = #{content}, edited = TRUE, updated_by = #{updatedBy}, "
           + "updated_at = NOW(), revision = revision + 1 WHERE id = #{id} AND deleted = 0")
   int updateFileComment(FileComment entity);
 
@@ -92,7 +92,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    * @return 受影响行数
    */
   @Update(
-      "UPDATE nw_file_comment SET deleted = 1, updated_at = NOW() WHERE id = #{id} AND deleted = 0")
+      "UPDATE ydsz_file_file_comment SET deleted = 1, updated_at = NOW() WHERE id = #{id} AND deleted = 0")
   int deleteFileComment(@Param("id") String id);
 
   /**
@@ -103,7 +103,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    * @return 受影响行数
    */
   @Update(
-      "UPDATE nw_file_comment SET resolved = TRUE, updated_by = #{userId}, updated_at = NOW(), "
+      "UPDATE ydsz_file_file_comment SET resolved = TRUE, updated_by = #{userId}, updated_at = NOW(), "
           + "revision = revision + 1 WHERE id = #{id} AND deleted = 0")
   int markFileCommentResolved(@Param("id") String id, @Param("userId") String userId);
 }

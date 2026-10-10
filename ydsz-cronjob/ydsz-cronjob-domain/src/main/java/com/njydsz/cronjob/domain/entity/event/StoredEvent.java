@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.entity.event;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
@@ -37,6 +38,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TableName("ydsz_job_event_store")
 public class StoredEvent extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;

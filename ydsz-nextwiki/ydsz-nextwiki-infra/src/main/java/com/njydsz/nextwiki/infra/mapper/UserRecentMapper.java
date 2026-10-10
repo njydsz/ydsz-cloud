@@ -12,7 +12,7 @@ import com.njydsz.nextwiki.domain.entity.UserRecent;
 /**
  * 用户最近访问 Mapper
  *
- * <p>对应数据表 {@code nw_user_recent}。
+ * <p>对应数据表 {@code ydsz_file_user_recent}。
  *
  * <p><b>主要索引：</b>
  *
@@ -101,7 +101,7 @@ public interface UserRecentMapper extends BaseMapper<UserRecent> {
    * @param nodeId 节点ID
    * @return 受影响行数
    */
-  @Delete("DELETE FROM nw_user_recent WHERE user_id = #{userId} AND node_id = #{nodeId}")
+  @Delete("DELETE FROM ydsz_file_user_recent WHERE user_id = #{userId} AND node_id = #{nodeId}")
   int deleteByUserIdAndNodeId(
       @Param("userId") String userId, @Param("nodeId") String nodeId);
 }

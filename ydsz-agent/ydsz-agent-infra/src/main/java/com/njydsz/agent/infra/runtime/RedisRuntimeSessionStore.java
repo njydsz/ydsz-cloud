@@ -1,5 +1,6 @@
 package com.njydsz.agent.infra.runtime;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -292,7 +293,7 @@ public class RedisRuntimeSessionStore implements RuntimeSessionStore {
         .currentIteration(asInt(map.get("currentIteration")))
         .maxIterations(asInt(map.get("maxIterations")))
         .totalTokens(asInt(map.get("totalTokens")))
-        .costUsd(asDouble(map.get("costUsd")))
+        .costUsd((BigDecimal) map.get("costUsd"))
         .startTime(parseDateTime(map.get("startTime")))
         .lastActiveTime(parseDateTime(map.get("lastActiveTime")))
         .source(asString(map.get("source")))

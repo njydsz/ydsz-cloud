@@ -13,7 +13,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * <p><b>S4-P3-02：文档模板体系</b>
  *
- * <p>对应空间模板表 {@code nw_space_template}，预定义可复用的空间结构模板（如"项目管理模板"、"会议纪要模板"）。
+ * <p>对应空间模板表 {@code ydsz_file_space_template}，预定义可复用的空间结构模板（如"项目管理模板"、"会议纪要模板"）。
  *
  * @author ydsz
  * @since 26.09.24

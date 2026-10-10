@@ -33,7 +33,7 @@ public final class CostEstimate implements Serializable {
   private final int estimatedTotalTokens;
 
   /** 估算成本（USD，调用前预检） */
-  private final double estimatedCostUsd;
+  private final BigDecimal estimatedCostUsd;
 
   /** 实际 Prompt Token 数（调用后核算，可能为 0 表示尚未核算） */
   private final int actualPromptTokens;
@@ -45,33 +45,33 @@ public final class CostEstimate implements Serializable {
   private final int actualTotalTokens;
 
   /** 实际成本（USD，调用后核算） */
-  private final double actualCostUsd;
+  private final BigDecimal actualCostUsd;
 
   /** 本次调用使用的模型名称 */
   private final String model;
 
   /** 模型单价（USD / 千 Token） */
-  private final double unitPrice;
+  private final BigDecimal unitPrice;
 
   public CostEstimate(
       int estimatedPromptTokens,
       int estimatedCompletionTokens,
       int estimatedTotalTokens,
-      double estimatedCostUsd,
+      BigDecimal estimatedCostUsd,
       int actualPromptTokens,
       int actualCompletionTokens,
       int actualTotalTokens,
-      double actualCostUsd,
+      BigDecimal actualCostUsd,
       String model,
-      double unitPrice) {
+      BigDecimal unitPrice) {
     this.estimatedPromptTokens = estimatedPromptTokens;
     this.estimatedCompletionTokens = estimatedCompletionTokens;
     this.estimatedTotalTokens = estimatedTotalTokens;
-    this.estimatedCostUsd = round(estimatedCostUsd);
+    this.estimatedCostUsd = (estimatedCostUsd == null ? BigDecimal.ZERO : estimatedCostUsd).setScale(PRICE_SCALE, RoundingMode.HALF_UP);
     this.actualPromptTokens = actualPromptTokens;
     this.actualCompletionTokens = actualCompletionTokens;
     this.actualTotalTokens = actualTotalTokens;
-    this.actualCostUsd = round(actualCostUsd);
+    this.actualCostUsd = (actualCostUsd == null ? BigDecimal.ZERO : actualCostUsd).setScale(PRICE_SCALE, RoundingMode.HALF_UP);
     this.model = model;
     this.unitPrice = unitPrice;
   }
@@ -86,10 +86,10 @@ public final class CostEstimate implements Serializable {
    * @return 仅含估算值的 CostEstimate 实例
    */
   public static CostEstimate estimate(
-      int estimatedPromptTokens, int maxTokens, String model, double unitPrice) {
+      int estimatedPromptTokens, int maxTokens, String model, BigDecimal unitPrice) {
     int estimatedCompletion = maxTokens;
     int estimatedTotal = estimatedPromptTokens + estimatedCompletion;
-    double estimatedCost = estimatedTotal * unitPrice / 1000.0;
+    BigDecimal estimatedCost = BigDecimal.valueOf(estimatedTotal).multiply(unitPrice).divide(BigDecimal.valueOf(1000), PRICE_SCALE, RoundingMode.HALF_UP);
     return new CostEstimate(
         estimatedPromptTokens,
         estimatedCompletion,
@@ -98,7 +98,7 @@ public final class CostEstimate implements Serializable {
         0,
         0,
         0,
-        0.0,
+        BigDecimal.ZERO,
         model,
         unitPrice);
   }
@@ -111,15 +111,15 @@ public final class CostEstimate implements Serializable {
    * @param unitPrice 模型单价（USD / 千 Token）
    * @return 含精确核算值的 CostEstimate 实例
    */
-  public static CostEstimate actual(TokenUsage usage, String model, double unitPrice) {
+  public static CostEstimate actual(TokenUsage usage, String model, BigDecimal unitPrice) {
     if (usage == null) {
-      return new CostEstimate(0, 0, 0, 0.0, 0, 0, 0, 0.0, model, unitPrice);
+      return new CostEstimate(0, 0, 0, BigDecimal.ZERO, 0, 0, 0, BigDecimal.ZERO, model, unitPrice);
     }
     int prompt = usage.getPromptTokens();
     int completion = usage.getCompletionTokens();
     int total = usage.getTotalTokens();
-    double cost = total * unitPrice / 1000.0;
-    return new CostEstimate(0, 0, 0, 0.0, prompt, completion, total, cost, model, unitPrice);
+    BigDecimal cost = BigDecimal.valueOf(total).multiply(unitPrice).divide(BigDecimal.valueOf(1000), PRICE_SCALE, RoundingMode.HALF_UP);
+    return new CostEstimate(0, 0, 0, BigDecimal.ZERO, prompt, completion, total, cost, model, unitPrice);
   }
 
   public int getEstimatedPromptTokens() {
@@ -134,7 +134,7 @@ public final class CostEstimate implements Serializable {
     return estimatedTotalTokens;
   }
 
-  public double getEstimatedCostUsd() {
+  public BigDecimal getEstimatedCostUsd() {
     return estimatedCostUsd;
   }
 
@@ -150,7 +150,7 @@ public final class CostEstimate implements Serializable {
     return actualTotalTokens;
   }
 
-  public double getActualCostUsd() {
+  public BigDecimal getActualCostUsd() {
     return actualCostUsd;
   }
 
@@ -158,12 +158,8 @@ public final class CostEstimate implements Serializable {
     return model;
   }
 
-  public double getUnitPrice() {
+  public BigDecimal getUnitPrice() {
     return unitPrice;
-  }
-
-  private static double round(double value) {
-    return BigDecimal.valueOf(value).setScale(PRICE_SCALE, RoundingMode.HALF_UP).doubleValue();
   }
 
   @Override

@@ -70,7 +70,7 @@ public interface SearchIndexMapper extends BaseMapper<SearchIndex> {
    */
   @Select({
     "<script>",
-    "SELECT id FROM nw_file_node WHERE deleted = 0 AND node_type = 'file'",
+    "SELECT id FROM ydsz_file_file_node WHERE deleted = 0 AND node_type = 'file'",
     "<if test='createdBy != null and createdBy != \"\"'>",
     "AND created_by = #{createdBy}",
     "</if>",

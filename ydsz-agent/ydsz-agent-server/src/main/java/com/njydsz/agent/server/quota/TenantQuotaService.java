@@ -124,7 +124,7 @@ public class TenantQuotaService {
     }
     String tid = tenantId != null ? tenantId : "default";
     int actualTokens = costEstimate.getActualTotalTokens();
-    double actualCostUsd = costEstimate.getActualCostUsd();
+    double actualCostUsd = costEstimate.getActualCostUsd().doubleValue();
     if (actualTokens > 0) {
       long newDaily = incrementDailyTokens(tid, actualTokens);
       log.info("[Quota] 记录每日 Token 用量: tenant={}, delta={}, newTotal={}", tid, actualTokens, newDaily);

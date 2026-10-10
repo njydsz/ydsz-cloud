@@ -1,5 +1,6 @@
 package com.njydsz.agent.domain.runtime;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -26,7 +27,7 @@ public final class RuntimeSession {
     private final int currentIteration;
     private final int maxIterations;
     private final int totalTokens;
-    private final double costUsd;
+    private final BigDecimal costUsd;
     private final LocalDateTime startTime;
     private final LocalDateTime lastActiveTime;
     private final String source;
@@ -104,7 +105,7 @@ public final class RuntimeSession {
         return totalTokens;
     }
 
-    public double getCostUsd() {
+    public BigDecimal getCostUsd() {
         return costUsd;
     }
 
@@ -159,7 +160,7 @@ public final class RuntimeSession {
         private int currentIteration;
         private int maxIterations;
         private int totalTokens;
-        private double costUsd;
+        private BigDecimal costUsd;
         private LocalDateTime startTime;
         private LocalDateTime lastActiveTime;
         private String source;
@@ -225,7 +226,7 @@ public final class RuntimeSession {
             return this;
         }
 
-        public Builder costUsd(double costUsd) {
+        public Builder costUsd(BigDecimal costUsd) {
             this.costUsd = costUsd;
             return this;
         }

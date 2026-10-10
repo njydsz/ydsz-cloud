@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.runtime;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +78,7 @@ public class RuntimeManagementService {
                 .currentIteration(0)
                 .maxIterations(10)
                 .totalTokens(0)
-                .costUsd(0.0)
+                .costUsd(BigDecimal.ZERO)
                 .startTime(now)
                 .lastActiveTime(now)
                 .source(source)
@@ -129,7 +130,7 @@ public class RuntimeManagementService {
      * @param totalTokens 累计 Token 数
      * @param costUsd     累计成本（USD）
      */
-    public void updateTokenUsage(String executionId, int totalTokens, double costUsd) {
+    public void updateTokenUsage(String executionId, int totalTokens, BigDecimal costUsd) {
         RuntimeSession existing = sessionStore.findByExecutionId(executionId).orElse(null);
         if (existing == null) {
             return;
@@ -382,9 +383,9 @@ public class RuntimeManagementService {
                 .filter(s -> RuntimeSessionStatus.FAILED.getCode().equals(s.getStatus()))
                 .count();
 
-        double totalCost = allSessions.stream()
-                .mapToDouble(RuntimeSession::getCostUsd)
-                .sum();
+        BigDecimal totalCost = allSessions.stream()
+                .map(RuntimeSession::getCostUsd)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         int totalTokens = allSessions.stream()
                 .mapToInt(RuntimeSession::getTotalTokens)
                 .sum();

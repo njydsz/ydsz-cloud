@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.event;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -83,7 +84,7 @@ public class AgentEventPublisher {
       String model,
       long durationMs,
       int totalTokens,
-      double costUsd) {
+      BigDecimal costUsd) {
     Map<String, Object> metadata = new HashMap<>(COLLECTION_CAPACITY);
     metadata.put("tenantId", tenantId);
     metadata.put("agentType", agentType);
@@ -135,7 +136,7 @@ public class AgentEventPublisher {
    * @param costUsd 成本（USD）
    */
   public void publishConversationCreated(
-      String conversationId, String tenantId, String model, double costUsd) {
+      String conversationId, String tenantId, String model, BigDecimal costUsd) {
     Map<String, Object> metadata = new HashMap<>(COLLECTION_CAPACITY);
     metadata.put("tenantId", tenantId);
     metadata.put("model", model);

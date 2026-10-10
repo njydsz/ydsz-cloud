@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
@@ -31,6 +32,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TableName("ydsz_flow_idempotent")
 public class FlowIdempotent extends MpBaseEntity<String> {
 
   @Serial

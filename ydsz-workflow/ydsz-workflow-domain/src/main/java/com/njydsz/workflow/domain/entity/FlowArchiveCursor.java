@@ -2,6 +2,7 @@ package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
@@ -29,6 +30,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@TableName("ydsz_flow_archive_cursor")
 public class FlowArchiveCursor extends MpBaseEntity<String> {
 
   @Serial

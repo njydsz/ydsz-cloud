@@ -1,5 +1,6 @@
 package com.njydsz.generator.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -41,6 +42,7 @@ public class GenTemplate extends MpBaseEntity<String> {
   /** 内容 MD5 哈希（版本对比）。 */
   private String hash;
   /** 是否启用。 */
+  @TableField("is_active")
   private Boolean isActive;
   /** 模板类型码（BACKEND/FRONTEND，对应 TemplateFileTypeEnum.code）。 */
   private String fileType;

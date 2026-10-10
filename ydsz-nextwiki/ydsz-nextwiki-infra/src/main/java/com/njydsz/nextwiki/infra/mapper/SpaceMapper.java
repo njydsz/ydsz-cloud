@@ -13,7 +13,7 @@ import com.njydsz.nextwiki.domain.entity.Space;
 /**
  * 知识库空间 Mapper
  *
- * <p>对应数据表 {@code nw_space}。
+ * <p>对应数据表 {@code ydsz_file_space}。
  *
  * @author ydsz-team
  * @since 26.10.01

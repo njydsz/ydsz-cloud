@@ -13,7 +13,7 @@ import com.njydsz.nextwiki.domain.entity.UserFavorite;
 /**
  * 用户收藏夹 Mapper
  *
- * <p>对应数据表 {@code nw_user_favorite}。
+ * <p>对应数据表 {@code ydsz_file_user_favorite}。
  *
  * <p><b>主要索引：</b>
  *
@@ -94,7 +94,7 @@ public interface UserFavoriteMapper extends BaseMapper<UserFavorite> {
    * @return 受影响行数
    */
   @Delete(
-      "DELETE FROM nw_user_favorite WHERE user_id = #{userId} AND node_id = #{nodeId}")
+      "DELETE FROM ydsz_file_user_favorite WHERE user_id = #{userId} AND node_id = #{nodeId}")
   int deleteByUserIdAndNodeId(
       @Param("userId") String userId, @Param("nodeId") String nodeId);
 
@@ -107,7 +107,7 @@ public interface UserFavoriteMapper extends BaseMapper<UserFavorite> {
    * @return 受影响行数
    */
   @Update(
-      "UPDATE nw_user_favorite SET sort = #{sort}, updated_at = NOW() "
+      "UPDATE ydsz_file_user_favorite SET sort = #{sort}, updated_at = NOW() "
           + "WHERE user_id = #{userId} AND node_id = #{nodeId}")
   int updatesort(
       @Param("userId") String userId,

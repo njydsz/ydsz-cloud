@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
@@ -35,6 +36,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@TableName("ydsz_msg_log")
 public class MsgLog extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;

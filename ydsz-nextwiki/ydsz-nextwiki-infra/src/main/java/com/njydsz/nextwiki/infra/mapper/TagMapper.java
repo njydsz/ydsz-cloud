@@ -56,13 +56,13 @@ public interface TagMapper extends BaseMapper<Tag> {
   List<Tag> selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
   /**
-   * 插入文件-标签关联记录（中间表 nw_file_tag）。
+   * 插入文件-标签关联记录（中间表 ydsz_file_file_tag）。
    *
    * @param fileTag 关联实体（id/fileNodeId/tagId/createdBy/updatedBy 由调用方填充，revision/deleted 默认 0）
    * @return 受影响行数
    */
   @Insert(
-      "INSERT INTO nw_file_tag (id, file_node_id, tag_id, created_by, created_at, updated_by, updated_at, revision, deleted) "
+      "INSERT INTO ydsz_file_file_tag (id, file_node_id, tag_id, created_by, created_at, updated_by, updated_at, revision, deleted) "
           + "VALUES (#{id}, #{fileNodeId}, #{tagId}, #{createdBy}, NOW(), #{updatedBy}, NOW(), 0, 0)")
   int insertFileTag(FileTag fileTag);
 
@@ -73,7 +73,7 @@ public interface TagMapper extends BaseMapper<Tag> {
    * @param tagId 标签 ID
    * @return 受影响行数
    */
-  @Delete("DELETE FROM nw_file_tag WHERE file_node_id = #{fileNodeId} AND tag_id = #{tagId}")
+  @Delete("DELETE FROM ydsz_file_file_tag WHERE file_node_id = #{fileNodeId} AND tag_id = #{tagId}")
   int deleteFileTag(@Param("fileNodeId") String fileNodeId, @Param("tagId") String tagId);
 
   /**
@@ -82,7 +82,7 @@ public interface TagMapper extends BaseMapper<Tag> {
    * @param fileNodeId 文件节点 ID
    * @return 受影响行数
    */
-  @Delete("DELETE FROM nw_file_tag WHERE file_node_id = #{fileNodeId}")
+  @Delete("DELETE FROM ydsz_file_file_tag WHERE file_node_id = #{fileNodeId}")
   int deleteAllFileTags(@Param("fileNodeId") String fileNodeId);
 
   /**
@@ -99,7 +99,7 @@ public interface TagMapper extends BaseMapper<Tag> {
    * @param tagId 标签 ID
    * @return 受影响行数
    */
-  @Update("UPDATE nw_tag SET usage_count = usage_count + 1 WHERE id = #{tagId}")
+  @Update("UPDATE ydsz_file_tag SET usage_count = usage_count + 1 WHERE id = #{tagId}")
   int incrementUsage(@Param("tagId") String tagId);
 
   /**
@@ -108,7 +108,7 @@ public interface TagMapper extends BaseMapper<Tag> {
    * @param tagId 标签 ID
    * @return 受影响行数
    */
-  @Update("UPDATE nw_tag SET usage_count = GREATEST(usage_count - 1, 0) WHERE id = #{tagId}")
+  @Update("UPDATE ydsz_file_tag SET usage_count = GREATEST(usage_count - 1, 0) WHERE id = #{tagId}")
   int decrementUsage(@Param("tagId") String tagId);
 
   /**
@@ -118,8 +118,8 @@ public interface TagMapper extends BaseMapper<Tag> {
    * @return 命中标签所关联的文件节点 ID 列表
    */
   @Select(
-      "SELECT ft.file_node_id FROM nw_file_tag ft "
-          + "INNER JOIN nw_tag t ON ft.tag_id = t.id "
+      "SELECT ft.file_node_id FROM ydsz_file_file_tag ft "
+          + "INNER JOIN ydsz_file_tag t ON ft.tag_id = t.id "
           + "WHERE t.name LIKE CONCAT('%', #{tagName}, '%') AND ft.deleted = 0 AND t.deleted = 0")
   List<String> findFileNodeIdsByTagName(@Param("tagName") String tagName);
 }

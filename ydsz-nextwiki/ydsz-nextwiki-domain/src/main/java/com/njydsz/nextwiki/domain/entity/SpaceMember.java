@@ -15,7 +15,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * <p><b>S3-P2-01：空间成员角色管理</b>
  *
- * <p>对应空间成员表 {@code nw_space_member}，记录用户与空间的归属关系及角色。
+ * <p>对应空间成员表 {@code ydsz_file_space_member}，记录用户与空间的归属关系及角色。
  *
  * @author ydsz
  * @since 26.09.24

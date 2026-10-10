@@ -3,6 +3,7 @@ package com.njydsz.message.domain.entity;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.domain.enums.core.NotificationCategoryEnum;
@@ -30,6 +31,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@TableName("ydsz_msg_notification")
 public class MsgNotification extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;

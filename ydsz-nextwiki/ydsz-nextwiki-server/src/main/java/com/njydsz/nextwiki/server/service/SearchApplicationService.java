@@ -47,7 +47,7 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
  *       ↓
  *   主路径：UnifiedSearchService → FileSearchProvider（权限过滤 + 全文检索）
  *       ↓
- *   降级：SearchDomainService.search()（nw_search_index 表的 LIKE 查询）
+ *   降级：SearchDomainService.search()（ydsz_file_search_index 表的 LIKE 查询）
  * </pre>
  *
  * <p><b>索引同步链路：</b>

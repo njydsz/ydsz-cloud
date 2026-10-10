@@ -66,7 +66,7 @@ public interface ShareLinkMapper extends BaseMapper<ShareLink> {
    * @param id 分享链接主键
    * @return 受影响行数
    */
-  @Update("UPDATE nw_share_link SET status = 'revoked', updated_at = NOW() WHERE id = #{id}")
+  @Update("UPDATE ydsz_file_share_link SET status = 'revoked', updated_at = NOW() WHERE id = #{id}")
   int revoke(@Param("id") String id);
 
   /**
@@ -76,7 +76,7 @@ public interface ShareLinkMapper extends BaseMapper<ShareLink> {
    * @return 受影响行数
    */
   @Update(
-      "UPDATE nw_share_link SET access_count = access_count + 1, updated_at = NOW() WHERE id = #{id}")
+      "UPDATE ydsz_file_share_link SET access_count = access_count + 1, updated_at = NOW() WHERE id = #{id}")
   int incrementAccessCount(@Param("id") String id);
 
   /**

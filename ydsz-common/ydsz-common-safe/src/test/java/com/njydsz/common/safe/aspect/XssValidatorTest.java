@@ -130,6 +130,67 @@ class XssValidatorTest {
     }
 
     @Test
+    @DisplayName("javascript: 伪协议变体被检测")
+    void javascript_protocol_variants_detected() {
+      // 标准写法
+      assertThat(XssValidator.containsXss("javascript:alert(1)")).isTrue();
+      // 大小写混合
+      assertThat(XssValidator.containsXss("JavaScript:alert(1)")).isTrue();
+      assertThat(XssValidator.containsXss("JAVASCRIPT:void(0)")).isTrue();
+      // 含空白绕过
+      assertThat(XssValidator.containsXss("java\tscript:alert(1)")).isTrue();
+      // 链接中使用
+      assertThat(XssValidator.containsXss("<a href='javascript:alert(1)'>click</a>")).isTrue();
+    }
+
+    @Test
+    @DisplayName("vbscript: 和 data: 伪协议被检测")
+    void other_dangerous_protocols_detected() {
+      assertThat(XssValidator.containsXss("vbscript:MsgBox('XSS')")).isTrue();
+      assertThat(XssValidator.containsXss("VBScript:CreateObject('WScript.Shell')")).isTrue();
+      assertThat(XssValidator.containsXss("data:text/html,<script>alert(1)</script>")).isTrue();
+      assertThat(XssValidator.containsXss("data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==")).isTrue();
+    }
+
+    @Test
+    @DisplayName("<img onerror=...> 事件处理器被检测")
+    void img_onerror_detected() {
+      assertThat(XssValidator.containsXss("<img onerror=alert(1)>")).isTrue();
+      assertThat(XssValidator.containsXss("<img src=x onerror=alert(document.cookie)>")).isTrue();
+      assertThat(XssValidator.containsXss("<IMG ONERROR=alert(1)>")).isTrue();
+      assertThat(XssValidator.containsXss("<img onerror = alert(1)>")).isTrue();
+      assertThat(XssValidator.containsXss("<img src='x' onerror='alert(1)'>")).isTrue();
+    }
+
+    @Test
+    @DisplayName("其他 on* 事件处理器变体被检测")
+    void event_handler_variants_detected() {
+      assertThat(XssValidator.containsXss("<div onmouseover=alert(1)>hover</div>")).isTrue();
+      assertThat(XssValidator.containsXss("<input onfocus=alert(1) autofocus>")).isTrue();
+      assertThat(XssValidator.containsXss("<body onload=alert(1)>")).isTrue();
+      assertThat(XssValidator.containsXss("<svg onload=alert(1)>")).isTrue();
+      assertThat(XssValidator.containsXss("<details open ontoggle=alert(1)>")).isTrue();
+    }
+
+    @Test
+    @DisplayName("正常纯文本和中文内容放行")
+    void normal_text_passed() {
+      assertThat(XssValidator.containsXss("张三")).isFalse();
+      assertThat(XssValidator.containsXss("这是一段正常的中文描述文字")).isFalse();
+      assertThat(XssValidator.containsXss("Hello, World!")).isFalse();
+      assertThat(XssValidator.containsXss("2024-01-15 10:30:00")).isFalse();
+      assertThat(XssValidator.containsXss("订单号：ORD-2024-001")).isFalse();
+      assertThat(XssValidator.containsXss("产品规格：10cm × 20cm")).isFalse();
+    }
+
+    @Test
+    @DisplayName("含有尖括号但非攻击的数学表达式放行")
+    void math_expressions_with_angles_passed() {
+      // 数学表达式中 a < b > c 不应该被误报
+      assertThat(XssValidator.containsXss("range: x<10")).isFalse();
+    }
+
+    @Test
     @DisplayName("expression 和 CSS 行为被检测")
     void expression_and_css_behavior_detected() {
       assertThat(XssValidator.containsXss("expression(alert(1))")).isTrue();

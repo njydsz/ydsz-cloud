@@ -2,6 +2,7 @@ package com.njydsz.agent.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 import lombok.Data;
 
@@ -42,5 +43,5 @@ public class AgentTraceStepDTO implements Serializable {
   private Long durationMs;
 
   /** Token 成本（USD，精确到 6 位小数；非 LLM 调用步骤为 0） */
-  private Double cost;
+  private BigDecimal cost;
 }

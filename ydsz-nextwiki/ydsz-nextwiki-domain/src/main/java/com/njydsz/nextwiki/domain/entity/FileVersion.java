@@ -2,6 +2,7 @@ package com.njydsz.nextwiki.domain.entity;
 
 import java.io.Serializable;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -58,5 +59,6 @@ public class FileVersion extends MpBaseEntity<String> implements Serializable {
   private String changeType;
 
   /** 是否为当前活跃版本 */
+  @TableField("is_active")
   private Boolean isActive;
 }

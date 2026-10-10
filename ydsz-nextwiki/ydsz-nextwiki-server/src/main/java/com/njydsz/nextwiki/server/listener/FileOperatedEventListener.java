@@ -213,7 +213,7 @@ public class FileOperatedEventListener {
   // ==================== 私有方法（DB 降级索引同步） ====================
 
   /**
-   * 构建并同步 DB 降级搜索索引（nw_search_index）。
+   * 构建并同步 DB 降级搜索索引（ydsz_file_search_index）。
    *
    * <p>加载文件节点与标签，经 {@link SearchDomainService#buildSearchIndex} 组装后 upsert。
    * 统一搜索引擎主索引由 {@code SearchIndexEventBridge} 链路另行维护。

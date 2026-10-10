@@ -72,7 +72,7 @@ public interface FileVersionMapper extends BaseMapper<FileVersion> {
    * @return 受影响行数
    */
   @Update(
-      "UPDATE nw_file_version SET is_active = CASE WHEN version_number = #{versionNumber} THEN true ELSE false END "
+      "UPDATE ydsz_file_file_version SET is_active = CASE WHEN version_number = #{versionNumber} THEN true ELSE false END "
           + "WHERE file_node_id = #{fileNodeId}")
   int setActiveVersion(
       @Param("fileNodeId") String fileNodeId, @Param("versionNumber") Integer versionNumber);
@@ -105,10 +105,10 @@ public interface FileVersionMapper extends BaseMapper<FileVersion> {
    * @return 受影响行数
    */
   @Delete(
-      "DELETE FROM nw_file_version WHERE file_node_id = #{fileNodeId} AND deleted = 0 "
+      "DELETE FROM ydsz_file_file_version WHERE file_node_id = #{fileNodeId} AND deleted = 0 "
           + "AND id NOT IN ("
           + "  SELECT id FROM ("
-          + "    SELECT id FROM nw_file_version "
+          + "    SELECT id FROM ydsz_file_file_version "
           + "    WHERE file_node_id = #{fileNodeId} AND deleted = 0 "
           + "    ORDER BY version_number DESC LIMIT #{keepCount}"
           + "  ) AS keep_ids"

@@ -8,7 +8,7 @@ import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
-import com.njydsz.system.domain.approval.ConfigApproval;
+import com.njydsz.system.domain.entity.ConfigApproval;
 import com.njydsz.system.domain.approval.ConfigApprovalVO;
 import com.njydsz.system.domain.dto.ApiPermissionDTO;
 import com.njydsz.system.domain.dto.AppInfoDTO;

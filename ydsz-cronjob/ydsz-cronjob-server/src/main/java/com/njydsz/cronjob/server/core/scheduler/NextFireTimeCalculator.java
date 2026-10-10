@@ -1,11 +1,11 @@
 package com.njydsz.cronjob.server.core.scheduler;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,23 +42,11 @@ public class NextFireTimeCalculator {
   @Value("${ydsz.cronjob.scheduler.cache-ttl-seconds:60}")
   private long cacheTtlSeconds;
 
-  /** 缓存条目：Key = cron + "|" + timezone */
-  private final class CacheEntry {
-    final LocalDateTime calculatedAt;
-    final LocalDateTime nextFireTime;
-
-    CacheEntry(LocalDateTime calculatedAt, LocalDateTime nextFireTime) {
-      this.calculatedAt = calculatedAt;
-      this.nextFireTime = nextFireTime;
-    }
-
-    boolean isExpired() {
-      return Duration.between(calculatedAt, LocalDateTime.now()).getSeconds() >= cacheTtlSeconds;
-    }
-  }
-
-  /** 计算结果缓存 */
-  private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>(64);
+  /** 计算结果缓存（W-TinyLFU，write-through TTL = cacheTtlSeconds） */
+  private final Cache<String, LocalDateTime> cache = YdszCache.newBuilder()
+      .maximumSize(10_000)
+      .expireAfterWrite(cacheTtlSeconds, TimeUnit.SECONDS)
+      .build();
 
   /**
    * 计算任务的下次触发时间（优先使用任务级时区）。
@@ -115,16 +103,12 @@ public class NextFireTimeCalculator {
       Assert.hasText(cronExpression, "cron 表达式不能为空");
       String tz = timezone != null && !timezone.isBlank() ? timezone : DEFAULT_TIMEZONE;
       String cacheKey = cronExpression + "|" + tz;
-      CacheEntry cached = cache.get(cacheKey);
-      if (cached != null && !cached.isExpired()) {
-        return cached.nextFireTime;
-      }
-      ZoneId zoneId = ZoneId.of(tz);
-      CronExpression expr = CronExpression.parse(cronExpression);
-      LocalDateTime now = LocalDateTime.now(zoneId);
-      LocalDateTime next = expr.next(now);
-      cache.put(cacheKey, new CacheEntry(LocalDateTime.now(), next));
-      return next;
+      return cache.getWithProtection(cacheKey, key -> {
+        ZoneId zoneId = ZoneId.of(tz);
+        CronExpression expr = CronExpression.parse(cronExpression);
+        LocalDateTime now = LocalDateTime.now(zoneId);
+        return expr.next(now);
+      });
     } catch (Exception e) {
       log.warn(
           "[NextFireTimeCalculator] 计算 nextFireTime 失败: cron={} tz={} err={}",
@@ -135,8 +119,8 @@ public class NextFireTimeCalculator {
     }
   }
 
-  /** 定时清理过期的缓存条目（防止长期运行后缓存堆积不再使用的表达式）。 */
+  /** 触发缓存维护钩子（YdszCache 基于 W-TinyLFU 自动过期淘汰，本方法供外部调度点触发维护）。 */
   public void cleanup() {
-    cache.entrySet().removeIf(entry -> entry.getValue().isExpired());
+    cache.cleanUp();
   }
 }
