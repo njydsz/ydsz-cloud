@@ -19,7 +19,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 class FlowInstanceStatusStateTransitionTest {
 
   @Nested
-  @DisplayName("DRAFT 状态流转")
+  @DisplayName("DRAFT 状态流转 — 正向")
   class DraftTransitions {
 
     @Test
@@ -44,6 +44,24 @@ class FlowInstanceStatusStateTransitionTest {
     @DisplayName("DRAFT 不能流转到 SUSPENDED")
     void draft_cannotTransitTo_suspended() {
       assertThat(FlowInstanceStatus.DRAFT.canTransitTo(FlowInstanceStatus.SUSPENDED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("DRAFT 不能流转到 ERROR")
+    void draft_cannotTransitTo_error() {
+      assertThat(FlowInstanceStatus.DRAFT.canTransitTo(FlowInstanceStatus.ERROR)).isFalse();
+    }
+
+    @Test
+    @DisplayName("DRAFT 不能流转到 REJECTED")
+    void draft_cannotTransitTo_rejected() {
+      assertThat(FlowInstanceStatus.DRAFT.canTransitTo(FlowInstanceStatus.REJECTED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("DRAFT 不能流转到 ROLLED_BACK")
+    void draft_cannotTransitTo_rolledBack() {
+      assertThat(FlowInstanceStatus.DRAFT.canTransitTo(FlowInstanceStatus.ROLLED_BACK)).isFalse();
     }
   }
 
@@ -109,6 +127,30 @@ class FlowInstanceStatusStateTransitionTest {
     void suspended_cannotTransitTo_completed() {
       assertThat(FlowInstanceStatus.SUSPENDED.canTransitTo(FlowInstanceStatus.COMPLETED)).isFalse();
     }
+
+    @Test
+    @DisplayName("SUSPENDED 不能流转到 REJECTED")
+    void suspended_cannotTransitTo_rejected() {
+      assertThat(FlowInstanceStatus.SUSPENDED.canTransitTo(FlowInstanceStatus.REJECTED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("SUSPENDED 不能流转到 ERROR")
+    void suspended_cannotTransitTo_error() {
+      assertThat(FlowInstanceStatus.SUSPENDED.canTransitTo(FlowInstanceStatus.ERROR)).isFalse();
+    }
+
+    @Test
+    @DisplayName("SUSPENDED 不能流转到 ROLLED_BACK")
+    void suspended_cannotTransitTo_rolledBack() {
+      assertThat(FlowInstanceStatus.SUSPENDED.canTransitTo(FlowInstanceStatus.ROLLED_BACK)).isFalse();
+    }
+
+    @Test
+    @DisplayName("SUSPENDED 不能流转到 DRAFT")
+    void suspended_cannotTransitTo_draft() {
+      assertThat(FlowInstanceStatus.SUSPENDED.canTransitTo(FlowInstanceStatus.DRAFT)).isFalse();
+    }
   }
 
   @Nested
@@ -132,34 +174,244 @@ class FlowInstanceStatusStateTransitionTest {
     void completed_cannotTransitTo_terminated() {
       assertThat(FlowInstanceStatus.COMPLETED.canTransitTo(FlowInstanceStatus.TERMINATED)).isFalse();
     }
+
+    @Test
+    @DisplayName("COMPLETED 不能流转到 REJECTED")
+    void completed_cannotTransitTo_rejected() {
+      assertThat(FlowInstanceStatus.COMPLETED.canTransitTo(FlowInstanceStatus.REJECTED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("COMPLETED 不能流转到 ERROR")
+    void completed_cannotTransitTo_error() {
+      assertThat(FlowInstanceStatus.COMPLETED.canTransitTo(FlowInstanceStatus.ERROR)).isFalse();
+    }
+
+    @Test
+    @DisplayName("COMPLETED 不能流转到 SUSPENDED")
+    void completed_cannotTransitTo_suspended() {
+      assertThat(FlowInstanceStatus.COMPLETED.canTransitTo(FlowInstanceStatus.SUSPENDED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("COMPLETED 不能流转到 DRAFT")
+    void completed_cannotTransitTo_draft() {
+      assertThat(FlowInstanceStatus.COMPLETED.canTransitTo(FlowInstanceStatus.DRAFT)).isFalse();
+    }
   }
 
   @Nested
-  @DisplayName("终态不可流转")
-  class TerminalStates {
+  @DisplayName("ERROR 状态流转 — 正向")
+  class ErrorTransitions {
 
     @Test
-    @DisplayName("TERMINATED 为终态，不可再流转")
-    void terminated_isTerminal_and_cannotTransit() {
-      assertThat(FlowInstanceStatus.TERMINATED.isTerminal()).isTrue();
-      assertThat(FlowInstanceStatus.TERMINATED.isFinished()).isTrue();
-      assertThat(FlowInstanceStatus.TERMINATED.canTransitTo(FlowInstanceStatus.RUNNING)).isFalse();
+    @DisplayName("ERROR 可以流转到 RUNNING（重试）")
+    void error_canTransitTo_running() {
+      assertThat(FlowInstanceStatus.ERROR.canTransitTo(FlowInstanceStatus.RUNNING)).isTrue();
     }
 
     @Test
-    @DisplayName("REJECTED 为终态，不可再流转")
-    void rejected_isTerminal_and_cannotTransit() {
-      assertThat(FlowInstanceStatus.REJECTED.isTerminal()).isTrue();
-      assertThat(FlowInstanceStatus.REJECTED.isFinished()).isTrue();
-      assertThat(FlowInstanceStatus.REJECTED.canTransitTo(FlowInstanceStatus.RUNNING)).isFalse();
+    @DisplayName("ERROR 可以流转到 TERMINATED（放弃异常实例）")
+    void error_canTransitTo_terminated() {
+      assertThat(FlowInstanceStatus.ERROR.canTransitTo(FlowInstanceStatus.TERMINATED)).isTrue();
     }
 
     @Test
-    @DisplayName("ROLLED_BACK 为终态，不可再流转")
-    void rolledBack_isTerminal_and_cannotTransit() {
-      assertThat(FlowInstanceStatus.ROLLED_BACK.isTerminal()).isTrue();
-      assertThat(FlowInstanceStatus.ROLLED_BACK.isFinished()).isTrue();
-      assertThat(FlowInstanceStatus.ROLLED_BACK.canTransitTo(FlowInstanceStatus.RUNNING)).isFalse();
+    @DisplayName("ERROR 可以流转到 REJECTED（驳回异常实例）")
+    void error_canTransitTo_rejected() {
+      assertThat(FlowInstanceStatus.ERROR.canTransitTo(FlowInstanceStatus.REJECTED)).isTrue();
+    }
+
+    @Test
+    @DisplayName("ERROR 可以流转到 ROLLED_BACK（撤销）")
+    void error_canTransitTo_rolledBack() {
+      assertThat(FlowInstanceStatus.ERROR.canTransitTo(FlowInstanceStatus.ROLLED_BACK)).isTrue();
+    }
+  }
+
+  @Nested
+  @DisplayName("ERROR 状态流转 — 负向")
+  class ErrorNegatives {
+
+    @Test
+    @DisplayName("ERROR 不能流转到 COMPLETED")
+    void error_cannotTransitTo_completed() {
+      assertThat(FlowInstanceStatus.ERROR.canTransitTo(FlowInstanceStatus.COMPLETED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("ERROR 不能流转到 SUSPENDED")
+    void error_cannotTransitTo_suspended() {
+      assertThat(FlowInstanceStatus.ERROR.canTransitTo(FlowInstanceStatus.SUSPENDED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("ERROR 不能流转到 DRAFT")
+    void error_cannotTransitTo_draft() {
+      assertThat(FlowInstanceStatus.ERROR.canTransitTo(FlowInstanceStatus.DRAFT)).isFalse();
+    }
+  }
+
+  @Nested
+  @DisplayName("中间态：ERROR 非终态，可被恢复")
+  class IntermediateErrorSemantics {
+
+    @Test
+    @DisplayName("ERROR 不是终态")
+    void error_isNotTerminal() {
+      assertThat(FlowInstanceStatus.ERROR.isTerminal()).isFalse();
+    }
+
+    @Test
+    @DisplayName("ERROR 不是完成态")
+    void error_isNotFinished() {
+      assertThat(FlowInstanceStatus.ERROR.isFinished()).isFalse();
+    }
+  }
+
+  @Nested
+  @DisplayName("中间态：DRAFT/RUNNING/SUSPENDED 非终态")
+  class IntermediateNonTerminalSemantics {
+
+    @Test
+    @DisplayName("DRAFT 不是终态")
+    void draft_isNotTerminal() {
+      assertThat(FlowInstanceStatus.DRAFT.isTerminal()).isFalse();
+    }
+
+    @Test
+    @DisplayName("RUNNING 不是终态")
+    void running_isNotTerminal() {
+      assertThat(FlowInstanceStatus.RUNNING.isTerminal()).isFalse();
+    }
+
+    @Test
+    @DisplayName("SUSPENDED 不是终态")
+    void suspended_isNotTerminal() {
+      assertThat(FlowInstanceStatus.SUSPENDED.isTerminal()).isFalse();
+    }
+  }
+
+  @Nested
+  @DisplayName("TERMINATED 终态负向")
+  class TerminatedNegatives {
+
+    @Test
+    @DisplayName("TERMINATED 不能流转到 COMPLETED")
+    void terminated_cannotTransitTo_completed() {
+      assertThat(FlowInstanceStatus.TERMINATED.canTransitTo(FlowInstanceStatus.COMPLETED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("TERMINATED 不能流转到 REJECTED")
+    void terminated_cannotTransitTo_rejected() {
+      assertThat(FlowInstanceStatus.TERMINATED.canTransitTo(FlowInstanceStatus.REJECTED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("TERMINATED 不能流转到 ROLLED_BACK")
+    void terminated_cannotTransitTo_rolledBack() {
+      assertThat(FlowInstanceStatus.TERMINATED.canTransitTo(FlowInstanceStatus.ROLLED_BACK)).isFalse();
+    }
+
+    @Test
+    @DisplayName("TERMINATED 不能流转到 ERROR")
+    void terminated_cannotTransitTo_error() {
+      assertThat(FlowInstanceStatus.TERMINATED.canTransitTo(FlowInstanceStatus.ERROR)).isFalse();
+    }
+
+    @Test
+    @DisplayName("TERMINATED 不能流转到 SUSPENDED")
+    void terminated_cannotTransitTo_suspended() {
+      assertThat(FlowInstanceStatus.TERMINATED.canTransitTo(FlowInstanceStatus.SUSPENDED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("TERMINATED 不能流转到 DRAFT")
+    void terminated_cannotTransitTo_draft() {
+      assertThat(FlowInstanceStatus.TERMINATED.canTransitTo(FlowInstanceStatus.DRAFT)).isFalse();
+    }
+  }
+
+  @Nested
+  @DisplayName("REJECTED 终态负向")
+  class RejectedNegatives {
+
+    @Test
+    @DisplayName("REJECTED 不能流转到 COMPLETED")
+    void rejected_cannotTransitTo_completed() {
+      assertThat(FlowInstanceStatus.REJECTED.canTransitTo(FlowInstanceStatus.COMPLETED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("REJECTED 不能流转到 TERMINATED")
+    void rejected_cannotTransitTo_terminated() {
+      assertThat(FlowInstanceStatus.REJECTED.canTransitTo(FlowInstanceStatus.TERMINATED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("REJECTED 不能流转到 ROLLED_BACK")
+    void rejected_cannotTransitTo_rolledBack() {
+      assertThat(FlowInstanceStatus.REJECTED.canTransitTo(FlowInstanceStatus.ROLLED_BACK)).isFalse();
+    }
+
+    @Test
+    @DisplayName("REJECTED 不能流转到 ERROR")
+    void rejected_cannotTransitTo_error() {
+      assertThat(FlowInstanceStatus.REJECTED.canTransitTo(FlowInstanceStatus.ERROR)).isFalse();
+    }
+
+    @Test
+    @DisplayName("REJECTED 不能流转到 SUSPENDED")
+    void rejected_cannotTransitTo_suspended() {
+      assertThat(FlowInstanceStatus.REJECTED.canTransitTo(FlowInstanceStatus.SUSPENDED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("REJECTED 不能流转到 DRAFT")
+    void rejected_cannotTransitTo_draft() {
+      assertThat(FlowInstanceStatus.REJECTED.canTransitTo(FlowInstanceStatus.DRAFT)).isFalse();
+    }
+  }
+
+  @Nested
+  @DisplayName("ROLLED_BACK 终态负向")
+  class RolledBackNegatives {
+
+    @Test
+    @DisplayName("ROLLED_BACK 不能流转到 COMPLETED")
+    void rolledBack_cannotTransitTo_completed() {
+      assertThat(FlowInstanceStatus.ROLLED_BACK.canTransitTo(FlowInstanceStatus.COMPLETED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("ROLLED_BACK 不能流转到 TERMINATED")
+    void rolledBack_cannotTransitTo_terminated() {
+      assertThat(FlowInstanceStatus.ROLLED_BACK.canTransitTo(FlowInstanceStatus.TERMINATED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("ROLLED_BACK 不能流转到 REJECTED")
+    void rolledBack_cannotTransitTo_rejected() {
+      assertThat(FlowInstanceStatus.ROLLED_BACK.canTransitTo(FlowInstanceStatus.REJECTED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("ROLLED_BACK 不能流转到 ERROR")
+    void rolledBack_cannotTransitTo_error() {
+      assertThat(FlowInstanceStatus.ROLLED_BACK.canTransitTo(FlowInstanceStatus.ERROR)).isFalse();
+    }
+
+    @Test
+    @DisplayName("ROLLED_BACK 不能流转到 SUSPENDED")
+    void rolledBack_cannotTransitTo_suspended() {
+      assertThat(FlowInstanceStatus.ROLLED_BACK.canTransitTo(FlowInstanceStatus.SUSPENDED)).isFalse();
+    }
+
+    @Test
+    @DisplayName("ROLLED_BACK 不能流转到 DRAFT")
+    void rolledBack_cannotTransitTo_draft() {
+      assertThat(FlowInstanceStatus.ROLLED_BACK.canTransitTo(FlowInstanceStatus.DRAFT)).isFalse();
     }
   }
 

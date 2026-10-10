@@ -1,7 +1,5 @@
 package com.njydsz.system.domain.approval;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import lombok.Data;
@@ -15,10 +13,7 @@ import lombok.Data;
  * @since 26.09.08
  */
 @Data
-public class ConfigApprovalVO implements Serializable {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
+public class ConfigApprovalVO {
 
   /** 审批单唯一 ID */
   private String id;

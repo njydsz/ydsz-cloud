@@ -1,7 +1,5 @@
 package com.njydsz.system.domain.approval;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -22,10 +20,7 @@ import lombok.Data;
  */
 @Data
 @TableName("ydsz_system_config_approval")
-public class ConfigApproval implements Serializable {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
+public class ConfigApproval {
 
   /** 审批单唯一 ID */
   @TableId(value = "id", type = IdType.ASSIGN_ID)

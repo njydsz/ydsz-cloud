@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.njydsz.common.core.constant.SystemConstants;
@@ -234,11 +233,12 @@ public final class RuleContextVO implements Serializable {
    * @since 26.10.01
    */
   public Map<String, Object> getExpressionCache() {
-    // P0-4 修复：AtomicReference 确保线程安全的懒初始化
+    // P0-4 修复：AtomicReference 确保线程安全的懒初始化 + synchronizedMap 保证并发安全
+    // domain 层不直接使用 ConcurrentHashMap，改用 Collections.synchronizedMap 包装
     // 多线程场景（如 ParallelRuleEvaluator）下可能并发调用此方法
     Map<String, Object> cache = expressionCacheRef.get();
     if (cache == null) {
-      cache = new ConcurrentHashMap<>();
+      cache = Collections.synchronizedMap(new LinkedHashMap<>());
       if (expressionCacheRef.compareAndSet(null, cache)) {
         expressionCache = cache;
       } else {

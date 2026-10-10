@@ -1,8 +1,5 @@
 package com.njydsz.system.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
-
 import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Data;
 
@@ -17,9 +14,7 @@ import java.util.Map;
  * @since 26.10.09
  */
 @Data
-public class LockStatsVO implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class LockStatsVO {
 
   /** 活跃锁数量 */
   @JsonProperty("activeLockCount")

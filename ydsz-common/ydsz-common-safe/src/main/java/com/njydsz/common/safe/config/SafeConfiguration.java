@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -91,6 +92,7 @@ import com.njydsz.common.safe.ssrf.SsrfHttpRequestInterceptor;
  * @since 26.10.01
  */
 @AutoConfiguration
+@AutoConfigureAfter(org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration.class)
 @AutoConfigureBefore(JsonAutoConfiguration.class)
 @ConditionalOnClass(FilterRegistrationBean.class)
 @EnableScheduling
@@ -602,12 +604,11 @@ public class SafeConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
-  @ConditionalOnBean(StringRedisTemplate.class)
   public RepeatSubmitTokenService repeatSubmitTokenService(
       ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
     StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
     if (redisTemplate == null) {
-      LOG.warn("StringRedisTemplate 不可用，表单重复提交 Token 服务需要 Redis 支持");
+      LOG.warn("StringRedisTemplate 不可用，表单重复提交 Token 服务需要 Redis 支持，跳过注册");
       return null;
     }
     LOG.info("注册表单重复提交 Token 服务");

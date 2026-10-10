@@ -14,6 +14,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.strategy.RepeatSubmitTokenService;
 import com.njydsz.common.lock.spi.CurrentUserIdResolver;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 
 /**
  * 表单重复提交 Token 控制器（ydsz-system-web）
@@ -40,6 +41,7 @@ import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 @ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/repeat-submit")
+@ConditionalOnBean(RepeatSubmitTokenService.class)
 @Tag(name = "防重复提交", description = "表单重复提交防护 Token 管理")
 public class RepeatSubmitTokenController {
 

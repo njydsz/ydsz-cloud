@@ -2,6 +2,7 @@ package com.njydsz.workflow.domain.enums;
 
 import com.njydsz.common.domain.enums.BaseStatusEnum;
 import com.njydsz.workflow.domain.entity.FlowInstance;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * 流程实例状态枚举
@@ -37,21 +38,27 @@ import com.njydsz.workflow.domain.entity.FlowInstance;
  * @see FlowTaskStatus 任务级状态枚举
  * @see FlowInstance 流程实例实体
  */
+@Schema(name = "FlowInstanceStatus", description = "工作流实例状态枚举")
 public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
 
   /** 运行中：流程已启动，至少有一个任务未完成 */
+  @Schema(description = "运行中（流程已启动，至少有一个任务未完成）")
   RUNNING,
 
   /** 挂起：流程被管理员或系统暂停，可通过「恢复」重新进入 RUNNING */
+  @Schema(description = "已挂起（流程被管理员或系统暂停，可通过恢复重新进入 RUNNING）")
   SUSPENDED,
 
   /** 已完成：所有任务均已通过，流程正常结束 */
+  @Schema(description = "已完成（所有任务均已通过，流程终态）")
   COMPLETED,
 
   /** 已终止：管理员强制停止流程，任务不再继续 */
+  @Schema(description = "已终止（管理员强制停止流程，终态）")
   TERMINATED,
 
   /** 已驳回：被驳回且流程最终结束（区别于「驳回到上一节点」） */
+  @Schema(description = "已驳回（被驳回且流程最终结束，终态）")
   REJECTED,
 
   /**
@@ -59,6 +66,7 @@ public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
    *
    * <p>服务节点执行失败、超时等异常状态，需人工介入处理。 流程引擎会持续重试或等待人工干预。
    */
+  @Schema(description = "执行异常（服务节点执行失败、超时等，需人工介入处理）")
   ERROR,
 
   /**
@@ -67,6 +75,7 @@ public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
    * <p>原本已 COMPLETED 的实例被发起人/管理员撤销，最终态。 流程不再运行，但保留全部历史轨迹，供业务侧 （如 {@code
    * ProjectInitiationFlowListener}）感知并执行回滚补偿逻辑。
    */
+  @Schema(description = "已撤销（原本已完成的实例被撤销，终态，保留全部历史轨迹供回滚补偿）")
   ROLLED_BACK,
 
   /**
@@ -81,6 +90,7 @@ public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
    *   <li>DRAFT → TERMINATED：用户取消草稿
    * </ul>
    */
+  @Schema(description = "草稿（用户暂存待审状态，已填写表单但未正式提交）")
   DRAFT;
 
   /**

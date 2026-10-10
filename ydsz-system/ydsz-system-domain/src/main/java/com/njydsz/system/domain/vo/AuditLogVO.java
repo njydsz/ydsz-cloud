@@ -1,6 +1,5 @@
 package com.njydsz.system.domain.vo;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import lombok.Data;
@@ -18,9 +17,7 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-public class AuditLogVO implements Serializable {
-
-  private static final long serialVersionUID = 1L;
+public class AuditLogVO {
 
   /** 审计记录唯一标识（雪花算法生成） */
   private String id;

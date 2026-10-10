@@ -50,7 +50,7 @@ import com.njydsz.common.core.response.YdszResponse;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/agent/async-task")
+@RequestMapping("/agent/async-task")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "异步任务", description = "异步任务提交 / 查询 / 取消 / 列表")

@@ -76,6 +76,13 @@ spring:
             - Path=/api/literule/**,/api/rule/**
           filters:
             - StripPrefix=1
+        # Generator 模块 - 代码生成引擎
+        - id: ydsz-generator
+          uri: http://localhost:9090
+          predicates:
+            - Path=/api/generator/**
+          filters:
+            - StripPrefix=1
   autoconfigure:
     exclude:
       # 线程池 / 文档 / Sentry / WebMVC 自动配置（网关为 WebFlux reactive 栈）

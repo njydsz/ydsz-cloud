@@ -1,8 +1,5 @@
 package com.njydsz.system.domain.query;
 
-import java.io.Serial;
-import java.io.Serializable;
-
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
@@ -14,9 +11,7 @@ import lombok.Data;
  * @since 26.10.09
  */
 @Data
-public class FeatureFlagPageQuery implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
+public class FeatureFlagPageQuery {
 
   /** 页码（从 1 开始） */
   @Min(value = 1, message = "页码最小为 1")

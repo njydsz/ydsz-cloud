@@ -7,6 +7,7 @@ import java.util.concurrent.Semaphore;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -282,8 +283,8 @@ public class FileConfiguration {
       ObjectProvider<FileMetrics> metricsProvider,
       ObjectProvider<StorageRetryHelper> retryHelperProvider,
       FileTypeValidator fileTypeValidator,
-      ObjectProvider<ExecutorService> deleteExecutorProvider,
-      ObjectProvider<ExecutorService> asyncUploadExecutorProvider) {
+      @Qualifier("fileDeleteExecutor") ObjectProvider<ExecutorService> deleteExecutorProvider,
+      @Qualifier("fileUploadExecutor") ObjectProvider<ExecutorService> asyncUploadExecutorProvider) {
     DefaultStorageFactory factory = new DefaultStorageFactory(fileProperties, fileUploadProperties);
     factory.setMultipartContextStore(multipartContextStore);
     factory.setCheckpointService(checkpointService);

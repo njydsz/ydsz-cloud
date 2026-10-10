@@ -1,8 +1,5 @@
 package com.njydsz.system.domain.vo;
 
-import java.io.Serial;
-import java.io.Serializable;
-
 import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Data;
 
@@ -15,10 +12,7 @@ import lombok.Data;
  * @since 26.10.09
  */
 @Data
-public class FeatureFlagVO implements Serializable {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
+public class FeatureFlagVO {
 
   /** 主键 ID */
   private String id;

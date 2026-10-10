@@ -1,8 +1,5 @@
 package com.njydsz.system.domain.feature;
 
-import java.io.Serial;
-import java.io.Serializable;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
@@ -16,10 +13,7 @@ import lombok.Data;
  * @since 26.10.09
  */
 @Data
-public class FeatureFlagDTO implements Serializable {
-
-  @Serial
-  private static final long serialVersionUID = 1L;
+public class FeatureFlagDTO {
 
   /** 主键 ID（创建时由后端自动生成，更新时必填） */
   private String id;

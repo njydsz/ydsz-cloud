@@ -3,6 +3,7 @@ package com.njydsz.common.lock.config;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -17,6 +18,7 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import com.njydsz.common.lock.aspect.DistributedScheduledAspect;
+import com.njydsz.common.redis.config.RedisConfiguration;
 import com.njydsz.common.lock.aspect.YdszDistributedLockAspect;
 import com.njydsz.common.lock.core.LockEventListener;
 import com.njydsz.common.lock.core.LockTemplate;
@@ -49,8 +51,8 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * @since 26.10.01
  */
 @AutoConfiguration
+@AutoConfigureAfter(RedisConfiguration.class)
 @ConditionalOnClass({StringRedisTemplate.class})
-@ConditionalOnBean(StringRedisTemplate.class)
 @ConditionalOnProperty(
     prefix = "ydsz.lock",
     name = "enabled",
@@ -80,8 +82,8 @@ public class DistributedLockAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
-  public LockEventListener lockEventListener(ObjectProvider<LockEventListener> listener) {
-    return listener.getIfAvailable(() -> LockEventListener.NO_OP);
+  public LockEventListener lockEventListener() {
+    return LockEventListener.NO_OP;
   }
 
   /**

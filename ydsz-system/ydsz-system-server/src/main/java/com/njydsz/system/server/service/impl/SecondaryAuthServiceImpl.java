@@ -10,9 +10,9 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.system.api.client.UserCredentialClient;
 import com.njydsz.system.domain.dto.VerifyPasswordRequest;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.port.UserCredentialPort;
 import com.njydsz.system.domain.vo.SecondaryAuthVO;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.service.SecondaryAuthService;
@@ -46,7 +46,7 @@ public class SecondaryAuthServiceImpl implements SecondaryAuthService {
   /** 令牌值常量 */
   private static final String TOKEN_VERIFIED_VALUE = "1";
 
-  private final UserCredentialClient userCredentialClient;
+  private final UserCredentialPort userCredentialPort;
   private final RedisStringOps redisStringOps;
   private final SystemProperties systemProperties;
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -112,19 +112,15 @@ public class SecondaryAuthServiceImpl implements SecondaryAuthService {
   }
 
   /**
-   * 通过 Feign 客户端调用用户中心校验密码。
+   * 通过端口调用用户中心校验密码（具体实现委托给 infra 层适配器）。
    *
    * @param userId 用户 ID
    * @param password 明文密码
    * @return true 表示密码正确；false 表示密码错误或用户不存在
    */
   private boolean verifyPasswordThroughClient(String userId, String password) {
-    VerifyPasswordRequest request = new VerifyPasswordRequest();
-    request.setUserId(userId);
-    request.setPassword(password);
     try {
-      YdszResponse<Boolean> response = userCredentialClient.verifyPassword(request);
-      return response != null && response.getData() != null && Boolean.TRUE.equals(response.getData());
+      return userCredentialPort.verifyPassword(userId, password);
     } catch (Exception e) {
       log.warn("调用用户中心密码校验服务异常: userId={}, error={}", userId, e.getMessage());
       return false;
