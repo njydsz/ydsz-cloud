@@ -38,7 +38,7 @@
 
 
 CREATE TABLE ydsz_msg_template (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
     locale                   VARCHAR2(16 CHAR)        DEFAULT 'zh-CN',
@@ -101,7 +101,7 @@ CREATE INDEX idx_ydsz_msg_template_scene_code ON ydsz_msg_template (scene_code);
 CREATE INDEX idx_ydsz_msg_template_tenant_is_deleted ON ydsz_msg_template (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_template_version (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     version                  NUMBER(10)               NOT NULL,
     content                  CLOB                     NOT NULL,
@@ -143,7 +143,7 @@ COMMENT ON COLUMN ydsz_msg_template_version.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_msg_template_version_tenant_is_deleted ON ydsz_msg_template_version (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_notification (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     title                    VARCHAR2(255 CHAR)       NOT NULL,
     content                  CLOB                    ,
     level                    VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'INFO',
@@ -216,7 +216,7 @@ CREATE INDEX idx_ydsz_msg_notification_message_group ON ydsz_msg_notification (m
 CREATE INDEX idx_ydsz_msg_notification_tenant_is_deleted ON ydsz_msg_notification (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_user_channel (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     channel_type             VARCHAR2(32 CHAR)        NOT NULL,
     channel_user_id          VARCHAR2(128 CHAR)       NOT NULL,
@@ -257,7 +257,7 @@ CREATE INDEX idx_ydsz_msg_user_channel_channel_user_id ON ydsz_msg_user_channel 
 CREATE INDEX idx_ydsz_msg_user_channel_tenant_is_deleted ON ydsz_msg_user_channel (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_subscription (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     topic_code               VARCHAR2(64 CHAR)        NOT NULL,
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -298,7 +298,7 @@ CREATE INDEX idx_ydsz_msg_subscription_topic_code ON ydsz_msg_subscription (topi
 CREATE INDEX idx_ydsz_msg_subscription_tenant_is_deleted ON ydsz_msg_subscription (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_preference (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
     biz_type                 VARCHAR2(64 CHAR)        NOT NULL DEFAULT '__DEFAULT__',
@@ -352,7 +352,7 @@ COMMENT ON COLUMN ydsz_msg_preference.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_msg_preference_tenant_is_deleted ON ydsz_msg_preference (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_route_rule (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
     biz_type                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -400,7 +400,7 @@ CREATE INDEX idx_ydsz_msg_route_rule_biz_channel ON ydsz_msg_route_rule (biz_typ
 CREATE INDEX idx_ydsz_msg_route_rule_tenant_is_deleted ON ydsz_msg_route_rule (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_variable_source (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     variable_name            VARCHAR2(64 CHAR)        NOT NULL,
     source_type              VARCHAR2(32 CHAR)        NOT NULL,
@@ -440,7 +440,7 @@ COMMENT ON COLUMN ydsz_msg_variable_source.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_msg_variable_source_tenant_is_deleted ON ydsz_msg_variable_source (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_canary (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     canary_key               VARCHAR2(128 CHAR)       NOT NULL,
     experiment_name          VARCHAR2(128 CHAR)       NOT NULL,
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
@@ -487,7 +487,7 @@ CREATE INDEX idx_ydsz_msg_canary_template_code ON ydsz_msg_canary (template_code
 CREATE INDEX idx_ydsz_msg_canary_tenant_is_deleted ON ydsz_msg_canary (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_tenant_config (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     tenant_name              VARCHAR2(128 CHAR)       DEFAULT NULL,
     daily_limit              NUMBER(19)               DEFAULT NULL,
     hourly_limit             NUMBER(19)               DEFAULT NULL,
@@ -518,7 +518,7 @@ COMMENT ON COLUMN ydsz_msg_tenant_config.status IS '配置状态: ENABLED / DISA
 
 
 CREATE TABLE ydsz_msg_batch (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     batch_id                 VARCHAR2(64 CHAR)        NOT NULL,
     batch_name               VARCHAR2(128 CHAR)       DEFAULT NULL,
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -578,7 +578,7 @@ CREATE INDEX idx_ydsz_msg_batch_sender_id ON ydsz_msg_batch (sender_id);
 CREATE INDEX idx_ydsz_msg_batch_tenant_is_deleted ON ydsz_msg_batch (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_aggregate (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     aggregate_group          VARCHAR2(64 CHAR)        NOT NULL,
     receiver                 VARCHAR2(128 CHAR)       NOT NULL,
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -628,7 +628,7 @@ CREATE INDEX idx_ydsz_msg_aggregate_scheduled_send_at ON ydsz_msg_aggregate (sch
 CREATE INDEX idx_ydsz_msg_aggregate_tenant_is_deleted ON ydsz_msg_aggregate (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_offline (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     msg_type                 VARCHAR2(32 CHAR)        DEFAULT NULL,
     payload                  CLOB                     NOT NULL CONSTRAINT ck_ydsz_msg_offline_payload CHECK (payload IS JSON),
@@ -669,7 +669,7 @@ CREATE INDEX idx_ydsz_msg_offline_expired_at ON ydsz_msg_offline (expired_at);
 CREATE INDEX idx_ydsz_msg_offline_tenant_is_deleted ON ydsz_msg_offline (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_log (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
     biz_type                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     biz_id                   VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -767,7 +767,7 @@ CREATE INDEX idx_ydsz_msg_log_scheduled_at ON ydsz_msg_log (scheduled_at);
 CREATE INDEX idx_ydsz_msg_log_tenant_is_deleted ON ydsz_msg_log (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_receipt (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     log_id                   VARCHAR2(32 CHAR)        NOT NULL,
     provider_trace_id        VARCHAR2(128 CHAR)       DEFAULT NULL,
     receipt_type             VARCHAR2(32 CHAR)        NOT NULL,
@@ -811,7 +811,7 @@ CREATE INDEX idx_ydsz_msg_receipt_provider_trace_id ON ydsz_msg_receipt (provide
 CREATE INDEX idx_ydsz_msg_receipt_tenant_is_deleted ON ydsz_msg_receipt (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_trace (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     msg_id                   VARCHAR2(64 CHAR)        NOT NULL,
     trace_id                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     node                     VARCHAR2(64 CHAR)        NOT NULL,
@@ -858,7 +858,7 @@ CREATE INDEX idx_ydsz_msg_trace_node_status ON ydsz_msg_trace (node, status);
 CREATE INDEX idx_ydsz_msg_trace_event_at ON ydsz_msg_trace (event_at);
 
 CREATE TABLE ydsz_msg_feedback (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     msg_id                   VARCHAR2(64 CHAR)        NOT NULL,
     notification_id          VARCHAR2(32 CHAR)        DEFAULT NULL,
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -903,7 +903,7 @@ CREATE INDEX idx_ydsz_msg_feedback_user_id ON ydsz_msg_feedback (user_id);
 CREATE INDEX idx_ydsz_msg_feedback_tenant_is_deleted ON ydsz_msg_feedback (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_outbox (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     aggregate_type           VARCHAR2(128 CHAR)       NOT NULL,
     aggregate_id             VARCHAR2(128 CHAR)       NOT NULL,
     event_type               VARCHAR2(128 CHAR)       NOT NULL,

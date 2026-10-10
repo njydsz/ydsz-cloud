@@ -25,7 +25,7 @@
 
 
 CREATE TABLE ydsz_rule_def (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -107,7 +107,7 @@ CREATE INDEX idx_ydsz_rule_def_status ON ydsz_rule_def (status);
 CREATE INDEX idx_ydsz_rule_def_tenant_is_deleted ON ydsz_rule_def (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_variable_def (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     var_name                 VARCHAR2(128 CHAR)       NOT NULL,
     var_type                 VARCHAR2(32 CHAR)        DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -150,7 +150,7 @@ CREATE INDEX idx_ydsz_rule_variable_def_category ON ydsz_rule_variable_def (cate
 CREATE INDEX idx_ydsz_rule_variable_def_tenant_is_deleted ON ydsz_rule_variable_def (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_template (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     template_name            VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -205,7 +205,7 @@ CREATE INDEX idx_ydsz_rule_template_category ON ydsz_rule_template (category);
 CREATE INDEX idx_ydsz_rule_template_tenant_is_deleted ON ydsz_rule_template (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_script (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -257,7 +257,7 @@ CREATE INDEX idx_ydsz_rule_script_rule_code ON ydsz_rule_script (rule_code);
 CREATE INDEX idx_ydsz_rule_script_tenant_is_deleted ON ydsz_rule_script (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_decision_table (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     table_code               VARCHAR2(64 CHAR)        NOT NULL,
     table_name               VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -310,7 +310,7 @@ CREATE INDEX idx_ydsz_rule_decision_table_category ON ydsz_rule_decision_table (
 CREATE INDEX idx_ydsz_rule_decision_table_tenant_is_deleted ON ydsz_rule_decision_table (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_decision_tree (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -358,7 +358,7 @@ CREATE INDEX idx_ydsz_rule_decision_tree_rule_code ON ydsz_rule_decision_tree (r
 CREATE INDEX idx_ydsz_rule_decision_tree_tenant_is_deleted ON ydsz_rule_decision_tree (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_scorecard (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -413,7 +413,7 @@ CREATE INDEX idx_ydsz_rule_scorecard_category ON ydsz_rule_scorecard (category);
 CREATE INDEX idx_ydsz_rule_scorecard_tenant_is_deleted ON ydsz_rule_scorecard (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_chain_graph (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     name                     VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -453,7 +453,7 @@ COMMENT ON COLUMN ydsz_rule_chain_graph.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_rule_chain_graph_tenant_is_deleted ON ydsz_rule_chain_graph (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_dependency (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     depends_on_rule_code     VARCHAR2(64 CHAR)        NOT NULL,
     dependency_type          VARCHAR2(32 CHAR)        NOT NULL,
@@ -492,7 +492,7 @@ CREATE INDEX idx_ydsz_rule_dependency_depends_on_rule_code ON ydsz_rule_dependen
 CREATE INDEX idx_ydsz_rule_dependency_tenant_is_deleted ON ydsz_rule_dependency (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_pack (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     pack_code                VARCHAR2(64 CHAR)        NOT NULL,
     pack_version             VARCHAR2(32 CHAR)        NOT NULL,
     pack_name                VARCHAR2(128 CHAR)       NOT NULL,
@@ -550,7 +550,7 @@ CREATE INDEX idx_ydsz_rule_pack_industry ON ydsz_rule_pack (industry);
 CREATE INDEX idx_ydsz_rule_pack_tenant_is_deleted ON ydsz_rule_pack (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_pack_install (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     installed_by             VARCHAR2(64 CHAR)        DEFAULT NULL,
     installed_at             TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -585,7 +585,7 @@ CREATE INDEX idx_ydsz_rule_pack_install_installed_at ON ydsz_rule_pack_install (
 CREATE INDEX idx_ydsz_rule_pack_install_tenant_is_deleted ON ydsz_rule_pack_install (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_ab_policy (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     is_auto_rollback_is_enabled    NUMBER(1)                NOT NULL DEFAULT 0,
     rollback_action          VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -633,7 +633,7 @@ COMMENT ON COLUMN ydsz_rule_ab_policy.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_rule_ab_policy_tenant_is_deleted ON ydsz_rule_ab_policy (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_canary_bucket (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     bucket_type              VARCHAR2(32 CHAR)        NOT NULL,
     bucket_count             NUMBER(19)               NOT NULL DEFAULT 0,
@@ -670,7 +670,7 @@ CREATE INDEX idx_ydsz_rule_canary_bucket_stat_date ON ydsz_rule_canary_bucket (s
 CREATE INDEX idx_ydsz_rule_canary_bucket_tenant_is_deleted ON ydsz_rule_canary_bucket (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_ab_rollback (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     trigger_reason           VARCHAR2(32 CHAR)        NOT NULL,
     error_rate               NUMBER(20,6)             DEFAULT NULL,
@@ -713,7 +713,7 @@ CREATE INDEX idx_ydsz_rule_ab_rollback_created_at ON ydsz_rule_ab_rollback (crea
 CREATE INDEX idx_ydsz_rule_ab_rollback_tenant_is_deleted ON ydsz_rule_ab_rollback (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rule_version_history (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     version                  NUMBER(10)               NOT NULL,
     definition_json          CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_rule_version_history_definition_json CHECK (definition_json IS JSON),
@@ -742,7 +742,7 @@ COMMENT ON COLUMN ydsz_rule_version_history.operator IS '操作人';
 CREATE INDEX idx_ydsz_rule_version_history_rule_version ON ydsz_rule_version_history (rule_code, version);
 
 CREATE TABLE ydsz_rule_execution_trace (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     trace_id                 VARCHAR2(64 CHAR)        NOT NULL,
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     rule_name                VARCHAR2(128 CHAR)       DEFAULT NULL,

@@ -23,7 +23,7 @@
 
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_def (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     rule_code                VARCHAR(64)              NOT NULL,
     rule_name                VARCHAR(128)             NOT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
@@ -105,7 +105,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_def_status ON ydsz_rule_def (status);
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_def_tenant_is_deleted ON ydsz_rule_def (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_variable_def (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     var_name                 VARCHAR(128)             NOT NULL,
     var_type                 VARCHAR(32)              DEFAULT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
@@ -148,7 +148,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_variable_def_category ON ydsz_rule_vari
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_variable_def_tenant_is_deleted ON ydsz_rule_variable_def (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_template (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     template_code            VARCHAR(64)              NOT NULL,
     template_name            VARCHAR(128)             NOT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
@@ -203,7 +203,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_template_category ON ydsz_rule_template
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_template_tenant_is_deleted ON ydsz_rule_template (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_script (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     rule_code                VARCHAR(64)              NOT NULL,
     rule_name                VARCHAR(128)             NOT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
@@ -255,7 +255,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_script_rule_code ON ydsz_rule_script (r
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_script_tenant_is_deleted ON ydsz_rule_script (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     table_code               VARCHAR(64)              NOT NULL,
     table_name               VARCHAR(128)             NOT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
@@ -308,7 +308,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_table_category ON ydsz_rule_de
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_table_tenant_is_deleted ON ydsz_rule_decision_table (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     rule_code                VARCHAR(64)              NOT NULL,
     rule_name                VARCHAR(128)             NOT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
@@ -356,7 +356,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_tree_rule_code ON ydsz_rule_de
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_tree_tenant_is_deleted ON ydsz_rule_decision_tree (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     rule_code                VARCHAR(64)              NOT NULL,
     rule_name                VARCHAR(128)             NOT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
@@ -411,7 +411,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_scorecard_category ON ydsz_rule_scoreca
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_scorecard_tenant_is_deleted ON ydsz_rule_scorecard (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_chain_graph (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     rule_code                VARCHAR(64)              NOT NULL,
     name                     VARCHAR(128)             NOT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
@@ -451,7 +451,7 @@ COMMENT ON COLUMN ydsz_rule_chain_graph.updated_by IS '最后更新人';
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_chain_graph_tenant_is_deleted ON ydsz_rule_chain_graph (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     rule_code                VARCHAR(64)              NOT NULL,
     depends_on_rule_code     VARCHAR(64)              NOT NULL,
     dependency_type          VARCHAR(32)              NOT NULL,
@@ -490,7 +490,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_dependency_depends_on_rule_code ON ydsz
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_dependency_tenant_is_deleted ON ydsz_rule_dependency (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     pack_code                VARCHAR(64)              NOT NULL,
     pack_version             VARCHAR(32)              NOT NULL,
     pack_name                VARCHAR(128)             NOT NULL,
@@ -548,7 +548,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_industry ON ydsz_rule_pack (indust
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_tenant_is_deleted ON ydsz_rule_pack (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_pack_install (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     installed_by             VARCHAR(64)              DEFAULT NULL,
     installed_at             TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
@@ -583,7 +583,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_install_installed_at ON ydsz_rule_
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_install_tenant_is_deleted ON ydsz_rule_pack_install (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     rule_code                VARCHAR(64)              NOT NULL,
     is_auto_rollback_enabled SMALLINT                 NOT NULL DEFAULT 0,
     rollback_action          VARCHAR(32)              DEFAULT NULL,
@@ -631,7 +631,7 @@ COMMENT ON COLUMN ydsz_rule_ab_policy.updated_by IS '最后更新人';
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_ab_policy_tenant_is_deleted ON ydsz_rule_ab_policy (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_canary_bucket (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     rule_code                VARCHAR(64)              NOT NULL,
     bucket_type              VARCHAR(32)              NOT NULL,
     bucket_count             BIGINT                   NOT NULL DEFAULT 0,
@@ -668,7 +668,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_canary_bucket_stat_date ON ydsz_rule_ca
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_canary_bucket_tenant_is_deleted ON ydsz_rule_canary_bucket (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     rule_code                VARCHAR(64)              NOT NULL,
     trigger_reason           VARCHAR(32)              NOT NULL,
     error_rate               NUMERIC(20,6)            DEFAULT NULL,
@@ -711,7 +711,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_ab_rollback_created_at ON ydsz_rule_ab_
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_ab_rollback_tenant_is_deleted ON ydsz_rule_ab_rollback (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_version_history (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     rule_code                VARCHAR(64)              NOT NULL,
     version                  INTEGER                  NOT NULL,
     definition_json          JSONB                    DEFAULT NULL,
@@ -741,7 +741,7 @@ COMMENT ON COLUMN ydsz_rule_version_history.created_at IS '创建时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_version_history_rule_version ON ydsz_rule_version_history (rule_code, version);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_execution_trace (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     trace_id                 VARCHAR(64)              NOT NULL,
     rule_code                VARCHAR(64)              NOT NULL,
     rule_name                VARCHAR(128)             DEFAULT NULL,

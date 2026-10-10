@@ -24,7 +24,7 @@
 -- 1. 消息模板主表（支持 ${var} 嵌套占位符 / 多语言 i18n / 版本 / 审核 / 分类 / 场景）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_template (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     template_code   VARCHAR(64)     NOT NULL COMMENT '模板唯一编码（业务标识）',
     channel         VARCHAR(32)     NOT NULL COMMENT '发送通道（SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/DINGTALK_WORK/WECOM/WECOM_APP/FEISHU/WX_MINI/ALIPAY_MINI）',
     locale          VARCHAR(16)     DEFAULT 'zh-CN' COMMENT '语言区域（如 zh-CN / en-US，影响 i18n 选择）',
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_template (
 -- 2. 消息模板版本历史表（每次审核通过/拒绝的版本快照，支持版本回滚与历史对比）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_template_version (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     template_code   VARCHAR(64)     NOT NULL COMMENT '模板编码（关联 ydsz_msg_template.template_code）',
     version         INT             NOT NULL COMMENT '版本号（每次审核通过递增，如 1, 2, 3）',
     content         TEXT            NOT NULL COMMENT '模板内容快照',
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_template_version (
 -- 3. 站内通知表（系统消息/待办/预警/公告统一入口）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_notification (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     title           VARCHAR(255)    NOT NULL COMMENT '通知标题',
     content         TEXT            COMMENT '通知内容',
     level           VARCHAR(32)     NOT NULL DEFAULT 'INFO' COMMENT '通知级别: INFO 提示 / WARN 警告 / ERROR 错误 / URGENT 紧急',
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_notification (
 -- 4. 用户通道绑定表（userId → 各通道联系方式映射）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel (
-    id                VARCHAR(32)   PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     user_id           VARCHAR(32)   NOT NULL COMMENT '用户 ID（关联 ydsz_employee.id）',
     channel_type      VARCHAR(32)   NOT NULL COMMENT '通道类型: SMS/EMAIL/PUSH/DINGTALK/WECOM/FEISHU 等',
     channel_user_id   VARCHAR(128)  NOT NULL COMMENT '通道用户标识（手机号/邮箱/IM userId/企微userId/个推cid）',
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel (
 -- 5. 订阅关系表（用户对主题 topic_code 在指定通道的订阅/退订状态）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_subscription (
-    id                VARCHAR(32)   PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     user_id           VARCHAR(32)   NOT NULL COMMENT '用户 ID',
     topic_code        VARCHAR(64)   NOT NULL COMMENT '主题编码（如 RISK_ALERT / CONTRACT_APPROVAL / APPROVAL_TODO）',
     channel           VARCHAR(32)   NOT NULL COMMENT '通道',
@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_subscription (
 -- 6. 用户消息偏好表（免打扰时段 / 频率上限 / 聚合开关 / 偏好语言）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_preference (
-    id                VARCHAR(32)   PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     user_id           VARCHAR(32)   NOT NULL COMMENT '用户 ID（关联 ydsz_employee.id）',
     channel           VARCHAR(32)   NOT NULL COMMENT '通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU',
     biz_type          VARCHAR(64)   NOT NULL DEFAULT '__DEFAULT__' COMMENT '业务类型（__DEFAULT__ 表示该通道全局默认偏好）',
@@ -210,7 +210,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_preference (
 -- 7. 消息路由规则表（按 biz_type/channel/条件表达式路由到目标通道，支持降级）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_route_rule (
-    id                VARCHAR(32)   PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_code         VARCHAR(64)   NOT NULL COMMENT '规则编码（唯一）',
     rule_name         VARCHAR(128)  NOT NULL COMMENT '规则名称',
     biz_type          VARCHAR(64)   DEFAULT NULL COMMENT '业务类型',
@@ -238,7 +238,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_route_rule (
 -- 8. 消息变量数据源绑定表（模板变量绑定 BEAN/SQL/HTTP/STATIC 数据源）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_variable_source (
-    id                VARCHAR(32)   PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     template_code     VARCHAR(64)   NOT NULL COMMENT '模板编码',
     variable_name     VARCHAR(64)   NOT NULL COMMENT '变量名（与模板 ${var} 对应）',
     source_type       VARCHAR(32)   NOT NULL COMMENT '数据源类型: BEAN / SQL / HTTP / STATIC',
@@ -262,7 +262,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_variable_source (
 -- 9. 灰度实验表（支撑消息模板 A/B 对照实验）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_canary (
-    id                VARCHAR(32)   PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     canary_key        VARCHAR(128)  NOT NULL COMMENT '灰度实验唯一键，格式 canary_{templateCode}_{timestamp}',
     experiment_name   VARCHAR(128)  NOT NULL COMMENT 'A/B 实验名称',
     template_code     VARCHAR(64)   NOT NULL COMMENT '关联模板编码',
@@ -290,7 +290,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_canary (
 -- 10. 多租户消息配置表（租户级发送配额与通道覆盖）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_tenant_config (
-    id                  VARCHAR(32) PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     tenant_name         VARCHAR(128) DEFAULT NULL COMMENT '租户名称',
     daily_limit         BIGINT      DEFAULT NULL COMMENT '租户级每日发送上限（null 表示使用全局默认值）',
     hourly_limit        BIGINT      DEFAULT NULL COMMENT '租户级每小时发送上限（null 表示使用全局默认值）',
@@ -312,7 +312,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_tenant_config (
 -- 11. 消息发送批次表（异步批量发送的批次状态与进度）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_batch (
-    id                VARCHAR(32)   PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     batch_id          VARCHAR(64)   NOT NULL COMMENT '批次 ID（业务侧生成，全局唯一）',
     batch_name        VARCHAR(128)  DEFAULT NULL COMMENT '批次名称',
     channel           VARCHAR(32)   NOT NULL COMMENT '发送通道',
@@ -347,7 +347,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_batch (
 -- 12. 聚合批次表（同 aggregate_group+receiver 的消息按频率合并为摘要发送）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_aggregate (
-    id                 VARCHAR(32)  PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     aggregate_group    VARCHAR(64)  NOT NULL COMMENT '聚合组',
     receiver           VARCHAR(128) NOT NULL COMMENT '接收人',
     channel            VARCHAR(32)  NOT NULL COMMENT '通道',
@@ -377,7 +377,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_aggregate (
 -- 13. 离线消息持久化表（Redis 溢出持久化，支持 30 天回溯）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_offline (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     user_id         VARCHAR(32)     NOT NULL COMMENT '接收人用户 ID',
     msg_type        VARCHAR(32)     DEFAULT NULL COMMENT '消息类型标签（如 NOTIFICATION / ALERT）',
     payload         JSON            NOT NULL COMMENT '消息内容（JSON）',
@@ -402,7 +402,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_offline (
 -- 14. 消息发送日志表（全通道发送全量记录的事实表，消息中心核心表）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_log (
-    id                VARCHAR(32)   PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     channel           VARCHAR(32)   NOT NULL COMMENT '发送通道（SMS/EMAIL/PUSH/INAPP/WEBHOOK/HMAC/HMAC_WORK/WECOM/WECOM_APP/POST/WX_MINI/ALIPAY_MINI）',
     biz_type          VARCHAR(64)   DEFAULT NULL COMMENT '业务类型',
     biz_id            VARCHAR(64)   DEFAULT NULL COMMENT '业务单据 ID',
@@ -460,7 +460,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_log (
 -- 15. 消息回执表（服务商送达/已读/点击/失败回调记录）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_receipt (
-    id                VARCHAR(32)   PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     log_id            VARCHAR(32)   NOT NULL COMMENT '关联 ydsz_msg_log.id',
     provider_trace_id VARCHAR(128)  DEFAULT NULL COMMENT '三方服务商回执 ID',
     receipt_type      VARCHAR(32)   NOT NULL COMMENT '回执类型: DELIVERED 送达 / READ 已读 / CLICKED 点击 / FAILED 失败',
@@ -487,7 +487,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_receipt (
 -- 16. 消息轨迹表（消息从接入到投递全链路的关键节点记录）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_trace (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     msg_id          VARCHAR(64)     NOT NULL COMMENT '消息 ID（关联 ydsz_msg_log.msg_id）',
     trace_id        VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（关联 ydsz_msg_log.trace_id，用于跨服务链路串联）',
     node            VARCHAR(64)     NOT NULL COMMENT '轨迹节点类型（RECEIVED/CHANNEL_CHECK/ROUTE_MATCHED/CANARY_HIT/SUBSCRIPTION_CHECK/PREFERENCE_CHECK/DEDUP_CHECK/RATE_LIMIT_CHECK/TEMPLATE_LOADED/TEMPLATE_RENDERED/SENSITIVE_FILTERED/PERSISTED/SCHEDULED/AGGREGATED/DISPATCH_START/DISPATCH_SUCCESS/FALLBACK/RETRY/SEND_FAILED/RECEIPT_RECEIVED/RECALLED/CASCADE_SENT）',
@@ -519,7 +519,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_trace (
 -- 17. 消息用户反馈表（用户对消息质量的评分和反馈）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_feedback (
-    id                VARCHAR(32)   PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     msg_id            VARCHAR(64)   NOT NULL COMMENT '消息 ID（关联 ydsz_msg_log.msg_id）',
     notification_id   VARCHAR(32)   DEFAULT NULL COMMENT '站内通知 ID（关联 ydsz_msg_notification.id，可为 NULL）',
     user_id           VARCHAR(32)   NOT NULL COMMENT '用户 ID',
@@ -547,7 +547,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_feedback (
 --     参考 ydsz-common-event 的 outbox_mysql.sql，以 OutboxEvent 实体实际字段为准
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_msg_outbox (
-    id                VARCHAR(32)   PRIMARY KEY COMMENT '事件唯一 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '事件唯一 ID（Snowflake）'
     aggregate_type    VARCHAR(128)  NOT NULL COMMENT '聚合根类型',
     aggregate_id      VARCHAR(128)  NOT NULL COMMENT '聚合根 ID',
     event_type        VARCHAR(128)  NOT NULL COMMENT '事件类型',

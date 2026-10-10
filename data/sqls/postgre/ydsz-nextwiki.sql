@@ -23,7 +23,7 @@
 
 
 CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     parent_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     name                     VARCHAR(255)             NOT NULL,
     node_type                VARCHAR(32)              NOT NULL,
@@ -99,7 +99,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_id_parent_tenant ON ydsz_file
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_storage_class ON ydsz_file_file_node (node_type, is_deleted, storage_class, updated_at);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_file_version (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     file_node_id             VARCHAR(32)              NOT NULL,
     version_number           INTEGER                  NOT NULL,
     storage_key              VARCHAR(1024)            DEFAULT NULL,
@@ -145,7 +145,7 @@ COMMENT ON COLUMN ydsz_file_file_version.updated_by IS '最后更新人';
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_version_tenant_is_deleted ON ydsz_file_file_version (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_tag (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     name                     VARCHAR(255)             NOT NULL,
     color                    VARCHAR(32)              DEFAULT NULL,
     type                     VARCHAR(32)              NOT NULL DEFAULT 'manual',
@@ -181,7 +181,7 @@ COMMENT ON COLUMN ydsz_file_tag.updated_by IS '最后更新人';
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_tag_tenant_is_deleted ON ydsz_file_tag (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_file_tag (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     file_node_id             VARCHAR(32)              NOT NULL,
     tag_id                   VARCHAR(32)              NOT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
@@ -214,7 +214,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_tag_tag_id ON ydsz_file_file_tag (
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_tag_tenant_is_deleted ON ydsz_file_file_tag (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_file_comment (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     file_node_id             VARCHAR(32)              NOT NULL,
     content                  TEXT                     NOT NULL,
     parent_comment_id        VARCHAR(32)              DEFAULT NULL,
@@ -255,7 +255,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_comment_parent_comment_id ON ydsz_
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_comment_tenant_is_deleted ON ydsz_file_file_comment (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_file_acl (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     file_node_id             VARCHAR(32)              NOT NULL,
     grantee_type             VARCHAR(32)              NOT NULL,
     grantee_id               VARCHAR(64)              NOT NULL,
@@ -296,7 +296,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_acl_grantee ON ydsz_file_file_acl 
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_acl_tenant_is_deleted ON ydsz_file_file_acl (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_share_link (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     file_node_id             VARCHAR(32)              NOT NULL,
     share_code               VARCHAR(64)              NOT NULL,
     extract_code             VARCHAR(8)               DEFAULT NULL,
@@ -348,7 +348,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_link_expire_reminder ON ydsz_file
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_link_tenant_is_deleted ON ydsz_file_share_link (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_share_recipient (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     share_id                 VARCHAR(32)              NOT NULL,
     recipient_type           VARCHAR(32)              NOT NULL DEFAULT 'USER',
     recipient_id             VARCHAR(64)              NOT NULL,
@@ -388,7 +388,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_recipient_user_is_deleted ON ydsz
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_recipient_tenant_is_deleted ON ydsz_file_share_recipient (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     share_id                 VARCHAR(32)              NOT NULL,
     share_code               VARCHAR(64)              NOT NULL,
     file_node_id             VARCHAR(32)              NOT NULL,
@@ -441,7 +441,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_visitor ON ydsz_file_s
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_tenant_is_deleted ON ydsz_file_share_access_log (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log_archive (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     share_id                 VARCHAR(32)              NOT NULL,
     share_code               VARCHAR(64)              NOT NULL,
     file_node_id             VARCHAR(32)              NOT NULL,
@@ -488,7 +488,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_archive_archive_access
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_archive_tenant_is_deleted ON ydsz_file_share_access_log_archive (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_space (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     name                     VARCHAR(128)             NOT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
     icon_url                 VARCHAR(1024)            DEFAULT NULL,
@@ -540,7 +540,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_owner ON ydsz_file_space (owner_i
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_tenant_is_deleted ON ydsz_file_space (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_space_member (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     space_id                 VARCHAR(32)              NOT NULL,
     user_id                  VARCHAR(64)              NOT NULL,
     role                     VARCHAR(32)              NOT NULL,
@@ -576,7 +576,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_member_user ON ydsz_file_space_me
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_member_tenant_is_deleted ON ydsz_file_space_member (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_space_template (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     name                     VARCHAR(128)             NOT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
     category                 VARCHAR(32)              NOT NULL DEFAULT 'general',
@@ -627,7 +627,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_template_is_system_is_public_acce
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_template_tenant_is_deleted ON ydsz_file_space_template (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_trash_item (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     file_node_id             VARCHAR(32)              NOT NULL,
     original_name            VARCHAR(255)             NOT NULL,
     original_path            VARCHAR(1024)            DEFAULT NULL,
@@ -673,7 +673,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_trash_item_purge_time ON ydsz_file_tras
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_trash_item_tenant_is_deleted ON ydsz_file_trash_item (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_search_index (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     file_node_id             VARCHAR(32)              NOT NULL,
     name                     VARCHAR(255)             NOT NULL,
     path                     VARCHAR(1024)            DEFAULT NULL,
@@ -719,7 +719,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_search_index_ft_search_name_content ON 
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_search_index_tenant_is_deleted ON ydsz_file_search_index (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_user_favorite (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     user_id                  VARCHAR(64)              NOT NULL,
     node_id                  VARCHAR(64)              NOT NULL,
     deleted_time             TIMESTAMP                DEFAULT NULL,
@@ -753,7 +753,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_user_favorite_user_sort ON ydsz_file_us
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_user_favorite_tenant_is_deleted ON ydsz_file_user_favorite (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_user_recent (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     user_id                  VARCHAR(64)              NOT NULL,
     node_id                  VARCHAR(64)              NOT NULL,
     access_type              VARCHAR(32)              NOT NULL DEFAULT 'view',
@@ -789,7 +789,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_user_recent_access_type ON ydsz_file_us
 CREATE INDEX IF NOT EXISTS idx_ydsz_file_user_recent_tenant_is_deleted ON ydsz_file_user_recent (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_file_storage_quota (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     scope_type               VARCHAR(32)              NOT NULL,
     scope_id                 VARCHAR(64)              NOT NULL,
     quota_limit              BIGINT                   NOT NULL DEFAULT 0,

@@ -32,7 +32,7 @@
 
 
 CREATE TABLE IF NOT EXISTS ydsz_job_main (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     job_name                 VARCHAR(128)             NOT NULL,
     job_group                VARCHAR(128)             DEFAULT NULL,
     job_key                  VARCHAR(64)              NOT NULL,
@@ -136,7 +136,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_main_status_is_deleted_next_fire
     ON ydsz_job_main (status, is_deleted, next_fire_time);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_glue (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     job_id                   VARCHAR(32)              NOT NULL,
     source_code              TEXT                     NOT NULL,
     language                 VARCHAR(32)              NOT NULL DEFAULT 'GROOVY',
@@ -174,7 +174,7 @@ COMMENT ON COLUMN ydsz_job_glue.updated_by IS '最后更新人';
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_glue_tenant_is_deleted ON ydsz_job_glue (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_task (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     job_id                   VARCHAR(32)              NOT NULL,
     log_id                   VARCHAR(32)              NOT NULL,
     job_key                  VARCHAR(64)              NOT NULL,
@@ -225,7 +225,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_task_jt_log_id ON ydsz_job_task (log_id)
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_task_tenant_is_deleted ON ydsz_job_task (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_node (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     node_id                  VARCHAR(64)              NOT NULL,
     app_name                 VARCHAR(128)             DEFAULT NULL,
     host                     VARCHAR(128)             NOT NULL,
@@ -278,7 +278,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_node_last_heartbeat ON ydsz_job_node (la
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_node_tenant_is_deleted ON ydsz_job_node (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_history (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     job_id                   VARCHAR(32)              NOT NULL,
     version                  INTEGER                  NOT NULL,
     snapshot                 JSONB                    DEFAULT NULL,
@@ -329,7 +329,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_history_jh_job_id ON ydsz_job_history (j
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_history_jh_changed_at ON ydsz_job_history (changed_at);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_artifact (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     job_id                   VARCHAR(32)              NOT NULL,
     log_id                   VARCHAR(32)              NOT NULL,
     job_key                  VARCHAR(64)              NOT NULL,
@@ -379,7 +379,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_artifact_ja_expire_at ON ydsz_job_artifa
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_artifact_tenant_is_deleted ON ydsz_job_artifact (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_webhook (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     name                     VARCHAR(128)             NOT NULL,
     event_type               VARCHAR(64)              NOT NULL,
     job_key                  VARCHAR(64)              DEFAULT NULL,
@@ -426,7 +426,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_webhook_jw_job_key ON ydsz_job_webhook (
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_webhook_tenant_is_deleted ON ydsz_job_webhook (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_alert_rule (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     rule_name                VARCHAR(128)             NOT NULL,
     job_id                   VARCHAR(32)              DEFAULT NULL,
     job_key                  VARCHAR(64)              DEFAULT NULL,
@@ -481,7 +481,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_rule_ar_alert_type ON ydsz_job_ale
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_rule_tenant_is_deleted ON ydsz_job_alert_rule (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_tenant_quota (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     max_jobs                 INTEGER                  DEFAULT NULL,
     max_concurrent           INTEGER                  DEFAULT NULL,
     max_daily_executions     INTEGER                  DEFAULT NULL,
@@ -516,7 +516,7 @@ COMMENT ON COLUMN ydsz_job_tenant_quota.updated_by IS '最后更新人';
 
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     dag_key                  VARCHAR(64)              NOT NULL,
     dag_name                 VARCHAR(128)             NOT NULL,
     dag_definition           JSONB                    NOT NULL,
@@ -577,7 +577,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_dag_next_fire ON ydsz_job_dag (next_
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_tenant_is_deleted ON ydsz_job_dag (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_version (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     dag_id                   VARCHAR(32)              NOT NULL,
     dag_key                  VARCHAR(64)              NOT NULL,
     version                  INTEGER                  NOT NULL,
@@ -626,7 +626,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_version_dv_dag_key ON ydsz_job_dag_v
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_version_tenant_is_deleted ON ydsz_job_dag_version (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     dag_id                   VARCHAR(32)              NOT NULL,
     dag_key                  VARCHAR(64)              NOT NULL,
     instance_status          VARCHAR(32)              NOT NULL,
@@ -688,7 +688,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_instance_di_started_at ON ydsz_job_d
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_instance_tenant_is_deleted ON ydsz_job_dag_instance (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     dag_instance_id          VARCHAR(32)              NOT NULL,
     dag_id                   VARCHAR(32)              NOT NULL,
     job_id                   VARCHAR(32)              NOT NULL,
@@ -744,7 +744,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_node_instance_dni_log_id ON ydsz_job
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_node_instance_tenant_is_deleted ON ydsz_job_dag_node_instance (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_log (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     job_id                   VARCHAR(32)              NOT NULL,
     job_key                  VARCHAR(64)              NOT NULL,
     start_time               TIMESTAMP                DEFAULT NULL,
@@ -817,7 +817,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_log_job_key_status_created
     ON ydsz_job_log (job_key, status, created_at);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_log_content (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     log_id                   VARCHAR(32)              NOT NULL,
     job_key                  VARCHAR(64)              NOT NULL,
     line_no                  INTEGER                  NOT NULL,
@@ -848,7 +848,7 @@ COMMENT ON COLUMN ydsz_job_log_content.created_at IS '创建时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_log_content_jlc_job_key ON ydsz_job_log_content (job_key);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_daily_stats (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     job_id                   VARCHAR(32)              NOT NULL,
     job_key                  VARCHAR(64)              NOT NULL,
     stats_date               DATE                     NOT NULL,
@@ -891,7 +891,7 @@ COMMENT ON COLUMN ydsz_job_daily_stats.created_at IS '创建时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_daily_stats_jds_stats_date ON ydsz_job_daily_stats (stats_date);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_alert_dispatch (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     alert_code               VARCHAR(64)              NOT NULL,
     source_type              VARCHAR(32)              NOT NULL,
     rule_id                  VARCHAR(32)              DEFAULT NULL,
@@ -984,7 +984,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_outbox_jo_status_created ON ydsz_job_out
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     dag_instance_id          VARCHAR(32)              NOT NULL,
     node_key                 VARCHAR(128)             NOT NULL,
     result_json              TEXT                     DEFAULT NULL,
@@ -1018,7 +1018,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_context_instance ON ydsz_job_dag_con
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_job_event_store (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     aggregate_type           VARCHAR(64)              NOT NULL,
     aggregate_id             VARCHAR(32)              NOT NULL,
     event_type               VARCHAR(128)             NOT NULL,
@@ -1055,7 +1055,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_event_store_occurred ON ydsz_job_event_s
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_job_webhook_retry (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     webhook_id               VARCHAR(32)              NOT NULL,
     event_type               VARCHAR(128)             NOT NULL,
     job_key                  VARCHAR(64)              DEFAULT NULL,

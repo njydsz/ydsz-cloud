@@ -34,7 +34,7 @@
 
 
 CREATE TABLE ydsz_job_main (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     job_name                 VARCHAR2(128 CHAR)       NOT NULL,
     job_group                VARCHAR2(128 CHAR)       DEFAULT NULL,
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
@@ -134,7 +134,7 @@ CREATE INDEX idx_ydsz_job_main_job_next_fire ON ydsz_job_main (next_fire_time);
 CREATE INDEX idx_ydsz_job_main_tenant_is_deleted ON ydsz_job_main (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_glue (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     job_id                   VARCHAR2(32 CHAR)        NOT NULL,
     source_code              CLOB                     NOT NULL,
     language                 VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'GROOVY',
@@ -172,7 +172,7 @@ COMMENT ON COLUMN ydsz_job_glue.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_job_glue_tenant_is_deleted ON ydsz_job_glue (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_task (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     job_id                   VARCHAR2(32 CHAR)        NOT NULL,
     log_id                   VARCHAR2(32 CHAR)        NOT NULL,
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
@@ -223,7 +223,7 @@ CREATE INDEX idx_ydsz_job_task_jt_log_id ON ydsz_job_task (log_id);
 CREATE INDEX idx_ydsz_job_task_tenant_is_deleted ON ydsz_job_task (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_node (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     node_id                  VARCHAR2(64 CHAR)        NOT NULL,
     app_name                 VARCHAR2(128 CHAR)       DEFAULT NULL,
     host                     VARCHAR2(128 CHAR)       NOT NULL,
@@ -272,7 +272,7 @@ CREATE INDEX idx_ydsz_job_node_last_heartbeat ON ydsz_job_node (last_heartbeat);
 CREATE INDEX idx_ydsz_job_node_tenant_is_deleted ON ydsz_job_node (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_history (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     job_id                   VARCHAR2(32 CHAR)        NOT NULL,
     version                  NUMBER(10)               NOT NULL,
     snapshot                 CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_history_snapshot CHECK (snapshot IS JSON),
@@ -323,7 +323,7 @@ CREATE INDEX idx_ydsz_job_history_jh_job_id ON ydsz_job_history (job_id);
 CREATE INDEX idx_ydsz_job_history_jh_changed_at ON ydsz_job_history (changed_at);
 
 CREATE TABLE ydsz_job_artifact (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     job_id                   VARCHAR2(32 CHAR)        NOT NULL,
     log_id                   VARCHAR2(32 CHAR)        NOT NULL,
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
@@ -373,7 +373,7 @@ CREATE INDEX idx_ydsz_job_artifact_ja_expire_at ON ydsz_job_artifact (expire_at)
 CREATE INDEX idx_ydsz_job_artifact_tenant_is_deleted ON ydsz_job_artifact (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_webhook (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     name                     VARCHAR2(128 CHAR)       NOT NULL,
     event_type               VARCHAR2(64 CHAR)        NOT NULL,
     job_key                  VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -420,7 +420,7 @@ CREATE INDEX idx_ydsz_job_webhook_jw_job_key ON ydsz_job_webhook (job_key);
 CREATE INDEX idx_ydsz_job_webhook_tenant_is_deleted ON ydsz_job_webhook (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_alert_rule (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
     job_id                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     job_key                  VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -475,7 +475,7 @@ CREATE INDEX idx_ydsz_job_alert_rule_ar_alert_type ON ydsz_job_alert_rule (alert
 CREATE INDEX idx_ydsz_job_alert_rule_tenant_is_deleted ON ydsz_job_alert_rule (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_tenant_quota (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     max_jobs                 NUMBER(10)               DEFAULT NULL,
     max_concurrent           NUMBER(10)               DEFAULT NULL,
     max_daily_executions     NUMBER(10)               DEFAULT NULL,
@@ -510,7 +510,7 @@ COMMENT ON COLUMN ydsz_job_tenant_quota.updated_by IS '最后更新人';
 
 
 CREATE TABLE ydsz_job_dag (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     dag_key                  VARCHAR2(64 CHAR)        NOT NULL,
     dag_name                 VARCHAR2(128 CHAR)       NOT NULL,
     dag_definition           CLOB                     NOT NULL CONSTRAINT ck_ydsz_job_dag_dag_definition CHECK (dag_definition IS JSON),
@@ -571,7 +571,7 @@ CREATE INDEX idx_ydsz_job_dag_dag_next_fire ON ydsz_job_dag (next_fire_time);
 CREATE INDEX idx_ydsz_job_dag_tenant_is_deleted ON ydsz_job_dag (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_dag_version (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     dag_id                   VARCHAR2(32 CHAR)        NOT NULL,
     dag_key                  VARCHAR2(64 CHAR)        NOT NULL,
     version                  NUMBER(10)               NOT NULL,
@@ -620,7 +620,7 @@ CREATE INDEX idx_ydsz_job_dag_version_dv_dag_key ON ydsz_job_dag_version (dag_ke
 CREATE INDEX idx_ydsz_job_dag_version_tenant_is_deleted ON ydsz_job_dag_version (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_dag_instance (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     dag_id                   VARCHAR2(32 CHAR)        NOT NULL,
     dag_key                  VARCHAR2(64 CHAR)        NOT NULL,
     instance_status          VARCHAR2(32 CHAR)        NOT NULL,
@@ -682,7 +682,7 @@ CREATE INDEX idx_ydsz_job_dag_instance_di_started_at ON ydsz_job_dag_instance (s
 CREATE INDEX idx_ydsz_job_dag_instance_tenant_is_deleted ON ydsz_job_dag_instance (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_dag_node_instance (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     dag_instance_id          VARCHAR2(32 CHAR)        NOT NULL,
     dag_id                   VARCHAR2(32 CHAR)        NOT NULL,
     job_id                   VARCHAR2(32 CHAR)        NOT NULL,
@@ -738,7 +738,7 @@ CREATE INDEX idx_ydsz_job_dag_node_instance_dni_log_id ON ydsz_job_dag_node_inst
 CREATE INDEX idx_ydsz_job_dag_node_instance_tenant_is_deleted ON ydsz_job_dag_node_instance (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_log (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     job_id                   VARCHAR2(32 CHAR)        NOT NULL,
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
     start_time               TIMESTAMP                DEFAULT NULL,
@@ -807,7 +807,7 @@ CREATE INDEX idx_ydsz_job_log_jl_start_time ON ydsz_job_log (start_time);
 CREATE INDEX idx_ydsz_job_log_jl_trace_id ON ydsz_job_log (trace_id);
 
 CREATE TABLE ydsz_job_log_content (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     log_id                   VARCHAR2(32 CHAR)        NOT NULL,
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
     line_no                  NUMBER(10)               NOT NULL,
@@ -837,7 +837,7 @@ COMMENT ON COLUMN ydsz_job_log_content.content IS '日志内容（单行文本�
 CREATE INDEX idx_ydsz_job_log_content_jlc_job_key ON ydsz_job_log_content (job_key);
 
 CREATE TABLE ydsz_job_daily_stats (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     job_id                   VARCHAR2(32 CHAR)        NOT NULL,
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
     stats_date               DATE                     NOT NULL,
@@ -879,7 +879,7 @@ COMMENT ON COLUMN ydsz_job_daily_stats.p95_duration_ms IS 'P95 耗时（毫秒�
 CREATE INDEX idx_ydsz_job_daily_stats_jds_stats_date ON ydsz_job_daily_stats (stats_date);
 
 CREATE TABLE ydsz_job_alert_dispatch (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     alert_code               VARCHAR2(64 CHAR)        NOT NULL,
     source_type              VARCHAR2(32 CHAR)        NOT NULL,
     rule_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,

@@ -26,7 +26,7 @@
 
 
 CREATE TABLE ydsz_sys_tenant (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     tenant_code              VARCHAR2(64 CHAR)        NOT NULL,
     tenant_name              VARCHAR2(128 CHAR)       NOT NULL,
     contact_name             VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -73,7 +73,7 @@ CREATE INDEX idx_ydsz_sys_tenant_plan_id ON ydsz_sys_tenant (plan_id);
 CREATE INDEX idx_ydsz_sys_tenant_tenant_is_deleted ON ydsz_sys_tenant (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_tenant_plan (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     plan_code                VARCHAR2(64 CHAR)        NOT NULL,
     plan_name                VARCHAR2(128 CHAR)       NOT NULL,
     description              CLOB                     DEFAULT NULL,
@@ -112,7 +112,7 @@ COMMENT ON COLUMN ydsz_sys_tenant_plan.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_sys_tenant_plan_tenant_is_deleted ON ydsz_sys_tenant_plan (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_tenant_plan_menu (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     plan_id                  VARCHAR2(32 CHAR)        NOT NULL,
     menu_id                  VARCHAR2(64 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -144,7 +144,7 @@ COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_sys_tenant_plan_menu_tenant_is_deleted ON ydsz_sys_tenant_plan_menu (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_dict_type (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     type_code                VARCHAR2(64 CHAR)        NOT NULL,
     type_name                VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -178,7 +178,7 @@ COMMENT ON COLUMN ydsz_sys_dict_type.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_sys_dict_type_tenant_is_deleted ON ydsz_sys_dict_type (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_dict_item (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     type_code                VARCHAR2(64 CHAR)        NOT NULL,
     item_code                VARCHAR2(64 CHAR)        NOT NULL,
     item_value               VARCHAR2(128 CHAR)       NOT NULL,
@@ -220,7 +220,7 @@ CREATE INDEX idx_ydsz_sys_dict_item_parent_id ON ydsz_sys_dict_item (parent_id);
 CREATE INDEX idx_ydsz_sys_dict_item_tenant_is_deleted ON ydsz_sys_dict_item (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_config (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     config_group             VARCHAR2(64 CHAR)        NOT NULL,
     config_key               VARCHAR2(128 CHAR)       NOT NULL,
     config_value             CLOB                     DEFAULT NULL,
@@ -263,7 +263,7 @@ COMMENT ON COLUMN ydsz_sys_config.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_sys_config_tenant_is_deleted ON ydsz_sys_config (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_variable (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     variable_key             VARCHAR2(128 CHAR)       NOT NULL,
     variable_value           CLOB                     DEFAULT NULL,
     value_type               VARCHAR2(32 CHAR)        NOT NULL,
@@ -299,7 +299,7 @@ COMMENT ON COLUMN ydsz_sys_variable.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_sys_variable_tenant_is_deleted ON ydsz_sys_variable (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_app_info (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     app_code                 VARCHAR2(64 CHAR)        NOT NULL,
     app_name                 VARCHAR2(128 CHAR)       NOT NULL,
     app_key                  VARCHAR2(64 CHAR)        NOT NULL,
@@ -344,7 +344,7 @@ COMMENT ON COLUMN ydsz_sys_app_info.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_sys_app_info_tenant_is_deleted ON ydsz_sys_app_info (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_entity_version (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     resource_type            VARCHAR2(32 CHAR)        NOT NULL,
     resource_key             VARCHAR2(128 CHAR)       NOT NULL,
     resource_group           VARCHAR2(64 CHAR)        DEFAULT NULL,

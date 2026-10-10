@@ -22,7 +22,7 @@
 
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     template_code            VARCHAR(64)              NOT NULL,
     template_name            VARCHAR(128)             NOT NULL,
     content                  TEXT                     NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
     category                 VARCHAR(64)              DEFAULT NULL,
     current_version          INTEGER                  NOT NULL DEFAULT 1,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_ab_test_enabled       BOOLEAN                  NOT NULL DEFAULT FALSE,
+    is_ab_test_enabled       SMALLINT                 NOT NULL DEFAULT 0,
     ab_target_version        INTEGER                  DEFAULT NULL,
     ab_traffic_percent       INTEGER                  DEFAULT NULL,
     CONSTRAINT pk_ydsz_agt_prompt_template PRIMARY KEY (id),
@@ -70,7 +70,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_prompt_template_category ON ydsz_agt_pro
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_prompt_template_tenant_is_deleted ON ydsz_agt_prompt_template (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     template_code            VARCHAR(64)              NOT NULL,
     version                  INTEGER                  NOT NULL,
     content                  TEXT                     NOT NULL,
@@ -106,7 +106,7 @@ COMMENT ON COLUMN ydsz_agt_prompt_version.updated_by IS '最后更新人';
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_prompt_version_template_code ON ydsz_agt_prompt_version (template_code);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     agent_code               VARCHAR(64)              NOT NULL,
     agent_name               VARCHAR(128)             NOT NULL,
     agent_type               VARCHAR(32)              NOT NULL,
@@ -231,7 +231,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_step_trace_step_cost ON ydsz_agt_t
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_step_tenant ON ydsz_agt_trace_step (tenant_id);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
-    id                       VARCHAR(64)             ,
+    id                       VARCHAR(36)
     conversation_id          VARCHAR(64)              DEFAULT NULL,
     trace_id                 VARCHAR(64)              DEFAULT NULL,
     step_description         VARCHAR(512)             DEFAULT NULL,
@@ -291,7 +291,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_approval_approval_status ON ydsz_agt_app
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_approval_approval_tenant ON ydsz_agt_approval (tenant_id);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     conversation_id          VARCHAR(64)              NOT NULL,
     model_name               VARCHAR(64)              NOT NULL,
     prompt_tokens            BIGINT                   NOT NULL DEFAULT 0,
@@ -342,7 +342,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_token_usage_tenant_is_deleted ON ydsz_ag
 -- CREATE EXTENSION IF NOT EXISTS vector;  -- 本地环境未安装 pgvector，已注释
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_document_chunk (
-    id                       VARCHAR(64)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     document_id              VARCHAR(64)              NOT NULL,
     content                  TEXT                     NOT NULL,
     embedding                BYTEA                    DEFAULT NULL,
@@ -601,14 +601,14 @@ EXECUTE FUNCTION fn_ydsz_agt_insight_report_set_updated_at();
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_dag_workflow (
-    id              VARCHAR(32) PRIMARY KEY,
+    id                       VARCHAR(36) PRIMARY KEY
     workflow_code   VARCHAR(64) NOT NULL UNIQUE,
     workflow_name   VARCHAR(128) NOT NULL,
     description     TEXT,
     dsl_content     TEXT NOT NULL,
     layout_json     TEXT,
     category        VARCHAR(64),
-    is_published    BOOLEAN NOT NULL DEFAULT FALSE,
+    is_published    SMALLINT NOT NULL DEFAULT 0,
     -- MpBaseEntity 继承字段补充
     status          VARCHAR(32) DEFAULT NULL,
     sort INTEGER DEFAULT 0,
@@ -652,7 +652,7 @@ EXECUTE FUNCTION fn_ydsz_agt_dag_workflow_set_updated_at();
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_async_task (
-    id                       VARCHAR(32)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     task_type                VARCHAR(64)              NOT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'PENDING',
     user_id                  VARCHAR(64)              DEFAULT NULL,

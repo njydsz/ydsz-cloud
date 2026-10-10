@@ -22,7 +22,7 @@
 
 -- 流程分类表（按业务线分组的树形分类，流程定义引用）
 CREATE TABLE IF NOT EXISTS ydsz_flow_category (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     category_code   VARCHAR(64)     NOT NULL COMMENT '分类编码（唯一，业务语义，建议 snake_case）',
     category_name   VARCHAR(128)    NOT NULL COMMENT '分类名称（前端展示）',
     parent_id       VARCHAR(32)     DEFAULT NULL COMMENT '父分类 ID（支持多级树形结构，顶级为 NULL）',
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_category (
 
 -- 流程定义表（工作流模板层，支持灰度发布与协同编辑锁定）
 CREATE TABLE IF NOT EXISTS ydsz_flow_definition (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码（业务语义，如 project_initiation / contract_change）',
     flow_name           VARCHAR(128)    NOT NULL COMMENT '流程名称（前端展示）',
     category            VARCHAR(64)     DEFAULT NULL COMMENT '流程类别（用于分类筛选，如「项目类」「合同类」「人事类」）',
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_definition (
 
 -- 流程模板表（模板市场预置模板，含 BPMN 2.0 XML，支持继承与版本化）
 CREATE TABLE IF NOT EXISTS ydsz_flow_template (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     template_code       VARCHAR(64)     NOT NULL COMMENT '模板编码（唯一标识，如 hr_leave_approval）',
     template_name       VARCHAR(128)    NOT NULL COMMENT '模板名称（前端展示）',
     category            VARCHAR(32)     DEFAULT NULL COMMENT '分类（HR / FINANCE / ADMIN / PROJECT / GENERAL）',
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_template (
 
 -- 流程节点表（流程定义中的节点：开始/审批/网关/结束/子流程/抄送）
 CREATE TABLE IF NOT EXISTS ydsz_flow_node (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     definition_id       VARCHAR(32)     NOT NULL COMMENT '所属流程定义 ID（关联 ydsz_flow_definition.id）',
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码（冗余字段，避免 JOIN 流程定义）',
     node_type           INT             NOT NULL COMMENT '节点类型（0=开始，1=审批，2=网关，3=结束，4=子流程，5=抄送）',
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_node (
 
 -- 节点跳转关联表（流程图有向边，对应 BPMN sequenceFlow）
 CREATE TABLE IF NOT EXISTS ydsz_flow_skip (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     definition_id       VARCHAR(32)     NOT NULL COMMENT '所属流程定义 ID',
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码（冗余字段）',
     skip_name           VARCHAR(128)    DEFAULT NULL COMMENT '跳转名称（线上标签，如「同意」「金额 > 1万」）',
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_skip (
 
 -- 流程自动触发规则表（源流程终态后按条件自动启动目标流程）
 CREATE TABLE IF NOT EXISTS ydsz_flow_auto_trigger (
-    id                      VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     source_flow_code        VARCHAR(64)     NOT NULL COMMENT '源流程编码（触发方）',
     target_flow_code        VARCHAR(64)     NOT NULL COMMENT '目标流程编码（被触发方）',
     condition_expression    VARCHAR(512)    DEFAULT NULL COMMENT '条件表达式（Aviator 语法，为空则无条件触发）',
@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_auto_trigger (
 
 -- 流程实例表（一次完整流程审批的运行时上下文）
 CREATE TABLE IF NOT EXISTS ydsz_flow_instance (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码（业务侧使用，如 project_initiation）',
     flow_name           VARCHAR(128)    NOT NULL COMMENT '流程名称（冗余，避免 JOIN 流程定义）',
     definition_id       VARCHAR(32)     NOT NULL COMMENT '流程定义 ID（关联 ydsz_flow_definition.id）',
@@ -244,7 +244,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_instance (
 
 -- 待办任务运行表（我的待办核心查询表，任务完成后归档至 ydsz_flow_his_task）
 CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID（关联 ydsz_flow_instance.id）',
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码（冗余字段）',
     definition_id       VARCHAR(32)     NOT NULL COMMENT '流程定义 ID',
@@ -301,7 +301,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
 
 -- 流程任务-办理人关系表（会签多办理人、加签/减签多对多关系）
 CREATE TABLE IF NOT EXISTS ydsz_flow_user (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     task_id             VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_flow_run_task.id）',
     instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID（冗余便于查询）',
     node_code           VARCHAR(64)     NOT NULL COMMENT '节点编码',
@@ -330,7 +330,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_user (
 
 -- 工作流定时器表（中间定时器 / 边界定时器调度，对标 BPMN TimerEvent）
 CREATE TABLE IF NOT EXISTS ydsz_flow_timer (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID',
     definition_id       VARCHAR(32)     NOT NULL COMMENT '流程定义 ID',
     flow_code           VARCHAR(64)     DEFAULT NULL COMMENT '流程编码（冗余）',
@@ -361,7 +361,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_timer (
 
 -- 工作流事件订阅表（消息/错误/信号事件运行时等待，对标 BPMN CatchEvent）
 CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
-    id                      VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     instance_id             VARCHAR(32)     NOT NULL COMMENT '流程实例 ID',
     definition_id           VARCHAR(32)     NOT NULL COMMENT '流程定义 ID',
     flow_code               VARCHAR(64)     DEFAULT NULL COMMENT '流程编码（冗余）',
@@ -399,7 +399,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
 
 -- 历史任务表（已完成任务归档，按月分区，审批历史查询表）
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID（归档时从 ydsz_flow_run_task.instance_id 复制）',
     task_id             VARCHAR(32)     NOT NULL COMMENT '原始任务 ID（指向源 ydsz_flow_run_task.id，归档后源表清理前可关联）',
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码',
@@ -444,7 +444,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
 
 -- 历史流程实例表（终态实例冷数据归档，按月分区）
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码',
     flow_name           VARCHAR(128)    DEFAULT NULL COMMENT '流程名称（冗余）',
     definition_id       VARCHAR(32)     NOT NULL COMMENT '流程定义 ID',
@@ -485,7 +485,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
 
 -- 流程评论表（审批人之间的沟通讨论，支持多级回复，可编辑删除）
 CREATE TABLE IF NOT EXISTS ydsz_flow_comment (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     instance_id         VARCHAR(32)     NOT NULL COMMENT '关联流程实例 ID',
     task_id             VARCHAR(32)     DEFAULT NULL COMMENT '关联任务 ID（实例级评论可为空）',
     node_code           VARCHAR(64)     DEFAULT NULL COMMENT '关联节点编码（任务级评论时记录所在节点）',
@@ -513,7 +513,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_comment (
 
 -- 审批常用语表（用户预设常用审批意见，按用户隔离）
 CREATE TABLE IF NOT EXISTS ydsz_flow_quick_comment (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（所属用户，常用语按用户隔离）',
     content         VARCHAR(500)    NOT NULL COMMENT '常用语内容（审批意见文本，最大长度 500）',
     comment_type    VARCHAR(32)     DEFAULT NULL COMMENT '意见分类（AGREE=同意，DISAGREE=不同意，SUGGEST=建议，INQUIRE=询问，可空）',
@@ -537,7 +537,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_quick_comment (
 
 -- 流程抄送表（抄送中心通知记录，仅通知不阻塞流程）
 CREATE TABLE IF NOT EXISTS ydsz_flow_cc (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID',
     task_id             VARCHAR(32)     DEFAULT NULL COMMENT '触发的任务 ID（CC 节点任务，可空）',
     node_code           VARCHAR(64)     DEFAULT NULL COMMENT '触发抄送的节点编码',
@@ -572,7 +572,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_cc (
 
 -- 流程抄送规则表（自动抄送规则配置，运行时按规则生成抄送记录）
 CREATE TABLE IF NOT EXISTS ydsz_flow_cc_rule (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     flow_code           VARCHAR(64)     DEFAULT NULL COMMENT '流程编码（NULL=所有流程生效）',
     node_code           VARCHAR(64)     DEFAULT NULL COMMENT '节点编码（NULL=该流程所有节点生效）',
     rule_type           VARCHAR(32)     NOT NULL COMMENT '规则类型（USER=指定用户，ROLE=角色展开，DEPT=部门展开，SPEL=表达式动态解析）',
@@ -595,7 +595,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_cc_rule (
 
 -- 审批附件表（附件元数据统一落库，支持 MD5 秒传去重）
 CREATE TABLE IF NOT EXISTS ydsz_flow_attachment (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     instance_id         VARCHAR(32)     NOT NULL COMMENT '关联流程实例 ID',
     task_id             VARCHAR(32)     DEFAULT NULL COMMENT '关联任务 ID（实例级附件可为空）',
     node_code           VARCHAR(64)     DEFAULT NULL COMMENT '关联节点编码',
@@ -632,7 +632,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_attachment (
 
 -- 流程委派代理表（长期授权规则，时间区间内匹配的待办自动转给代理人）
 CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_auth (
-    id                      VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     owner_user_id           VARCHAR(32)     NOT NULL COMMENT '授权人（原办理人）ID',
     owner_user_name         VARCHAR(64)     DEFAULT NULL COMMENT '授权人姓名（冗余）',
     delegate_user_id        VARCHAR(32)     NOT NULL COMMENT '被授权人（代理人）ID',
@@ -663,7 +663,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_auth (
 
 -- 流程管理员角色映射表（用户与流程管理员角色多对多，支持临时授权）
 CREATE TABLE IF NOT EXISTS ydsz_flow_admin_role (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID',
     role_code       VARCHAR(64)     NOT NULL COMMENT '角色编码（FLOW_ADMIN=流程管理员，FLOW_DESIGNER=流程设计者，FLOW_AUDITOR=流程审计员）',
     is_enabled      TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（0=撤销授权但保留历史记录，1=启用中）',
@@ -686,7 +686,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_admin_role (
 
 -- 流程审计日志表（全生命周期操作轨迹，只追加，禁止修改删除）
 CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     instance_id         VARCHAR(32)     NOT NULL COMMENT '流程实例 ID',
     task_id             VARCHAR(32)     DEFAULT NULL COMMENT '任务 ID（实例级操作可为空）',
     flow_code           VARCHAR(64)     NOT NULL COMMENT '流程编码',

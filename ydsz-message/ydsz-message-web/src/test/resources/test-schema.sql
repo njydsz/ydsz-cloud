@@ -5,7 +5,7 @@
 DROP TABLE IF EXISTS ydsz_msg_template CASCADE;
 
 CREATE TABLE ydsz_msg_template (
-  id                VARCHAR(32)   PRIMARY KEY,
+  id                VARCHAR(36)   PRIMARY KEY,
   template_code     VARCHAR(64)   NOT NULL,
   channel           VARCHAR(32)   NOT NULL,
   locale            VARCHAR(16)   DEFAULT 'zh-CN',
@@ -26,11 +26,11 @@ CREATE TABLE ydsz_msg_template (
   variable_defs     JSONB         DEFAULT NULL,
   sort              INTEGER       DEFAULT 0,
   revision          INTEGER       DEFAULT 0,
-  tenant_id         VARCHAR(64)   NOT NULL DEFAULT '0',
+  tenant_id         VARCHAR(36)   NOT NULL DEFAULT '0',
   is_deleted        SMALLINT      NOT NULL DEFAULT 0,
-  created_by        VARCHAR(64)   DEFAULT NULL,
+  created_by        VARCHAR(36)   DEFAULT NULL,
   created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_by        VARCHAR(64)   DEFAULT NULL,
+  updated_by        VARCHAR(36)   DEFAULT NULL,
   updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT uk_ydsz_msg_template_template_code UNIQUE (template_code, tenant_id)
 );

@@ -25,7 +25,7 @@
 
 
 CREATE TABLE ydsz_file_file_node (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     parent_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     name                     VARCHAR2(255 CHAR)       NOT NULL,
     node_type                VARCHAR2(32 CHAR)        NOT NULL,
@@ -99,7 +99,7 @@ CREATE INDEX idx_ydsz_file_file_node_not_is_deleted ON ydsz_file_file_node (id, 
 CREATE INDEX idx_ydsz_file_file_node_storage_class ON ydsz_file_file_node (node_type, is_deleted, storage_class, updated_at);
 
 CREATE TABLE ydsz_file_file_version (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     version_number           NUMBER(10)               NOT NULL,
     storage_key              VARCHAR2(1024 CHAR)      DEFAULT NULL,
@@ -145,7 +145,7 @@ COMMENT ON COLUMN ydsz_file_file_version.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_file_file_version_tenant_is_deleted ON ydsz_file_file_version (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_tag (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     name                     VARCHAR2(255 CHAR)       NOT NULL,
     color                    VARCHAR2(32 CHAR)        DEFAULT NULL,
     type                     VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'manual',
@@ -181,7 +181,7 @@ COMMENT ON COLUMN ydsz_file_tag.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_file_tag_tenant_is_deleted ON ydsz_file_tag (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_file_tag (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     tag_id                   VARCHAR2(32 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -214,7 +214,7 @@ CREATE INDEX idx_ydsz_file_file_tag_tag_id ON ydsz_file_file_tag (tag_id);
 CREATE INDEX idx_ydsz_file_file_tag_tenant_is_deleted ON ydsz_file_file_tag (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_file_comment (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     content                  CLOB                     NOT NULL,
     parent_comment_id        VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -255,7 +255,7 @@ CREATE INDEX idx_ydsz_file_file_comment_parent_comment_id ON ydsz_file_file_comm
 CREATE INDEX idx_ydsz_file_file_comment_tenant_is_deleted ON ydsz_file_file_comment (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_file_acl (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     grantee_type             VARCHAR2(32 CHAR)        NOT NULL,
     grantee_id               VARCHAR2(64 CHAR)        NOT NULL,
@@ -296,7 +296,7 @@ CREATE INDEX idx_ydsz_file_file_acl_grantee ON ydsz_file_file_acl (grantee_type,
 CREATE INDEX idx_ydsz_file_file_acl_tenant_is_deleted ON ydsz_file_file_acl (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_share_link (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     share_code               VARCHAR2(64 CHAR)        NOT NULL,
     extract_code             VARCHAR2(8 CHAR)         DEFAULT NULL,
@@ -348,7 +348,7 @@ CREATE INDEX idx_ydsz_file_share_link_expire_reminder ON ydsz_file_share_link (s
 CREATE INDEX idx_ydsz_file_share_link_tenant_is_deleted ON ydsz_file_share_link (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_share_recipient (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     share_id                 VARCHAR2(32 CHAR)        NOT NULL,
     recipient_type           VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'USER',
     recipient_id             VARCHAR2(64 CHAR)        NOT NULL,
@@ -388,7 +388,7 @@ CREATE INDEX idx_ydsz_file_share_recipient_user ON ydsz_file_share_recipient (re
 CREATE INDEX idx_ydsz_file_share_recipient_tenant_is_deleted ON ydsz_file_share_recipient (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_share_access_log (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     share_id                 VARCHAR2(32 CHAR)        NOT NULL,
     share_code               VARCHAR2(64 CHAR)        NOT NULL,
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
@@ -441,7 +441,7 @@ CREATE INDEX idx_ydsz_file_share_access_log_visitor ON ydsz_file_share_access_lo
 CREATE INDEX idx_ydsz_file_share_access_log_tenant_is_deleted ON ydsz_file_share_access_log (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_share_access_log_archive (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     share_id                 VARCHAR2(32 CHAR)        NOT NULL,
     share_code               VARCHAR2(64 CHAR)        NOT NULL,
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
@@ -488,7 +488,7 @@ CREATE INDEX idx_ydsz_file_share_access_log_archive_archive_access_time ON ydsz_
 CREATE INDEX idx_ydsz_file_share_access_log_archive_tenant_is_deleted ON ydsz_file_share_access_log_archive (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_space (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     name                     VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     icon_url                 VARCHAR2(1024 CHAR)      DEFAULT NULL,
@@ -540,7 +540,7 @@ CREATE INDEX idx_ydsz_file_space_is_owner ON ydsz_file_space (owner_id);
 CREATE INDEX idx_ydsz_file_space_tenant_is_deleted ON ydsz_file_space (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_space_member (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     space_id                 VARCHAR2(32 CHAR)        NOT NULL,
     user_id                  VARCHAR2(64 CHAR)        NOT NULL,
     role                     VARCHAR2(32 CHAR)        NOT NULL,
@@ -576,7 +576,7 @@ CREATE INDEX idx_ydsz_file_space_member_user ON ydsz_file_space_member (user_id)
 CREATE INDEX idx_ydsz_file_space_member_tenant_is_deleted ON ydsz_file_space_member (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_space_template (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     name                     VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     category                 VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'general',
@@ -620,7 +620,7 @@ CREATE INDEX idx_ydsz_file_space_template_system_is_public ON ydsz_file_space_te
 CREATE INDEX idx_ydsz_file_space_template_tenant_is_deleted ON ydsz_file_space_template (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_trash_item (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     original_name            VARCHAR2(255 CHAR)       NOT NULL,
     original_path            VARCHAR2(1024 CHAR)      DEFAULT NULL,
@@ -666,7 +666,7 @@ CREATE INDEX idx_ydsz_file_trash_item_purge_time ON ydsz_file_trash_item (purge_
 CREATE INDEX idx_ydsz_file_trash_item_tenant_is_deleted ON ydsz_file_trash_item (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_search_index (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     name                     VARCHAR2(255 CHAR)       NOT NULL,
     path                     VARCHAR2(1024 CHAR)      DEFAULT NULL,
@@ -712,7 +712,7 @@ CREATE INDEX idx_ydsz_file_search_index_ft_search_name_content ON ydsz_file_sear
 CREATE INDEX idx_ydsz_file_search_index_tenant_is_deleted ON ydsz_file_search_index (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_user_favorite (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     user_id                  VARCHAR2(64 CHAR)        NOT NULL,
     node_id                  VARCHAR2(64 CHAR)        NOT NULL,
     deleted_time             TIMESTAMP                DEFAULT NULL,
@@ -746,7 +746,7 @@ CREATE INDEX idx_ydsz_file_user_favorite_user_sort ON ydsz_file_user_favorite (u
 CREATE INDEX idx_ydsz_file_user_favorite_tenant_is_deleted ON ydsz_file_user_favorite (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_user_recent (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     user_id                  VARCHAR2(64 CHAR)        NOT NULL,
     node_id                  VARCHAR2(64 CHAR)        NOT NULL,
     access_type              VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'view',
@@ -780,7 +780,7 @@ CREATE INDEX idx_ydsz_file_user_recent_access_type ON ydsz_file_user_recent (use
 CREATE INDEX idx_ydsz_file_user_recent_tenant_is_deleted ON ydsz_file_user_recent (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_file_storage_quota (
-    id                       VARCHAR2(32 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     scope_type               VARCHAR2(32 CHAR)        NOT NULL,
     scope_id                 VARCHAR2(64 CHAR)        NOT NULL,
     quota_limit              NUMBER(19)               NOT NULL DEFAULT 0,

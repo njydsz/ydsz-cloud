@@ -36,7 +36,7 @@
 
 
 CREATE TABLE ydsz_flow_category (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     category_code            VARCHAR2(64 CHAR)        NOT NULL,
     category_name            VARCHAR2(128 CHAR)       NOT NULL,
     parent_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -77,7 +77,7 @@ CREATE INDEX idx_ydsz_flow_category_parent_id ON ydsz_flow_category (parent_id);
 CREATE INDEX idx_ydsz_flow_category_tenant_is_deleted ON ydsz_flow_category (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_definition (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     flow_name                VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -146,7 +146,7 @@ CREATE INDEX idx_ydsz_flow_definition_category ON ydsz_flow_definition (category
 CREATE INDEX idx_ydsz_flow_definition_tenant_is_deleted ON ydsz_flow_definition (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_template (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     template_name            VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -203,7 +203,7 @@ CREATE INDEX idx_ydsz_flow_template_parent_template_id ON ydsz_flow_template (pa
 CREATE INDEX idx_ydsz_flow_template_tenant_is_deleted ON ydsz_flow_template (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_node (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     node_type                NUMBER(10)               NOT NULL,
@@ -258,7 +258,7 @@ CREATE INDEX idx_ydsz_flow_node_flow_code ON ydsz_flow_node (flow_code);
 CREATE INDEX idx_ydsz_flow_node_tenant_is_deleted ON ydsz_flow_node (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_skip (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     skip_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
@@ -314,7 +314,7 @@ CREATE INDEX idx_ydsz_flow_skip_source_node_code ON ydsz_flow_skip (source_node_
 CREATE INDEX idx_ydsz_flow_skip_tenant_is_deleted ON ydsz_flow_skip (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_auto_trigger (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     source_flow_code         VARCHAR2(64 CHAR)        NOT NULL,
     target_flow_code         VARCHAR2(64 CHAR)        NOT NULL,
     condition_expression     VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -355,7 +355,7 @@ CREATE INDEX idx_ydsz_flow_auto_trigger_is_enabled ON ydsz_flow_auto_trigger (en
 CREATE INDEX idx_ydsz_flow_auto_trigger_tenant_is_deleted ON ydsz_flow_auto_trigger (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_instance (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     flow_name                VARCHAR2(128 CHAR)       NOT NULL,
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
@@ -431,7 +431,7 @@ CREATE INDEX idx_ydsz_flow_instance_flow_status ON ydsz_flow_instance (flow_stat
 CREATE INDEX idx_ydsz_flow_instance_tenant_is_deleted ON ydsz_flow_instance (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_run_task (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
@@ -539,7 +539,7 @@ CREATE INDEX idx_ydsz_flow_run_task_due_at ON ydsz_flow_run_task (due_at);
 CREATE INDEX idx_ydsz_flow_run_task_tenant_is_deleted ON ydsz_flow_run_task (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_user (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     task_id                  VARCHAR2(32 CHAR)        NOT NULL,
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     node_code                VARCHAR2(64 CHAR)        NOT NULL,
@@ -592,7 +592,7 @@ CREATE INDEX idx_ydsz_flow_user_instance_id ON ydsz_flow_user (instance_id);
 CREATE INDEX idx_ydsz_flow_user_tenant_is_deleted ON ydsz_flow_user (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_timer (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -648,7 +648,7 @@ CREATE INDEX idx_ydsz_flow_timer_timer_status ON ydsz_flow_timer (timer_status);
 CREATE INDEX idx_ydsz_flow_timer_tenant_is_deleted ON ydsz_flow_timer (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_event_subscription (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -709,7 +709,7 @@ CREATE INDEX idx_ydsz_flow_event_subscription_correlation_key ON ydsz_flow_event
 CREATE INDEX idx_ydsz_flow_event_subscription_tenant_is_deleted ON ydsz_flow_event_subscription (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_his_task (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     task_id                  VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
@@ -794,7 +794,7 @@ CREATE INDEX idx_ydsz_flow_his_task_finish_at ON ydsz_flow_his_task (finish_at);
 CREATE INDEX idx_ydsz_flow_his_task_tenant_is_deleted ON ydsz_flow_his_task (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_his_instance (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     flow_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
@@ -863,7 +863,7 @@ CREATE INDEX idx_ydsz_flow_his_instance_archived_at ON ydsz_flow_his_instance (a
 CREATE INDEX idx_ydsz_flow_his_instance_end_at ON ydsz_flow_his_instance (end_at);
 
 CREATE TABLE ydsz_flow_comment (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     task_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -914,7 +914,7 @@ CREATE INDEX idx_ydsz_flow_comment_parent_comment_id ON ydsz_flow_comment (paren
 CREATE INDEX idx_ydsz_flow_comment_tenant_is_deleted ON ydsz_flow_comment (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_quick_comment (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     content                  VARCHAR2(500 CHAR)       NOT NULL,
     comment_type             VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -956,7 +956,7 @@ CREATE INDEX idx_ydsz_flow_quick_comment_use_count ON ydsz_flow_quick_comment (u
 CREATE INDEX idx_ydsz_flow_quick_comment_tenant_is_deleted ON ydsz_flow_quick_comment (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_cc (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     task_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -1020,7 +1020,7 @@ CREATE INDEX idx_ydsz_flow_cc_business_key ON ydsz_flow_cc (business_key);
 CREATE INDEX idx_ydsz_flow_cc_tenant_is_deleted ON ydsz_flow_cc (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_cc_rule (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     flow_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
     rule_type                VARCHAR2(32 CHAR)        NOT NULL,
@@ -1061,7 +1061,7 @@ CREATE INDEX idx_ydsz_flow_cc_rule_is_enabled ON ydsz_flow_cc_rule (enabled);
 CREATE INDEX idx_ydsz_flow_cc_rule_tenant_is_deleted ON ydsz_flow_cc_rule (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_attachment (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     task_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -1121,7 +1121,7 @@ CREATE INDEX idx_ydsz_flow_attachment_md5 ON ydsz_flow_attachment (md5);
 CREATE INDEX idx_ydsz_flow_attachment_tenant_is_deleted ON ydsz_flow_attachment (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_delegate_auth (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     owner_user_id            VARCHAR2(32 CHAR)        NOT NULL,
     owner_user_name          VARCHAR2(64 CHAR)        DEFAULT NULL,
     delegate_user_id         VARCHAR2(32 CHAR)        NOT NULL,
@@ -1177,7 +1177,7 @@ CREATE INDEX idx_ydsz_flow_delegate_auth_status_time ON ydsz_flow_delegate_auth 
 CREATE INDEX idx_ydsz_flow_delegate_auth_tenant_is_deleted ON ydsz_flow_delegate_auth (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_admin_role (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     role_code                VARCHAR2(64 CHAR)        NOT NULL,
     is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
@@ -1218,7 +1218,7 @@ CREATE INDEX idx_ydsz_flow_admin_role_role_code ON ydsz_flow_admin_role (role_co
 CREATE INDEX idx_ydsz_flow_admin_role_tenant_is_deleted ON ydsz_flow_admin_role (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_audit_log (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     task_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,

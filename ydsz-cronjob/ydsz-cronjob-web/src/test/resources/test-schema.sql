@@ -5,7 +5,7 @@
 DROP TABLE IF EXISTS ydsz_job_main CASCADE;
 
 CREATE TABLE ydsz_job_main (
-  id                        VARCHAR(32)   PRIMARY KEY,
+  id                        VARCHAR(36)   PRIMARY KEY,
   job_name                  VARCHAR(128)  NOT NULL,
   job_group                 VARCHAR(128)  DEFAULT NULL,
   job_key                   VARCHAR(64)   NOT NULL,
@@ -44,11 +44,11 @@ CREATE TABLE ydsz_job_main (
   status                    VARCHAR(32)   DEFAULT NULL,
   sort                      INTEGER       DEFAULT 0,
   revision                  INTEGER       NOT NULL DEFAULT 0,
-  tenant_id                 VARCHAR(64)   NOT NULL DEFAULT '0',
+  tenant_id                 VARCHAR(36)   NOT NULL DEFAULT '0',
   is_deleted                SMALLINT      NOT NULL DEFAULT 0,
-  created_by                VARCHAR(64)   DEFAULT NULL,
+  created_by                VARCHAR(36)   DEFAULT NULL,
   created_at                TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_by                VARCHAR(64)   DEFAULT NULL,
+  updated_by                VARCHAR(36)   DEFAULT NULL,
   updated_at                TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT uk_ydsz_job_job_key UNIQUE (job_key, tenant_id)
 );

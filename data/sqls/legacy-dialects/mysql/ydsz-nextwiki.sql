@@ -11,7 +11,7 @@
 -- 1. 文件节点主表（网盘文件/目录树）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     parent_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '父节点ID（根目录为 "0"）',
     name            VARCHAR(255)    NOT NULL COMMENT '节点名称（文件名或目录名）',
     node_type       VARCHAR(32)     NOT NULL COMMENT 'is_folder / file',
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
 -- 2. 文件版本历史表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_version (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '关联的文件节点ID',
     version_number  INT             NOT NULL COMMENT '版本号（从 1 开始递增）',
     storage_key     VARCHAR(1024)   DEFAULT NULL COMMENT '该版本的存储对象键',
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_version (
 -- 3. 标签表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_tag (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     name            VARCHAR(255)    NOT NULL COMMENT '标签名称',
     color           VARCHAR(32)     DEFAULT NULL COMMENT '标签颜色（十六进制颜色码，如 #1890ff）',
     type            VARCHAR(32)     NOT NULL DEFAULT 'manual' COMMENT 'is_system（系统预设）',
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_tag (
 -- 4. 文件-标签关联表（多对多）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_tag (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点ID',
     tag_id          VARCHAR(32)     NOT NULL COMMENT '标签ID',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_tag (
 -- 5. 文件评论表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_comment (
-    id                VARCHAR(32)   NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     file_node_id      VARCHAR(32)   NOT NULL COMMENT '关联的文件节点ID',
     content           TEXT          NOT NULL COMMENT '评论内容',
     parent_comment_id VARCHAR(32)   DEFAULT NULL COMMENT '父评论ID（用于回复，null 表示顶级评论）',
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_comment (
 -- 6. 文件级 ACL 权限表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_acl (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点ID',
     grantee_type    VARCHAR(32)     NOT NULL COMMENT '授权对象类型：user / role / group / tenant',
     grantee_id      VARCHAR(64)     NOT NULL COMMENT '授权对象ID（用户ID / 角色ID / 组ID / 租户ID）',
@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_acl (
 -- 7. 文件分享链接表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_share_link (
-    id                VARCHAR(32)   NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     file_node_id      VARCHAR(32)   NOT NULL COMMENT '关联的文件节点ID',
     share_code        VARCHAR(64)   NOT NULL COMMENT '分享码（URL 中的唯一标识，UUID 生成）',
     extract_code      VARCHAR(8)    DEFAULT NULL COMMENT '提取码（4 位数字，访问时需要输入）',
@@ -213,7 +213,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_link (
 -- 8. 分享目标用户表（定向分享）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_share_recipient (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     share_id        VARCHAR(32)     NOT NULL COMMENT '分享链接 ID',
     recipient_type  VARCHAR(32)     NOT NULL DEFAULT 'USER' COMMENT '接收者类型：USER/DEPT/ROLE',
     recipient_id    VARCHAR(64)     NOT NULL COMMENT '接收者 ID',
@@ -239,7 +239,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_recipient (
 -- 9. 分享链接访问日志表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     share_id        VARCHAR(32)     NOT NULL COMMENT '分享链接 ID',
     share_code      VARCHAR(64)     NOT NULL COMMENT '分享码',
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点 ID',
@@ -272,7 +272,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log (
 -- 10. 分享访问日志归档表（V5 归档策略，MySQL 以普通表落地，按 access_time/created_at 定期清理归档）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log_archive (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     share_id        VARCHAR(32)     NOT NULL COMMENT '分享链接 ID',
     share_code      VARCHAR(64)     NOT NULL COMMENT '分享码',
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点 ID',
@@ -304,7 +304,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log_archive (
 -- 11. 知识库空间表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_space (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     name            VARCHAR(128)    NOT NULL COMMENT '空间名称',
     description     VARCHAR(512)    DEFAULT NULL COMMENT '空间描述',
     icon_url        VARCHAR(1024)   DEFAULT NULL COMMENT '空间图标 URL',
@@ -336,7 +336,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space (
 -- 12. 空间成员表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_space_member (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     space_id        VARCHAR(32)     NOT NULL COMMENT '空间ID',
     user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
     role            VARCHAR(32)     NOT NULL COMMENT 'is_owner / admin / editor / viewer',
@@ -361,7 +361,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space_member (
 -- 13. 空间模板表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_space_template (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     name            VARCHAR(128)    NOT NULL COMMENT '模板名称',
     description     VARCHAR(512)    DEFAULT NULL COMMENT '模板描述',
     category        VARCHAR(32)     NOT NULL DEFAULT 'general' COMMENT '模板分类：general / project / meeting / knowledge',
@@ -389,7 +389,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space_template (
 -- 14. 回收站条目表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_trash_item (
-    id                  VARCHAR(32)   NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     file_node_id        VARCHAR(32)   NOT NULL COMMENT '原文件节点ID',
     original_name       VARCHAR(255)  NOT NULL COMMENT '原文件名',
     original_path       VARCHAR(1024) DEFAULT NULL COMMENT '原始路径',
@@ -418,7 +418,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_trash_item (
 -- 15. 文件搜索索引表（ES 不可用时的数据库 fallback）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_search_index (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '关联的文件节点ID',
     name            VARCHAR(255)    NOT NULL COMMENT '文件名（用于搜索）',
     path            VARCHAR(1024)   DEFAULT NULL COMMENT '目录路径',
@@ -446,7 +446,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_search_index (
 -- 16. 用户收藏夹表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_user_favorite (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
     node_id         VARCHAR(64)     NOT NULL COMMENT '收藏的文件/目录节点ID',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
@@ -469,7 +469,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_user_favorite (
 -- 17. 用户最近访问表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_user_recent (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
     node_id         VARCHAR(64)     NOT NULL COMMENT '访问的文件/目录节点ID',
     access_type     VARCHAR(32)     NOT NULL DEFAULT 'view' COMMENT '访问类型：view / edit / download',
@@ -494,7 +494,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_user_recent (
 -- 18. 存储配额表
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_storage_quota (
-    id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) NOT NULL COMMENT '主键 ID（Snowflake）'
     scope_type      VARCHAR(32)     NOT NULL COMMENT '配额维度：user / tenant / project',
     scope_id        VARCHAR(64)     NOT NULL COMMENT '维度ID（用户ID / 租户ID / 项目ID）',
     quota_limit     BIGINT          NOT NULL DEFAULT 0 COMMENT '配额上限（字节）',

@@ -12,7 +12,7 @@
 
 -- 租户主表（SaaS 多租户核心元数据）
 CREATE TABLE IF NOT EXISTS ydsz_sys_tenant (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     tenant_code     VARCHAR(64)     NOT NULL COMMENT '租户编码（唯一业务标识，租户登录/调用使用）',
     tenant_name     VARCHAR(128)    NOT NULL COMMENT '租户名称（展示用）',
     contact_name    VARCHAR(64)     DEFAULT NULL COMMENT '联系人姓名',
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant (
 
 -- 租户套餐表（套餐/订阅计划：功能菜单 + 资源配额 + 计费规则）
 CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     plan_code       VARCHAR(64)     NOT NULL COMMENT '套餐编码（唯一标识，如 TRIAL/STANDARD/ENTERPRISE）',
     plan_name       VARCHAR(128)    NOT NULL COMMENT '套餐名称（展示用，如「试用版」「企业版」）',
     description     TEXT            DEFAULT NULL COMMENT '套餐描述（包含价格、功能清单、配额上限）',
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan (
 
 -- 租户套餐菜单关联表（套餐与菜单权限多对多关联）
 CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan_menu (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     plan_id         VARCHAR(32)     NOT NULL COMMENT '套餐 ID（ydsz_sys_tenant_plan.id）',
     menu_id         VARCHAR(64)     NOT NULL COMMENT '菜单 ID（ydsz_menu.id 或权限码 ydsz:xxx）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan_menu (
 
 -- 字典类型表（数据字典分类信息）
 CREATE TABLE IF NOT EXISTS ydsz_sys_dict_type (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     type_code       VARCHAR(64)     NOT NULL COMMENT '类型编码（唯一标识，用于业务引用）',
     type_name       VARCHAR(128)    NOT NULL COMMENT '类型名称（展示用）',
     description     VARCHAR(512)    DEFAULT NULL COMMENT '类型描述',
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_dict_type (
 
 -- 字典项表（字典类型的具体枚举值）
 CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     type_code       VARCHAR(64)     NOT NULL COMMENT '所属字典类型编码（逻辑外键 → ydsz_sys_dict_type.type_code）',
     item_code       VARCHAR(64)     NOT NULL COMMENT '字典项编码（同 typeCode 内唯一）',
     item_value      VARCHAR(128)    NOT NULL COMMENT '字典项真实值（业务代码引用的枚举值，如 "PAID"）',
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
 
 -- 系统配置表（系统级配置项，面向后端）
 CREATE TABLE IF NOT EXISTS ydsz_sys_config (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     config_group    VARCHAR(64)     NOT NULL COMMENT '配置分组（按业务域分类管理配置）',
     config_key      VARCHAR(128)    NOT NULL COMMENT '配置键（同组内唯一标识）',
     config_value    TEXT            DEFAULT NULL COMMENT '配置值',
@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_config (
 
 -- 系统变量表（系统级动态变量，面向业务侧，按 key 高频查询）
 CREATE TABLE IF NOT EXISTS ydsz_sys_variable (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     variable_key    VARCHAR(128)    NOT NULL COMMENT '变量键（唯一标识，全局唯一）',
     variable_value  TEXT            DEFAULT NULL COMMENT '变量值（按 valueType 反序列化为 String/Number/Boolean/JSON）',
     value_type      VARCHAR(32)     NOT NULL COMMENT '值类型（STRING/NUMBER/BOOLEAN/JSON）',
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_variable (
 
 -- 应用信息表（OAuth2 客户端应用注册信息）
 CREATE TABLE IF NOT EXISTS ydsz_sys_app_info (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     app_code        VARCHAR(64)     NOT NULL COMMENT '应用业务编码（对外展示/业务标识，全局唯一）',
     app_name        VARCHAR(128)    NOT NULL COMMENT '应用名称',
     app_key         VARCHAR(64)     NOT NULL COMMENT '应用唯一标识（认证查询入口，语义等价 OAuth2 client_id，租户内唯一）',
@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS ydsz_sys_app_info (
 
 -- 统一实体版本表（Config/Dict/Variable 变更历史快照）
 CREATE TABLE IF NOT EXISTS ydsz_sys_entity_version (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     resource_type   VARCHAR(32)     NOT NULL COMMENT '资源类型（CONFIG/DICT/VARIABLE）',
     resource_key    VARCHAR(128)    NOT NULL COMMENT '资源唯一标识（configKey/typeCode/variableKey）',
     resource_group  VARCHAR(64)     DEFAULT NULL COMMENT '资源分组（仅 CONFIG 类型使用，其他为 null）',

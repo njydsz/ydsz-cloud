@@ -28,7 +28,7 @@
 
 
 CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
-    id                       VARCHAR(64)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     aggregate_type           VARCHAR(128)             NOT NULL,
     aggregate_id             VARCHAR(128)             NOT NULL,
     event_type               VARCHAR(128)             NOT NULL,
@@ -89,7 +89,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_comm_outbox_aggregate ON ydsz_comm_outbox (a
 -- 启用条件：ydsz.event.outbox.archive.enabled=true（默认不启用）
 
 CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
-    id              VARCHAR(64)     PRIMARY KEY,
+    id                       VARCHAR(36) PRIMARY KEY
     aggregate_id    VARCHAR(128)    NOT NULL,
     aggregate_type  VARCHAR(128)    DEFAULT NULL,
     event_type      VARCHAR(256)    NOT NULL,
@@ -183,7 +183,7 @@ EXECUTE FUNCTION fn_ydsz_comm_outbox_set_updated_at();
 --       由审计切面（AuditAspect）自动写入，AuditAdminController 提供查询接口。
 
 CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
-    id                       VARCHAR(64)              NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     app_key                  VARCHAR(64)              NOT NULL DEFAULT '',
     operator_id              VARCHAR(64)              DEFAULT NULL,
     operator_name            VARCHAR(64)              DEFAULT NULL,
@@ -276,7 +276,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_comm_audit_log_status
 
 CREATE TABLE IF NOT EXISTS ydsz_comm_search_index_partitioned
 (
-    id              VARCHAR(128) NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     doc_type        VARCHAR(64)  NOT NULL,
     title           VARCHAR(512),
     subtitle        VARCHAR(512),

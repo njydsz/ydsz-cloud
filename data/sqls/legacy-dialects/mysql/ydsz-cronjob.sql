@@ -20,7 +20,7 @@
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     job_name              VARCHAR(128)    NOT NULL COMMENT '任务名称',
     job_group             VARCHAR(128)    DEFAULT NULL COMMENT '任务分组',
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（唯一）',
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_glue (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
     source_code           TEXT            NOT NULL COMMENT '源代码（Groovy/Python/Shell/JavaScript 脚本内容）',
     language              VARCHAR(32)     NOT NULL DEFAULT 'GROOVY' COMMENT '语言: GROOVY(默认)/PYTHON/SHELL/JAVASCRIPT/JAVA',
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_glue (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_task (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
     log_id                VARCHAR(32)     NOT NULL COMMENT '执行日志 ID（关联 ydsz_job_log.id）',
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余，便于查询）',
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_task (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_node (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     node_id               VARCHAR(64)     NOT NULL COMMENT '节点 ID（hostname:port 或 hostname:pid）',
     app_name              VARCHAR(128)    DEFAULT NULL COMMENT '应用名称',
     host                  VARCHAR(128)    NOT NULL COMMENT '主机名',
@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_node (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_history (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
     version               INT             NOT NULL COMMENT '版本号（对应更新前的 job.version）',
     snapshot              JSON            DEFAULT NULL COMMENT '完整 Job JSON 快照（变更后状态; DELETE 时为 NULL）',
@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_history (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_artifact (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID',
     log_id                VARCHAR(32)     NOT NULL COMMENT '执行日志 ID',
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余）',
@@ -232,7 +232,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_artifact (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_webhook (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     name                  VARCHAR(128)    NOT NULL COMMENT 'WebHook 名称',
     event_type            VARCHAR(64)     NOT NULL COMMENT '订阅的事件类型: TASK_STARTED / TASK_SUCCESS / TASK_FAILED / TASK_TIMEOUT / DAG_COMPLETED',
     job_key               VARCHAR(64)     DEFAULT NULL COMMENT '订阅的任务 KEY（null=所有任务）',
@@ -261,7 +261,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_webhook (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_alert_rule (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_name             VARCHAR(128)    NOT NULL COMMENT '规则名称',
     job_id                VARCHAR(32)     DEFAULT NULL COMMENT '关联任务 ID（NULL 表示全局规则）',
     job_key               VARCHAR(64)     DEFAULT NULL COMMENT '任务 KEY 冗余（NULL 表示全局规则）',
@@ -294,7 +294,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_rule (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_tenant_quota (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     max_jobs              INT             DEFAULT NULL COMMENT '任务数上限（NULL=unlimited；超过此值拒绝创建新任务）',
     max_concurrent        INT             DEFAULT NULL COMMENT '并发执行上限（NULL=unlimited；超过此值拒绝派发）',
     max_daily_executions  INT             DEFAULT NULL COMMENT '日执行量上限（NULL=unlimited；超过此值拒绝派发）',
@@ -316,7 +316,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_tenant_quota (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     dag_key               VARCHAR(64)     NOT NULL COMMENT 'DAG 唯一 KEY（调度与触发使用）',
     dag_name              VARCHAR(128)    NOT NULL COMMENT 'DAG 名称（展示用）',
     dag_definition        JSON            NOT NULL COMMENT 'DAG 定义 JSON（nodes + edges + 可视化坐标）',
@@ -352,7 +352,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_version (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     dag_id                VARCHAR(32)     NOT NULL COMMENT 'DAG ID（关联 ydsz_job_dag.id）',
     dag_key               VARCHAR(64)     NOT NULL COMMENT 'DAG KEY（冗余字段，便于查询）',
     version               INT             NOT NULL COMMENT '版本号（从 1 递增）',
@@ -382,7 +382,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_version (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     dag_id                VARCHAR(32)     NOT NULL COMMENT 'DAG 定义 ID',
     dag_key               VARCHAR(64)     NOT NULL COMMENT 'DAG KEY（冗余，便于查询）',
     instance_status       VARCHAR(32)     NOT NULL COMMENT '实例状态: PENDING/RUNNING/SUCCESS/FAILED/PARTIAL_SUCCESS/PAUSED/CANCELED',
@@ -420,7 +420,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     dag_instance_id       VARCHAR(32)     NOT NULL COMMENT 'DAG 实例 ID',
     dag_id                VARCHAR(32)     NOT NULL COMMENT 'DAG 定义 ID',
     job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID',
@@ -456,7 +456,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_log (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID',
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY',
     start_time            DATETIME        DEFAULT NULL COMMENT '开始时间',
@@ -505,7 +505,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_log_content (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     log_id                VARCHAR(32)     NOT NULL COMMENT '任务执行日志 ID（关联 ydsz_job_log.id）',
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余，避免连表查询）',
     line_no               INT             NOT NULL COMMENT '行号（从 1 递增）',
@@ -529,7 +529,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log_content (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_daily_stats (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID',
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余）',
     stats_date            DATE            NOT NULL COMMENT '统计日期',
@@ -561,7 +561,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_daily_stats (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_alert_dispatch (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     alert_code            VARCHAR(64)     NOT NULL COMMENT '预警编码（cronjob 自动生成: CRONJOB-{timestamp}-{ruleId}）',
     source_type           VARCHAR(32)     NOT NULL COMMENT '触发源类型（cronjob 告警固定为 CRONJOB）',
     rule_id               VARCHAR(32)     DEFAULT NULL COMMENT '规则 ID（映射到 rule_id）',
@@ -626,7 +626,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_outbox (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     dag_instance_id       VARCHAR(32)     NOT NULL COMMENT 'DAG 实例 ID（关联 ydsz_job_dag_instance.id）',
     node_key              VARCHAR(128)    NOT NULL COMMENT '节点 KEY',
     result_json           JSON            DEFAULT NULL COMMENT '节点执行结果 JSON（单次写入，避免行锁竞争）',
@@ -651,7 +651,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_webhook_retry (
-    id                    VARCHAR(64)     PRIMARY KEY COMMENT '主键（雪花 ID）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键（雪花 ID）'
     webhook_id            VARCHAR(64)     NOT NULL COMMENT 'Webhook 订阅 ID（关联 ydsz_job_webhook.id）',
     event_type            VARCHAR(32)     NOT NULL COMMENT '事件类型: TASK_STARTED/TASK_SUCCESS/TASK_FAILED/TASK_TIMEOUT/DAG_COMPLETED',
     job_key               VARCHAR(128)    DEFAULT NULL COMMENT '任务 KEY',
@@ -802,7 +802,7 @@ DELIMITER ;
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_event_store (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     aggregate_type        VARCHAR(64)     NOT NULL COMMENT '聚合根类型',
     aggregate_id          VARCHAR(32)     NOT NULL COMMENT '聚合根 ID',
     event_type            VARCHAR(64)     NOT NULL COMMENT '事件类型',

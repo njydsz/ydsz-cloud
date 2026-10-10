@@ -27,7 +27,7 @@
 
 
 CREATE TABLE ydsz_idm_account_user (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     username                 VARCHAR2(64 CHAR)        NOT NULL,
     password                 VARCHAR2(255 CHAR)       NOT NULL,
     real_name                VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -98,7 +98,7 @@ CREATE INDEX idx_ydsz_idm_account_user_company_id ON ydsz_idm_account_user (comp
 CREATE INDEX idx_ydsz_idm_account_user_tenant_is_deleted ON ydsz_idm_account_user (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_org_company (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     company_name             VARCHAR2(128 CHAR)       NOT NULL,
     company_code             VARCHAR2(64 CHAR)        NOT NULL,
     parent_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
@@ -139,7 +139,7 @@ CREATE INDEX idx_ydsz_idm_org_company_parent_id ON ydsz_idm_org_company (parent_
 CREATE INDEX idx_ydsz_idm_org_company_tenant_is_deleted ON ydsz_idm_org_company (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_org_department (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     parent_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     dept_name                VARCHAR2(128 CHAR)       NOT NULL,
     dept_code                VARCHAR2(64 CHAR)        NOT NULL,
@@ -180,7 +180,7 @@ CREATE INDEX idx_ydsz_idm_org_department_leader_id ON ydsz_idm_org_department (l
 CREATE INDEX idx_ydsz_idm_org_department_tenant_is_deleted ON ydsz_idm_org_department (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_role (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     role_code                VARCHAR2(64 CHAR)        NOT NULL,
     role_name                VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -219,7 +219,7 @@ COMMENT ON COLUMN ydsz_idm_role.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_idm_role_tenant_is_deleted ON ydsz_idm_role (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_menu (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     parent_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     menu_name                VARCHAR2(128 CHAR)       NOT NULL,
     menu_code                VARCHAR2(64 CHAR)        NOT NULL,
@@ -268,7 +268,7 @@ CREATE INDEX idx_ydsz_idm_menu_permission_code ON ydsz_idm_menu (permission_code
 CREATE INDEX idx_ydsz_idm_menu_tenant_is_deleted ON ydsz_idm_menu (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_post (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     post_name                VARCHAR2(128 CHAR)       NOT NULL,
     post_code                VARCHAR2(64 CHAR)        NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -303,7 +303,7 @@ COMMENT ON COLUMN ydsz_idm_post.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_idm_post_tenant_is_deleted ON ydsz_idm_post (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_account_user_language (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     language_code            VARCHAR2(32 CHAR)        NOT NULL,
     language_name            VARCHAR2(128 CHAR)       NOT NULL,
     is_default               NUMBER(1)                NOT NULL DEFAULT 0,
@@ -338,7 +338,7 @@ COMMENT ON COLUMN ydsz_idm_account_user_language.updated_at IS '最后更新时�
 CREATE INDEX idx_ydsz_idm_account_user_language_tenant_is_deleted ON ydsz_idm_account_user_language (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_account_user_role (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     role_id                  VARCHAR2(32 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -371,7 +371,7 @@ CREATE INDEX idx_ydsz_idm_account_user_role_role_id ON ydsz_idm_account_user_rol
 CREATE INDEX idx_ydsz_idm_account_user_role_tenant_is_deleted ON ydsz_idm_account_user_role (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_account_user_post (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     post_id                  VARCHAR2(32 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -404,7 +404,7 @@ CREATE INDEX idx_ydsz_idm_account_user_post_post_id ON ydsz_idm_account_user_pos
 CREATE INDEX idx_ydsz_idm_account_user_post_tenant_is_deleted ON ydsz_idm_account_user_post (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_account_user_dept (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     dept_id                  VARCHAR2(32 CHAR)        NOT NULL,
     is_primary               NUMBER(1)                NOT NULL DEFAULT 0,
@@ -439,7 +439,7 @@ CREATE INDEX idx_ydsz_idm_account_user_dept_dept_id ON ydsz_idm_account_user_dep
 CREATE INDEX idx_ydsz_idm_account_user_dept_tenant_is_deleted ON ydsz_idm_account_user_dept (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_org_company_dept (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     company_id               VARCHAR2(32 CHAR)        NOT NULL,
     dept_id                  VARCHAR2(32 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -472,7 +472,7 @@ CREATE INDEX idx_ydsz_idm_org_company_dept_dept_id ON ydsz_idm_org_company_dept 
 CREATE INDEX idx_ydsz_idm_org_company_dept_tenant_is_deleted ON ydsz_idm_org_company_dept (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_role_permission (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     role_id                  VARCHAR2(32 CHAR)        NOT NULL,
     permission_id            VARCHAR2(32 CHAR)        NOT NULL,
     menu_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -508,7 +508,7 @@ CREATE INDEX idx_ydsz_idm_role_permission_menu_id ON ydsz_idm_role_permission (m
 CREATE INDEX idx_ydsz_idm_role_permission_tenant_is_deleted ON ydsz_idm_role_permission (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_account_login_history (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     user_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
     username                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     login_ip                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -542,7 +542,7 @@ CREATE INDEX idx_ydsz_idm_account_login_history_ip ON ydsz_idm_account_login_his
 CREATE INDEX idx_ydsz_idm_account_login_history_created_at ON ydsz_idm_account_login_history (created_at);
 
 CREATE TABLE ydsz_idm_account_password_history (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     password_hash            VARCHAR2(255 CHAR)       NOT NULL,
     CONSTRAINT pk_ydsz_idm_account_password_history PRIMARY KEY (id),
@@ -568,7 +568,7 @@ CREATE INDEX idx_ydsz_idm_account_password_history_user_id_created_at ON ydsz_id
 CREATE INDEX idx_ydsz_idm_account_password_history_user_id ON ydsz_idm_account_password_history (user_id);
 
 CREATE TABLE ydsz_idm_auth_policy (
-    id                       VARCHAR2(64 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     name                     VARCHAR2(64 CHAR)        NOT NULL,
     password_min_length      NUMBER(10)               DEFAULT 8,
     is_password_require_uppercase NUMBER(1)                DEFAULT 1,
@@ -624,7 +624,7 @@ WHEN NOT MATCHED THEN
 ;
 
 CREATE TABLE ydsz_idm_auth_social_client (
-    id                       VARCHAR2(64 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     platform                 VARCHAR2(32 CHAR)        NOT NULL,
     platform_name            VARCHAR2(64 CHAR)        DEFAULT NULL,
     app_id                   VARCHAR2(128 CHAR)       NOT NULL,
@@ -668,7 +668,7 @@ CREATE INDEX idx_ydsz_idm_auth_social_client_status ON ydsz_idm_auth_social_clie
 CREATE INDEX idx_ydsz_idm_auth_social_client_tenant_is_deleted ON ydsz_idm_auth_social_client (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_identity_saml_config (
-    id                       VARCHAR2(64 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     name                     VARCHAR2(64 CHAR)        NOT NULL,
     entity_id                VARCHAR2(512 CHAR)       NOT NULL,
     sso_url                  VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -712,7 +712,7 @@ CREATE INDEX idx_ydsz_idm_identity_saml_config_status ON ydsz_idm_identity_saml_
 CREATE INDEX idx_ydsz_idm_identity_saml_config_tenant_is_deleted ON ydsz_idm_identity_saml_config (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_identity_oauth2_application (
-    id                       VARCHAR2(64 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     client_id                VARCHAR2(128 CHAR)       NOT NULL,
     client_name              VARCHAR2(256 CHAR)       NOT NULL,
     client_secret            VARCHAR2(256 CHAR)       NOT NULL,
@@ -759,7 +759,7 @@ CREATE INDEX idx_ydsz_idm_identity_oauth2_application_status ON ydsz_idm_identit
 CREATE INDEX idx_ydsz_idm_identity_oauth2_application_tenant_is_deleted ON ydsz_idm_identity_oauth2_application (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_auth_social_account (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     platform                 VARCHAR2(32 CHAR)        NOT NULL,
     open_id                  VARCHAR2(128 CHAR)       NOT NULL,
@@ -806,7 +806,7 @@ CREATE INDEX idx_ydsz_idm_auth_social_account_user_id ON ydsz_idm_auth_social_ac
 CREATE INDEX idx_ydsz_idm_auth_social_account_tenant_is_deleted ON ydsz_idm_auth_social_account (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idm_identity_security_alert (
-    id                       VARCHAR2(64 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     alert_type               VARCHAR2(32 CHAR)        NOT NULL,
     risk_level               VARCHAR2(16 CHAR)        NOT NULL,
     user_id                  VARCHAR2(64 CHAR)        DEFAULT NULL,

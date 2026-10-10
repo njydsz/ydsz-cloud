@@ -24,7 +24,7 @@
 
 
 CREATE TABLE ydsz_agt_prompt_template (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     template_name            VARCHAR2(128 CHAR)       NOT NULL,
     content                  CLOB                     NOT NULL,
@@ -65,7 +65,7 @@ CREATE INDEX idx_ydsz_agt_prompt_template_category ON ydsz_agt_prompt_template (
 CREATE INDEX idx_ydsz_agt_prompt_template_tenant_is_deleted ON ydsz_agt_prompt_template (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_agt_prompt_version (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     version                  NUMBER(10)               NOT NULL,
     content                  CLOB                     NOT NULL,
@@ -101,7 +101,7 @@ COMMENT ON COLUMN ydsz_agt_prompt_version.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_agt_prompt_version_template_code ON ydsz_agt_prompt_version (template_code);
 
 CREATE TABLE ydsz_agt_definition (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     agent_code               VARCHAR2(64 CHAR)        NOT NULL,
     agent_name               VARCHAR2(128 CHAR)       NOT NULL,
     agent_type               VARCHAR2(32 CHAR)        NOT NULL,
@@ -209,7 +209,7 @@ COMMENT ON COLUMN ydsz_agt_trace_step.cost IS 'Token 成本（USD，精确到 6 
 CREATE INDEX idx_ydsz_agt_trace_step_trace_step_cost ON ydsz_agt_trace_step (cost);
 
 CREATE TABLE ydsz_agt_approval (
-    id                       VARCHAR2(64 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     conversation_id          VARCHAR2(64 CHAR)        DEFAULT NULL,
     trace_id                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     step_description         VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -252,7 +252,7 @@ CREATE INDEX idx_ydsz_agt_approval_approval_status ON ydsz_agt_approval (status)
 CREATE INDEX idx_ydsz_agt_approval_approval_tenant ON ydsz_agt_approval (tenant_id);
 
 CREATE TABLE ydsz_agt_token_usage (
-    id                       VARCHAR2(32 CHAR)       ,
+    id                       VARCHAR2(36 CHAR)
     conversation_id          VARCHAR2(64 CHAR)        NOT NULL,
     model_name               VARCHAR2(64 CHAR)        NOT NULL,
     prompt_tokens            NUMBER(19)               NOT NULL DEFAULT 0,

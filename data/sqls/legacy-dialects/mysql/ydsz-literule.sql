@@ -11,7 +11,7 @@
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_def (
-    id                          VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_code                   VARCHAR(64)     NOT NULL COMMENT '规则编码，业务唯一',
     rule_name                   VARCHAR(128)    NOT NULL COMMENT '规则名称',
     category                    VARCHAR(64)     DEFAULT NULL COMMENT '规则分类编码（一级分类标识）',
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_def (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_variable_def (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     var_name        VARCHAR(128)    NOT NULL COMMENT '变量名（如 cpi / budgetAmount / evmRedCount）',
     var_type        VARCHAR(32)     DEFAULT NULL COMMENT '变量类型（Number / String 等）',
     description     VARCHAR(512)    DEFAULT NULL COMMENT '变量描述（中文，供前端编辑器提示）',
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_variable_def (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则变量定义表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_template (
-    id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     template_code         VARCHAR(64)     NOT NULL COMMENT '模板编码，业务唯一',
     template_name         VARCHAR(128)    NOT NULL COMMENT '模板名称',
     category              VARCHAR(64)     DEFAULT NULL COMMENT '分类编码',
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_template (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_script (
-    id               VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_code        VARCHAR(64)     NOT NULL COMMENT '规则编码',
     rule_name        VARCHAR(128)    NOT NULL COMMENT '规则名称',
     category         VARCHAR(64)     DEFAULT NULL COMMENT '规则分类',
@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_script (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则脚本表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
-    id                VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     table_code        VARCHAR(64)     NOT NULL COMMENT '决策表编码',
     table_name        VARCHAR(128)    NOT NULL COMMENT '决策表名称',
     description       VARCHAR(512)    DEFAULT NULL COMMENT '描述',
@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='决策表实体表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
-    id                VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_code         VARCHAR(64)     NOT NULL COMMENT '规则编码',
     rule_name         VARCHAR(128)    NOT NULL COMMENT '规则名称',
     category          VARCHAR(64)     DEFAULT NULL COMMENT '规则分类',
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则决策树表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
-    id                VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_code         VARCHAR(64)     NOT NULL COMMENT '规则编码',
     rule_name         VARCHAR(128)    NOT NULL COMMENT '规则名称',
     category          VARCHAR(64)     DEFAULT NULL COMMENT '规则分类（RISK / QUALITY / PROFIT 等）',
@@ -227,7 +227,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_chain_graph (
-    id            VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_code     VARCHAR(64)     NOT NULL COMMENT '关联规则编码（一对一）',
     name          VARCHAR(128)    NOT NULL COMMENT '画布名称',
     description   VARCHAR(512)    DEFAULT NULL COMMENT '画布描述',
@@ -248,7 +248,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_chain_graph (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则链画布表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
-    id                   VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_code            VARCHAR(64)     NOT NULL COMMENT '主规则编码（依赖方）',
     depends_on_rule_code VARCHAR(64)     NOT NULL COMMENT '被依赖的规则编码',
     dependency_type      VARCHAR(32)     NOT NULL COMMENT '依赖类型（EXECUTE/READ_RESULT/SOFT）',
@@ -273,7 +273,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
-    id               VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     pack_code        VARCHAR(64)     NOT NULL COMMENT '规则集编码（全局唯一，用于版本间关联）',
     pack_version     VARCHAR(32)     NOT NULL COMMENT '规则集版本号（如 26.10.01）',
     pack_name        VARCHAR(128)    NOT NULL COMMENT '规则集名称',
@@ -304,7 +304,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则集（知识包）表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_pack_install (
-    id            VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     installed_by  VARCHAR(64)     DEFAULT NULL COMMENT '安装操作人 ID',
     installed_at  DATETIME        DEFAULT NULL COMMENT '安装时间',
     status        VARCHAR(32)     DEFAULT NULL COMMENT '安装状态（INSTALLING/INSTALLED/FAILED/UNINSTALLING/UNINSTALLED）',
@@ -327,7 +327,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_pack_install (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
-    id                   VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_code            VARCHAR(64)     NOT NULL COMMENT '关联规则编码（一对一）',
     is_auto_rollback_is_enabled TINYINT(1)     NOT NULL DEFAULT 0 COMMENT '是否启用自动回滚（1=启用，0=停用）',
     rollback_action      VARCHAR(32)     DEFAULT NULL COMMENT 'is_owner）',
@@ -352,7 +352,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AB Test 自动回滚策略表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_canary_bucket (
-    id           VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_code    VARCHAR(64)     NOT NULL COMMENT '规则编码',
     bucket_type  VARCHAR(32)     NOT NULL COMMENT '桶类型（PRIMARY/CANARY）',
     bucket_count BIGINT          NOT NULL DEFAULT 0 COMMENT '桶命中次数',
@@ -372,7 +372,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_canary_bucket (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则灰度分桶统计表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
-    id             VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_code      VARCHAR(64)     NOT NULL COMMENT '规则编码（关联 ydsz_rule_def.rule_code）',
     trigger_reason VARCHAR(32)     NOT NULL COMMENT '触发原因（ERROR_RATE/MANUAL/OWNER_REQUEST）',
     error_rate     DECIMAL(20,6)   DEFAULT NULL COMMENT '回滚时的错误率（triggerReason=ERROR_RATE 时记录）',
@@ -399,7 +399,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_version_history (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     rule_code       VARCHAR(64)     NOT NULL COMMENT '规则编码',
     version         INT             NOT NULL COMMENT '版本号',
     definition_json JSON            DEFAULT NULL COMMENT '该版本的规则定义 JSON 快照',
@@ -418,7 +418,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_version_history (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='LiteRule 规则版本历史表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_execution_trace (
-    id               VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     trace_id         VARCHAR(64)     NOT NULL COMMENT '追踪 ID（同一批次评估共享）',
     rule_code        VARCHAR(64)     NOT NULL COMMENT '规则编码',
     rule_name        VARCHAR(128)    DEFAULT NULL COMMENT '规则名称',

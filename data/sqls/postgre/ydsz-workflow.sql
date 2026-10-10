@@ -34,7 +34,7 @@
 
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_category (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     category_code            VARCHAR(64)              NOT NULL,
     category_name            VARCHAR(128)             NOT NULL,
     parent_id                VARCHAR(32)              DEFAULT NULL,
@@ -74,7 +74,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_category_parent_id ON ydsz_flow_categor
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_category_tenant_is_deleted ON ydsz_flow_category (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_definition (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     flow_code                VARCHAR(64)              NOT NULL,
     flow_name                VARCHAR(128)             NOT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
@@ -143,7 +143,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_definition_category ON ydsz_flow_defini
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_definition_tenant_is_deleted ON ydsz_flow_definition (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_template (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     template_code            VARCHAR(64)              NOT NULL,
     template_name            VARCHAR(128)             NOT NULL,
     category                 VARCHAR(32)              DEFAULT NULL,
@@ -200,7 +200,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_template_parent_template_id ON ydsz_flo
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_template_tenant_is_deleted ON ydsz_flow_template (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_node (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     definition_id            VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              NOT NULL,
     node_type                INTEGER                  NOT NULL,
@@ -255,7 +255,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_node_flow_code ON ydsz_flow_node (flow_
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_node_tenant_is_deleted ON ydsz_flow_node (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_skip (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     definition_id            VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              NOT NULL,
     skip_name                VARCHAR(128)             DEFAULT NULL,
@@ -311,7 +311,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_skip_source_node_code ON ydsz_flow_skip
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_skip_tenant_is_deleted ON ydsz_flow_skip (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_auto_trigger (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     source_flow_code         VARCHAR(64)              NOT NULL,
     target_flow_code         VARCHAR(64)              NOT NULL,
     condition_expression     VARCHAR(512)             DEFAULT NULL,
@@ -352,7 +352,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_auto_trigger_is_enabled ON ydsz_flow_au
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_auto_trigger_tenant_is_deleted ON ydsz_flow_auto_trigger (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_instance (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     flow_code                VARCHAR(64)              NOT NULL,
     flow_name                VARCHAR(128)             NOT NULL,
     definition_id            VARCHAR(32)              NOT NULL,
@@ -432,7 +432,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_tenant_flow_code_time
     ON ydsz_flow_instance (tenant_id, flow_code, created_at);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     instance_id              VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              NOT NULL,
     definition_id            VARCHAR(32)              NOT NULL,
@@ -544,7 +544,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_assignee_status_is_deleted
     ON ydsz_flow_run_task (assignee_id, status, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_user (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     task_id                  VARCHAR(32)              NOT NULL,
     instance_id              VARCHAR(32)              NOT NULL,
     node_code                VARCHAR(64)              NOT NULL,
@@ -597,7 +597,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_user_instance_id ON ydsz_flow_user (ins
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_user_tenant_is_deleted ON ydsz_flow_user (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_timer (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     instance_id              VARCHAR(32)              NOT NULL,
     definition_id            VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              DEFAULT NULL,
@@ -653,7 +653,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_timer_status ON ydsz_flow_timer (
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_tenant_is_deleted ON ydsz_flow_timer (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     instance_id              VARCHAR(32)              NOT NULL,
     definition_id            VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              DEFAULT NULL,
@@ -714,7 +714,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_subscription_correlation_key ON y
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_subscription_tenant_is_deleted ON ydsz_flow_event_subscription (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     instance_id              VARCHAR(32)              NOT NULL,
     task_id                  VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              NOT NULL,
@@ -799,7 +799,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_finish_at ON ydsz_flow_his_tas
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_tenant_is_deleted ON ydsz_flow_his_task (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     flow_code                VARCHAR(64)              NOT NULL,
     flow_name                VARCHAR(128)             DEFAULT NULL,
     definition_id            VARCHAR(32)              NOT NULL,
@@ -869,7 +869,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_instance_end_at ON ydsz_flow_his_in
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_instance_tenant_is_deleted ON ydsz_flow_his_instance (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_comment (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     instance_id              VARCHAR(32)              NOT NULL,
     task_id                  VARCHAR(32)              DEFAULT NULL,
     node_code                VARCHAR(64)              DEFAULT NULL,
@@ -920,7 +920,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_comment_parent_comment_id ON ydsz_flow_
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_comment_tenant_is_deleted ON ydsz_flow_comment (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_quick_comment (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     user_id                  VARCHAR(32)              NOT NULL,
     content                  VARCHAR(500)             NOT NULL,
     comment_type             VARCHAR(32)              DEFAULT NULL,
@@ -962,7 +962,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_quick_comment_use_count ON ydsz_flow_qu
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_quick_comment_tenant_is_deleted ON ydsz_flow_quick_comment (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_cc (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     instance_id              VARCHAR(32)              NOT NULL,
     task_id                  VARCHAR(32)              DEFAULT NULL,
     node_code                VARCHAR(64)              DEFAULT NULL,
@@ -1026,7 +1026,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_business_key ON ydsz_flow_cc (busine
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_tenant_is_deleted ON ydsz_flow_cc (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_cc_rule (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     flow_code                VARCHAR(64)              DEFAULT NULL,
     node_code                VARCHAR(64)              DEFAULT NULL,
     rule_type                VARCHAR(32)              NOT NULL,
@@ -1067,7 +1067,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_rule_is_enabled ON ydsz_flow_cc_rule
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_rule_tenant_is_deleted ON ydsz_flow_cc_rule (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_attachment (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     instance_id              VARCHAR(32)              NOT NULL,
     task_id                  VARCHAR(32)              DEFAULT NULL,
     node_code                VARCHAR(64)              DEFAULT NULL,
@@ -1127,7 +1127,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_attachment_md5 ON ydsz_flow_attachment 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_attachment_tenant_is_deleted ON ydsz_flow_attachment (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_auth (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     owner_user_id            VARCHAR(32)              NOT NULL,
     owner_user_name          VARCHAR(64)              DEFAULT NULL,
     delegate_user_id         VARCHAR(32)              NOT NULL,
@@ -1183,7 +1183,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_status_time ON ydsz_flow_
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_tenant_is_deleted ON ydsz_flow_delegate_auth (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_admin_role (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     user_id                  VARCHAR(32)              NOT NULL,
     role_code                VARCHAR(64)              NOT NULL,
     is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
@@ -1226,7 +1226,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_admin_role_tenant_is_deleted ON ydsz_fl
 -- 2026-09-23: ydsz_flow_audit_log 改造为按月 RANGE 分区表（分区键 operated_at）
 --   目的：审计日志按月分区提升查询性能，同时便于历史分区 detach 归档到冷存储
 CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log (
-    id                       VARCHAR(32)     NOT NULL,
+    id                       VARCHAR(36) NOT NULL
     instance_id              VARCHAR(32)      NOT NULL,
     task_id                  VARCHAR(32)      DEFAULT NULL,
     flow_code                VARCHAR(64)      NOT NULL,
@@ -1314,7 +1314,7 @@ END $$;
 -- 幂等键：scope + key_hash（SHA-256 of scope+key），过期时间由 ttl_at 控制
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_idempotent (
-    id              VARCHAR(32)     PRIMARY KEY,
+    id                       VARCHAR(36) PRIMARY KEY
     scope           VARCHAR(64)      NOT NULL,
     key_hash        VARCHAR(64)      NOT NULL,
     key_raw         VARCHAR(512)     DEFAULT NULL,
@@ -1363,7 +1363,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_idempotent_tenant_status
 -- ============================================================================
 -- 用途：FlowHistoryArchiveService 断点续传，记录上次归档的最大 end_time
 CREATE TABLE IF NOT EXISTS ydsz_flow_archive_cursor (
-    id              VARCHAR(32)     PRIMARY KEY,
+    id                       VARCHAR(36) PRIMARY KEY
     archive_type    VARCHAR(32)     NOT NULL,
     -- INSTANCE / PURGE
     cursor_value    VARCHAR(64)     NOT NULL,

@@ -30,7 +30,7 @@
 
 
 CREATE TABLE ydsz_comm_outbox (
-    id                       VARCHAR2(64 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     aggregate_type           VARCHAR2(128 CHAR)       NOT NULL,
     aggregate_id             VARCHAR2(128 CHAR)       NOT NULL,
     event_type               VARCHAR2(128 CHAR)       NOT NULL,
@@ -125,7 +125,7 @@ CREATE INDEX idx_ydsz_comm_search_dead_letter_dlq_doc_type ON ydsz_comm_search_d
 -- BIGINT→NUMBER(19)、TEXT→CLOB、TIMESTAMP→TIMESTAMP。
 
 CREATE TABLE ydsz_comm_audit_log (
-    id                       VARCHAR2(64 CHAR)        NOT NULL,
+    id                       VARCHAR2(36 CHAR) NOT NULL
     app_key                  VARCHAR2(64 CHAR)        NOT NULL DEFAULT '',
     operator_id              VARCHAR2(64 CHAR)        DEFAULT NULL,
     operator_name            VARCHAR2(64 CHAR)        DEFAULT NULL,

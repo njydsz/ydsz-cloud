@@ -10,7 +10,7 @@
 -- Prompt 模板主表（沿用 V1__prompt_template.sql 定义）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     template_code   VARCHAR(64)     NOT NULL COMMENT '模板唯一编码（业务标识，创建后不可变）',
     template_name   VARCHAR(128)    NOT NULL COMMENT '模板名称（展示用）',
     content         TEXT            NOT NULL COMMENT '模板内容，支持 #{var} 占位符',
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
 -- Prompt 模板版本历史表（沿用 V1__prompt_template.sql 定义）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     template_code   VARCHAR(64)     NOT NULL COMMENT '所属模板编码（关联 ydsz_agt_prompt_template.template_code）',
     version         INT             NOT NULL COMMENT '版本号（与 template 的 current_version 对应）',
     content         TEXT            NOT NULL COMMENT '该版本的模板内容快照',
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
 -- Agent 定义表（实体：AgentDefinition extends MpBaseEntity<String>）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
-    id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     agent_code      VARCHAR(64)     NOT NULL COMMENT 'Agent 编码（业务唯一键）',
     agent_name      VARCHAR(128)    NOT NULL COMMENT 'Agent 名称（展示用）',
     agent_type      VARCHAR(32)     NOT NULL COMMENT 'Agent 类型（CHAT/REACT/RAG/PLAN_EXECUTE/ROUTER）',
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
 -- Agent 人工审批请求表（实体：AgentApproval，独立主键 id，无公共基类列）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
-    id                  VARCHAR(64)     PRIMARY KEY COMMENT '审批请求 ID（主键，业务生成非自增）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '审批请求 ID（主键，业务生成非自增）'
     conversation_id     VARCHAR(64)     DEFAULT NULL COMMENT '所属对话 ID',
     trace_id            VARCHAR(64)     DEFAULT NULL COMMENT '执行链路 ID',
     step_description    VARCHAR(512)    DEFAULT NULL COMMENT '待审批步骤的业务描述',
@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
 -- Token 用量记录表（实体：TokenUsageRecord extends MpBaseEntity<String>）
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
-    id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
+    id VARCHAR(36) PRIMARY KEY COMMENT '主键 ID（Snowflake）'
     conversation_id     VARCHAR(64)     NOT NULL COMMENT '所属对话 ID（关联 ydsz_agent_conversation）',
     model_name          VARCHAR(64)     NOT NULL COMMENT '使用的模型标识',
     prompt_tokens       BIGINT          NOT NULL DEFAULT 0 COMMENT '提示词 Token 数',

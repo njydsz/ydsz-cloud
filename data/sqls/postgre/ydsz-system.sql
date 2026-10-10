@@ -24,7 +24,7 @@
 
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_tenant (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     tenant_code              VARCHAR(64)              NOT NULL,
     tenant_name              VARCHAR(128)             NOT NULL,
     contact_name             VARCHAR(64)              DEFAULT NULL,
@@ -71,7 +71,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_plan_id ON ydsz_sys_tenant (plan_
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_tenant_deleted ON ydsz_sys_tenant (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     plan_code                VARCHAR(64)              NOT NULL,
     plan_name                VARCHAR(128)             NOT NULL,
     description              TEXT                     DEFAULT NULL,
@@ -110,7 +110,7 @@ COMMENT ON COLUMN ydsz_sys_tenant_plan.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_plan_tenant_deleted ON ydsz_sys_tenant_plan (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan_menu (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     plan_id                  VARCHAR(32)              NOT NULL,
     menu_id                  VARCHAR(64)              NOT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
@@ -142,7 +142,7 @@ COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_plan_menu_tenant_deleted ON ydsz_sys_tenant_plan_menu (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_dict_type (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     type_code                VARCHAR(64)              NOT NULL,
     type_name                VARCHAR(128)             NOT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
@@ -176,7 +176,7 @@ COMMENT ON COLUMN ydsz_sys_dict_type.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_dict_type_tenant_deleted ON ydsz_sys_dict_type (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     type_code                VARCHAR(64)              NOT NULL,
     item_code                VARCHAR(64)              NOT NULL,
     item_value               VARCHAR(128)             NOT NULL,
@@ -218,7 +218,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_sys_dict_item_parent_id ON ydsz_sys_dict_ite
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_dict_item_tenant_deleted ON ydsz_sys_dict_item (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_config (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     config_group             VARCHAR(64)              NOT NULL,
     config_key               VARCHAR(128)             NOT NULL,
     config_value             TEXT                     DEFAULT NULL,
@@ -261,7 +261,7 @@ COMMENT ON COLUMN ydsz_sys_config.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_config_tenant_deleted ON ydsz_sys_config (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_variable (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     variable_key             VARCHAR(128)             NOT NULL,
     variable_value           TEXT                     DEFAULT NULL,
     value_type               VARCHAR(32)              NOT NULL,
@@ -297,7 +297,7 @@ COMMENT ON COLUMN ydsz_sys_variable.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_variable_tenant_deleted ON ydsz_sys_variable (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_app_info (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     app_code                 VARCHAR(64)              NOT NULL,
     app_name                 VARCHAR(128)             NOT NULL,
     app_key                  VARCHAR(64)              NOT NULL,
@@ -342,7 +342,7 @@ COMMENT ON COLUMN ydsz_sys_app_info.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_app_info_tenant_deleted ON ydsz_sys_app_info (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_entity_version (
-    id                       VARCHAR(32)             ,
+    id                       VARCHAR(36)
     resource_type            VARCHAR(32)              NOT NULL,
     resource_key             VARCHAR(128)             NOT NULL,
     resource_group           VARCHAR(64)              DEFAULT NULL,
@@ -527,7 +527,7 @@ EXECUTE FUNCTION fn_ydsz_sys_entity_version_set_updated_at();
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_api_permission (
-    id                       VARCHAR(32),
+    id                       VARCHAR(36)
     api_code                 VARCHAR(128)             NOT NULL,
     api_name                 VARCHAR(256)             DEFAULT NULL,
     http_method              VARCHAR(10)              DEFAULT NULL,
@@ -574,7 +574,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_sys_api_permission_api_code ON ydsz_sys_api_
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS ydsz_system_config_approval (
-    id                       VARCHAR(32),
+    id                       VARCHAR(36)
     resource_type            VARCHAR(32)              NOT NULL,
     resource_key             VARCHAR(128)             NOT NULL,
     resource_group           VARCHAR(128)             DEFAULT NULL,

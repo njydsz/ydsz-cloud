@@ -31,10 +31,10 @@ import com.njydsz.common.core.response.YdszResponse;
  *
  * <p><b>API 列表</b>：
  * <ul>
- *   <li>{@code POST /api/agent/async-task/submit} — 提交异步任务</li>
- *   <li>{@code GET /api/agent/async-task/{taskId}} — 查询任务详情</li>
- *   <li>{@code POST /api/agent/async-task/{taskId}/cancel} — 取消任务</li>
- *   <li>{@code GET /api/agent/async-task/active} — 查询租户活跃任务列表</li>
+ *   <li>{@code POST /agent/async-task/submit} — 提交异步任务</li>
+ *   <li>{@code GET /agent/async-task/{taskId}} — 查询任务详情</li>
+ *   <li>{@code POST /agent/async-task/{taskId}/cancel} — 取消任务</li>
+ *   <li>{@code GET /agent/async-task/active} — 查询租户活跃任务列表</li>
  * </ul>
  *
  * <p><b>架构位置</b>：
