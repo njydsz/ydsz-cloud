@@ -71,6 +71,15 @@
             <artifactId>ydsz-common-audit</artifactId>
         </dependency>
         <!-- common-lock: @Idempotent 注解（InternalApiController 幂等保护） -->
+        <!-- spring-messaging + spring-websocket: common-socket WebSocketAutoConfiguration introspect 需要 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-messaging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-websocket</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-lock</artifactId>
@@ -79,6 +88,11 @@
     <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-safe</artifactId>
+    </dependency>
+    <!-- postgresql 驱动：ydsz-common-jdbc 中声明为 optional，需显式引入 -->
+    <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
     </dependency>
     <!-- P3-2: Excel 导出能力（任务列表/执行日志流式导出，使用 ydsz-common-excel） -->
     <dependency>

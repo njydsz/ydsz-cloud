@@ -1,6 +1,7 @@
 package com.njydsz.agent.server.middleware;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +33,14 @@ public class AgentMetricsMiddleware implements AgentMiddleware {
   private final AgentMetrics metrics;
   private final String defaultModel;
 
-  public AgentMetricsMiddleware(AgentMetrics metrics, String defaultModel) {
+  /**
+   * 构造函数
+   *
+   * @param metrics Agent 指标采集器
+   * @param defaultModel 默认 LLM 模型名称（从 ydsz.agent.llm.default-model 配置注入）
+   */
+  public AgentMetricsMiddleware(AgentMetrics metrics,
+      @Value("${ydsz.agent.llm.default-model:default-model}") String defaultModel) {
     this.metrics = metrics;
     this.defaultModel = defaultModel;
   }

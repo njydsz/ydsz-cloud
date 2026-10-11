@@ -227,6 +227,22 @@ public class MybatisPlusConfiguration {
   }
 
   /**
+   * 注册 SQL AST 解析缓存 Bean。
+   *
+   * <p>当组件扫描未发现 {@link SqlAstCache} Bean 时（如部分模块未覆盖 common-jdbc 扫描路径），
+   * 自动创建默认实例兜底，确保拦截器链正常工作。
+   *
+   * 已通过组件扫描注册时不重复创建（@ConditionalOnMissingBean 保证唯一性）。
+   *
+   * @return SqlAstCache 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(SqlAstCache.class)
+  public SqlAstCache sqlAstCache() {
+    return new SqlAstCache(SqlAstCache.DEFAULT_MAX_SIZE);
+  }
+
+  /**
    * 配置 MyBatis Plus 拦截器链
    *
    * <p>按顺序添加以下拦截器：

@@ -11,6 +11,7 @@ import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.model.UserInfo;
@@ -90,7 +91,7 @@ public class SessionManager {
   private final RedisHashOps redisHashOps;
   private final RedisStringOps redisStringOps;
   private final RedisCollectionOps redisCollectionOps;
-  private final TokenBlacklistService tokenBlacklistService;
+  private final ObjectProvider<TokenBlacklistService> tokenBlacklistServiceProvider;
   private final UserInfoProperties properties;
 
   /**
@@ -183,11 +184,20 @@ public class SessionManager {
     }
 
     // 吊销 refresh_token（P0-3），杜绝登出后长期复用缝隙
+    TokenBlacklistService blacklistService = tokenBlacklistServiceProvider.getIfAvailable();
     if (refreshToken != null && !refreshToken.isBlank()) {
-      tokenBlacklistService.addToBlacklist(refreshToken);
+      if (blacklistService != null) {
+        blacklistService.addToBlacklist(refreshToken);
+      } else {
+        log.warn("跳过 refresh_token 吊销：TokenBlacklistService 不可用（Redis 未配置）");
+      }
       log.info("Refresh token revoked on logout for user: {}", userId);
     }
-    tokenBlacklistService.addToBlacklist(accessToken);
+    if (blacklistService != null) {
+      blacklistService.addToBlacklist(accessToken);
+    } else {
+      log.warn("跳过 access_token 加入黑名单：TokenBlacklistService 不可用（Redis 未配置）");
+    }
     redisStringOps.del(accessToken);
     return userId;
   }
@@ -214,9 +224,15 @@ public class SessionManager {
         redisStringOps.del(sessionKey);
         return 0;
       }
+      TokenBlacklistService evictBlacklistService = tokenBlacklistServiceProvider.getIfAvailable();
+      if (evictBlacklistService == null) {
+        log.warn("TokenBlacklistService 不可用，批量驱逐会话时跳过黑名单写入（Redis 可能未配置）");
+      }
       for (String token : tokens) {
         try {
-          tokenBlacklistService.addToBlacklist(token);
+          if (evictBlacklistService != null) {
+            evictBlacklistService.addToBlacklist(token);
+          }
           redisStringOps.del(token);
         } catch (Exception e) {
           log.warn("Failed to evict session token for user: {}, error={}", userId, e.getMessage());

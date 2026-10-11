@@ -51,6 +51,7 @@ import com.njydsz.literule.server.approval.RuleApprovalWorkflowBridge;
 import com.njydsz.literule.server.audit.RuleAuditLogService;
 import com.njydsz.literule.server.benchmark.RuleStressTestService;
 import com.njydsz.literule.server.cache.CachingRuleConfigProvider;
+import com.njydsz.literule.server.cache.DirectDbRuleConfigProvider;
 import com.njydsz.literule.server.cep.CEPEngine;
 import com.njydsz.literule.server.core.AsyncTraceRecorder;
 import com.njydsz.literule.server.core.DefaultRuleEngine;
@@ -80,7 +81,6 @@ import com.njydsz.literule.server.sdk.LiteRuleSdk;
 import com.njydsz.literule.server.security.RulePermissionChecker;
 import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;
 import com.njydsz.literule.server.spi.ApolloRuleSource;
-import com.njydsz.literule.server.spi.DbRuleSource;
 import com.njydsz.literule.server.spi.DecisionTableConfigProvider;
 import com.njydsz.literule.server.spi.DecisionTreeConfigProvider;
 import com.njydsz.literule.server.spi.DefaultAlertActionHandler;
@@ -564,7 +564,6 @@ public class LiteRuleAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
-  @ConditionalOnBean(RuleConfigProvider.class)
   public RuleHotReloader ruleHotReloader(
       RuleEngine ruleEngine,
       ExpressionEngine evaluator,
@@ -666,18 +665,21 @@ public class LiteRuleAutoConfiguration {
   }
 
   /**
-   * 规则管理服务（当存在 RuleConfigProvider 时生效）
+   * 规则管理服务。
+   *
+   * <p>注意：@ConditionalOnBean(RuleConfigProvider.class) 条件已移除，原因同
+   * {@link #cachingRuleConfigProvider}。参数注入时，若容器中无 RuleConfigProvider Bean，
+   * Spring 将抛出明确异常。
    *
    * @param ruleEngine 规则引擎
    * @param evaluator 表达式求值器
-   * @param configProvider 规则配置提供者
+   * @param configProvider 规则配置提供者（由容器注入 @Primary 的 CachingRuleConfigProvider）
    * @param eventPublisher 事件发布器
    * @param ruleVersionDiffService 规则版本 Diff 服务（P0-X3，RuleAdminService 构造依赖）
    * @return RuleAdminService 实例
    */
   @Bean
   @ConditionalOnMissingBean
-  @ConditionalOnBean(RuleConfigProvider.class)
   public RuleAdminService ruleAdminService(
       RuleEngine ruleEngine,
       ExpressionEngine evaluator,
@@ -883,7 +885,6 @@ public class LiteRuleAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
-  @ConditionalOnBean(RuleConfigProvider.class)
   public RuleApprovalService ruleApprovalService(
       RuleConfigProvider configProvider,
       DistributedLocker distributedLocker,
@@ -928,7 +929,6 @@ public class LiteRuleAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
-  @ConditionalOnBean(RuleConfigProvider.class)
   public RulePermissionChecker rulePermissionChecker(RuleConfigProvider configProvider) {
     log.info("[LiteRule-Permission] 规则权限检查器已初始化");
     return new RulePermissionChecker(configProvider);
@@ -965,7 +965,6 @@ public class LiteRuleAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(CachingRuleConfigProvider.class)
-  @ConditionalOnBean(RuleConfigProvider.class)
   @ConditionalOnProperty(
       prefix = "ydsz.literule.cache",
       name = "enabled",
@@ -973,15 +972,23 @@ public class LiteRuleAutoConfiguration {
       matchIfMissing = true)
   @Primary
   public CachingRuleConfigProvider cachingRuleConfigProvider(
-      List<RuleConfigProvider> providers,
+      ObjectProvider<List<RuleConfigProvider>> providersProvider,
       ObjectProvider<RedisStringOps> redisStringOpsProvider,
       LiteRuleProperties properties) {
-    // 过滤掉 CachingRuleConfigProvider 自身（避免循环装饰），取第一个作为委托
+    // 使用 ObjectProvider 延迟获取 RuleConfigProvider 列表，避免泛型擦除导致 Spring 无法解析
+    // List<RuleConfigProvider> 类型。ObjectProvider 同时兼容无 Bean 场景（返回 null），
+    // 配合 getIfAvailable() 实现安全降级：无委托 Provider 时不注册 CachingRuleConfigProvider。
+    List<RuleConfigProvider> providers = providersProvider.getIfAvailable();
+    if (providers == null || providers.isEmpty()) {
+      log.warn("[LiteRule-Cache] 未发现任何 RuleConfigProvider Bean，跳过 CachingRuleConfigProvider 注册");
+      // 返回 null 导致 Spring 忽略此 Bean（标注 @Bean 的方法返回 null 时不注册）
+      return null;
+    }
     RuleConfigProvider delegate =
         providers.stream()
             .filter(p -> !(p instanceof CachingRuleConfigProvider))
             .findFirst()
-            .orElseThrow(() -> new IllegalStateException("未找到可装饰的 RuleConfigProvider 委托实现"));
+            .orElseThrow(() -> new IllegalStateException("未找到可装饰的 RuleConfigProvider 委托实现（过滤后列表为空）"));
     RedisStringOps redisStringOps = redisStringOpsProvider.getIfAvailable();
     log.info(
         "[LiteRule-Cache] 多级缓存 RuleConfigProvider 已初始化 (delegate={}, L2={})",
@@ -1048,30 +1055,34 @@ public class LiteRuleAutoConfiguration {
   }
 
   // ------------------------------------------------------------------
-  // P1-11 规则数据源注册（DbRuleSource + RuleSourceManager）
+  // P1-11 规则数据源注册（DirectDbRuleConfigProvider + RuleSourceManager）
   // ------------------------------------------------------------------
 
   /**
-   * 数据库规则数据源 Bean（P1-11）
+   * 直接数据库访问 RuleConfigProvider（无装饰依赖，作为 CachingRuleConfigProvider 的 delegate）。
    *
-   * <p>当 {@code RuleConfigProvider} 存在且 {@code ydsz.literule.rule-source.type=db}（默认）时 自动装配 {@link
-   * DbRuleSource}，代理 {@link RuleConfigProvider} 作为默认数据源。
+ * <p>解决 LiteRuleAutoConfiguration 中 @ConditionalOnBean(RuleConfigProvider.class) 导致 Bean 链断裂问题：
+ * 原设计中 Provider 相互包装（鸡生蛋蛋生鸡），移除循环条件后由此基础 DB 源提供数据。
    *
-   * @param configProvider 规则配置提供者
-   * @return DbRuleSource 实例
+   * <p>此 Bean 直接注入 {@link com.njydsz.literule.infra.mapper.RuleDefinitionMapper}
+   * （DDD 分层违例，参见 ydsz-literule-server/pom.xml），无需其他 Provider 前置条件。
+   *
+   * @param ruleDefinitionMapper MyBatis Mapper（由 ydsz-literule-infra @MapperScan 注册）
+   * @return DirectDbRuleConfigProvider 实例
    * @since 26.10.01
    */
-  @Bean
-  @ConditionalOnMissingBean(DbRuleSource.class)
-  @ConditionalOnBean(RuleConfigProvider.class)
+  @Bean(name = "directDbRuleConfigProvider")
+  @ConditionalOnMissingBean(name = "directDbRuleConfigProvider")
+  @ConditionalOnBean(com.njydsz.literule.infra.mapper.RuleDefinitionMapper.class)
   @ConditionalOnProperty(
       prefix = "ydsz.literule.rule-source",
       name = "type",
       havingValue = "db",
       matchIfMissing = true)
-  public DbRuleSource dbRuleSource(RuleConfigProvider configProvider) {
-    log.info("[LiteRule-Source] 数据库规则数据源已初始化");
-    return new DbRuleSource(configProvider);
+  public DirectDbRuleConfigProvider directDbRuleConfigProvider(
+      com.njydsz.literule.infra.mapper.RuleDefinitionMapper ruleDefinitionMapper) {
+    log.info("[LiteRule-Source] 直接数据库 RuleConfigProvider 已初始化");
+    return new DirectDbRuleConfigProvider(ruleDefinitionMapper);
   }
 
   /**
@@ -1160,7 +1171,6 @@ public class LiteRuleAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
-  @ConditionalOnBean(RuleConfigProvider.class)
   public RuleSourceManager ruleSourceManager(List<RuleConfigProvider> sources) {
     RuleSourceManager manager = new RuleSourceManager();
     for (RuleConfigProvider source : sources) {
@@ -1519,7 +1529,6 @@ public class LiteRuleAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
-  @ConditionalOnBean(RuleConfigProvider.class)
   @ConditionalOnProperty(
       prefix = "ydsz.literule.lifecycle",
       name = "enabled",

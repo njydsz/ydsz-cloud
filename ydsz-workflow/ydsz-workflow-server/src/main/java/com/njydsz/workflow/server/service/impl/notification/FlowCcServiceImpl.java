@@ -9,6 +9,7 @@ import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -84,7 +85,7 @@ public class FlowCcServiceImpl implements FlowCcService {
   private final DefaultFlowVariableStrategy variableStrategy;
 
   /** 审批人解析器，将 role:/dept:/position:/leader: 等标识展开为具体用户 ID 列表 */
-  private final FlowAssigneeResolver assigneeResolver;
+  private final ObjectProvider<FlowAssigneeResolver> assigneeResolverProvider;
 
   // ============================== 抄送节点处理 ==============================
 
@@ -414,7 +415,12 @@ public class FlowCcServiceImpl implements FlowCcService {
           || token.startsWith("dept:")
           || token.startsWith("position:")
           || token.startsWith("leader:")) {
-        List<Long> expanded = assigneeResolver.expandUsers(token, variables);
+        FlowAssigneeResolver resolver = assigneeResolverProvider.getIfAvailable();
+        if (resolver == null) {
+          log.warn("[FlowCc] FlowAssigneeResolver 不可用，跳过 token 展开: token={}", maskToken(token));
+          return;
+        }
+        List<Long> expanded = resolver.expandUsers(token, variables);
         if (expanded != null && !expanded.isEmpty()) {
           for (Long e : expanded) {
             userIds.add(String.valueOf(e));
@@ -427,10 +433,13 @@ public class FlowCcServiceImpl implements FlowCcService {
           userIds.add(String.valueOf(uid));
         } else {
           // 其他格式 → 尝试通过 resolver 展开
-          List<Long> expanded = assigneeResolver.expandUsers(token, variables);
-          if (expanded != null && !expanded.isEmpty()) {
-            for (Long e : expanded) {
-              userIds.add(String.valueOf(e));
+          FlowAssigneeResolver resolver = assigneeResolverProvider.getIfAvailable();
+          if (resolver != null) {
+            List<Long> expanded = resolver.expandUsers(token, variables);
+            if (expanded != null && !expanded.isEmpty()) {
+              for (Long e : expanded) {
+                userIds.add(String.valueOf(e));
+              }
             }
           }
         }

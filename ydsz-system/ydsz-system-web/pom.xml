@@ -69,11 +69,16 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-audit</artifactId>
         </dependency>
-        <!-- ydsz-common-search: GlobalSearchController 使用 UnifiedSearchService/SearchProperties 等 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-search</artifactId>
-        </dependency>
+    <!-- ydsz-common-search: GlobalSearchController 使用 UnifiedSearchService/SearchProperties 等 -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-search</artifactId>
+    </dependency>
+    <!-- opentelemetry-api: GlobalOpenTelemetry 运行时依赖（ClassNotFoundException 修复，BOM 已在父 pom 中管理版本 1.47.0） -->
+    <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-api</artifactId>
+    </dependency>
         <!-- P1: explicit declaration for ydsz-common-thread (bootstrap.yml ydsz.thread.pools.config) -->
         <dependency>
             <groupId>com.njydsz</groupId>

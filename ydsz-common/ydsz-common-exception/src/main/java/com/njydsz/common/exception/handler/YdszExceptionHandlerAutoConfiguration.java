@@ -69,8 +69,8 @@ public class YdszExceptionHandlerAutoConfiguration {
     return new MvcExceptionHandler(
         environment,
         messageSource,
-        exceptionMetrics.getIfAvailable(),
-        properties.getIfAvailable(),
+        exceptionMetrics,
+        properties,
         eventPublisherProvider);
   }
 
@@ -97,9 +97,9 @@ public class YdszExceptionHandlerAutoConfiguration {
       Environment environment,
       MessageSource messageSource,
       ObjectProvider<ExceptionMetrics> exceptionMetrics,
-      ExceptionProperties properties) {
+      ObjectProvider<ExceptionProperties> properties) {
     return new ValidationExceptionHandler(
-        environment, messageSource, exceptionMetrics.getIfAvailable(), properties);
+        environment, messageSource, exceptionMetrics, properties);
   }
 
   // ==================== Reactive WebFlux 处理器 ====================
@@ -127,7 +127,7 @@ public class YdszExceptionHandlerAutoConfiguration {
       ObjectProvider<ExceptionMetrics> exceptionMetrics,
       ObjectProvider<ExceptionProperties> properties) {
     return new WebFluxExceptionHandler(
-        environment, messageSource, exceptionMetrics.getIfAvailable(), properties.getIfAvailable());
+        environment, messageSource, exceptionMetrics, properties);
   }
 
   // ==================== JDBC 处理器 ====================
@@ -154,6 +154,6 @@ public class YdszExceptionHandlerAutoConfiguration {
       ObjectProvider<ExceptionMetrics> exceptionMetrics,
       ObjectProvider<ExceptionProperties> properties) {
     return new JdbcExceptionHandler(
-        environment, messageSource, exceptionMetrics.getIfAvailable(), properties.getIfAvailable());
+        environment, messageSource, exceptionMetrics, properties);
   }
 }

@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.workflow.domain.repository.FlowJoinTokenRepository;
-import com.njydsz.workflow.infra.entity.FlowJoinTokenEntity;
+import com.njydsz.workflow.domain.entity.FlowJoinTokenEntity;
 import com.njydsz.workflow.infra.mapper.FlowJoinTokenMapper;
 import com.njydsz.common.auth.util.SecurityUtils;
 

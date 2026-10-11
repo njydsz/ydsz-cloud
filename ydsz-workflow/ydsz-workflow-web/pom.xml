@@ -93,12 +93,26 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
+        <!-- MapStruct 运行时：注解处理器（compiler plugin）仅提供编译期处理，运行时需要 Mappers.getMapper() 等类 -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
         <!-- spring-boot-starter-web: Controller 注解（PostMapping/PutMapping/DeleteMapping/PathVariable） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <!-- ydsz-common-lock: @IdempotentExempt 注解 -->
+        <!-- spring-messaging + spring-websocket: common-socket WebSocketAutoConfiguration introspect 需要 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-messaging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-websocket</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-lock</artifactId>

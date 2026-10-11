@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -35,10 +34,12 @@ import com.njydsz.common.event.repository.OutboxRepository;
  *   <li>重试操作通过 CAS 更新确保幂等（仅 DEAD_LETTER 可被重置）
  * </ul>
  *
+ * <p>由 {@code EventAutoConfiguration} 通过 {@code @Bean} 方法统一注册，
+ * 不通过组件扫描注册，确保与 {@link OutboxRepository} Bean 生命周期一致。
+ *
  * @author ydsz-team
  * @since 26.10.01
  */
-@Service
 public class OutboxAdminService {
 
   /** 日志实例 */

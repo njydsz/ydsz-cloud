@@ -1,6 +1,7 @@
 package com.njydsz.common.exception.handler;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -66,21 +67,23 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
   /**
    * 构造 WebFlux 全局异常处理器
    *
-   * @param messageSource 国际化消息源
-   * @param exceptionMetrics 异常指标统计器（可选）
-   * @param properties 异常模块配置属性（可选）
+   * <p>使用 {@link ObjectProvider} 包装可选依赖，确保在组件扫描阶段也能正常实例化。
+   *
    * @param environment Spring 环境对象
+   * @param messageSource 国际化消息源
+   * @param exceptionMetricsProvider 异常指标统计器提供器（可选）
+   * @param propertiesProvider 异常模块配置属性提供器（可选）
    */
   public WebFluxExceptionHandler(
       Environment environment,
       MessageSource messageSource,
-      ExceptionMetrics exceptionMetrics,
-      ExceptionProperties properties) {
+      ObjectProvider<ExceptionMetrics> exceptionMetricsProvider,
+      ObjectProvider<ExceptionProperties> propertiesProvider) {
     super(environment);
     this.messageSource = messageSource;
     setMessageSource(messageSource);
-    setExceptionMetrics(environment, exceptionMetrics);
-    setExceptionProperties(environment, properties);
+    setExceptionMetrics(environment, exceptionMetricsProvider.getIfAvailable());
+    setExceptionProperties(environment, propertiesProvider.getIfAvailable());
   }
 
   @Override

@@ -27,8 +27,9 @@ management:
       probes:
         enabled: true
 
-# Sentry 监控配置
+# ydzs 配置：Sentry + Agent 核心
 ydsz:
+  # Sentry 监控配置
   jdbc:
     slow-sql:
       enabled: true
@@ -40,8 +41,7 @@ ydsz:
       primary: micrometer
       enable-system-metrics: true
 
-# Agent 核心配置（各 environment profile 可覆盖）
-ydsz:
+  # Agent 核心配置（各 environment profile 可覆盖）
   agent:
     approval:
       pause-ttl-hours: 1

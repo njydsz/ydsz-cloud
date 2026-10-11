@@ -10,6 +10,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -154,7 +155,7 @@ public class MetricsAutoConfiguration {
   @ConditionalOnMissingBean(name = "elkCircuitBreaker")
   @ConditionalOnProperty(prefix = "ydsz.sentry.logging.elk", name = "enabled", havingValue = "true")
   public SentryCircuitBreaker elkCircuitBreaker(
-      SentryProperties properties, CircuitBreakerRegistry registry) {
+      SentryProperties properties, @Qualifier("circuitBreakerRegistry") CircuitBreakerRegistry registry) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
     CircuitBreakerConfig config = buildChannelConfig(cb);
     return SentryCircuitBreaker.fromRegistry("elk-logstash", config, registry);
@@ -175,7 +176,7 @@ public class MetricsAutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   public SentryCircuitBreaker lokiCircuitBreaker(
-      SentryProperties properties, CircuitBreakerRegistry registry) {
+      SentryProperties properties, @Qualifier("circuitBreakerRegistry") CircuitBreakerRegistry registry) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
     CircuitBreakerConfig config = buildChannelConfig(cb);
     return SentryCircuitBreaker.fromRegistry("loki", config, registry);

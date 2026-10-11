@@ -105,7 +105,7 @@
           AND tenant_id = #{tenantId}
           AND canary_status = 'CANARYING'
           AND canary_percent > 0
-          AND canary_percent < 100
+          AND canary_percent &lt; 100
           AND is_publish = 1
           AND status = 'ENABLED'
           AND is_deleted = 0

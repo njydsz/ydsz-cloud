@@ -144,7 +144,8 @@ public class DistributedLockAutoConfiguration {
   @ConditionalOnMissingBean
   @ConditionalOnBean(RedisMessageListenerContainer.class)
   public LockReleaseNotifier lockReleaseNotifier(
-      StringRedisTemplate stringRedisTemplate, RedisMessageListenerContainer listenerContainer) {
+      StringRedisTemplate stringRedisTemplate,
+      @Qualifier("redisMessageListenerContainer") RedisMessageListenerContainer listenerContainer) {
     return new LockReleaseNotifier(stringRedisTemplate, listenerContainer);
   }
 
@@ -203,7 +204,7 @@ public class DistributedLockAutoConfiguration {
   public LockOptionalDependencies lockOptionalDependencies(
       ObjectProvider<RedisStringOps> stringOpsProvider,
       ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
-      ObjectProvider<TaskScheduler> schedulerProvider,
+      @Qualifier("lockWatchDogScheduler") ObjectProvider<TaskScheduler> schedulerProvider,
       ObjectProvider<LockRenewalService> renewalServiceProvider,
       ObjectProvider<LockReleaseNotifier> notifierProvider,
       ObjectProvider<LockWaitTimePolicy> waitTimePolicyProvider,

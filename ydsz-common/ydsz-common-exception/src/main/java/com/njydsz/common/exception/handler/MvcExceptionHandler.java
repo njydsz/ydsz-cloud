@@ -75,23 +75,26 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
   /**
    * 构造 MVC 全局异常处理器。
    *
+   * <p>使用 {@link ObjectProvider} 包装可选依赖，确保在组件扫描阶段也能正常实例化
+   * （当 MeterRegistry Bean 不存在或 {@link ExceptionMetrics} 未装配时）。
+   *
    * @param environment Spring 环境对象
    * @param messageSource 国际化消息源
-   * @param exceptionMetrics 异常指标统计器
-   * @param properties 异常模块配置属性（可为 null）
+   * @param exceptionMetricsProvider 异常指标统计器提供器，可为 null
+   * @param propertiesProvider 异常模块配置属性提供器，可为 null
    * @param eventPublisherProvider 事件发布器提供者
    */
   public MvcExceptionHandler(
       Environment environment,
       MessageSource messageSource,
-      ExceptionMetrics exceptionMetrics,
-      ExceptionProperties properties,
+      ObjectProvider<ExceptionMetrics> exceptionMetricsProvider,
+      ObjectProvider<ExceptionProperties> propertiesProvider,
       ObjectProvider<ApplicationEventPublisher> eventPublisherProvider) {
     super(environment);
     this.messageSource = messageSource;
     setMessageSource(messageSource);
-    setExceptionMetrics(environment, exceptionMetrics);
-    setExceptionProperties(environment, properties);
+    setExceptionMetrics(environment, exceptionMetricsProvider.getIfAvailable());
+    setExceptionProperties(environment, propertiesProvider.getIfAvailable());
     setEventPublisher(eventPublisherProvider.getIfAvailable());
   }
 

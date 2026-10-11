@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.infra.entity.FlowJoinTokenEntity;
+import com.njydsz.workflow.domain.entity.FlowJoinTokenEntity;
 
 /**
  * 并行网关 join token Mapper

@@ -114,6 +114,16 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-thread</artifactId>
         </dependency>
+        <!-- spring-messaging + spring-websocket: common-socket 注入 WebSocketAutoConfiguration 时
+             需 introspect WebSocketMessageBrokerConfigurer 等类型，业务模块需直接声明 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-messaging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-websocket</artifactId>
+        </dependency>
         <!-- common-lock: @Idempotent 注解（InternalApiController 幂等保护） -->
         <dependency>
             <groupId>com.njydsz</groupId>

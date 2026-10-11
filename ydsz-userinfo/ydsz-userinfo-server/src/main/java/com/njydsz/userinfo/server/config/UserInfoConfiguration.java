@@ -55,7 +55,9 @@ import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
   UserTokenProperties.class,
   UserSecurityProperties.class,
   UserLoginRiskProperties.class,
-  JdbcProvisionProperties.class
+  JdbcProvisionProperties.class,
+  RememberMeProperties.class,
+  ScimProperties.class
 })
 public class UserInfoConfiguration {
 

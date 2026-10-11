@@ -13,7 +13,6 @@ spring:
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml,classpath*:mapper/flow/**/*.xml
-  type-aliases-package: com.njydsz.workflow.entity
 
 # SIT 环境关闭文档 UI
 springdoc:

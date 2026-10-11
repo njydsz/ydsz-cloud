@@ -13,6 +13,7 @@ import io.micrometer.core.instrument.Timer;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.model.UserInfo;
@@ -77,7 +78,7 @@ public class AuthServiceImpl implements AuthService {
 
   private final UserAccountRepository userAccountRepository;
   private final TokenService tokenService;
-  private final TokenBlacklistService tokenBlacklistService;
+  private final ObjectProvider<TokenBlacklistService> tokenBlacklistServiceProvider;
   private final CaptchaService captchaService;
   private final RiskScoringService riskScoringService;
   private final MfaService mfaService;
@@ -446,7 +447,8 @@ public class AuthServiceImpl implements AuthService {
     // P1-4: refresh_token 重用检测（RFC 6819 §5.2.2.3）
     // 若旧 refresh_token 已在黑名单（已被使用并轮换），说明 token 泄露被复用，
     // 立即链式撤销该用户全部会话，防止攻击者长期滥用 token 家族
-    if (tokenBlacklistService.isBlacklisted(refreshToken)) {
+    TokenBlacklistService blacklistService = tokenBlacklistServiceProvider.getIfAvailable();
+    if (blacklistService != null && blacklistService.isBlacklisted(refreshToken)) {
       UserInfo reusedUser = tokenService.parseRefreshToken(refreshToken);
       log.warn(
           "Refresh token reuse detected, revoking all sessions: username={}",
@@ -477,7 +479,11 @@ public class AuthServiceImpl implements AuthService {
     String newRefreshToken = tokenService.issueRefreshToken(userInfo, deviceTypeCode);
 
     // 将旧 refresh_token 加入黑名单（一次性使用，防止重放攻击）
-    tokenBlacklistService.addToBlacklist(refreshToken);
+    if (blacklistService != null) {
+      blacklistService.addToBlacklist(refreshToken);
+    } else {
+      log.warn("跳过 refresh_token 加入黑名单：TokenBlacklistService 不可用（Redis 未配置）");
+    }
 
     // 更新 Redis 会话（新 access_token + 新 refresh_token）
     sessionManager.refreshSession(newAccessToken, newRefreshToken, userInfo);

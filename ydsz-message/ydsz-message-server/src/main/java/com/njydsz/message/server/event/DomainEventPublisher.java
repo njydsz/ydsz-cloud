@@ -17,7 +17,7 @@ import com.njydsz.message.domain.event.MessageDomainEvent;
  * @since 26.10.01
  */
 @Slf4j
-@Component
+@Component("messageDomainEventPublisher")
 @RequiredArgsConstructor
 public class DomainEventPublisher {
 
