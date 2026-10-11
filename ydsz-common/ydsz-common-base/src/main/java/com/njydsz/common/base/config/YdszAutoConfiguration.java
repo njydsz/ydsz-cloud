@@ -48,7 +48,7 @@ import com.njydsz.common.base.health.YdszHealthIndicator;
     name = "enabled",
     havingValue = "true",
     matchIfMissing = true)
-@EnableConfigurationProperties(YdszRequestProperties.class)
+@EnableConfigurationProperties({YdszRequestProperties.class, DocProperties.class})
 public class YdszAutoConfiguration {
 
   /**
