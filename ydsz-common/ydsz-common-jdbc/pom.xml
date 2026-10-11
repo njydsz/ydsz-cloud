@@ -116,7 +116,6 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
-            <optional>true</optional>
         </dependency>
         <!--
             以下数据库驱动已移除（如需使用，请在业务模块 pom.xml 中自行引入）：

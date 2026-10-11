@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.knowledge.Entity;
@@ -38,6 +39,7 @@ import com.njydsz.common.json.tree.JsonNode;
  * @since 26.09.17
  */
 @Slf4j
+@Service
 public class LlmEntityExtractionService implements EntityExtractionService {
 
   /** 抽取 LLM 温度参数 - 需要精确抽取 */

@@ -5,6 +5,7 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -109,7 +110,8 @@ public class FlowOfflineAutoForwardServiceImpl implements FlowOfflineAutoForward
   /** 运行时任务仓储（domain 层契约），查询原办理人名下的待办任务 */
   private final FlowRunTaskRepository taskRepository;
 
-  /** 流程任务服务，调用 transfer 接口执行批量转办 */
+  /** 流程任务服务，调用 transfer 接口执行批量转办（@Lazy 打破潜在的循环依赖） */
+  @Lazy
   private final FlowTaskService taskService;
 
   /**

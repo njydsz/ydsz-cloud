@@ -13,7 +13,9 @@ spring:
       max-request-size: 500MB
 
 # NextWiki 配置（生产环境由 Nacos ydsz-nextwiki.yml 覆盖）
-nextwiki:
+# 注意：配置前缀使用 ydzz.nextwiki（符合 CONFIG-004：业务模块自定义配置必须使用 ydzs.{module}.* 前缀）
+ydsz:
+  nextwiki:
   upload:
     max-file-size: 524288000
     allowed-types: ""

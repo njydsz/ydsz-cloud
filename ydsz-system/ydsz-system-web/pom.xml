@@ -69,10 +69,15 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-audit</artifactId>
         </dependency>
-    <!-- ydsz-common-search: GlobalSearchController 使用 UnifiedSearchService/SearchProperties 等 -->
+        <!-- ydsz-common-search: GlobalSearchController 使用 UnifiedSearchService/SearchProperties 等 -->
     <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-search</artifactId>
+    </dependency>
+    <!-- ydsz-common-notify: sentry 模块以 optional+provided 引用该依赖，不会传递到 system-web，需显式声明 -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-notify</artifactId>
     </dependency>
     <!-- opentelemetry-api: GlobalOpenTelemetry 运行时依赖（ClassNotFoundException 修复，BOM 已在父 pom 中管理版本 1.47.0） -->
     <dependency>

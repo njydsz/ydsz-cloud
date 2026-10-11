@@ -71,7 +71,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
-
+        
         <!-- common-audit（P1-3: 操作审计接入） -->
         <dependency>
             <groupId>com.njydsz</groupId>

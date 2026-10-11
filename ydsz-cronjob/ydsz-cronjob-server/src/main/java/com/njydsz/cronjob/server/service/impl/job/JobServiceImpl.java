@@ -14,12 +14,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
 import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
@@ -78,8 +78,52 @@ import com.njydsz.cronjob.server.service.job.TenantQuotaService;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class JobServiceImpl implements JobService, ApplicationRunner {
+
+  /**
+   * 手写构造器（替代 @RequiredArgsConstructor），为 taskScheduler 参数添加 @Qualifier 注解，
+   * 从 3 个 TaskScheduler Bean（cronjobTaskScheduler / lockWatchDogScheduler / messageBrokerTaskScheduler）
+   * 中明确指定注入 cronjobTaskScheduler。
+   *
+   * @param jobRepository 任务定义 Repository
+   * @param jobLogRepository 任务日志 Repository
+   * @param applicationContext Spring 应用上下文
+   * @param cronjobProperties 调度配置属性
+   * @param jobLockManager 任务锁管理器
+   * @param nextFireTimeCalculator 下次触发时间计算器
+   * @param taskDispatcherProvider 任务派发器（可选）
+   * @param tenantQuotaService 租户级配额服务
+   * @param jobHistoryServiceProvider 任务历史版本服务（可选）
+   * @param searchIndexEventBridgeProvider 搜索索引事件桥接器（可选）
+   * @param taskScheduler 定时任务调度器（明确指定 cronjobTaskScheduler Bean）
+   * @param eventPublisherProvider 领域事件发布器（可选）
+   */
+  public JobServiceImpl(
+      JobRepository jobRepository,
+      JobLogRepository jobLogRepository,
+      ApplicationContext applicationContext,
+      CronjobProperties cronjobProperties,
+      JobLockManager jobLockManager,
+      NextFireTimeCalculator nextFireTimeCalculator,
+      ObjectProvider<TaskDispatcher> taskDispatcherProvider,
+      TenantQuotaService tenantQuotaService,
+      ObjectProvider<JobHistoryService> jobHistoryServiceProvider,
+      ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider,
+      @Qualifier("cronjobTaskScheduler") TaskScheduler taskScheduler,
+      ObjectProvider<DomainEventPublisher> eventPublisherProvider) {
+    this.jobRepository = jobRepository;
+    this.jobLogRepository = jobLogRepository;
+    this.applicationContext = applicationContext;
+    this.cronjobProperties = cronjobProperties;
+    this.jobLockManager = jobLockManager;
+    this.nextFireTimeCalculator = nextFireTimeCalculator;
+    this.taskDispatcherProvider = taskDispatcherProvider;
+    this.tenantQuotaService = tenantQuotaService;
+    this.jobHistoryServiceProvider = jobHistoryServiceProvider;
+    this.searchIndexEventBridgeProvider = searchIndexEventBridgeProvider;
+    this.taskScheduler = taskScheduler;
+    this.eventPublisherProvider = eventPublisherProvider;
+  }
 
   /** 任务定义 Repository */
   private final JobRepository jobRepository;

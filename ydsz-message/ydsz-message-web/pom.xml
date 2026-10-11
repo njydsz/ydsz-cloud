@@ -70,7 +70,11 @@
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-core</artifactId>
     </dependency>
-    <!-- P3-3: Excel 导出能力（投递日志流式导出，使用 ydsz-common-excel） -->
+    <!-- MapStruct 运行时：注解处理器仅提供编译期处理，运行时需要 Mappers.getMapper() 等类 -->
+    <dependency>
+        <groupId>org.mapstruct</groupId>
+        <artifactId>mapstruct</artifactId>
+    </dependency>
     <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-excel</artifactId>

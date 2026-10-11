@@ -87,7 +87,6 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FileApplicationService {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
@@ -124,7 +123,6 @@ public class FileApplicationService {
   private final PlatformTransactionManager transactionManager;
 
   /** 批量任务线程池（使用 ydsz-common-thread 统一管理的 nextwikiTaskExecutor） */
-  @Qualifier("nextwikiTaskExecutor")
   private final Executor batchTaskExecutor;
 
   /** 缓存服务（文件详情、目录列表、配额用量 Redis 缓存） */
@@ -135,6 +133,59 @@ public class FileApplicationService {
 
   /** 编程式事务模板（用于精确控制事务边界，将IO操作移出事务） */
   private TransactionTemplate transactionTemplate;
+
+  /**
+   * 构造器 — 手动声明以支持 @Qualifier 精确指定线程池 Bean。
+   *
+   * <p>使用 @Qualifier("nextwikiTaskExecutor") 在构造器参数级别消歧，
+   * 避免 Spring 容器中存在多个 Executor 类型 Bean 时抛出歧义异常。
+   */
+  public FileApplicationService(
+      SnowflakeIdGenerator snowflakeIdGenerator,
+      FolderDomainService folderDomainService,
+      FileVersionDomainService versionDomainService,
+      QuotaDomainService quotaDomainService,
+      StorageQuotaRepository storageQuotaRepository,
+      StorageReferenceService storageReferenceService,
+      TrashDomainService trashDomainService,
+      FileNodeRepository fileNodeRepository,
+      FileVersionRepository versionRepository,
+      TrashItemRepository trashItemRepository,
+      ApplicationEventPublisher eventPublisher,
+      FilePermissionService permissionService,
+      LockStrategy lockStrategy,
+      VirusScanApplicationService virusScanApplicationService,
+      ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider,
+      ObjectProvider<DomainEventPublisher> eventPublisherProvider,
+      FolderCopyService folderCopyService,
+      PlatformTransactionManager transactionManager,
+      @Qualifier("nextwikiTaskExecutor") Executor batchTaskExecutor,
+      NextwikiCacheService cacheService,
+      NextwikiStructMapper mapper,
+      NextwikiProperties properties) {
+    this.snowflakeIdGenerator = snowflakeIdGenerator;
+    this.folderDomainService = folderDomainService;
+    this.versionDomainService = versionDomainService;
+    this.quotaDomainService = quotaDomainService;
+    this.storageQuotaRepository = storageQuotaRepository;
+    this.storageReferenceService = storageReferenceService;
+    this.trashDomainService = trashDomainService;
+    this.fileNodeRepository = fileNodeRepository;
+    this.versionRepository = versionRepository;
+    this.trashItemRepository = trashItemRepository;
+    this.eventPublisher = eventPublisher;
+    this.permissionService = permissionService;
+    this.lockStrategy = lockStrategy;
+    this.virusScanApplicationService = virusScanApplicationService;
+    this.searchIndexBridgeProvider = searchIndexBridgeProvider;
+    this.eventPublisherProvider = eventPublisherProvider;
+    this.folderCopyService = folderCopyService;
+    this.transactionManager = transactionManager;
+    this.batchTaskExecutor = batchTaskExecutor;
+    this.cacheService = cacheService;
+    this.mapper = mapper;
+    this.properties = properties;
+  }
 
   @PostConstruct
   void initTransactionTemplate() {

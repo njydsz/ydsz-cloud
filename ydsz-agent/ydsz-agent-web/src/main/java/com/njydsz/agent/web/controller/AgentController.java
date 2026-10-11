@@ -10,8 +10,8 @@ import java.util.Objects;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -108,7 +108,6 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @Slf4j
 @RestController
 @RequestMapping("/agent")
-@RequiredArgsConstructor
 public class AgentController {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
@@ -120,8 +119,32 @@ public class AgentController {
   /** Agent 应用门面（解耦 Controller 与内部服务） */
   private final AgentFacade agentFacade;
 
-  /** 请求守卫（幂等 + 限流 + 业务校验） */
+  /**
+   * 请求守卫（幂等 + 限流 + 业务校验）。
+   *
+   * <p>使用 ObjectProvider 实现可选注入：当容器中不存在 AgentRequestGuard Bean 时，
+   * {@link #requestGuard} 为 {@code null}，调用处通过 null 检查安全降级，
+   * 跳过幂等和限流校验，不影响 Agent 核心执行能力。
+   */
   private final AgentRequestGuard requestGuard;
+
+  /**
+   * 构造器 — 使用 ObjectProvider 实现 AgentRequestGuard 的可选注入。
+   *
+   * <p>当容器中不存在 AgentRequestGuard Bean 时 {@link #requestGuard} 置为 {@code null}，
+   * 调用处通过 null 检查安全降级，不影响 Agent 核心执行能力。
+   */
+  public AgentController(
+      SsePushChannelFactory ssePushChannelFactory,
+      AgentFacade agentFacade,
+      ObjectProvider<AgentRequestGuard> requestGuardProvider) {
+    this.ssePushChannelFactory = ssePushChannelFactory;
+    this.agentFacade = agentFacade;
+    this.requestGuard = requestGuardProvider.getIfAvailable();
+    if (this.requestGuard == null) {
+      log.warn("[Agent] AgentRequestGuard 未注册，幂等和限流校验将跳过");
+    }
+  }
 
   /**
    * 同步执行 Agent，等待完整响应后返回。
@@ -149,7 +172,7 @@ public class AgentController {
     log.info(
         "[Agent-API] 执行请求: agentCode={}, stream={}", request.getAgentCode(), request.isStream());
     applyTraceContext(request);
-    requestGuard.check(request.getRequestId(), null);
+    if (requestGuard != null) { requestGuard.check(request.getRequestId(), null); }
     AgentExecutionRequest execReq = toExecutionRequest(request);
     ChatResponse response = agentFacade.execute(execReq);
     return YdszResponse.success(toDTO(response));
@@ -191,7 +214,7 @@ public class AgentController {
   public SseEmitter executeStream(@Valid @RequestBody AgentExecutionRequestDTO request) {
     log.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());
     applyTraceContext(request);
-    requestGuard.check(request.getRequestId(), null);
+    if (requestGuard != null) { requestGuard.check(request.getRequestId(), null); }
     // P0-SOCKET: 使用 SsePushChannelFactory 创建 SSE 通道（统一心跳保活 + cleanup）
     SsePushChannel channel = ssePushChannelFactory.create();
     SseExecutor executor = new SseExecutor(channel);
@@ -295,7 +318,7 @@ public class AgentController {
   @Operation(summary = "同步对话", description = "等待 LLM 返回完整响应后返回")
   public YdszResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
     applyTraceContext(request);
-    requestGuard.check(request.getRequestId(), null);
+    if (requestGuard != null) { requestGuard.check(request.getRequestId(), null); }
     ChatResponse response;
     // 多模态输入优先：multimodalContent 非空时使用 Vision 模型对话
     if (request.getMultimodalContent() != null && !request.getMultimodalContent().isEmpty()) {
@@ -338,7 +361,7 @@ public class AgentController {
   @Operation(summary = "流式对话（SSE）", description = "逐 token 推送 LLM 响应")
   public SseEmitter chatStream(@Valid @RequestBody ChatRequestDTO request) {
     applyTraceContext(request);
-    requestGuard.check(request.getRequestId(), null);
+    if (requestGuard != null) { requestGuard.check(request.getRequestId(), null); }
     // P0-SOCKET: 使用 SsePushChannelFactory 创建 SSE 通道
     SsePushChannel channel = ssePushChannelFactory.create();
     SseExecutor executor = new SseExecutor(channel);
@@ -434,7 +457,7 @@ public class AgentController {
       @Valid @RequestBody BatchChatRequestDTO request) {
     log.info("[Batch-API] 批量对话请求: itemsCount={}", request.getItems().size());
     applyTraceContext(request);
-    requestGuard.check(request.getRequestId(), null);
+    if (requestGuard != null) { requestGuard.check(request.getRequestId(), null); }
     // DTO → 应用层 BatchChatItem 转换
     List<BatchChatItem> facadeItems = new ArrayList<>(request.getItems().size());
     for (BatchChatRequestDTO.BatchChatItem dto : request.getItems()) {

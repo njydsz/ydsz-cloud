@@ -2,16 +2,22 @@ package com.njydsz.userinfo.server.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 /**
  * WebAuthn/Passkey 配置属性
  *
  * <p>封装 ydsz.userinfo.webauthn 前缀下的配置项，用于控制 FIDO2 WebAuthn 的行为。
  *
+ * <p>添加 @Component 注解确保始终注册为 Spring Bean，不受 WebAuthnConfiguration 中
+ * @ConditionalOnProperty 条件控制（默认 enabled=false 时 WebAuthnConfiguration 不加载，
+ * 但 WebAuthnService 始终需要此 Bean 存在）。
+ *
  * @author ydsz-team
  * @since 26.10.01
  */
 @Data
+@Component
 @ConfigurationProperties(prefix = "ydsz.userinfo.webauthn")
 public class WebAuthnProperties {
 

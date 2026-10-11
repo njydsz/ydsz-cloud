@@ -20,6 +20,7 @@ import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.SentryObservation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -84,7 +85,10 @@ public class CodeGenService {
   /**
    * 构造器 — 注入代码生成线程池（声明式 Bean）。
    *
-   * @param datasourceService     数据源服务
+   * @param datasourceServiceProvider 数据源服务提供者（使用 ObjectProvider 延迟解析，
+   *                                 彻底打破 CodeGenService ↔ DatasourceService 循环依赖：
+   *                                 ObjectProvider 本身不触发 Bean 初始化，
+   *                                 直到首次调用 getIfAvailable() 才真正创建 DatasourceService）
    * @param templateGroupService  模板分组服务
    * @param templateService       模板服务
    * @param tableMetadataService  表元数据服务
@@ -94,7 +98,7 @@ public class CodeGenService {
    * @param historyFileRepository 生成文件仓储
    */
   public CodeGenService(
-      DatasourceService datasourceService,
+      ObjectProvider<DatasourceService> datasourceServiceProvider,
       TemplateGroupService templateGroupService,
       TemplateService templateService,
       TableMetadataService tableMetadataService,
@@ -103,7 +107,8 @@ public class CodeGenService {
       @Autowired
   @Qualifier("codeGenExecutor") ExecutorService codeGenExecutor,
       GenHistoryFileRepository historyFileRepository) {
-    this.datasourceService = datasourceService;
+    // ObjectProvider 不触发 DatasourceService 初始化，彻底打破循环依赖
+    this.datasourceService = datasourceServiceProvider.getIfAvailable();
     this.templateGroupService = templateGroupService;
     this.templateService = templateService;
     this.tableMetadataService = tableMetadataService;

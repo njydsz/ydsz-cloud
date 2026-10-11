@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.support.CronExpression;
@@ -24,7 +25,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  * <ul>
  *   <li><b>任务级时区</b>：优先使用 {@link Job#getTimezone()}，为空时回退到默认时区 Asia/Shanghai，
  *       避免多时区部署下触发时间漂移
- *   <li><b>本地缓存</b>：缓存 key = cron + timezone（60s TTL），同一表达式在扫描周期内只解析一次；
+ *   <li><b>本地缓存</b>：缓存 key = cron + timezone（默认 60s TTL），同一表达式在扫描周期内只解析一次；
  *       缓存 key 含时区，避免不同时区共用同一缓存导致计算结果串扰
  * </ul>
  *
@@ -38,15 +39,29 @@ public class NextFireTimeCalculator {
   /** 默认时区（与调度基线一致） */
   private static final String DEFAULT_TIMEZONE = "Asia/Shanghai";
 
+  /** 默认缓存 TTL（秒） */
+  private static final long DEFAULT_CACHE_TTL_SECONDS = 60L;
+
   /** 缓存 TTL（秒）：同一表达式在扫描周期内只解析一次 */
   @Value("${ydsz.cronjob.scheduler.cache-ttl-seconds:60}")
   private long cacheTtlSeconds;
 
   /** 计算结果缓存（W-TinyLFU，write-through TTL = cacheTtlSeconds） */
-  private final Cache<String, LocalDateTime> cache = YdszCache.<String, LocalDateTime>newBuilder()
-      .maximumSize(10_000)
-      .expireAfterWrite(cacheTtlSeconds, TimeUnit.SECONDS)
-      .build();
+  private volatile Cache<String, LocalDateTime> cache;
+
+  /**
+   * 在 @Value 注入完成后再初始化缓存，避免字段初始化时 cacheTtlSeconds 为 0 导致
+   * YdszCache.expireAfterWrite 抛出 IllegalArgumentException。
+   */
+  @PostConstruct
+  public void initCache() {
+    long ttl = cacheTtlSeconds > 0 ? cacheTtlSeconds : DEFAULT_CACHE_TTL_SECONDS;
+    cache = YdszCache.<String, LocalDateTime>newBuilder()
+        .maximumSize(10_000)
+        .expireAfterWrite(ttl, TimeUnit.SECONDS)
+        .build();
+    log.info("[NextFireTimeCalculator] 下次触发时间缓存已初始化, cacheTtlSeconds={}", ttl);
+  }
 
   /**
    * 计算任务的下次触发时间（优先使用任务级时区）。

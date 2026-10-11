@@ -2,8 +2,8 @@ package com.njydsz.userinfo.server.auth;
 
 import java.time.Duration;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -46,7 +46,6 @@ import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class MfaService {
 
   /** 绑定流程临时密钥 Redis Key 前缀 */
@@ -81,6 +80,30 @@ public class MfaService {
   private final RedisStringOps redisStringOps;
   private final VerifyCodeService verifyCodeService;
   private final MfaSecretEncryptor mfaSecretEncryptor;
+
+  /**
+   * 构造器 — 使用 ObjectProvider 实现 MfaSecretEncryptor 的可选注入。
+   *
+   * <p>当容器中不存在 MfaSecretEncryptor Bean 时降级为 noop 实现，
+   * 避免因 Bean 缺失导致服务启动失败。
+   *
+   * @param redisStringOps      Redis 操作组件
+   * @param verifyCodeService   验证码服务
+   * @param encryptorProvider   MFA 加密器提供者（可选，未配置时降级为明文传输）
+   */
+  public MfaService(
+      RedisStringOps redisStringOps,
+      VerifyCodeService verifyCodeService,
+      ObjectProvider<MfaSecretEncryptor> encryptorProvider) {
+    this.redisStringOps = redisStringOps;
+    this.verifyCodeService = verifyCodeService;
+    this.mfaSecretEncryptor = encryptorProvider.getIfAvailable(() -> new MfaSecretEncryptor() {
+      @Override
+      public String encrypt(String plainSecret) { return plainSecret; }
+      @Override
+      public String decrypt(String cipherSecret) { return cipherSecret; }
+    });
+  }
 
   /**
    * 发起 TOTP 绑定：生成临时密钥与 otpauth URI。

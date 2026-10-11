@@ -93,6 +93,7 @@ import com.njydsz.literule.server.spi.RuleActionHandler;
 import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.version.RuleVersionDiffService;
+import com.njydsz.literule.server.spi.NoopRuleConfigProvider;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.spi.RulePackProvider;
 import com.njydsz.literule.server.spi.RuleSourceManager;
@@ -972,29 +973,54 @@ public class LiteRuleAutoConfiguration {
       matchIfMissing = true)
   @Primary
   public CachingRuleConfigProvider cachingRuleConfigProvider(
-      ObjectProvider<List<RuleConfigProvider>> providersProvider,
+      ObjectProvider<DirectDbRuleConfigProvider> directDbProviderProvider,
+      ObjectProvider<NacosRuleSource> nacosProviderProvider,
+      ObjectProvider<ApolloRuleSource> apolloProviderProvider,
+      ObjectProvider<ZookeeperRuleSource> zookeeperProviderProvider,
       ObjectProvider<RedisStringOps> redisStringOpsProvider,
       LiteRuleProperties properties) {
-    // 使用 ObjectProvider 延迟获取 RuleConfigProvider 列表，避免泛型擦除导致 Spring 无法解析
-    // List<RuleConfigProvider> 类型。ObjectProvider 同时兼容无 Bean 场景（返回 null），
-    // 配合 getIfAvailable() 实现安全降级：无委托 Provider 时不注册 CachingRuleConfigProvider。
-    List<RuleConfigProvider> providers = providersProvider.getIfAvailable();
-    if (providers == null || providers.isEmpty()) {
-      log.warn("[LiteRule-Cache] 未发现任何 RuleConfigProvider Bean，跳过 CachingRuleConfigProvider 注册");
-      // 返回 null 导致 Spring 忽略此 Bean（标注 @Bean 的方法返回 null 时不注册）
-      return null;
+    // 使用具体子类型的 ObjectProvider 逐一查找委托实现，避免 ObjectProvider<List<RuleConfigProvider>>
+    // 触发对所有 RuleConfigProvider 的即时解析（包括正在创建的 CachingRuleConfigProvider 自身），
+    // 从而导致 BeanCurrentlyInCreationException。
+    // 优先级：DB > Nacos > Apollo > Zookeeper > NO-OP。
+    RuleConfigProvider delegate = directDbProviderProvider.getIfAvailable();
+    if (delegate == null) {
+      delegate = nacosProviderProvider.getIfAvailable();
     }
-    RuleConfigProvider delegate =
-        providers.stream()
-            .filter(p -> !(p instanceof CachingRuleConfigProvider))
-            .findFirst()
-            .orElseThrow(() -> new IllegalStateException("未找到可装饰的 RuleConfigProvider 委托实现（过滤后列表为空）"));
+    if (delegate == null) {
+      delegate = apolloProviderProvider.getIfAvailable();
+    }
+    if (delegate == null) {
+      delegate = zookeeperProviderProvider.getIfAvailable();
+    }
+    if (delegate == null) {
+      log.warn("[LiteRule-Cache] 未找到可装饰的 RuleConfigProvider 委托实现，使用 NO-OP 默认实现（空规则）");
+      delegate = new NoopRuleConfigProvider();
+    }
     RedisStringOps redisStringOps = redisStringOpsProvider.getIfAvailable();
     log.info(
         "[LiteRule-Cache] 多级缓存 RuleConfigProvider 已初始化 (delegate={}, L2={})",
         delegate.getClass().getSimpleName(),
         redisStringOps != null);
     return new CachingRuleConfigProvider(delegate, redisStringOps, properties);
+  }
+
+  /**
+   * NO-OP 默认 RuleConfigProvider 实现（当无任何 RuleConfigProvider Bean 时兜底使用）。
+   *
+   * <p>返回空规则列表，save/enable/disable/delete 均抛出 UnsupportedOperationException。
+   * 保证容器启动不失败（下游依赖方 RuleAdminService / RuleHotReloader / RuleApprovalService
+   * 等注入时不为 null），但实际操作规则时会明确报错。
+   *
+   * <p>注册为 Spring Bean（@ConditionalOnMissingBean RuleConfigProvider），避免在已有
+   * RuleConfigProvider Bean 时产生 Bean 冲突。
+   *
+   * @since 26.10.08
+   */
+  @Bean
+  @ConditionalOnMissingBean(RuleConfigProvider.class)
+  public NoopRuleConfigProvider noopRuleConfigProvider() {
+    return new NoopRuleConfigProvider();
   }
 
   // ------------------------------------------------------------------

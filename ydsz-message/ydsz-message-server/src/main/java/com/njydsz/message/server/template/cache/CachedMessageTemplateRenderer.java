@@ -1,7 +1,8 @@
 package com.njydsz.message.server.template.cache;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.ArrayList;
+import com.njydsz.common.locales.util.I18n;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,8 @@ import java.util.regex.Pattern;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
@@ -53,6 +56,7 @@ import com.njydsz.message.server.template.util.TemplateFilterUtil;
  * @since 26.10.01
  */
 @Slf4j
+@Service
 public class CachedMessageTemplateRenderer extends SentryMetricsAdapter implements MessageTemplateRenderer {
 
   @Override
@@ -98,7 +102,7 @@ public class CachedMessageTemplateRenderer extends SentryMetricsAdapter implemen
   private static final String CACHE_NAME = "message:template-ast";
 
   /** 模板 AST 缓存：原始模板字符串 → 编译后的 AST */
-  private final Cache<String, TemplateAst> astCache;
+  private Cache<String, TemplateAst> astCache;
 
   /** 命中次数统计（监控用） */
   private final AtomicLong cacheHits = new AtomicLong(0);
@@ -106,17 +110,21 @@ public class CachedMessageTemplateRenderer extends SentryMetricsAdapter implemen
   /** 未命中次数统计（监控用） */
   private final AtomicLong cacheMisses = new AtomicLong(0);
 
+  /** 最大缓存容量（可通过 ydsz.message.template.cache-max-size 配置，默认 1000） */
+  @Value("${ydsz.message.template.cache-max-size:1000}")
+  private int maxCacheSize;
+
+  /** 写入后过期时间（分钟）（可通过 ydsz.message.template.cache-expire-minutes 配置，默认 30） */
+  @Value("${ydsz.message.template.cache-expire-minutes:30}")
+  private long expireAfterWriteMinutes;
+
   /**
-   * 构造带监控的缓存实例。
+   * 初始化缓存实例。
    *
-   * <p>使用 ydsz-common-cache 统一管理缓存生命周期，支持配置外部化和健康检查。
-   *
-   * @param maxCacheSize 最大缓存容量
-   * @param expireAfterWriteMinutes 写入后过期时间（分钟）
+   * <p>使用 @PostConstruct 在 Spring 注入配置值后创建缓存，使用 ydsz-common-cache 统一管理缓存生命周期。
    */
-  public CachedMessageTemplateRenderer(
-      int maxCacheSize,
-      long expireAfterWriteMinutes) {
+  @PostConstruct
+  public void initCache() {
     this.astCache =
         YdszCache.<String, TemplateAst>newBuilder()
             .name(CACHE_NAME)
