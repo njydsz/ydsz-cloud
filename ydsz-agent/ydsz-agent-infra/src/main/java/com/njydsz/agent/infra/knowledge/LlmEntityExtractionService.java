@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
@@ -40,6 +41,7 @@ import com.njydsz.common.json.tree.JsonNode;
  */
 @Slf4j
 @Service
+@ConditionalOnBean(LlmClient.class)
 public class LlmEntityExtractionService implements EntityExtractionService {
 
   /** 抽取 LLM 温度参数 - 需要精确抽取 */

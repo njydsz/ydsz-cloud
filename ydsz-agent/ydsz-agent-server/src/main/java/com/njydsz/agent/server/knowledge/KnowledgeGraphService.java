@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.knowledge.Entity;
@@ -57,13 +58,13 @@ public class KnowledgeGraphService {
   /**
    * 构造知识图谱服务。
    *
-   * @param extractionService 实体抽取服务
+   * @param extractionServiceProvider 实体抽取服务提供者（延迟解析，支持抽取服务不存在时跳过）
    * @param graphStore 图谱存储
    */
   public KnowledgeGraphService(
-      EntityExtractionService extractionService,
+      ObjectProvider<EntityExtractionService> extractionServiceProvider,
       KnowledgeGraphStore graphStore) {
-    this.extractionService = Objects.requireNonNull(extractionService, "extractionService 不能为 null");
+    this.extractionService = extractionServiceProvider.getIfAvailable();
     this.graphStore = Objects.requireNonNull(graphStore, "graphStore 不能为 null");
   }
 
@@ -80,6 +81,11 @@ public class KnowledgeGraphService {
   public IngestResult ingestDocument(String docId, String text) {
     Objects.requireNonNull(docId, "docId 不能为 null");
     if (text == null || text.isBlank()) {
+      return new IngestResult(0, 0);
+    }
+    // 实体抽取服务未注册时（如 LlmClient 不可用），跳过抽取直接返回
+    if (extractionService == null) {
+      log.warn("[KG-Service] 实体抽取服务未注册，跳过摄入: docId={}", docId);
       return new IngestResult(0, 0);
     }
     log.info("[KG-Service] 开始摄入文档: docId={}, textLength={}", docId, text.length());

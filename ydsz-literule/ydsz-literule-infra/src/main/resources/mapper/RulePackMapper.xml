@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.literule.infra.mapper.RulePackMapper">
 
-    <select id="selectByPackCode" resultType="com.njydsz.literule.infra.entity.RulePack">
+    <select id="selectByPackCode" resultType="com.njydsz.literule.domain.entity.RulePack">
         SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
                rule_snapshots, previous_version,
                description, author, download_count, rating, is_enabled, is_official,
@@ -13,7 +13,7 @@
         ORDER BY created_at DESC
     </select>
 
-    <select id="selectByPackCodeVersion" resultType="com.njydsz.literule.infra.entity.RulePack">
+    <select id="selectByPackCodeVersion" resultType="com.njydsz.literule.domain.entity.RulePack">
         SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
                rule_snapshots, previous_version,
                description, author, download_count, rating, is_enabled, is_official,
@@ -24,7 +24,7 @@
         LIMIT 1
     </select>
 
-    <select id="selectByIndustry" resultType="com.njydsz.literule.infra.entity.RulePack">
+    <select id="selectByIndustry" resultType="com.njydsz.literule.domain.entity.RulePack">
         SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
                rule_snapshots, previous_version,
                description, author, download_count, rating, is_enabled, is_official,
