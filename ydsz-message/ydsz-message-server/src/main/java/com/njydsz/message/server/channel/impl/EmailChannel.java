@@ -1,14 +1,17 @@
 package com.njydsz.message.server.channel.impl;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.common.locales.util.I18n;
 
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
@@ -47,7 +50,7 @@ public class EmailChannel implements MessageChannel {
   /** 通道类型 */
   private static final String CHANNEL_TYPE = "EMAIL";
 
-  /** 邮件通知发送器（统一由 ydsz-common-notify 提供） */
+  /** 邮件通知发送器（统一由 ydsz-common-notify 提供；可选注入，未配置邮件时不启用） */
   private final EmailNotifySender emailNotifySender;
 
   /** 分布式 ID 生成器 */
@@ -56,13 +59,13 @@ public class EmailChannel implements MessageChannel {
   /**
    * 构造方法。
    *
-   * @param emailNotifySender 邮件通知发送器
+   * @param emailNotifySenderProvider 邮件通知发送器提供者（可选）
    * @param snowflakeIdGenerator 分布式 ID 生成器，用于构建 traceId
    */
   public EmailChannel(
-      EmailNotifySender emailNotifySender,
+      ObjectProvider<EmailNotifySender> emailNotifySenderProvider,
       SnowflakeIdGenerator snowflakeIdGenerator) {
-    this.emailNotifySender = emailNotifySender;
+    this.emailNotifySender = emailNotifySenderProvider.getIfAvailable();
     this.snowflakeIdGenerator = snowflakeIdGenerator;
   }
 
@@ -87,7 +90,7 @@ public class EmailChannel implements MessageChannel {
    */
   @Override
   public MessageSendResultVO send(MessageItemRequestDTO request) {
-    if (!emailNotifySender.isEnabled()) {
+    if (emailNotifySender == null || !emailNotifySender.isEnabled()) {
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "邮件通知未启用", "邮件通知未启用", null);
     }
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {

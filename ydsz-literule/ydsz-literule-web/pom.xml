@@ -94,7 +94,11 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
-        <!-- mapstruct: 已迁移至 infra 模块，web 模块通过 infra 传递依赖获取注解 -->
+        <!-- MapStruct 运行时：Mappers.getMapper() 等类需要运行时 jar（注解处理器仅编译期处理） -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
         <!-- ydsz-common-json -->
         <dependency>
             <groupId>com.njydsz</groupId>

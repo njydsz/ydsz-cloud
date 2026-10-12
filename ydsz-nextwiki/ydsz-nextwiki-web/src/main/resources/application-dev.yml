@@ -4,6 +4,8 @@ spring:
     import:
       - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-common.yml"
       - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-nextwiki-web.yml"
+  main:
+    allow-circular-references: true
 
 datasource:
   hikari:
@@ -17,3 +19,5 @@ logging:
     root: INFO
 ydsz:
   local-dev: true
+  i18n:
+    validate-on-startup: false

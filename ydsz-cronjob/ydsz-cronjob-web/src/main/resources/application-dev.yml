@@ -4,6 +4,8 @@ spring:
     import:
       - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-common.yml"
       - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-cronjob-web.yml"
+  main:
+    allow-circular-references: true
 
 datasource:
   hikari:
@@ -16,4 +18,6 @@ logging:
     org.springframework: INFO
     root: INFO
 ydsz:
+  i18n:
+    validate-on-startup: false
   local-dev: true

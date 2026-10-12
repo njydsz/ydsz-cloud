@@ -52,7 +52,7 @@ public class JdbcHealthIndicator {
    * @return HealthIndicator 实例
    */
   @Bean
-  public HealthIndicator jdbcHealthContributor(SqlAstCache sqlAstCache) {
+  public HealthIndicator jdbcHealthContributor(@Lazy SqlAstCache sqlAstCache) {
     return new JdbcHealthIndicatorImpl(sqlAstCache);
   }
 

@@ -42,6 +42,14 @@ spring:
   main:
     # web-application-type: servlet — REMOVED: let Spring Boot auto-detect (gateway=reactive by classpath)
     allow-bean-definition-overriding: true
+  autoconfigure:
+    exclude:
+      # 排除 baomidou 官方 DynamicDataSourceAutoConfiguration：ydsz-common-jdbc 提供自研 DynamicRoutingDataSource，
+      # 与 baomidou 同名类互斥。baomidou 需要 spring.datasource.dynamic.primary 配置才能启动，
+      # 未配置时抛出 "dynamic-datasource can not find primary datasource" 错误。
+      # 排除 Spring Cloud Gateway 的 redisRateLimiter Bean，避免与 common-redis 的同名 Bean 冲突。
+      - com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration
+      - org.springframework.cloud.gateway.config.GatewayRedisAutoConfiguration
   servlet:
     multipart:
       max-file-size: 50MB

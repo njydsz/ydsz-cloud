@@ -1,0 +1,12 @@
+# === 本地配置（开发模式） ===
+spring:
+  main:
+    allow-circular-references: true
+
+ydsz:
+  i18n:
+    validate-on-startup: false
+
+logging:
+  level:
+    com.njydsz.generator: DEBUG

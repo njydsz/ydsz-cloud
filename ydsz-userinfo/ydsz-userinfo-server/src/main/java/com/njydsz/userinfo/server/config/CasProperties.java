@@ -5,6 +5,7 @@ import java.time.Duration;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 /**
  * CAS 协议配置属性。
@@ -33,6 +34,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 26.10.01
  */
 @Data
+@Component
 @ConfigurationProperties(prefix = "ydsz.userinfo.cas")
 public class CasProperties {
 

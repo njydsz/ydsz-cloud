@@ -4,6 +4,8 @@ spring:
     import:
       - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-common.yml"
       - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-userinfo-web.yml"
+  main:
+    allow-circular-references: true
 
 datasource:
   hikari:
@@ -17,6 +19,8 @@ logging:
     root: INFO
 ydsz:
   local-dev: true
+  i18n:
+    validate-on-startup: false
   auth:
     token:
       # 本地开发用 JWT 密钥（至少 256 bits / 32 bytes），生产环境应通过 Nacos 配置中心注入

@@ -4,6 +4,8 @@ spring:
     import:
       - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-common.yml"
       - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-agent-web.yml"
+  main:
+    allow-circular-references: true
 
 datasource:
   hikari:
@@ -16,6 +18,8 @@ logging:
     org.springframework: INFO
     root: INFO
 ydsz:
+  i18n:
+    validate-on-startup: false
   agent:
     approval:
       pause-on-sensitive: false

@@ -17,3 +17,5 @@ logging:
     root: INFO
 ydsz:
   local-dev: true
+  i18n:
+    validate-on-startup: false

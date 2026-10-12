@@ -18,6 +18,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.knowledge.Entity;
 import com.njydsz.agent.domain.knowledge.EntityType;
@@ -37,6 +38,7 @@ import com.njydsz.agent.domain.knowledge.Relation;
  * @since 26.09.17
  */
 @Slf4j
+@Component
 public class InMemoryKnowledgeGraphStore implements KnowledgeGraphStore {
 
   /** 存储类型标识 */

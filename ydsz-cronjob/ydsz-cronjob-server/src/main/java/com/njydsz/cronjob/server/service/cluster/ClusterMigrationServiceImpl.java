@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.code.YdszResultCode;
@@ -42,13 +42,31 @@ import com.njydsz.cronjob.server.service.job.JobService;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ClusterMigrationServiceImpl implements ClusterMigrationService {
 
   private final JobRepository jobRepository;
   private final JobService jobService;
   private final CronjobProperties cronjobProperties;
   private final ClusterMigrationClient migrationClient;
+
+  /**
+   * 构造集群漂移服务实现。
+   *
+   * @param jobRepository 任务仓储
+   * @param jobService 任务服务
+   * @param cronjobProperties 定时任务配置
+   * @param migrationClientProvider 集群漂移客户端提供者（可选，多集群未配置时不存在）
+   */
+  public ClusterMigrationServiceImpl(
+      JobRepository jobRepository,
+      JobService jobService,
+      CronjobProperties cronjobProperties,
+      ObjectProvider<ClusterMigrationClient> migrationClientProvider) {
+    this.jobRepository = jobRepository;
+    this.jobService = jobService;
+    this.cronjobProperties = cronjobProperties;
+    this.migrationClient = migrationClientProvider.getIfAvailable();
+  }
 
   @Override
   public BatchResultDTO<String> migrateToCluster(JobClusterMigrationDTO dto) {
@@ -63,8 +81,8 @@ public class ClusterMigrationServiceImpl implements ClusterMigrationService {
           .build();
     }
 
-    // 2. 校验目标集群可达性
-    if (!migrationClient.checkReachable(targetCluster)) {
+    // 2. 校验目标集群可达性（多集群未配置时跳过可达性校验）
+    if (migrationClient != null && !migrationClient.checkReachable(targetCluster)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.SERVICE_UNAVAILABLE)
           .message("目标集群不可达: " + targetCluster)
@@ -131,7 +149,13 @@ public class ClusterMigrationServiceImpl implements ClusterMigrationService {
     // 1. 注销本机调度器（停止在当前集群的调度）
     jobService.unregister(job.getJobKey());
 
-    // 2. 调用目标集群注册任务
+    // 2. 调用目标集群注册任务（多集群未配置时跳过远程注册）
+    if (migrationClient == null) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.SERVICE_UNAVAILABLE)
+          .message("多集群漂移功能未启用，无法迁移任务")
+          .build();
+    }
     String requestBody = YdszJson.toJson(job);
     boolean registered = migrationClient.registerJob(targetCluster, requestBody);
     if (!registered) {

@@ -1,13 +1,11 @@
 package com.njydsz.common.jdbc.datasource;
 
 import java.util.HashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
@@ -17,14 +15,18 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
 import com.njydsz.common.jdbc.annotation.DS;
 import com.njydsz.common.jdbc.config.MultiDataSourcePoolCustomizer;
+import com.njydsz.common.jdbc.config.YdszDataSourceProperties;
 import com.njydsz.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.common.jdbc.health.DynamicDataSourceHealthIndicator;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 /**
  * 动态数据源自动配置
@@ -64,9 +66,64 @@ import com.njydsz.common.jdbc.health.DynamicDataSourceHealthIndicator;
     name = "enabled",
     havingValue = "true",
     matchIfMissing = true)
+@EnableConfigurationProperties(YdszDataSourceProperties.class)
 public class DynamicDataSourceAutoConfiguration {
 
   private static final Logger log = LoggerFactory.getLogger(DynamicDataSourceAutoConfiguration.class);
+
+  private final YdszDataSourceProperties dataSourceProperties;
+
+  public DynamicDataSourceAutoConfiguration(YdszDataSourceProperties dataSourceProperties) {
+    this.dataSourceProperties = dataSourceProperties;
+  }
+
+  /**
+   * 创建基础 HikariDataSource。
+   *
+   * <p>从 ydsz.datasource.* 配置读取连接参数，创建原生 HikariCP 数据源。
+   * 这是解决 "dynamic-datasource can not find primary datasource" 的关键——
+   * 为 ObjectProvider<DataSource> 提供唯一候选 Bean。
+   */
+  @Bean
+  @ConditionalOnMissingBean(DataSource.class)
+  public HikariDataSource baseHikariDataSource() {
+    HikariConfig config = new HikariConfig();
+    if (dataSourceProperties.getUrl() != null) {
+      config.setJdbcUrl(dataSourceProperties.getUrl());
+    }
+    if (dataSourceProperties.getUsername() != null) {
+      config.setUsername(dataSourceProperties.getUsername());
+    }
+    if (dataSourceProperties.getPassword() != null) {
+      config.setPassword(dataSourceProperties.getPassword());
+    }
+    if (dataSourceProperties.getDriverClassName() != null) {
+      config.setDriverClassName(dataSourceProperties.getDriverClassName());
+    }
+
+    YdszDataSourceProperties.Hikari hikari = dataSourceProperties.getHikari();
+    if (hikari.getPoolName() != null) {
+      config.setPoolName(hikari.getPoolName());
+    }
+    config.setMinimumIdle(hikari.getMinimumIdle());
+    config.setMaximumPoolSize(hikari.getMaximumPoolSize());
+    config.setConnectionTimeout(hikari.getConnectionTimeout());
+    config.setIdleTimeout(hikari.getIdleTimeout());
+    config.setMaxLifetime(hikari.getMaxLifetime());
+    config.setValidationTimeout(hikari.getValidationTimeout());
+    config.setLeakDetectionThreshold(hikari.getLeakDetectionThreshold());
+    if (hikari.getConnectionTestQuery() != null) {
+      config.setConnectionTestQuery(hikari.getConnectionTestQuery());
+    }
+    if (hikari.getDataSourceProperties() != null) {
+      hikari.getDataSourceProperties().forEach(config::addDataSourceProperty);
+    }
+
+    log.info("创建 HikariDataSource: url={}, username={}, poolSize={}/{}",
+        dataSourceProperties.getUrl(), dataSourceProperties.getUsername(),
+        hikari.getMinimumIdle(), hikari.getMaximumPoolSize());
+    return new HikariDataSource(config);
+  }
 
   /**
    * 注册动态路由数据源

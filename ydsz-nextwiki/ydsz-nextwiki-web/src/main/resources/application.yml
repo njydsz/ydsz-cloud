@@ -1,6 +1,6 @@
 # NextWiki 网盘知识库服务本地配置
 # 公共配置（mybatis-plus / management / springdoc / datasource / redis）由 Nacos 共享配置
-# ydsz-common.yaml 提供，此处仅保留服务私有配置与 override
+# ydsz-common.yml 提供，此处仅保留服务私有配置与 override
 
 # 本地覆盖端口，实际运行时由 bootstrap.yml 中的 server.port=9003 决定
 server:
@@ -12,52 +12,48 @@ spring:
       max-file-size: 500MB
       max-request-size: 500MB
 
-# NextWiki 配置（生产环境由 Nacos ydsz-nextwiki.yml 覆盖）
-# 注意：配置前缀使用 ydzz.nextwiki（符合 CONFIG-004：业务模块自定义配置必须使用 ydzs.{module}.* 前缀）
+# NextWiki 配置（生产环境由 Nacos ydsz-nextwiki-web.yml 覆盖）
 ydsz:
   nextwiki:
-  upload:
-    max-file-size: 524288000
-    allowed-types: ""
-    conflict-strategy: KEEP_BOTH
-    chunk-temp-dir: ${java.io.tmpdir}/nextwiki-chunk
-  preview:
-    libreoffice-path: ${LIBREOFFICE_PATH:soffice}
-    temp-dir: ${java.io.tmpdir}/nextwiki-preview
-  thumbnail:
-    temp-dir: ${java.io.tmpdir}/nextwiki-thumbnail
-  ai:
-    llm-enabled: false
-    llm-api-url: ${LLM_API_URL:}
-    llm-api-key: ${LLM_API_KEY:}
-  cdn:
-    enabled: false
-    provider: aliyun
-    domain: ${CDN_DOMAIN:}
-    access-key: ${CDN_ACCESS_KEY:}
-    secret-key: ${CDN_SECRET_KEY:}
-  virus-scan:
-    enabled: false
-    host: ${CLAMAV_HOST:localhost}
-    port: ${CLAMAV_PORT:3310}
-  ocr:
-    enabled: false
-    provider: tesseract
-    tesseract-path: ${TESSERACT_PATH:tesseract}
-    language: chi_sim+eng
-  download:
-    rate-limit-per-minute: 30
-    ip-rate-limit-per-minute: 100
-    signed-url-expire-seconds: 3600
-  wopi:
-    editor-url: ${WOPI_EDITOR_URL:}
-  # P1-2: Netty TCP 推送通道（协作编辑实时同步）
-  tcp-push:
-    enabled: false
-    port: 9124
+    upload:
+      max-file-size: 524288000
+      allowed-types: ""
+      conflict-strategy: KEEP_BOTH
+      chunk-temp-dir: ${java.io.tmpdir}/nextwiki-chunk
+    preview:
+      libreoffice-path: ${LIBREOFFICE_PATH:soffice}
+      temp-dir: ${java.io.tmpdir}/nextwiki-preview
+    thumbnail:
+      temp-dir: ${java.io.tmpdir}/nextwiki-thumbnail
+    ai:
+      llm-enabled: false
+      llm-api-url: ${LLM_API_URL:}
+      llm-api-key: ${LLM_API_KEY:}
+    cdn:
+      enabled: false
+      provider: aliyun
+      domain: ${CDN_DOMAIN:}
+      access-key: ${CDN_ACCESS_KEY:}
+      secret-key: ${CDN_SECRET_KEY:}
+    virus-scan:
+      enabled: false
+      host: ${CLAMAV_HOST:localhost}
+      port: ${CLAMAV_PORT:3310}
+    ocr:
+      enabled: false
+      provider: tesseract
+      tesseract-path: ${TESSERACT_PATH:tesseract}
+      language: chi_sim+eng
+    download:
+      rate-limit-per-minute: 30
+      ip-rate-limit-per-minute: 100
+      signed-url-expire-seconds: 3600
+    wopi:
+      editor-url: ${WOPI_EDITOR_URL:}
+    tcp-push:
+      enabled: false
+      port: 9124
 
-# 统一线程池配置（ydsz-common-thread）
-ydsz:
   # JSON 引擎配置（ydsz-common-json）
   json:
     enabled: true
@@ -68,11 +64,10 @@ ydsz:
     warmup-classes:
       - com.njydsz.nextwiki.domain.vo.FileNodeVO
       - com.njydsz.nextwiki.domain.vo.ShareLinkVO
-      - com.njydsz.nextwiki.server.service.ChunkUploadApplicationService
+
   thread:
     enabled: true
     pools:
-      # P2-003: JDK 21 虚拟线程试点（nextwiki-task 改为 VIRTUAL — IO 密集型异步任务友好）
       nextwikiTask:
         type: VIRTUAL
         thread-name-prefix: nextwiki-async-
@@ -100,8 +95,7 @@ ydsz:
       enabled: true
       threshold-millis: 500
       alert-threshold-millis: 2000
-  # P2-2: 搜索引擎 PG 索引表名（各模块独立表，避免共用默认 ydzs_wiki_search_index）
+  # 搜索引擎 PG 索引表名
   search:
     pg:
       index-table: ydsz_nextwiki_search_index
-

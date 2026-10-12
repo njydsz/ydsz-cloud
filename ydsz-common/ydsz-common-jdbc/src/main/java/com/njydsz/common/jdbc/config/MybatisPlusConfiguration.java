@@ -105,7 +105,7 @@ public class MybatisPlusConfiguration {
   private final PaginationProperties paginationProperties;
   private final SqlFirewallProperties sqlFirewallProperties;
   private final ObjectProvider<List<InnerInterceptorProvider>> spiInterceptorProviders;
-  private final SqlAstCache sqlAstCache;
+  private final ObjectProvider<SqlAstCache> sqlAstCacheProvider;
   private final ObjectProvider<MeterRegistry> meterRegistryProvider;
   private final ObjectProvider<List<MeterBinder>> meterBindersProvider;
 
@@ -117,7 +117,7 @@ public class MybatisPlusConfiguration {
       PaginationProperties paginationProperties,
       SqlFirewallProperties sqlFirewallProperties,
       ObjectProvider<List<InnerInterceptorProvider>> spiInterceptorProviders,
-      SqlAstCache sqlAstCache,
+      ObjectProvider<SqlAstCache> sqlAstCacheProvider,
       ObjectProvider<MeterRegistry> meterRegistryProvider,
       ObjectProvider<List<MeterBinder>> meterBindersProvider) {
     this.jdbcProperties = jdbcProperties;
@@ -127,11 +127,16 @@ public class MybatisPlusConfiguration {
     this.paginationProperties = paginationProperties;
     this.sqlFirewallProperties = sqlFirewallProperties;
     this.spiInterceptorProviders = spiInterceptorProviders;
-    this.sqlAstCache = sqlAstCache;
+    this.sqlAstCacheProvider = sqlAstCacheProvider;
     this.meterRegistryProvider = meterRegistryProvider;
     this.meterBindersProvider = meterBindersProvider;
     applyGlobalIdType();
     registerJdbcMetrics();
+  }
+
+  /** 获取 SqlAstCache 实例（延迟解析，打破循环引用） */
+  private SqlAstCache getSqlAstCache() {
+    return sqlAstCacheProvider.getIfAvailable();
   }
 
   /**
@@ -200,7 +205,8 @@ public class MybatisPlusConfiguration {
   private void registerJdbcMetrics() {
     MeterRegistry registry = meterRegistryProvider.getIfAvailable();
     if (registry != null) {
-      sqlAstCache.setMeterRegistry(registry);
+      SqlAstCache cache = getSqlAstCache();
+      if (cache != null) { cache.setMeterRegistry(registry); }
       List<MeterBinder> binders = meterBindersProvider.getIfAvailable();
       if (binders != null) {
         for (MeterBinder binder : binders) {
@@ -348,7 +354,7 @@ public class MybatisPlusConfiguration {
     if (enabledHandlers.isEmpty()) {
       return;
     }
-    interceptor.addInnerInterceptor(new CombinedFieldFillInterceptor(sqlAstCache, enabledHandlers));
+    interceptor.addInnerInterceptor(new CombinedFieldFillInterceptor(getSqlAstCache(), enabledHandlers));
     log.debug(
         "MyBatis Plus: CombinedFieldFill interceptor enabled with {} handlers.",
         enabledHandlers.size());
@@ -368,9 +374,9 @@ public class MybatisPlusConfiguration {
       DataPermissionContextResolver resolver = new DataPermissionContextResolver(expander);
 
       interceptor.addInnerInterceptor(
-          new RowPermissionInnerInterceptor(sqlAstCache, dataPermissionConfiguration, resolver));
+          new RowPermissionInnerInterceptor(getSqlAstCache(), dataPermissionConfiguration, resolver));
       interceptor.addInnerInterceptor(
-          new ColPermissionInnerInterceptor(sqlAstCache, dataPermissionConfiguration, resolver));
+          new ColPermissionInnerInterceptor(getSqlAstCache(), dataPermissionConfiguration, resolver));
       log.debug("MyBatis Plus: RowPermission + ColPermission interceptors enabled.");
     }
   }
