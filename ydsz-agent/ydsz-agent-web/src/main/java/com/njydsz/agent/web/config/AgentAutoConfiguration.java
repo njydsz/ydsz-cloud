@@ -44,6 +44,7 @@ import com.njydsz.agent.domain.insight.InsightReportRepository;
 import com.njydsz.agent.domain.insight.InsightReportService;
 import com.njydsz.agent.domain.insight.ReportRenderer;
 import com.njydsz.agent.domain.json.AgentJsonModule;
+import com.njydsz.agent.domain.knowledge.EntityExtractionService;
 import com.njydsz.agent.domain.middleware.MiddlewareChain;
 import com.njydsz.agent.domain.profile.UserProfileRepository;
 import com.njydsz.agent.domain.profile.UserProfileService;
@@ -67,6 +68,7 @@ import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
 import com.njydsz.agent.infra.insight.HtmlReportRenderer;
 import com.njydsz.agent.infra.insight.LlmInsightReportGenerator;
+import com.njydsz.agent.infra.knowledge.LlmEntityExtractionService;
 import com.njydsz.agent.infra.llm.CachedLlmClient;
 import com.njydsz.agent.infra.llm.CompatibleLlmClient;
 import com.njydsz.agent.infra.llm.LlmClientRouter;
@@ -155,6 +157,21 @@ public class AgentAutoConfiguration {
   @Bean
   public AgentJsonModule agentJsonModule() {
     return new AgentJsonModule();
+  }
+
+  /**
+   * 装配基于 LLM 的实体抽取服务。
+   *
+   * <p>仅当 LLM 客户端可用时注册，避免 LlmClient Bean 缺失时启动失败。
+   *
+   * @param llmClient LLM 客户端
+   * @return 实体抽取服务实例
+   */
+  @Bean
+  @ConditionalOnBean(LlmClient.class)
+  @ConditionalOnMissingBean(EntityExtractionService.class)
+  public EntityExtractionService entityExtractionService(LlmClient llmClient) {
+    return new LlmEntityExtractionService(llmClient);
   }
 
   /**

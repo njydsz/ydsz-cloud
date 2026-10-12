@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -254,7 +255,7 @@ public class WebSocketAutoConfiguration {
    * @return 握手鉴权拦截器实例，不会为 {@code null}
    */
   @Bean
-  @ConditionalOnClass(TokenService.class)
+  @ConditionalOnBean(TokenService.class)
   @ConditionalOnMissingBean(WebSocketAuthInterceptor.class)
   public WebSocketAuthInterceptor webSocketAuthInterceptor(
       TokenService tokenService,

@@ -208,14 +208,23 @@
             <artifactId>ydsz-common-audit</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!--
-            P1-1: 接入 ydsz-common-thread 统一线程池管理
+                <!-- P1-1: 接入 ydzz-common-thread 统一线程池管理
               - Nacos 路由配置变更监听器线程池改为声明式配置（ydsz.thread.pools.nacosRouteListener）
               - 移除 NacosRouteDefinitionRepository 中自建 new ThreadPoolExecutor（违反规范 15.4.1）
         -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
+        <!-- OpenTelemetry API: ydsz-common-sentry 的 TracingAutoConfiguration 需要，避免 ClassNotFoundException -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+        </dependency>
+        <!-- common-notify: gateway 使用 common-sentry 的 AlertingAutoConfiguration，需要 NotifyService 类可见 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-notify</artifactId>
         </dependency>
 
         <!-- 单元测试基础设施：JUnit 5 + AssertJ + Mockito（云顶编码规范 §14.1） -->

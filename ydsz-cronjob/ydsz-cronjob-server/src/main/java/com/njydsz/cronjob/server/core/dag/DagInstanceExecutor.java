@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
@@ -73,7 +73,6 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class DagInstanceExecutor {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
@@ -81,6 +80,28 @@ public class DagInstanceExecutor {
 
   /** SpEL 表达式解析器（线程安全，可复用） */
   private static final ExpressionParser SPEL_PARSER = new SpelExpressionParser();
+
+  /**
+   * 手动构造器（替代 @RequiredArgsConstructor），将 TaskDispatcher 改为 ObjectProvider 注入以支持可选依赖。
+   */
+  public DagInstanceExecutor(
+      DagJoinCounterRedisBridge dagJoinCounterBridge,
+      DagInstanceRepository dagInstanceRepository,
+      DagNodeInstanceRepository dagNodeInstanceRepository,
+      JobDagRepository jobDagRepository,
+      JobRepository jobRepository,
+      JobLogRepository jobLogRepository,
+      DagDefinitionCodec dagDefinitionCodec,
+      ObjectProvider<TaskDispatcher> taskDispatcherProvider) {
+    this.dagJoinCounterBridge = dagJoinCounterBridge;
+    this.dagInstanceRepository = dagInstanceRepository;
+    this.dagNodeInstanceRepository = dagNodeInstanceRepository;
+    this.jobDagRepository = jobDagRepository;
+    this.jobRepository = jobRepository;
+    this.jobLogRepository = jobLogRepository;
+    this.dagDefinitionCodec = dagDefinitionCodec;
+    this.taskDispatcher = taskDispatcherProvider.getIfAvailable();
+  }
 
   /**
    * P0-1: DAG 并行网关 Join 计数器 Redis 持久化桥接。
@@ -109,6 +130,7 @@ public class DagInstanceExecutor {
   private final JobRepository jobRepository;
   private final JobLogRepository jobLogRepository;
   private final DagDefinitionCodec dagDefinitionCodec;
+  /** 任务派发器（可选依赖：TaskDispatcher Bean 不存在时 DAG 节点派发跳过，仅记录日志） */
   private final TaskDispatcher taskDispatcher;
 
   /**
@@ -668,7 +690,11 @@ public class DagInstanceExecutor {
     }
     dagNodeInstanceRepository.markRunning(nodeInstance.getId(), LocalDateTime.now());
 
-    // 派发任务（triggerType=DEPENDENT, 抢锁）
+    // 派发任务（triggerType=DEPENDENT, 抢锁），TaskDispatcher 不可用时跳过
+    if (taskDispatcher == null) {
+      log.warn("[DagInstance] TaskDispatcher 不可用，跳过 DAG 节点派发: instanceId={} jobKey={}", dagInstanceId, node.jobKey());
+      return;
+    }
     String logId = taskDispatcher.dispatch(job, null, "DEPENDENT");
     log.info(
         "[DagInstance] 节点派发: instanceId={} jobKey={} logId={}",

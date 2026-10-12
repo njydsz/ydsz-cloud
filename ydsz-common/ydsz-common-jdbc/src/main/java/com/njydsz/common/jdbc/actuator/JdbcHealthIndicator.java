@@ -5,12 +5,14 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import com.njydsz.common.jdbc.monitor.SqlAstCache;
 
@@ -38,6 +40,7 @@ import com.njydsz.common.jdbc.monitor.SqlAstCache;
  */
 @Configuration
 @ConditionalOnClass(HealthIndicator.class)
+@ConditionalOnBean(SqlAstCache.class)
 @ConditionalOnProperty(
     prefix = "ydsz.jdbc.health",
     name = "enabled",

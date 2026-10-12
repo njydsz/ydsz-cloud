@@ -1,15 +1,16 @@
 package com.njydsz.message.server.channel.recall;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.List;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
@@ -23,11 +24,32 @@ import com.njydsz.message.domain.vo.MsgLogVO;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class RecallChannelRouter implements InitializingBean {
 
   private final List<RecallChannel> recallChannels;
+
+  /**
+   * 默认撤回通道（DB 标记模式）。
+   *
+   * <p>使用 ObjectProvider 延迟获取，Bean 不存在时降级为内部新建实例，避免启动失败。
+   */
   private final DefaultRecallChannel defaultRecallChannel;
+
+  /**
+   * 手写构造器（替代 @RequiredArgsConstructor），将 DefaultRecallChannel 改为 ObjectProvider 注入 + null 保护，
+   * 避免因缺少 DefaultRecallChannel Bean 导致启动失败。
+   *
+   * @param recallChannels 撤回通道实现列表
+   * @param defaultRecallChannelProvider 默认撤回通道（可选）
+   */
+  public RecallChannelRouter(
+      List<RecallChannel> recallChannels,
+      ObjectProvider<DefaultRecallChannel> defaultRecallChannelProvider) {
+    this.recallChannels = recallChannels;
+    // ObjectProvider 延迟获取，不存在时降级为内部新建实例
+    DefaultRecallChannel provided = defaultRecallChannelProvider.getIfAvailable();
+    this.defaultRecallChannel = provided != null ? provided : new DefaultRecallChannel();
+  }
 
   /** 通道类型 → 撤回实现 */
   private final Map<String, RecallChannel> channelMap = new ConcurrentHashMap<>();

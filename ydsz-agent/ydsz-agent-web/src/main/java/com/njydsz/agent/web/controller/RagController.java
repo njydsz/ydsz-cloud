@@ -25,6 +25,7 @@ import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.server.rag.DocumentIngestionService;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.agent.server.search.HybridSearchService;
+import org.springframework.beans.factory.ObjectProvider;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -90,16 +91,29 @@ public class RagController {
   /** 文档摄入服务（封装分块 + Embedding + 写入向量库） */
   private final DocumentIngestionService ingestionService;
 
-  /** 混合搜索服务（RAG + WebSearch 融合检索） */
+  /**
+   * 混合搜索服务（RAG + WebSearch 融合检索）。
+   *
+   * <p>使用 ObjectProvider 延迟获取，Bean 不存在时降级（hybridSearch 接口返回 503），避免启动失败。
+   * HybridSearchService 已标记 @Deprecated 且其构造依赖需手动配置 Bean，默认环境下不可用。
+   */
   private final HybridSearchService hybridSearchService;
 
+  /**
+   * 手写构造器（替代 @RequiredArgsConstructor），将 HybridSearchService 改为 ObjectProvider 注入 + null 保护，
+   * 避免因缺少 HybridSearchService Bean 导致启动失败。
+   *
+   * @param ragService RAG 检索服务
+   * @param ingestionService 文档摄入服务
+   * @param hybridSearchServiceProvider 混合搜索服务（可选，Bean 不存在时为 null）
+   */
   public RagController(
       RagService ragService,
       DocumentIngestionService ingestionService,
-      HybridSearchService hybridSearchService) {
+      ObjectProvider<HybridSearchService> hybridSearchServiceProvider) {
     this.ragService = ragService;
     this.ingestionService = ingestionService;
-    this.hybridSearchService = hybridSearchService;
+    this.hybridSearchService = hybridSearchServiceProvider.getIfAvailable();
   }
 
   /**
@@ -353,6 +367,10 @@ public class RagController {
   @PostMapping("/hybrid-search")
   public YdszResponse<Map<String, Object>> hybridSearch(
       @Valid @RequestBody HybridSearchDTO request) {
+    // null 保护：HybridSearchService Bean 不存在时降级返回 503
+    if (hybridSearchService == null) {
+      return YdszResponse.error("混合搜索服务未启用");
+    }
     int topK = request.getTopK() != null ? request.getTopK() : DEFAULT_TOP_K;
     List<HybridSearchService.HybridChunk> results =
         hybridSearchService.hybridSearch(request.getQuery(), request.getDatasetId(), topK);

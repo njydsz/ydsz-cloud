@@ -2,7 +2,6 @@ package com.njydsz.nextwiki.server.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 /**
@@ -11,7 +10,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>绑定 {@code application.yml} 中 {@code ydsz.nextwiki.*} 配置项，涵盖文件上传、缩略图、OCR、CDN、AI
  * 摘要、病毒扫描、预览、下载限流、分片上传、WOPI 等子模块。
  *
- * <p>添加 @Component 注解确保始终注册为 Spring Bean，不受 AsyncConfig 中 @ConditionalOnProperty 条件影响。
+ * <p>通过 AsyncConfig 中的 @EnableConfigurationProperties 注册为 Spring Bean（避免 @Component 与 @EnableConfigurationProperties 重复注册导致歧义 Bean 错误）。
  * 配置前缀使用 ydzs.nextwiki（符合 CONFIG-004 规则：业务模块配置必须使用 ydzs.{module}.* 前缀）。
  *
  * <p>所有配置项均提供默认值，未配置时降级为安全默认（关闭高级能力，保证基础文件管理可用）。
@@ -51,7 +50,6 @@ import org.springframework.validation.annotation.Validated;
  * @since 26.10.01
  */
 @Data
-@Component
 @Validated
 @ConfigurationProperties(prefix = "ydsz.nextwiki")
 public class NextwikiProperties {

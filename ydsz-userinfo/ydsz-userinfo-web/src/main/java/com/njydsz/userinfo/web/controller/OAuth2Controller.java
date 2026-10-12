@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -90,7 +90,6 @@ import com.njydsz.userinfo.server.oauth2.OAuthCodeContext;
 @ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/oauth2")
-@RequiredArgsConstructor
 @Tag(name = "OAuth2", description = "OAuth2 授权码模式")
 public class OAuth2Controller {
   /** Map 初始容量 */
@@ -101,8 +100,28 @@ public class OAuth2Controller {
 
   private final RedisStringOps redisStringOps;
   private final TokenService tokenService;
+  /** Token 黑名单服务（可选依赖：RedisStringOps 不可用时为 null，此时禁用 revoke/refresh） */
   private final TokenBlacklistService tokenBlacklistService;
   private final UserInfoProperties properties;
+
+  /**
+   * 手动构造器（替代 @RequiredArgsConstructor），将 TokenBlacklistService 改为 ObjectProvider 注入以支持可选依赖。
+   *
+   * @param redisStringOps Redis 字符串操作服务
+   * @param tokenService Token 签发/校验服务
+   * @param tokenBlacklistServiceProvider Token 黑名单服务提供者（可选，不可用时为 null）
+   * @param properties 用户信息配置属性
+   */
+  public OAuth2Controller(
+      RedisStringOps redisStringOps,
+      TokenService tokenService,
+      ObjectProvider<TokenBlacklistService> tokenBlacklistServiceProvider,
+      UserInfoProperties properties) {
+    this.redisStringOps = redisStringOps;
+    this.tokenService = tokenService;
+    this.tokenBlacklistService = tokenBlacklistServiceProvider.getIfAvailable();
+    this.properties = properties;
+  }
 
   /** 授权码有效期（秒）：5 分钟，符合 RFC 6749 §4.1.2 建议（推荐 ≤ 10 分钟） */
   private static final long CODE_TTL_SECONDS = 300;
@@ -660,8 +679,10 @@ public class OAuth2Controller {
     String newAccessToken = tokenService.issueAccessToken(userInfo);
     String newRefreshToken = tokenService.issueRefreshToken(userInfo);
 
-    // 5. 旧 refresh_token 加入黑名单（一次性使用，防重放）
-    tokenBlacklistService.addToBlacklist(refreshToken);
+    // 5. 旧 refresh_token 加入黑名单（一次性使用，防重放），黑名单服务不可用时跳过
+    if (tokenBlacklistService != null) {
+      tokenBlacklistService.addToBlacklist(refreshToken);
+    }
 
     log.info("OAuth2 refresh token rotated: clientId={}, userId={}", clientId, userInfo.getUserId());
 
@@ -737,7 +758,12 @@ public class OAuth2Controller {
     if (token == null || token.isBlank()) {
       throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
     }
-    tokenBlacklistService.addToBlacklist(token);
+    // 黑名单服务不可用时跳过撤销（降级为仅记录日志）
+    if (tokenBlacklistService != null) {
+      tokenBlacklistService.addToBlacklist(token);
+    } else {
+      log.warn("TokenBlacklistService 不可用，跳过 token 撤销（仅记录日志）: typeHint={}", tokenTypeHint);
+    }
     log.info("OAuth2 token revoked: typeHint={}", tokenTypeHint);
     return YdszResponse.success();
   }

@@ -4,8 +4,10 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,18 +41,38 @@ import com.njydsz.common.locales.util.I18n;
 @ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/.well-known")
-@RequiredArgsConstructor
 @Tag(name = "OIDC", description = "OpenID Connect 标准端点")
 public class OidcController {
 
   /** OIDC 配置属性 */
   private final OidcProperties oidcProperties;
 
-  /** JWKS 公钥端点 */
+  /**
+   * JWKS 公钥端点（可选 Bean）。
+   *
+   * <p>通过 ObjectProvider 延迟获取，未注册时降级为 503 响应，避免启动失败。
+   */
   private final JwksEndpointVO jwksEndpoint;
 
   /** OIDC 基础 URL */
   private final String baseUrl;
+
+  /**
+   * 手写构造器（替代 @RequiredArgsConstructor），将 JwksEndpointVO 改为 ObjectProvider 注入 + null 保护，
+   * 避免因缺少 JwksEndpointVO Bean 导致启动失败。
+   *
+   * @param oidcProperties OIDC 配置属性
+   * @param jwksEndpointProvider JWKS 公钥端点（可选）
+   * @param baseUrl OIDC 基础 URL
+   */
+  public OidcController(
+      OidcProperties oidcProperties,
+      ObjectProvider<JwksEndpointVO> jwksEndpointProvider,
+      @Value("${ydsz.userinfo.base-url:}") String baseUrl) {
+    this.oidcProperties = oidcProperties;
+    this.jwksEndpoint = jwksEndpointProvider.getIfAvailable();
+    this.baseUrl = baseUrl;
+  }
 
   /**
    * OIDC Discovery 元数据端点
@@ -112,6 +134,8 @@ public class OidcController {
    *
    * <p>响应 Content-Type 为 {@code application/json}，符合 RFC 7517 规范。
    *
+   * <p>null 保护：当 JWksEndpointVO Bean 未注册时返回 503。
+   *
    * @return JWKS 公钥 JSON，格式如 {"keys":[{...}]}
    */
   @GetMapping(value = "/jwks.json", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -119,7 +143,14 @@ public class OidcController {
       summary = "JWKS 公钥端点",
       description = "返回 OIDC Provider 用于签名 JWT 的公钥集合，符合 RFC 7517 规范")
   public ResponseEntity<String> jwks() {
+    // null 保护：JwksEndpointVO Bean 不存在时降级返回 503
+    if (jwksEndpoint == null) {
+      log.warn("[OidcController] JwksEndpointVO Bean 未注册，JWKS 端点不可用");
+      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+          .body("{\"error\":\"JWKS endpoint not available\"}");
+    }
     String jwks = jwksEndpoint.generateJwks();
     return ResponseEntity.ok(jwks);
   }
+
 }

@@ -17,6 +17,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -66,6 +67,7 @@ import com.njydsz.common.locales.util.I18n;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "ydsz.userinfo.saml", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class SamlService {
 
   /** 集合初始容量 */

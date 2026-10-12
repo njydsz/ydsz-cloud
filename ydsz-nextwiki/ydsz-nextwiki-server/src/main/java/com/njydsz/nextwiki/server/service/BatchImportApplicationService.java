@@ -17,11 +17,11 @@ import java.util.concurrent.Executor;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import jakarta.annotation.Resource;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -52,12 +52,37 @@ public class BatchImportApplicationService {
   private static final int COLLECTION_CAPACITY = 16;
 
 
-  /** 文件应用服务（单文件上传/创建目录，批量导入的底层委托） */
-  private final FileApplicationService fileApplicationService;
+  /**
+   * 文件应用服务（单文件上传/创建目录，批量导入的底层委托）。
+   *
+   * <p>使用 ObjectProvider 延迟获取，FileApplicationService 不可用时降级为返回错误结果，避免启动失败。
+   */
+  private final ObjectProvider<FileApplicationService> fileApplicationServiceProvider;
 
-  /** P0-1: 并发上传线程池（由 ydsz-common-thread 统一管理，配置项: ydsz.thread.pools.nextwikiBatchImport） */
-  @Resource(name = "nextwikiBatchImportExecutor")
-  private Executor batchImportExecutor;
+  /**
+   * P0-1: 并发上传线程池（由 ydsz-common-thread 统一管理，配置项: ydsz.thread.pools.nextwikiBatchImport）。
+   *
+   * <p>使用 ObjectProvider 延迟获取，Bean 不存在时降级为当前线程串行执行，避免启动失败。
+   */
+  private final ObjectProvider<Executor> batchImportExecutorProvider;
+
+  /**
+   * 获取批量导入线程池，Bean 不存在时返回 null。
+   *
+   * @return 线程池 Executor 或 null
+   */
+  private Executor getBatchImportExecutor() {
+    return batchImportExecutorProvider.getIfAvailable();
+  }
+
+  /**
+   * 获取文件应用服务，Bean 不存在时返回 null。
+   *
+   * @return FileApplicationService 或 null
+   */
+  private FileApplicationService getFileApplicationService() {
+    return fileApplicationServiceProvider.getIfAvailable();
+  }
 
   /** 最大批量上传数量 */
   private static final int MAX_BATCH_SIZE = 100;
@@ -98,20 +123,42 @@ public class BatchImportApplicationService {
       return BatchImportResult.error("批量上传数量超过限制: " + MAX_BATCH_SIZE);
     }
 
+    // 获取线程池（可能为 null，降级为串行执行）
+    Executor executor = getBatchImportExecutor();
+
+    FileApplicationService fileService = getFileApplicationService();
+    if (fileService == null) {
+      log.error("[BatchImportApplicationService] FileApplicationService 不可用，拒绝批量上传");
+      return BatchImportResult.error("文件应用服务不可用");
+    }
+
     List<CompletableFuture<FileNodeVO>> futures = new ArrayList<>(COLLECTION_CAPACITY);
     for (MultipartFile file : files) {
-      CompletableFuture<FileNodeVO> future =
-          CompletableFuture.supplyAsync(
-              () -> {
-                try {
-                  return fileApplicationService.upload(file, parentId, null, null, userId);
-                } catch (Exception e) {
-                  log.error(
-                      "[BatchImportApplicationService] 文件上传失败: {}", file.getOriginalFilename(), e);
-                  return null;
-                }
-              },
-              batchImportExecutor);
+      CompletableFuture<FileNodeVO> future;
+      if (executor != null) {
+        // 线程池可用时并发上传
+        future = CompletableFuture.supplyAsync(
+            () -> {
+              try {
+                return fileService.upload(file, parentId, null, null, userId);
+              } catch (Exception e) {
+                log.error(
+                    "[BatchImportApplicationService] 文件上传失败: {}", file.getOriginalFilename(), e);
+                return null;
+              }
+            },
+            executor);
+      } else {
+        // 线程池不可用时降级为当前线程串行执行
+        try {
+          FileNodeVO result = fileService.upload(file, parentId, null, null, userId);
+          future = CompletableFuture.completedFuture(result);
+        } catch (Exception e) {
+          log.error(
+              "[BatchImportApplicationService] 文件上传失败: {}", file.getOriginalFilename(), e);
+          future = CompletableFuture.completedFuture(null);
+        }
+      }
       futures.add(future);
     }
 
@@ -180,7 +227,10 @@ public class BatchImportApplicationService {
           String folderName = extractFolderName(entry.getName());
           if (folderName != null && !folderName.isEmpty()) {
             try {
-              fileApplicationService.createFolder(parentId, folderName, userId);
+              FileApplicationService fileService = getFileApplicationService();
+              if (fileService != null) {
+                fileService.createFolder(parentId, folderName, userId);
+              }
             } catch (Exception e) {
               log.warn("[BatchImportApplicationService] 创建目录失败: {}", folderName, e);
             }
@@ -225,8 +275,13 @@ public class BatchImportApplicationService {
                   contentType != null ? contentType : "application/octet-stream",
                   content);
 
+          FileApplicationService fileService = getFileApplicationService();
+          if (fileService == null) {
+            failedCount++;
+            continue;
+          }
           FileNodeVO uploaded =
-              fileApplicationService.upload(multipartFile, parentId, fileName, "ZIP导入", userId);
+              fileService.upload(multipartFile, parentId, fileName, "ZIP导入", userId);
           if (uploaded != null) {
             importedFiles.add(uploaded);
           }

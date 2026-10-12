@@ -155,7 +155,7 @@ public class MetricsAutoConfiguration {
   @ConditionalOnMissingBean(name = "elkCircuitBreaker")
   @ConditionalOnProperty(prefix = "ydsz.sentry.logging.elk", name = "enabled", havingValue = "true")
   public SentryCircuitBreaker elkCircuitBreaker(
-      SentryProperties properties, @Qualifier("circuitBreakerRegistry") CircuitBreakerRegistry registry) {
+      SentryProperties properties, CircuitBreakerRegistry registry) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
     CircuitBreakerConfig config = buildChannelConfig(cb);
     return SentryCircuitBreaker.fromRegistry("elk-logstash", config, registry);
@@ -176,7 +176,7 @@ public class MetricsAutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   public SentryCircuitBreaker lokiCircuitBreaker(
-      SentryProperties properties, @Qualifier("circuitBreakerRegistry") CircuitBreakerRegistry registry) {
+      SentryProperties properties, CircuitBreakerRegistry registry) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
     CircuitBreakerConfig config = buildChannelConfig(cb);
     return SentryCircuitBreaker.fromRegistry("loki", config, registry);

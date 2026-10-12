@@ -12,8 +12,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.knowledge.Entity;
@@ -34,14 +32,12 @@ import com.njydsz.common.json.tree.JsonNode;
  * <p>将长文本按 chunk 切分后逐段调用 LLM，请求以 JSON 格式返回实体和关系。
  * 抽取结果自动去重（相同 name + type 的实体合并），关系统一使用实体 ID 引用。
  *
- * <p><b>装配条件：</b>由 Spring 自动装配，要求容器中已存在 {@link LlmClient} 实现。
+ * <p><b>装配条件：</b>由 AgentAutoConfiguration 中的 @Bean 方法条件注册（要求容器中已存在 {@link LlmClient} 实现）。
  *
  * @author ydsz-team
  * @since 26.09.17
  */
 @Slf4j
-@Service
-@ConditionalOnBean(LlmClient.class)
 public class LlmEntityExtractionService implements EntityExtractionService {
 
   /** 抽取 LLM 温度参数 - 需要精确抽取 */

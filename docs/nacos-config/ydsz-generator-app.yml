@@ -7,10 +7,10 @@
 # 数据源配置 — 覆盖 common-web 中的 PostgreSQL 配置
 spring:
   datasource:
-    url: ${NACOS_GEN_DB_URL:jdbc:mysql://127.0.0.1:3306/ydsz_cloud_gen?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    url: ${NACOS_GEN_DB_URL:jdbc:postgresql://127.0.0.1:5432/ydsz_cloud}
     username: ${NACOS_GEN_DB_USERNAME:}
     password: ${NACOS_GEN_DB_PASSWORD:}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: ydsz-gen-hikari-pool
 
@@ -54,28 +54,20 @@ generator:
     VARCHAR: String
     CHAR: String
     TEXT: String
-    LONGTEXT: String
-    MEDIUMTEXT: String
-    TINYTEXT: String
     INT: Integer
     INTEGER: Integer
-    TINYINT: Integer
     SMALLINT: Integer
-    MEDIUMINT: Integer
     BIGINT: Long
+    NUMERIC: java.math.BigDecimal
+    DECIMAL: java.math.BigDecimal
+    REAL: Float
     FLOAT: Float
     DOUBLE: Double
-    DECIMAL: java.math.BigDecimal
-    NUMERIC: java.math.BigDecimal
     DATE: java.time.LocalDate
-    DATETIME: java.time.LocalDateTime
     TIMESTAMP: java.time.LocalDateTime
     TIME: java.time.LocalTime
     BOOLEAN: Boolean
     BOOL: Boolean
-    BIT: Boolean
-    BLOB: "[B"
-    LONGBLOB: "[B"
     BYTEA: "[B"
   batch-timeout-minutes: 5
   thread-pool:

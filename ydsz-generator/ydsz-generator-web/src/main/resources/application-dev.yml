@@ -1,5 +1,8 @@
 # === 本地配置（开发模式） ===
 spring:
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5432/ydsz_cloud
+    driver-class-name: org.postgresql.Driver
   main:
     allow-circular-references: true
 

@@ -46,11 +46,24 @@ import com.njydsz.literule.server.spi.DashboardDataProvider;
 @Tag(name = "规则引擎监控大盘", description = "P1-6 规则引擎指标聚合 API：概览 / 趋势 / 分布 / Top 规则 / 实时指标")
 public class RuleDashboardController {
 
-  /** 规则引擎看板数据提供者（由消费方实现） */
-  private final DashboardDataProvider dashboardService;
+  /**
+   * 规则引擎看板数据提供者（由消费方实现，SPI 反转）。
+   *
+   * <p>使用 ObjectProvider 延迟获取，无实现方注册时跳过 Dashboard 相关端点数据返回空结果，避免启动失败。
+   */
+  private final ObjectProvider<DashboardDataProvider> dashboardServiceProvider;
 
   /** 引擎内建指标（可选，E3 慢规则/热点规则看板数据源） */
   private final ObjectProvider<RuleMetrics> ruleMetricsProvider;
+
+  /**
+   * 获取看板数据提供者（可选依赖，无实现方时返回 null）。
+   *
+   * @return DashboardDataProvider 或 null
+   */
+  private DashboardDataProvider getDashboardService() {
+    return dashboardServiceProvider.getIfAvailable();
+  }
 
   /**
    * 概览指标
@@ -62,7 +75,11 @@ public class RuleDashboardController {
   @GetMapping("/overview")
   @Operation(summary = "概览指标", description = "规则数量、触发率、P99 耗时、错误率等首屏卡片指标")
   public YdszResponse<RuleDashboardOverviewVO> overview() {
-    return YdszResponse.success(dashboardService.getOverview());
+    DashboardDataProvider service = getDashboardService();
+    if (service == null) {
+      return YdszResponse.success(new RuleDashboardOverviewVO());
+    }
+    return YdszResponse.success(service.getOverview());
   }
 
   /**
@@ -75,7 +92,11 @@ public class RuleDashboardController {
   @Operation(summary = "趋势指标", description = "按时间维度（小时/天）展示触发次数、P99 耗时、错误率趋势")
   public YdszResponse<RuleDashboardTrendVO> trends(
       @RequestParam(value = "timeRange", defaultValue = "24h") String timeRange) {
-    return YdszResponse.success(dashboardService.getTrends(timeRange));
+    DashboardDataProvider service = getDashboardService();
+    if (service == null) {
+      return YdszResponse.success(new RuleDashboardTrendVO());
+    }
+    return YdszResponse.success(service.getTrends(timeRange));
   }
 
   /**
@@ -86,7 +107,11 @@ public class RuleDashboardController {
   @GetMapping("/distribution")
   @Operation(summary = "分布指标", description = "按状态/类别/严重度/场景/租户/责任人分组的规则分布")
   public YdszResponse<RuleDashboardDistributionVO> distribution() {
-    return YdszResponse.success(dashboardService.getDistribution());
+    DashboardDataProvider service = getDashboardService();
+    if (service == null) {
+      return YdszResponse.success(new RuleDashboardDistributionVO());
+    }
+    return YdszResponse.success(service.getDistribution());
   }
 
   /**
@@ -101,7 +126,11 @@ public class RuleDashboardController {
   public YdszResponse<List<RuleDashboardTopRuleVO>> topRules(
       @RequestParam(value = "type", defaultValue = "triggered") String type,
       @RequestParam(value = "limit", defaultValue = "10") @Min(1) @Max(50) int limit) {
-    return YdszResponse.success(dashboardService.getTopRules(type, limit));
+    DashboardDataProvider service = getDashboardService();
+    if (service == null) {
+      return YdszResponse.success(List.of());
+    }
+    return YdszResponse.success(service.getTopRules(type, limit));
   }
 
   /**
@@ -112,7 +141,11 @@ public class RuleDashboardController {
   @GetMapping("/realtime")
   @Operation(summary = "实时指标", description = "当前 QPS、活跃规则数、注册规则数等秒级实时指标")
   public YdszResponse<RuleDashboardRealtimeVO> realtime() {
-    return YdszResponse.success(dashboardService.getRealtime());
+    DashboardDataProvider service = getDashboardService();
+    if (service == null) {
+      return YdszResponse.success(new RuleDashboardRealtimeVO());
+    }
+    return YdszResponse.success(service.getRealtime());
   }
 
   /**

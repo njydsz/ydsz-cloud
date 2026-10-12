@@ -63,8 +63,15 @@ public class GuardServiceImpl implements GuardService {
   /** Redis 基础服务（用于 INCR/EXPIRE 频率计数） */
   private final RedisStringOps redisStringOps;
 
-  /** 幂等策略（ydsz-common-lock 原子去重） */
-  private final IdempotentStrategy idempotentStrategy;
+  /**
+   * 幂等策略（ydsz-common-lock 原子去重）。
+   *
+   * <p>使用 ObjectProvider 延迟获取，不可用时降级放行，避免启动失败。
+   */
+  private final ObjectProvider<IdempotentStrategy> idempotentStrategyProvider;
+
+  /** 解析后的幂等策略实例（null 表示不可用，去重降级放行） */
+  private IdempotentStrategy idempotentStrategy;
 
   /** 用户偏好服务（读取 hourlyLimit/dailyLimit） */
   private final PreferenceService preferenceService;
@@ -87,13 +94,17 @@ public class GuardServiceImpl implements GuardService {
   private boolean failOpen;
 
   /**
-   * 初始化令牌桶限流实例（可选依赖，不可用时降级放行）。
+   * 初始化可选依赖实例（不可用时降级放行）。
    */
   @PostConstruct
-  void initRateLimiter() {
+  void initOptionalDependencies() {
     this.rateLimiter = rateLimiterProvider.getIfAvailable();
     if (this.rateLimiter == null) {
       log.warn(I18n.message("message.log.other.Guard_RedisRateLimiter.124feb"));
+    }
+    this.idempotentStrategy = idempotentStrategyProvider.getIfAvailable();
+    if (this.idempotentStrategy == null) {
+      log.warn("GuardServiceImpl: IdempotentStrategy Bean 不可用，去重功能降级放行");
     }
   }
 
@@ -319,6 +330,10 @@ public class GuardServiceImpl implements GuardService {
       return true;
     }
     int ttl = cfg.getTtlSeconds() <= 0 ? defaultTtlSeconds : cfg.getTtlSeconds();
+    if (idempotentStrategy == null) {
+      // 幂等策略不可用时降级放行
+      return true;
+    }
     String redisKey = MessageConstants.DEDUP_KEY_PREFIX + dedupKey;
     try {
       String token = idempotentStrategy.acquire(redisKey, ttl * 1000L);

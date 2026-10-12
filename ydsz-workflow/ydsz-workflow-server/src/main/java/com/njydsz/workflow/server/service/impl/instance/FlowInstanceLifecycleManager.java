@@ -9,6 +9,7 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -87,7 +88,8 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
    * @param instanceRepository 流程实例仓储
    * @param definitionService 流程定义服务
    * @param advancer 流程推进引擎
-   * @param taskService 流程任务服务
+   * @param taskService 流程任务服务（@Lazy 打破循环依赖：FlowInstanceLifecycleManager → FlowTaskService →
+   *                   FlowTaskCoreService → FlowInstanceService → FlowInstanceLifecycleManager）
    * @param taskRepository 运行时任务仓储
    * @param nodeRepository 流程节点仓储
    * @param flowMetrics Prometheus 指标
@@ -106,7 +108,7 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
       FlowInstanceRepository instanceRepository,
       FlowDefinitionService definitionService,
       DefaultFlowAdvancer advancer,
-      FlowTaskService taskService,
+      @Lazy FlowTaskService taskService,
       FlowRunTaskRepository taskRepository,
       FlowNodeRepository nodeRepository,
       FlowMetrics flowMetrics,

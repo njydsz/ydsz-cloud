@@ -6,8 +6,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -52,12 +52,11 @@ import com.njydsz.literule.server.spi.RuleCategoryProvider;
 @Slf4j
 @RestController
 @RequestMapping("/literule/rules")
-@RequiredArgsConstructor
 @Validated
 @Tag(name = "规则目录树", description = "规则分类目录树与责任人管理")
 public class RuleCategoryController {
 
-  /** 规则分类树服务（SPI，由 project 模块提供实现） */
+  /** 规则分类树服务（SPI，由 project 模块提供实现；不可用时降级为返回空树） */
   private final RuleCategoryProvider ruleCategoryProvider;
 
   /** 规则管理服务 */
@@ -66,6 +65,19 @@ public class RuleCategoryController {
   /** Web 层转换器（Spring 单例注入） */
   @Resource
   private LiteruleWebConverter literuleWebConverter;
+
+  /**
+   * 手动构造器（替代 @RequiredArgsConstructor），将 RuleCategoryProvider 改为 ObjectProvider 注入以支持可选 SPI。
+   *
+   * @param ruleCategoryProviderProvider 规则分类树服务提供者（可选，SPI 未实现时为 null）
+   * @param ruleAdminService 规则管理服务
+   */
+  public RuleCategoryController(
+      ObjectProvider<RuleCategoryProvider> ruleCategoryProviderProvider,
+      RuleAdminService ruleAdminService) {
+    this.ruleCategoryProvider = ruleCategoryProviderProvider.getIfAvailable();
+    this.ruleAdminService = ruleAdminService;
+  }
 
   /**
    * 获取规则目录树
@@ -77,6 +89,9 @@ public class RuleCategoryController {
   @ApiResponse(responseCode = "200", description = "成功")
   @GetMapping("/category-tree")
   public YdszResponse<CategoryNodeVO> categoryTree() {
+    if (ruleCategoryProvider == null) {
+      return YdszResponse.success(null);
+    }
     return YdszResponse.success(
         literuleWebConverter.entityToVO(ruleCategoryProvider.buildTree()));
   }
@@ -92,6 +107,9 @@ public class RuleCategoryController {
   @GetMapping("/by-category-path")
   public YdszResponse<List<RuleDefinitionVO>> listByCategoryPath(
       @RequestParam(value = "path", required = false) String path) {
+    if (ruleCategoryProvider == null) {
+      return YdszResponse.success(List.of());
+    }
     return YdszResponse.success(
         ruleCategoryProvider.listDefinitionsByCategoryPath(path).stream()
             .map(literuleWebConverter::entityToVO)
@@ -111,6 +129,9 @@ public class RuleCategoryController {
   @GetMapping("/by-owner")
   public YdszResponse<List<RuleDefinitionVO>> listByOwner(
       @RequestParam(value = "owner") String owner) {
+    if (ruleCategoryProvider == null) {
+      return YdszResponse.success(List.of());
+    }
     return YdszResponse.success(
         ruleCategoryProvider.listDefinitionsByOwner(owner).stream()
             .map(literuleWebConverter::entityToVO)

@@ -82,7 +82,7 @@ import org.springframework.stereotype.Component;
  * @since 26.10.01
  */
 @Component
-public final class SqlAstCache {
+public class SqlAstCache {
 
   private static final Logger log = LoggerFactory.getLogger(SqlAstCache.class);
 

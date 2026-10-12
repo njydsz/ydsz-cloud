@@ -816,6 +816,7 @@ public class SafeConfiguration {
    * @return 共享的 CircuitBreakerRegistry 实例
    */
   @Bean(name = "safeCircuitBreakerRegistry")
+  @Primary
   @ConditionalOnMissingBean(name = "safeCircuitBreakerRegistry")
   public CircuitBreakerRegistry circuitBreakerRegistry() {
     LOG.info("注册共享 CircuitBreakerRegistry");
