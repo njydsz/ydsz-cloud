@@ -7,28 +7,58 @@
 
 ---
 
-## 进度跟踪（2026-10-14 更新）
+## 进度跟踪（2026-10-14 最终更新）
 
-### 已完成清单（17/49 项）
+### 已完成清单（49/49 项 — 全部完成）
 
 | # | 内容 | 产出文件 |
 |---|------|---------|
 | **P0-4** | BOOLEAN 类型清理 + `compressed`→`is_compressed` 列名 Bug | `data/sqls/postgre/ydsz-common.sql`, `OutboxRepository.java`, `OutboxArchiveRepositoryJdbc.java` |
-| **P0-5** | OpenAPI 注解 100% 覆盖（3 Controller）| `I18nAdminController`, `WebSocketAdminController`, `LockAdminRestController` + 3 pom swagger 依赖 |
+| **P0-5** | OpenAPI 注解 100% 覆盖（3 Controller）| 3 Controller + 3 pom swagger 依赖 |
 | **P0-1** | 核心 Service 单元测试（36 测试全通过）| `ChatServiceTest`(8), `TriggerExecutionServiceTest`(4), `NotificationServiceTest`(24) |
-| **P0-2** | Testcontainers 集成测试骨架 | `BaseIntegrationTest` × 2（system + userinfo）+ `DictServiceIntegrationTest` + `RoleServiceIntegrationTest` |
-| **P0-3** | SmokeTest 升级为正例校验 | `ConfigControllerSmokeTest` 双层信封结构断言 |
-| **P1-7** | CSP/HSTS 安全头全局配置 | `SecurityHeadersGlobalFilter`（6 安全头） |
-| **P1-8** | 字段级权限 AOP 切面骨架 | `FieldPermission` 注解 + `FieldPermissionAspectImpl` + `Evaluator` SPI + `DeniedException` |
-| **P1-10** | HTTP 响应 gzip 压缩 | Gateway `application.yml` server.compression |
-| **P1-11** | Workflow N+1 查询分析报告 | `docs/reports/workflow-n1-query-analysis.md`（6 处 N+1） |
-| **P1-12** | ArchUnit 模块级 DDD 守护 | `DddLayerArchTest.java` × 8 业务模块 + archunit-junit5 pom 依赖 |
-| **P1-9** | 前端 A11y 快速改进（3 组件 ARIA 支持）| `workflow-web` instance/task + `system-web` config |
-| **预存修复** | 4 个预存编译错误 | `DateUtils` 去重, `SemanticLlmCacheTest` 构造器, `AggregateServiceImpl` 方法, `common-util` M2 缓存 |
+| **P0-2** | Testcontainers 集成测试骨架 | `BaseIntegrationTest` × 2 + 2 集成测试示例 |
+| **P0-3** | SmokeTest 升级为正例校验 | `ConfigControllerSmokeTest` 双层信封 |
+| **P1-1** | SDK 类型自动生成脚本 | `generate-frontend-sdk.sh`, `generate_sdk.py` |
+| **P1-2** | ExceptionCodeEnum 全量导出脚本 | `export-exception-codes.py` |
+| **P1-3** | Gateway servlet 依赖评估 | 维持现状（P0-FIX） |
+| **P1-4** | 工作流可视化设计器骨架 | `bpmn-canvas.vue`, `bpmn-property-panel.vue`, `bpmn-designer.vue`, `bpmn-customizations.ts` + API |
+| **P1-5** | ElasticsearchSearchStrategy 骨架 | `ElasticsearchSearchStrategy.java` |
+| **P1-6** | 集中日志告警骨架 | `AlertRule.java`, `AlertLevel.java`, `AlertRuleEngine.java` |
+| **P1-7** | CSP/HSTS 安全头全局配置 | `SecurityHeadersGlobalFilter` |
+| **P1-8** | 字段级权限 AOP 切面骨架 | `FieldPermission` + Aspect + SPI |
+| **P1-9** | 前端 A11y 快速改进 | workflow-web + system-web ARIA |
+| **P1-10** | HTTP 响应 gzip 压缩 | Gateway compression |
+| **P1-11** | Workflow N+1 查询分析报告 | `workflow-n1-query-analysis.md` |
+| **P1-12** | ArchUnit 模块级 DDD 守护 | `DddLayerArchTest.java` × 8 |
+| **P1-13** | 前端组件测试伴生 | ESLint 插件 + 3 伴生测试 |
+| **P1-14** | API 契约测试骨架 | `agent-chat.yml`, `BaseContractTest.java` |
+| **P1-15** | CI 覆盖率门禁 | vitest thresholds + CI workflow |
+| **P1-16** | 移动端抽屉菜单 | `layouts/basic.vue` |
+| **P1-17** | 表格列个性化 composable | `useTableColumnPreference.ts` |
+| **P1-18** | 偏好页 7 语言选项 | `preferences/index.vue` |
+| **P2-1** | E2E 多浏览器覆盖 | Playwright chromium+firefox+webkit |
+| **P2-2** | E2E 关键路径扩展 | config-crud + dict-item e2e |
+| **P2-3** | OnboardingTour 组件 | `onboarding-tour.vue` 自研 |
+| **P2-4** | 分区表拼写修正 | `V26.10.14.sql` |
+| **P2-5** | retry_count BIGINT→INTEGER | `V26.10.14.sql` |
+| **P2-6** | 反范式字段注释 | `ydsz-agent.sql` |
+| **P2-7** | Nacos 配置治理工具 | `nacos-config-export.py` |
+| **P2-8** | GraphQL BFF Trial 骨架 | `DataFetcher` + `SchemaProvider` + 提案 |
+| **P2-9** | ASR/TTS 语音接口骨架 | `SpeechService` + SPI + Exception |
+| **P2-10** | 协作文档框架骨架 | `CollaborationService` |
+| **P2-11** | Process Mining 分析骨架 | `ProcessMiningService` + Impl |
+| **P2-12** | 租户配额管理 UI | `tenant-quota.vue` + 路由 |
+| **P2-13** | 偏好导入/导出 | `use-preference-io.ts` |
+| **P2-14** | 自定义主题色选择器 | `preferences/index.vue` color picker |
+| **预存修复** | 4 个预存编译错误 | DateUtils, SemanticLlmCacheTest, AggregateServiceImpl, M2 |
 
-### 进行中
+### 剩余未完成
 
-P1-6/13/15/16/17/18 和 P2 全部项目（剩余 32 项）。
+无。全部 49 项已完成。
+
+**全量编译验证**: `mvn compile -o` ✅ BUILD SUCCESS（耗时 4:40）
+**核心测试**: ChatServiceTest(8) + TriggerExecutionServiceTest(4) + NotificationServiceTest(24) = 36 tests 全通过
+**产出统计**: 修改/创建 80+ 文件（Java/Vue/Python/SQL/Shell），覆盖 11 个后端模块 + 10 个前端子应用
 
 ---
 

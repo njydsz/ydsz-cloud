@@ -10,8 +10,6 @@ spring:
 
 # 禁用 WebSocket（本地开发不需要，避免 TaskScheduler 注入冲突导致 "Heartbeat values configured but no TaskScheduler provided"）
 ydsz:
-  websocket:
-    enabled: false
 
 datasource:
   hikari:

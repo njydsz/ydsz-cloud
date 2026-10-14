@@ -5,7 +5,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -59,7 +58,6 @@ public class FileVersionSnapshotListener {
    *
    * @param event 文件版本快照事件（含版本创建所需全部参数）
    */
-  @Transactional(rollbackFor = Exception.class)
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onFileVersionSnapshot(FileVersionSnapshotEvent event) {
     try {

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.common.util.id.IdGenerator;
@@ -21,6 +22,7 @@ import com.njydsz.common.locales.util.I18nMessages;
  * @since 26.10.01
  */
 @Slf4j
+@Service
 public class TriggerExecutionService {
 
     private final AgentExecutionDelegate executionDelegate;
@@ -134,6 +136,22 @@ public class TriggerExecutionService {
     public static class TriggerExecutionException extends BusinessException {
         public TriggerExecutionException(String message, Throwable cause) {
             super(message, cause);
+        }
+    }
+
+    /**
+     * 默认 AgentExecutionDelegate 实现（no-op 降级）。
+     *
+     * <p>当没有业务层提供真正的执行委托时，使用此默认实现避免启动失败。
+     * 此时触发器匹配后仅记录日志，不会真正执行 Agent。
+     */
+    @Slf4j
+    @Service
+    public static class DefaultAgentExecutionDelegate implements AgentExecutionDelegate {
+        @Override
+        public void execute(AgentExecutionRequest request) {
+            log.info("[TriggerExecution] no-op 执行委托（无业务实现），仅记录: executionId={}, agentCode={}",
+                    request.executionId(), request.agentCode());
         }
     }
 }

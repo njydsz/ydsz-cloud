@@ -21,8 +21,8 @@ logging:
 ydsz:
   i18n:
     validate-on-startup: false
-  websocket:
-    enabled: false
   sentry:
+    enabled: false
+  websocket:
     enabled: false
   local-dev: true

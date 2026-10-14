@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Primary;
 
 import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.mq.kafka.KafkaQueueProperties;
@@ -34,6 +35,7 @@ import com.njydsz.common.queue.mq.rabbit.RabbitMQProperties;
  */
 @Slf4j
 @Data
+@Primary
 @ConfigurationProperties(prefix = "ydsz.queue")
 public class QueueProperties {
 

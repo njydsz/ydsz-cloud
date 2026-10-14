@@ -72,6 +72,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
   private final FlowTaskQueryServiceImpl queryService;
 
   /** 核心操作子服务，协调创建/签收/通过/驳回/转办/委派等写操作 */
+  @Lazy
   private final FlowTaskCoreService completeService;
 
   /** 加签减签子服务，处理前/后加签、减签、追加处理人等 */

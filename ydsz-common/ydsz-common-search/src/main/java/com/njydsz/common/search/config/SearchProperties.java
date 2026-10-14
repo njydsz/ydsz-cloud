@@ -140,6 +140,9 @@ public class SearchProperties {
   /** PG 引擎配置 */
   private PgConfig pg = new PgConfig();
 
+  /** Elasticsearch 引擎配置 */
+  private ElasticsearchConfig elasticsearch = new ElasticsearchConfig();
+
   // ==================== 通用内部类 ====================
 
   /**
@@ -223,6 +226,27 @@ public class SearchProperties {
   }
 
   // ==================== 引擎特定内部类 ====================
+
+  /**
+   * Elasticsearch 搜索引擎的专属配置，对应 {@code ydsz.search.elasticsearch.*}。
+   *
+   * <p>仅在 {@code ydsz.search.engine = elasticsearch} 时生效。ES 客户端通过独立的 Spring Boot Starter
+   * 装配（{@code spring.elasticsearch.*} 标准配置），本类仅提供搜索模块所需的命名与能力参数。
+   */
+  @Data
+  public static class ElasticsearchConfig {
+
+    /** ES 索引名 */
+    private String indexName = "ydsz_search_index";
+
+    /** 是否启用 completion suggester（自动补全） */
+    private boolean suggestEnabled = true;
+
+    /** 搜索超时（秒） */
+    @Min(1)
+    @Max(60)
+    private int searchTimeoutSeconds = 5;
+  }
 
   /**
    * PostgreSQL 全文检索引擎的专属配置，对应 {@code ydsz.search.pg.*}。

@@ -7,6 +7,9 @@ spring:
   main:
     allow-circular-references: true
     lazy-initialization: true
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.health.autoconfigure.registry.HealthContributorRegistryAutoConfiguration
 
 datasource:
   hikari:
@@ -21,8 +24,6 @@ logging:
 ydsz:
   i18n:
     validate-on-startup: false
-  websocket:
-    enabled: false
   agent:
     approval:
       pause-on-sensitive: false
@@ -31,3 +32,5 @@ ydsz:
     a2a:
       enabled: false
   local-dev: true
+  websocket:
+    enabled: false

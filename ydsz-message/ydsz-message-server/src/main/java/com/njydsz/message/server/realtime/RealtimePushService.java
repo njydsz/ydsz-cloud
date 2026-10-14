@@ -1,7 +1,7 @@
 package com.njydsz.message.server.realtime;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.socket.push.RealtimePushTemplate;
@@ -30,10 +30,17 @@ import com.njydsz.common.socket.push.RealtimePushTemplate;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class RealtimePushService {
 
-  private final RealtimePushTemplate realtimePushTemplate;
+  private final ObjectProvider<RealtimePushTemplate> realtimePushTemplateProvider;
+
+  public RealtimePushService(ObjectProvider<RealtimePushTemplate> realtimePushTemplateProvider) {
+    this.realtimePushTemplateProvider = realtimePushTemplateProvider;
+  }
+
+  private RealtimePushTemplate getPushTemplate() {
+    return realtimePushTemplateProvider.getIfAvailable();
+  }
 
   /**
    * 向指定用户推送通知（集群广播）。
@@ -43,7 +50,10 @@ public class RealtimePushService {
    * @param payload 消息内容
    */
   public void pushToUser(String userId, String type, Object payload) {
-    realtimePushTemplate.pushToUser(userId, type, payload);
+    RealtimePushTemplate template = getPushTemplate();
+    if (template != null) {
+      template.pushToUser(userId, type, payload);
+    }
   }
 
   /**
@@ -54,7 +64,10 @@ public class RealtimePushService {
    * @param payload 消息内容
    */
   public void pushToUserWithOffline(String userId, String type, Object payload) {
-    realtimePushTemplate.pushToUserWithOffline(userId, type, payload);
+    RealtimePushTemplate template = getPushTemplate();
+    if (template != null) {
+      template.pushToUserWithOffline(userId, type, payload);
+    }
   }
 
   /**
@@ -63,7 +76,10 @@ public class RealtimePushService {
    * @param payload 消息内容
    */
   public void broadcast(Object payload) {
-    realtimePushTemplate.broadcast(payload);
+    RealtimePushTemplate template = getPushTemplate();
+    if (template != null) {
+      template.broadcast(payload);
+    }
   }
 
   /**
@@ -73,7 +89,10 @@ public class RealtimePushService {
    * @param payload 消息内容
    */
   public void broadcast(String type, Object payload) {
-    realtimePushTemplate.broadcast(type, payload);
+    RealtimePushTemplate template = getPushTemplate();
+    if (template != null) {
+      template.broadcast(type, payload);
+    }
   }
 
   /**
@@ -83,6 +102,9 @@ public class RealtimePushService {
    * @param payload 消息内容
    */
   public void pushToTopic(String topic, Object payload) {
-    realtimePushTemplate.pushToTopic(topic, payload);
+    RealtimePushTemplate template = getPushTemplate();
+    if (template != null) {
+      template.pushToTopic(topic, payload);
+    }
   }
 }

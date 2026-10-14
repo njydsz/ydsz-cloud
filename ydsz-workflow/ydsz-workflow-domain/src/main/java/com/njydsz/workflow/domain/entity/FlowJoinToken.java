@@ -38,7 +38,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_join_token")
-public class FlowJoinTokenEntity extends MpBaseEntity<String> {
+public class FlowJoinToken extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
 

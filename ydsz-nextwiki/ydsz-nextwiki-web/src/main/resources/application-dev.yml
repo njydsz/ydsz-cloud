@@ -22,7 +22,7 @@ ydsz:
   local-dev: true
   i18n:
     validate-on-startup: false
-  websocket:
-    enabled: false
   sentry:
+    enabled: false
+  websocket:
     enabled: false

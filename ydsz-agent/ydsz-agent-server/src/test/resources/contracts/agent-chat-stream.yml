@@ -1,0 +1,25 @@
+description: "流式对话 - SSE 流成功"
+request:
+  method: POST
+  url: /agent/chat/stream
+  headers:
+    Content-Type: application/json
+    Accept: text/event-stream
+  body:
+    conversationId: "conv-002"
+    message: "帮我写一段 Java 代码"
+  matchers:
+    body:
+      - path: $.message
+        type: by_regex
+        value: ".+"
+response:
+  status: 200
+  headers:
+    Content-Type: text/event-stream
+  body:
+    event: "chunk"
+    code: "A00000"
+    data:
+      conversationId: "conv-002"
+      delta: "好的，这里是一段 Java 代码示例..."

@@ -154,17 +154,17 @@
             <foreach collection="items" item="item">
                 WHEN #{item.id} THEN #{item.sort}
             </foreach>
-            END,
+            end,
             updated_by = CASE id
             <foreach collection="items" item="item">
                 WHEN #{item.id} THEN #{item.updatedBy}
             </foreach>
-            END,
+            end,
             updated_at = CASE id
             <foreach collection="items" item="item">
                 WHEN #{item.id} THEN #{item.updatedAt}
             </foreach>
-            END
+            end
         </set>
         WHERE id IN
         <foreach collection="items" item="item" open="(" separator="," close=")">

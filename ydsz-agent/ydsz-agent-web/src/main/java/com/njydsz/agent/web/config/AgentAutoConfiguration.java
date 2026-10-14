@@ -885,11 +885,11 @@ public class AgentAutoConfiguration {
   public UserProfileService userProfileService(
       UserProfileRepository userProfileRepository,
       AgentProperties properties,
-      ObjectProvider<LlmProfileAnalyzer> llmProfileAnalyzer) {
+      ObjectProvider<LlmProfileAnalyzer> llmProfileAnalyzerProvider) {
     return new UserProfileServiceImpl(
         userProfileRepository,
         properties,
-        llmProfileAnalyzer);
+        llmProfileAnalyzerProvider);
   }
 
   // ========================= BI 洞察报告 Bean 注册 =========================

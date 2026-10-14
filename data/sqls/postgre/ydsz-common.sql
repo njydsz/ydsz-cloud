@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
     event_type               VARCHAR(128)             NOT NULL,
     payload                  TEXT                     NOT NULL,
     status                   VARCHAR(15)              NOT NULL DEFAULT 'PENDING' CONSTRAINT ck_ydsz_comm_outbox_status CHECK (status IN ('PENDING', 'PROCESSING', 'SENT', 'DEAD_LETTER')),
-    retry_count              BIGINT                   NOT NULL DEFAULT 0,
-    max_retries              BIGINT                   NOT NULL DEFAULT 5,
+    retry_count              INTEGER                  NOT NULL DEFAULT 0,
+    max_retries              INTEGER                  NOT NULL DEFAULT 5,
     next_retry_at            TIMESTAMP(3)            ,
     error_message            TEXT                    ,
     schema_version           INTEGER                 NOT NULL DEFAULT 1,
@@ -298,21 +298,22 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_search_index_partitioned
 ) PARTITION BY HASH (tenant_id);
 
 -- 创建 8 个 HASH 分区
-CREATE TABLE IF NOT EXISTS ydzs_search_idx_part_0 PARTITION OF ydsz_comm_search_index_partitioned
+-- P2: 修正分区表拼写 ydzs_ → ydzsz_（与 ydzs-cloud-V26.10.01 基线命名保持一致，此处同步修正）
+CREATE TABLE IF NOT EXISTS ydsz_search_idx_part_0 PARTITION OF ydsz_comm_search_index_partitioned
     FOR VALUES WITH (MODULUS 8, REMAINDER 0);
-CREATE TABLE IF NOT EXISTS ydzs_search_idx_part_1 PARTITION OF ydsz_comm_search_index_partitioned
+CREATE TABLE IF NOT EXISTS ydsz_search_idx_part_1 PARTITION OF ydsz_comm_search_index_partitioned
     FOR VALUES WITH (MODULUS 8, REMAINDER 1);
-CREATE TABLE IF NOT EXISTS ydzs_search_idx_part_2 PARTITION OF ydsz_comm_search_index_partitioned
+CREATE TABLE IF NOT EXISTS ydsz_search_idx_part_2 PARTITION OF ydsz_comm_search_index_partitioned
     FOR VALUES WITH (MODULUS 8, REMAINDER 2);
-CREATE TABLE IF NOT EXISTS ydzs_search_idx_part_3 PARTITION OF ydsz_comm_search_index_partitioned
+CREATE TABLE IF NOT EXISTS ydsz_search_idx_part_3 PARTITION OF ydsz_comm_search_index_partitioned
     FOR VALUES WITH (MODULUS 8, REMAINDER 3);
-CREATE TABLE IF NOT EXISTS ydzs_search_idx_part_4 PARTITION OF ydsz_comm_search_index_partitioned
+CREATE TABLE IF NOT EXISTS ydsz_search_idx_part_4 PARTITION OF ydsz_comm_search_index_partitioned
     FOR VALUES WITH (MODULUS 8, REMAINDER 4);
-CREATE TABLE IF NOT EXISTS ydzs_search_idx_part_5 PARTITION OF ydsz_comm_search_index_partitioned
+CREATE TABLE IF NOT EXISTS ydsz_search_idx_part_5 PARTITION OF ydsz_comm_search_index_partitioned
     FOR VALUES WITH (MODULUS 8, REMAINDER 5);
-CREATE TABLE IF NOT EXISTS ydzs_search_idx_part_6 PARTITION OF ydsz_comm_search_index_partitioned
+CREATE TABLE IF NOT EXISTS ydsz_search_idx_part_6 PARTITION OF ydsz_comm_search_index_partitioned
     FOR VALUES WITH (MODULUS 8, REMAINDER 6);
-CREATE TABLE IF NOT EXISTS ydzs_search_idx_part_7 PARTITION OF ydsz_comm_search_index_partitioned
+CREATE TABLE IF NOT EXISTS ydsz_search_idx_part_7 PARTITION OF ydsz_comm_search_index_partitioned
     FOR VALUES WITH (MODULUS 8, REMAINDER 7);
 
 COMMENT ON TABLE ydsz_comm_search_index_partitioned IS '搜索全文索引分区表（按 tenant_id HASH 分区，原 ydzs_wiki_search_index 升级）';

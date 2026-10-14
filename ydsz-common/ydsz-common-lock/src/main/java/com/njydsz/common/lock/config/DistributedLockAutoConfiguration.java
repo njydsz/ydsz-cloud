@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -291,12 +292,29 @@ public class DistributedLockAutoConfiguration {
   }
 
   /**
+   * 创建统一 DistributedLocker Bean（Fallback 模式，Redis 不可用时降级本地锁）。
+   *
+   * <p>业务模块按类型注入 {@link com.njydsz.common.lock.core.DistributedLocker} 时即使用此 Bean，
+   * 无需自行处理降级逻辑。
+   *
+   * @return DistributedLocker 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnBean(LockStrategy.class)
+  public FallbackDistributedLock distributedLocker(LockStrategy lockStrategy) {
+    return new FallbackDistributedLock(
+        lockStrategy.getLock(com.njydsz.common.lock.core.LockType.REENTRANT), true);
+  }
+
+  /**
    * 创建调度线程池（用于 WatchDog 续期和信号量超时调度，Spring 管理，支持优雅停机和配置化）
    *
    * @param lockProperties 锁配置属性
    * @return TaskScheduler 实例
    */
   @Bean("lockWatchDogScheduler")
+  @Primary
   @ConditionalOnMissingBean(name = "lockWatchDogScheduler")
   public TaskScheduler lockWatchDogScheduler(LockProperties lockProperties) {
     ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();

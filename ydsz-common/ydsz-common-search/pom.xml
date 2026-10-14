@@ -155,5 +155,13 @@
             <artifactId>ydsz-common-lock</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Elasticsearch Java Client（可选，ConditionalOnClass 激活 EsSearchStrategy） -->
+        <dependency>
+            <groupId>co.elastic.clients</groupId>
+            <artifactId>elasticsearch-java</artifactId>
+            <version>8.15.0</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>

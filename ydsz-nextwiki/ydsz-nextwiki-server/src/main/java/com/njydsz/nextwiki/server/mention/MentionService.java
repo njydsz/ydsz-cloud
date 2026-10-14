@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.socket.push.RealtimePushTemplate;
@@ -55,8 +56,8 @@ public class MentionService {
   /** @提及 正则：@后面跟非空白字符（用户名/用户ID） */
   private static final Pattern MENTION_PATTERN = Pattern.compile("@([^\\s@]+)");
 
-  /** WebSocket 推送模板（统一实时推送能力） */
-  private final RealtimePushTemplate pushTemplate;
+  /** WebSocket 推送模板（统一实时推送能力，可选依赖） */
+  private final ObjectProvider<RealtimePushTemplate> pushTemplateProvider;
 
   /** 消息类型常量 */
   public static final String TYPE_COMMENT_MENTION = "COMMENT_MENTION";
@@ -64,10 +65,14 @@ public class MentionService {
   /**
    * 构造方法注入。
    *
-   * @param pushTemplate WebSocket 推送模板
+   * @param pushTemplateProvider WebSocket 推送模板提供者
    */
-  public MentionService(RealtimePushTemplate pushTemplate) {
-    this.pushTemplate = pushTemplate;
+  public MentionService(ObjectProvider<RealtimePushTemplate> pushTemplateProvider) {
+    this.pushTemplateProvider = pushTemplateProvider;
+  }
+
+  private RealtimePushTemplate getPushTemplate() {
+    return pushTemplateProvider.getIfAvailable();
   }
 
   /**
@@ -141,6 +146,10 @@ public class MentionService {
             "mentionedAt", LocalDateTime.now().toString()
         );
 
+        RealtimePushTemplate pushTemplate = getPushTemplate();
+        if (pushTemplate == null) {
+          continue;
+        }
         String messageId = "mention_" + commentId + "_" + mentionedUserId;
         pushTemplate.pushToUserWithOffline(
             mentionedUserId, TYPE_COMMENT_MENTION, payload, messageId);

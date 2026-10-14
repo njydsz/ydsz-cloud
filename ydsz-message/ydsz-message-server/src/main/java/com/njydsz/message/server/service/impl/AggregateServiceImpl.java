@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -24,6 +25,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.lock.core.DistributedLocker;
+import org.springframework.beans.factory.ObjectProvider;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
 import com.njydsz.message.domain.query.MsgAggregateQuery;
@@ -74,7 +76,8 @@ public class AggregateServiceImpl implements AggregateService {
   /** 聚合批次 Repository */
   private final MsgAggregateRepository msgAggregateRepository;
 
-  /** 消息发送服务（flush 时回调发送） */
+  /** 消息发送服务（flush 时回调发送），@Lazy 打破循环依赖 */
+  @Lazy
   private final MessageService messageService;
 
   /** 模板引擎（摘要渲染） */
@@ -83,8 +86,12 @@ public class AggregateServiceImpl implements AggregateService {
   /** 模板管理服务（加载摘要模板） */
   private final TemplateService templateService;
 
-  /** 分布式锁 */
-  private final DistributedLocker distributedLocker;
+  /** 分布式锁（可选依赖，local-dev 模式下 Redis 不可用时降级） */
+  private final ObjectProvider<DistributedLocker> distributedLockerProvider;
+
+  private DistributedLocker getDistributedLocker() {
+    return distributedLockerProvider.getIfAvailable();
+  }
 
   @Override
   public MsgAggregateVO appendOrStart(
@@ -99,7 +106,14 @@ public class AggregateServiceImpl implements AggregateService {
     String lockKey = MessageConstants.AGGREGATE_LOCK_PREFIX + group + ":" + receiver;
     String lockValue = null;
     try {
-      lockValue = distributedLocker.tryLock(lockKey, LOCK_WAIT_SECONDS, LOCK_TTL_SECONDS, TimeUnit.SECONDS);
+      DistributedLocker locker = getDistributedLocker();
+      if (locker == null) {
+        throw SysException.builder()
+            .resultCode(YdszResultCode.BAD_REQUEST)
+            .message("分布式锁不可用，请检查 Redis 连接")
+            .build();
+      }
+      lockValue = locker.tryLock(lockKey, LOCK_WAIT_SECONDS, LOCK_TTL_SECONDS, TimeUnit.SECONDS);
       if (lockValue == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)

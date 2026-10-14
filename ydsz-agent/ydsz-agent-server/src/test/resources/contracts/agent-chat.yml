@@ -1,0 +1,23 @@
+description: "创建对话 - 请求成功"
+request:
+  method: POST
+  url: /agent/chat
+  headers:
+    Content-Type: application/json
+  body:
+    conversationId: "conv-001"
+    message: "你好"
+  matchers:
+    body:
+      - path: $.message
+        type: by_regex
+        value: ".+"
+response:
+  status: 200
+  headers:
+    Content-Type: application/json
+  body:
+    code: "A00000"
+    data:
+      conversationId: "conv-001"
+      reply: "你好！有什么可以帮你的？"

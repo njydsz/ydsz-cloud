@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.njydsz.workflow.domain.entity.FlowJoinTokenEntity;
+import com.njydsz.workflow.domain.entity.FlowJoinToken;
 import java.time.LocalDateTime;
 
 /**
@@ -30,7 +30,7 @@ import java.time.LocalDateTime;
  * @since 26.10.08
  */
 @Mapper
-public interface FlowJoinTokenMapper extends BaseMapper<FlowJoinTokenEntity> {
+public interface FlowJoinTokenMapper extends BaseMapper<FlowJoinToken> {
 
   /**
    * 原子递增到达计数并返回更新后的值。
@@ -61,7 +61,7 @@ public interface FlowJoinTokenMapper extends BaseMapper<FlowJoinTokenEntity> {
    * @param joinNodeCode join 节点编码
    * @return join token 实体；不存在返回 null
    */
-  FlowJoinTokenEntity selectByInstanceAndNode(
+  FlowJoinToken selectByInstanceAndNode(
       @Param("instanceId") String instanceId,
       @Param("joinNodeCode") String joinNodeCode);
 
@@ -73,7 +73,7 @@ public interface FlowJoinTokenMapper extends BaseMapper<FlowJoinTokenEntity> {
    * @param instanceId 流程实例 ID
    * @return join token 实体列表
    */
-  List<FlowJoinTokenEntity> selectByInstanceId(@Param("instanceId") String instanceId);
+  List<FlowJoinToken> selectByInstanceId(@Param("instanceId") String instanceId);
 
   /**
    * 标记 join token 状态（原子 CAS 更新）。

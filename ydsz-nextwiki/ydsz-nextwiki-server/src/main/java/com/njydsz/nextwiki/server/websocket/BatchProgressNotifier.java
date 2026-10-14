@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.socket.push.RealtimePushTemplate;
@@ -45,8 +46,8 @@ public class BatchProgressNotifier {
   private static final int COLLECTION_CAPACITY = 16;
 
 
-  /** WebSocket 推送模板（统一实时推送能力） */
-  private final RealtimePushTemplate pushTemplate;
+  /** WebSocket 推送模板（统一实时推送能力，可选依赖） */
+  private final ObjectProvider<RealtimePushTemplate> pushTemplateProvider;
 
   /** 消息类型常量 */
   public static final String TYPE_BATCH_PROGRESS = "BATCH_PROGRESS";
@@ -54,10 +55,14 @@ public class BatchProgressNotifier {
   /**
    * 构造方法注入。
    *
-   * @param pushTemplate WebSocket 推送模板
+   * @param pushTemplateProvider WebSocket 推送模板提供者
    */
-  public BatchProgressNotifier(RealtimePushTemplate pushTemplate) {
-    this.pushTemplate = pushTemplate;
+  public BatchProgressNotifier(ObjectProvider<RealtimePushTemplate> pushTemplateProvider) {
+    this.pushTemplateProvider = pushTemplateProvider;
+  }
+
+  private RealtimePushTemplate getPushTemplate() {
+    return pushTemplateProvider.getIfAvailable();
   }
 
   /**
@@ -183,6 +188,10 @@ public class BatchProgressNotifier {
    * @param payload 消息内容
    */
   private void pushToUser(String userId, Map<String, Object> payload) {
+    RealtimePushTemplate pushTemplate = getPushTemplate();
+    if (pushTemplate == null) {
+      return;
+    }
     try {
       // 使用 taskId 作为消息 ID 实现幂等去重
       String messageId = payload.get("taskId") + "_" + payload.get("processedCount");

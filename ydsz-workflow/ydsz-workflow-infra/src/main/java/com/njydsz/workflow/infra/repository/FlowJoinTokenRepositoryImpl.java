@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.workflow.domain.repository.FlowJoinTokenRepository;
-import com.njydsz.workflow.domain.entity.FlowJoinTokenEntity;
+import com.njydsz.workflow.domain.entity.FlowJoinToken;
 import com.njydsz.workflow.infra.mapper.FlowJoinTokenMapper;
 import com.njydsz.common.auth.util.SecurityUtils;
 import com.njydsz.common.util.id.IdGenerator;
@@ -48,7 +48,7 @@ public class FlowJoinTokenRepositoryImpl implements FlowJoinTokenRepository {
    * @return token ID
    */
   public String initTokens(String instanceId, String joinNodeCode, int totalBranches, int requiredBranches) {
-    FlowJoinTokenEntity existing = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
+    FlowJoinToken existing = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
     if (existing != null && STATUS_PENDING.equals(existing.getJoinStatus())) {
       // 已初始化且仍在聚合中：跳过，返回已有 ID（幂等）
       log.debug("[FlowJoinTokenRepo] token 已存在，跳过初始化 instanceId={} nodeId={}",
@@ -56,7 +56,7 @@ public class FlowJoinTokenRepositoryImpl implements FlowJoinTokenRepository {
       return existing.getId();
     }
 
-    FlowJoinTokenEntity entity = new FlowJoinTokenEntity();
+    FlowJoinToken entity = new FlowJoinToken();
     entity.setId(String.valueOf(IdGenerator.nextId()));
     entity.setInstanceId(instanceId);
     entity.setJoinNodeCode(joinNodeCode);
@@ -90,7 +90,7 @@ public class FlowJoinTokenRepositoryImpl implements FlowJoinTokenRepository {
    */
   public int arriveToken(String instanceId, String joinNodeCode) {
     try {
-      FlowJoinTokenEntity existing = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
+      FlowJoinToken existing = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
       if (existing == null) {
         log.warn("[FlowJoinTokenRepo] arrive 时 token 不存在 instanceId={} nodeId={}",
             instanceId, joinNodeCode);
@@ -119,7 +119,7 @@ public class FlowJoinTokenRepositoryImpl implements FlowJoinTokenRepository {
    */
   public boolean isComplete(String instanceId, String joinNodeCode) {
     try {
-      FlowJoinTokenEntity entity = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
+      FlowJoinToken entity = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
       return entity != null && entity.isComplete();
     } catch (Exception e) {
       log.warn("[FlowJoinTokenRepo] 查询 complete 状态异常 instanceId={} nodeId={} err={}",
@@ -137,7 +137,7 @@ public class FlowJoinTokenRepositoryImpl implements FlowJoinTokenRepository {
    */
   public boolean markCompleted(String instanceId, String joinNodeCode) {
     try {
-      FlowJoinTokenEntity entity = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
+      FlowJoinToken entity = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
       if (entity == null) {
         return false;
       }
@@ -166,7 +166,7 @@ public class FlowJoinTokenRepositoryImpl implements FlowJoinTokenRepository {
    */
   public int markCancelled(String instanceId, String joinNodeCode) {
     try {
-      FlowJoinTokenEntity entity = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
+      FlowJoinToken entity = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
       if (entity == null) {
         return 0;
       }
@@ -203,7 +203,7 @@ public class FlowJoinTokenRepositoryImpl implements FlowJoinTokenRepository {
    */
   public boolean isInitialized(String instanceId, String joinNodeCode) {
     try {
-      FlowJoinTokenEntity entity = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
+      FlowJoinToken entity = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
       return entity != null && STATUS_PENDING.equals(entity.getJoinStatus());
     } catch (Exception e) {
       log.warn("[FlowJoinTokenRepo] 检查初始化状态异常 instanceId={} nodeId={} err={}",
@@ -221,7 +221,7 @@ public class FlowJoinTokenRepositoryImpl implements FlowJoinTokenRepository {
    */
   public int getArrivedCount(String instanceId, String joinNodeCode) {
     try {
-      FlowJoinTokenEntity entity = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
+      FlowJoinToken entity = joinTokenMapper.selectByInstanceAndNode(instanceId, joinNodeCode);
       return entity != null ? entity.getArrivedCount() : -1;
     } catch (Exception e) {
       return -1;

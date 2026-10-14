@@ -75,7 +75,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
     matchIfMissing = true)
 public class QueueConfiguration {
 
-  private final QueueProperties queueProperties;
+  private final ObjectProvider<QueueProperties> queuePropertiesProvider;
   private final ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider;
   private final ObjectProvider<RedisStringOps> redisStringOpsProvider;
 
@@ -83,10 +83,15 @@ public class QueueConfiguration {
       ObjectProvider<QueueProperties> queuePropertiesProvider,
       ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
       ObjectProvider<RedisStringOps> redisStringOpsProvider) {
-    // 使用 ObjectProvider 解决多个 QueueProperties Bean 的歧义问题，取第一个可用实例
-    this.queueProperties = queuePropertiesProvider.getIfAvailable();
+    // 使用 ObjectProvider 解决多个 QueueProperties Bean 的歧义问题
+    this.queuePropertiesProvider = queuePropertiesProvider;
     this.redisTemplateProvider = redisTemplateProvider;
     this.redisStringOpsProvider = redisStringOpsProvider;
+  }
+
+  /** 安全获取 QueueProperties（多 bean 场景下取第一个可用实例） */
+  private QueueProperties getQueueProperties() {
+    return queuePropertiesProvider.getIfAvailable();
   }
 
   /**
@@ -96,18 +101,20 @@ public class QueueConfiguration {
    */
   @PostConstruct
   public void init() {
+    QueueProperties props = getQueueProperties();
     RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
     if (redisTemplate != null) {
       log.info("[Queue] 消息队列配置初始化，Redis 连接：复用 ydsz-common-redis");
-    } else {
+    } else if (props != null) {
       log.info(
           "[Queue] 消息队列配置初始化，Redis 连接：自建 JedisPool（{}:{}）",
-          queueProperties.getHost(),
-          queueProperties.getPort());
+          props.getHost(),
+          props.getPort());
       log.info(
-          "[Queue] 提示：推荐引入 ydsz-common-redis 模块以复用 Redis 连接，" + "通过 spring.data.redis.* 配置连接信息");
+          "[Queue] 提示：推荐引入 ydsz-common-redis 模块以复用 Redis 连接，"
+              + "通过 spring.data.redis.* 配置连接信息");
     }
-    log.debug("[Queue] 队列配置详情：{}", queueProperties);
+    log.debug("[Queue] 队列配置详情：{}", props);
   }
 
   /**
@@ -140,9 +147,10 @@ public class QueueConfiguration {
    */
   @Bean("queueConsumerExecutor")
   @ConditionalOnMissingBean(name = "queueConsumerExecutor")
-  public ExecutorService queueConsumerExecutor(QueueProperties queueProperties) {
-    int coreSize = queueProperties.getConsumerExecutorCoreSize();
-    int queueCapacity = queueProperties.getConsumerExecutorQueueCapacity();
+  public ExecutorService queueConsumerExecutor(ObjectProvider<QueueProperties> queuePropertiesProvider) {
+    QueueProperties queueProperties = queuePropertiesProvider.getIfAvailable();
+    int coreSize = queueProperties != null ? queueProperties.getConsumerExecutorCoreSize() : 4;
+    int queueCapacity = queueProperties != null ? queueProperties.getConsumerExecutorQueueCapacity() : 256;
 
     ExecutorService executor = InternalExecutorFactory.newFixedThreadPool(
         "queue-consumer", coreSize, queueCapacity);
@@ -173,11 +181,11 @@ public class QueueConfiguration {
     RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
     if (redisTemplate != null) {
       log.info("[Queue] 创建消息队列提供者（复用 ydsz-common-redis 连接）");
-      return new MessageQueueFactory(queueProperties, redisTemplate, consumerExecutor,
+      return new MessageQueueFactory(getQueueProperties(), redisTemplate, consumerExecutor,
           kafkaPropertiesProvider, rocketPropertiesProvider, rabbitPropertiesProvider);
     }
     log.info("[Queue] 创建消息队列提供者（自建 JedisPool 连接）");
-    return new MessageQueueFactory(queueProperties, null, consumerExecutor,
+    return new MessageQueueFactory(getQueueProperties(), null, consumerExecutor,
         kafkaPropertiesProvider, rocketPropertiesProvider, rabbitPropertiesProvider);
   }
 
@@ -197,7 +205,7 @@ public class QueueConfiguration {
     if (redisTemplate != null) {
       log.info("[Queue] 创建死信队列服务（复用 ydsz-common-redis 连接）");
       return new DeadLetterQueueServiceImpl(redisTemplate, messageQueueProvider,
-          queueProperties, replayerRegistry);
+          getQueueProperties(), replayerRegistry);
     }
     log.warn("[Queue] RedisTemplate 不可用，返回空操作死信队列服务");
     return new NoOpDeadLetterQueueService();
@@ -216,9 +224,11 @@ public class QueueConfiguration {
   @ConditionalOnBean(DeadLetterQueueService.class)
   public DeadLetterRetryScheduler deadLetterRetryScheduler(
       DeadLetterQueueService deadLetterQueueService) {
+    QueueProperties props = getQueueProperties();
     if (deadLetterQueueService == null
         || deadLetterQueueService instanceof NoOpDeadLetterQueueService
-        || !queueProperties.isDeadLetterRetryEnabled()) {
+        || props == null
+        || !props.isDeadLetterRetryEnabled()) {
       log.info("[Queue] 死信队列自动重试已禁用，跳过调度器创建");
       return null;
     }
@@ -228,9 +238,9 @@ public class QueueConfiguration {
         InternalExecutorFactory.newSingleThreadScheduledPool("queue-dlq-retry");
     log.info(
         "[Queue] 创建死信队列自动重试调度器，间隔: {}ms, 抖动: {}%",
-        queueProperties.getDeadLetterRetryInterval(),
-        queueProperties.getDeadLetterRetryJitterPercent());
-    return new DeadLetterRetryScheduler(deadLetterQueueService, queueProperties, scheduler);
+        props.getDeadLetterRetryInterval(),
+        props.getDeadLetterRetryJitterPercent());
+    return new DeadLetterRetryScheduler(deadLetterQueueService, props, scheduler);
   }
 
   // ==================== 消息去重配置 ====================
@@ -247,7 +257,7 @@ public class QueueConfiguration {
   @ConditionalOnMissingBean(MessageDeduplicator.class)
   @ConditionalOnProperty(prefix = "ydsz.queue", name = "dedup-enabled", havingValue = "true")
   public MessageDeduplicator messageDeduplicator() {
-    long window = queueProperties.getDedupWindowMillis();
+    long window = getQueueProperties().getDedupWindowMillis();
     log.info("[Queue] 创建内存消息去重器，窗口: {}ms", window);
     return new MessageDeduplicator(window);
   }
@@ -283,7 +293,7 @@ public class QueueConfiguration {
   @Bean
   @ConditionalOnMissingBean(QueueEngines.class)
   public QueueEngines queueEngines(ObjectProvider<IMessageQueueProvider> messageQueueProvider) {
-    return new QueueEngines(messageQueueProvider, queueProperties);
+    return new QueueEngines(messageQueueProvider, getQueueProperties());
   }
 
   // ==================== 健康检查配置 ====================
@@ -303,7 +313,7 @@ public class QueueConfiguration {
   // CHECKSTYLE.ON: RegexpSinglelineJava
   public QueueHealthIndicator queueHealthIndicator() {
     log.info("[Queue] 创建消息队列健康检查器");
-    return new QueueHealthIndicator(queueProperties, redisStringOpsProvider);
+    return new QueueHealthIndicator(getQueueProperties(), redisStringOpsProvider);
   }
 
   // ==================== Actuator 端点配置 ====================
@@ -323,7 +333,7 @@ public class QueueConfiguration {
   // CHECKSTYLE.ON: RegexpSinglelineJava
   public QueueEndpoint queueEndpoint(QueueManager queueManager) {
     log.info("[Queue] 注册消息队列 Actuator 端点");
-    return new QueueEndpoint(queueProperties, queueManager);
+    return new QueueEndpoint(getQueueProperties(), queueManager);
   }
 
   // ==================== Micrometer 指标配置 ====================
