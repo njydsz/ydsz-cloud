@@ -16,6 +16,7 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.auth.SessionManager;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 设备会话管理服务（P3-2）。
@@ -120,7 +121,7 @@ public class DeviceSessionService {
       return null;
     }
     try {
-      return LocalDateTime.parse(timeStr);
+      return DateUtils.parseIso(timeStr);
     } catch (Exception e) {
       log.debug(I18n.message("userinfo.时间解析失败", new Object[]{timeStr}));
       return null;

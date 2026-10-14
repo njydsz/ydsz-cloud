@@ -7,6 +7,9 @@ spring:
   main:
     allow-circular-references: true
     lazy-initialization: true
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.health.autoconfigure.registry.HealthContributorRegistryAutoConfiguration
 
 datasource:
   hikari:
@@ -21,4 +24,15 @@ logging:
 ydsz:
   i18n:
     validate-on-startup: false
+  websocket:
+    enabled: false
+  sentry:
+    enabled: false
   local-dev: true
+
+# P2-FIX：禁用 Spring Boot 默认 HealthContributor Bean，避免与 ydsz-common-queue/Lock/cronjob 自定义 HealthIndicator 产生歧义
+# HealthContributorRegistryAutoConfiguration 会因多模块自定义 HealthIndicator 冲突导致启动失败
+management:
+  health:
+    defaults:
+      enabled: false

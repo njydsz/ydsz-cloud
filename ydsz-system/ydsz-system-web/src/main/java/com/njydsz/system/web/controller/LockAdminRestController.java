@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,6 +50,7 @@ import com.njydsz.system.domain.vo.LockVO;
 @ApiVersion("26.10.09")
 @RestController
 @RequestMapping("/system/lock")
+@Tag(name = "lock-admin", description = "分布式锁管理 API（分页列表/统计/强制释放）")
 public class LockAdminRestController {
 
   /** 默认分页大小 */
@@ -82,6 +85,7 @@ public class LockAdminRestController {
    * @return 分页锁列表
    */
   @GetMapping("/page")
+  @Operation(summary = "获取活跃锁分页列表", description = "基于 Redis SCAN 渐进式遍历，支持 lockKey 模糊匹配和 owner 筛选")
   public YdszResponse<LockVO[]> page(LockPageQuery query) {
     int pageNum = query.getPageNum() != null ? query.getPageNum() : 1;
     int pageSize = query.getPageSize() != null ? query.getPageSize() : DEFAULT_PAGE_SIZE;
@@ -127,6 +131,7 @@ public class LockAdminRestController {
    * @return 锁统计信息
    */
   @GetMapping("/stats")
+  @Operation(summary = "锁统计快照", description = "活跃数/超时数/持有者分布")
   public YdszResponse<LockStatsVO> stats() {
     LockStatsVO vo = new LockStatsVO();
     vo.setActiveLockCount(lockMetrics.getActiveLocks());
@@ -153,6 +158,7 @@ public class LockAdminRestController {
    * @return 是否释放成功
    */
   @DeleteMapping("/{lockKey}")
+  @Operation(summary = "强制释放指定锁", description = "死锁恢复运维操作")
   public YdszResponse<Boolean> release(@PathVariable String lockKey) {
     String fullKey = LOCK_KEY_PREFIX + lockKey;
     boolean released = lockAdmin.forceUnlock(fullKey);

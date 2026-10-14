@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.agent.domain.trigger.TriggerRepository;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.agent.server.trigger.TriggerExecutionService;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 定时触发器调度器。
@@ -73,10 +75,14 @@ public class CronTriggerScheduler {
     /** 周字段最大值 */
     private static final int DAY_OF_WEEK_MAX = 7;
 
+    /**
+     * 手写构造器：第二个参数 executionService 使用 ObjectProvider + null 保护，
+     * 避免启动时因 TriggerExecutionService Bean 缺失而崩溃。
+     */
     public CronTriggerScheduler(TriggerRepository triggerRepository,
-                                TriggerExecutionService executionService) {
+                                ObjectProvider<TriggerExecutionService> executionServiceProvider) {
         this.triggerRepository = Objects.requireNonNull(triggerRepository, "triggerRepository 不能为 null");
-        this.executionService = Objects.requireNonNull(executionService, "executionService 不能为 null");
+        this.executionService = executionServiceProvider.getIfAvailable();
     }
 
     /**
@@ -122,7 +128,7 @@ public class CronTriggerScheduler {
         // 检查执行间隔
         LocalDateTime lastExec = lastExecutionTimes.get(trigger.getTriggerId());
         if (lastExec != null) {
-            long secondsSinceLastExec = ChronoUnit.SECONDS.between(lastExec, now);
+            long secondsSinceLastExec = DateUtils.secondsBetween(lastExec, now);
             if (secondsSinceLastExec < MIN_EXECUTION_INTERVAL_SECONDS) {
                 return false;
             }

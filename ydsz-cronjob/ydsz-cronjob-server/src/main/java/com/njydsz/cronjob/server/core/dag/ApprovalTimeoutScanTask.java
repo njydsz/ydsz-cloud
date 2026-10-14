@@ -16,6 +16,7 @@ import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.server.core.maintenance.ScanTask;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * P2-4: 审批节点超时扫描任务。
@@ -187,7 +188,7 @@ public class ApprovalTimeoutScanTask implements ScanTask {
   private void rejectTimedOutNode(JobDagNodeInstanceVO node) {
     LocalDateTime now = LocalDateTime.now();
     long waitedMs =
-        node.getStartedAt() != null ? ChronoUnit.MILLIS.between(node.getStartedAt(), now) : 0;
+        node.getStartedAt() != null ? DateUtils.millisBetween(node.getStartedAt(), now) : 0;
 
     // 使用 updateById 更新节点（审批节点不走 RUNNING 的 markFinished CAS 路径）
     node.setNodeStatus(DagNodeStatus.APPROVAL_REJECTED.name());

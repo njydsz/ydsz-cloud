@@ -5,8 +5,8 @@ import java.time.Duration;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -46,7 +46,6 @@ import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 @Slf4j
 @RestController
 @RequestMapping("/nextwiki/storage")
-@RequiredArgsConstructor
 @Tag(name = "存储直传", description = "Presigned URL 生成、直传凭证")
 public class PresignedUrlController {
 
@@ -55,6 +54,14 @@ public class PresignedUrlController {
 
   /** 文件存储实现 */
   private final IFileStorage fileStorage;
+
+  /**
+   * 手写构造器：将 IFileStorage 改为 ObjectProvider + null 保护，
+   * 避免启动时因找不到文件存储 Bean 而崩溃。
+   */
+  public PresignedUrlController(ObjectProvider<IFileStorage> fileStorageProvider) {
+    this.fileStorage = fileStorageProvider.getIfAvailable();
+  }
 
   /**
    * 生成上传预签名 URL。

@@ -40,6 +40,7 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 import com.njydsz.userinfo.server.service.LoginAttemptContext;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 认证服务编排实现。
@@ -411,7 +412,7 @@ public class AuthServiceImpl implements AuthService {
     String loginTimeStr = sessionDetails.getOrDefault("loginTime", "");
     if (loginTimeStr != null && !loginTimeStr.isEmpty()) {
       try {
-    LocalDateTime loginTime = LocalDateTime.parse(loginTimeStr);
+    LocalDateTime loginTime = DateUtils.parseIso(loginTimeStr);
     sessionDuration = Duration.between(loginTime, LocalDateTime.now()).toMillis();
       } catch (Exception e) {
         log.debug(I18n.message("userinfo.解析.loginTime.失败.跳过会话时长统计", new Object[]{loginTimeStr}));

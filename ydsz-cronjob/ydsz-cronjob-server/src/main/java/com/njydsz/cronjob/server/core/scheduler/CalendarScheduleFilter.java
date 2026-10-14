@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * P2-14: 日历调度（工作日/节假日感知）。
@@ -126,7 +127,7 @@ public class CalendarScheduleFilter {
       Set<LocalDate> holidays = new HashSet<>(COLLECTION_CAPACITY);
       for (int i = 0; i < holidaysArr.size(); i++) {
         try {
-          holidays.add(LocalDate.parse(holidaysArr.getString(i)));
+          holidays.add(DateUtils.parseDateIso(holidaysArr.getString(i)));
         } catch (Exception e) {
           log.warn("[Calendar] 节假日日期解析失败: value={}", holidaysArr.getString(i));
         }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -49,9 +50,16 @@ public class HttpWebSearchService implements WebSearchService {
   private final AgentProperties properties;
   private final RestClient restClient;
 
-  public HttpWebSearchService(AgentProperties properties, RestClient.Builder restClientBuilder) {
+  /**
+   * 构造器：使用 ObjectProvider 解决 Spring 容器中 RestClient.Builder 缺失问题。
+   *
+   * <p>当容器中不存在 RestClient.Builder Bean 时，回退到 {@link RestClient#builder()} 直接构造。
+   */
+  public HttpWebSearchService(AgentProperties properties,
+      ObjectProvider<RestClient.Builder> restClientBuilderProvider) {
     this.properties = properties;
-    this.restClient = restClientBuilder.build();
+    RestClient.Builder builder = restClientBuilderProvider.getIfAvailable(RestClient::builder);
+    this.restClient = builder != null ? builder.build() : RestClient.builder().build();
   }
 
   @Override

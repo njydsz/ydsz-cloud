@@ -3,7 +3,6 @@ package com.njydsz.cronjob.domain.entity.job;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.EqualsAndHashCode;
@@ -12,17 +11,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
-
 /**
  * 任务配置历史版本实体（P1-6 任务版本管理）。
  *
  * <p>对应 {@code ydsz_job_history} 表，每次任务配置更新前自动保存一份完整 JSON 快照， 支持版本列表查询、版本对比和一键回滚。回滚操作会基于历史快照恢复配置字段，
  * 同时保留当前任务的统计字段（触发次数等），并产生新的历史版本。
  *
- * <p><b>YDIZ-OOP-006 合规：</b>{@code isDeleted}（primitive {@code boolean}）+
- * {@link TableLogic} 映射 DB 列 {@code is_deleted}，Lombok 生成 {@code isDeleted()} getter，
- * 与 MyBatis-Plus 逻辑删除约定一致。
+ * <p><b>YDIZ-DDD-008 合规：</b>通过继承 {@link MpBaseEntity} 获得 {@code isDeleted} 基础字段，
+ * 不重复声明覆盖平台基础字段（id/sort/status/revision/tenantId/isDeleted/审计四字段）。
  *
  * @author ydsz-team
  * @since 26.10.01
@@ -78,14 +74,4 @@ public class JobHistory extends MpBaseEntity<String> {
 
   /** 修改时间 */
   private LocalDateTime changedAt;
-
-  /**
-   * 是否逻辑删除（DB 列为 {@code is_deleted}，0=未删除，1=已删除）。
-   *
-   * <p>YDIZ-OOP-006 合规：{@code isDeleted}（primitive {@code boolean}）+
-   * {@link TableLogic} 自动映射 {@code is_deleted} 列，
-   * Lombok 生成 {@code isDeleted()} getter。
-   */
-  @TableLogic
-  private boolean isDeleted;
 }

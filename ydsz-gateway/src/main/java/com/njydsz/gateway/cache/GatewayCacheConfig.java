@@ -15,6 +15,7 @@ import com.njydsz.common.cache.spring.YdszCacheManager;
 import com.njydsz.common.cache.spring.YdszCacheProperties;
 
 import lombok.Data;
+import java.util.List;
 
 /**
  * 网关缓存统一配置（P2-4 P3-1 整改：缓存实例纳入 YdszCacheManager 统一治理，接入 CacheActuator 指标采集）。
@@ -102,7 +103,7 @@ public class GatewayCacheConfig {
     YdszCacheManager manager = new YdszCacheManager();
     manager.setCacheType(CacheType.STRIPED);
     manager.setCacheNames(
-        java.util.List.of(
+        List.of(
             CACHE_RATE_LIMIT, CACHE_IP_BLACKLIST,
             CACHE_JWT_VALIDATION, CACHE_GRAY_SERVICE_LIST));
     manager.setRecordStats(true);

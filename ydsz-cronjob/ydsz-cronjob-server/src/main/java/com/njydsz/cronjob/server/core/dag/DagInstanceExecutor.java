@@ -35,6 +35,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.core.TaskCompletedEvent;
 import com.njydsz.cronjob.server.core.dag.join.DagJoinCounterRedisBridge;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * DAG 实例执行器。
@@ -757,7 +758,7 @@ public class DagInstanceExecutor {
     LocalDateTime now = LocalDateTime.now();
     long durationMs =
         nodeInstance.getStartedAt() != null
-            ? ChronoUnit.MILLIS.between(nodeInstance.getStartedAt(), now)
+            ? DateUtils.millisBetween(nodeInstance.getStartedAt(), now)
             : 0;
 
     // P2-5: 通过 logId 查询 JobLog 获取节点执行结果
@@ -1102,7 +1103,7 @@ public class DagInstanceExecutor {
     // 5. 条件 CAS 更新终态
     LocalDateTime now = LocalDateTime.now();
     long durationMs = instance.getStartedAt() != null
-        ? ChronoUnit.MILLIS.between(instance.getStartedAt(), now)
+        ? DateUtils.millisBetween(instance.getStartedAt(), now)
         : 0;
     int updated = dagInstanceRepository.tryFinalizeInstance(
         dagInstanceId, finalStatus.name(), now, durationMs, errorMessage);
@@ -1127,7 +1128,7 @@ public class DagInstanceExecutor {
       LocalDateTime now = LocalDateTime.now();
       long durationMs =
           instance.getStartedAt() != null
-              ? ChronoUnit.MILLIS.between(instance.getStartedAt(), now)
+              ? DateUtils.millisBetween(instance.getStartedAt(), now)
               : 0;
       dagInstanceRepository.markFinished(
           dagInstanceId,
@@ -1152,7 +1153,7 @@ public class DagInstanceExecutor {
     }
     LocalDateTime now = LocalDateTime.now();
     long durationMs =
-        node.getStartedAt() != null ? ChronoUnit.MILLIS.between(node.getStartedAt(), now) : 0;
+        node.getStartedAt() != null ? DateUtils.millisBetween(node.getStartedAt(), now) : 0;
     dagNodeInstanceRepository.markFinished(
         node.getId(), DagNodeStatus.FAILED.name(), now, durationMs, null, errorMessage, null);
   }

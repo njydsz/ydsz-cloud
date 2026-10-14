@@ -32,6 +32,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
+import java.util.HashMap;
 
 /**
  * GLUE 在线编码 Controller（P1-2 GLUE 在线编码）。
@@ -284,7 +285,7 @@ public class GlueCodeController {
     Map<String, Object> result = glueCodeService.testCode(
         request.getSourceCode(), request.getLanguage(), null);
     boolean success = Boolean.TRUE.equals(result.get("success"));
-    Map<String, Object> validateResult = new java.util.HashMap<>();
+    Map<String, Object> validateResult = new HashMap<>();
     validateResult.put("valid", success);
     validateResult.put("message", success ? "语法校验通过" : (String) result.getOrDefault("error", "语法错误"));
     validateResult.put("errors", success ? null : result.get("error"));

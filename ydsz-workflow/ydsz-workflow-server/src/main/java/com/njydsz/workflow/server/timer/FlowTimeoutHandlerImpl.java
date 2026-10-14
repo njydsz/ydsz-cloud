@@ -45,7 +45,7 @@ public class FlowTimeoutHandlerImpl implements FlowTimeoutHandler {
   @Override
   public String handleTimeout(FlowRunTaskVO task, FlowTimeoutStrategy strategy) {
     if (task == null || strategy == null) {
-      return "跳过：任务或策略为空";
+      return I18n.message("workflow.timeout.skip");
     }
 
     String taskId = task.getId();
@@ -79,10 +79,10 @@ public class FlowTimeoutHandlerImpl implements FlowTimeoutHandler {
       dto.setComment("超时自动通过");
       taskService.timeoutAutoPass(dto);
       log.info(I18n.message("workflow.timeout.auto.pass", new Object[]{task.getId()}));
-      return "已自动通过";
+      return I18n.message("workflow.timeout.result.auto_passed");
     } catch (Exception e) {
         log.error(I18n.message("workflow.timeout.auto.pass.failed", new Object[]{task.getId(), e.getMessage()}), e);
-      return "自动通过失败: " + e.getMessage();
+      return I18n.message("workflow.timeout.result.auto_pass_failed", new Object[]{e.getMessage()});
     }
   }
 
@@ -104,10 +104,10 @@ public class FlowTimeoutHandlerImpl implements FlowTimeoutHandler {
       dto.setComment("超时自动转交管理员");
       taskService.timeoutTransfer(dto);
         log.info(I18n.message("workflow.timeout.transfer.admin", new Object[]{task.getId(), adminUserId}));
-      return "已转交管理员(" + adminUserId + ")";
+      return I18n.message("workflow.timeout.result.transferred", new Object[]{adminUserId});
     } catch (Exception e) {
         log.error(I18n.message("workflow.timeout.transfer.admin.failed", new Object[]{task.getId(), e.getMessage()}), e);
-      return "转交管理员失败: " + e.getMessage();
+      return I18n.message("workflow.timeout.result.transfer_failed", new Object[]{e.getMessage()});
     }
   }
 
@@ -135,10 +135,10 @@ public class FlowTimeoutHandlerImpl implements FlowTimeoutHandler {
     try {
       taskService.timeoutRemind(task.getInstanceId(), task.getNodeCode());
         log.info(I18n.message("workflow.timeout.remind", new Object[]{task.getId(), task.getInstanceId()}));
-      return "已发送催办通知";
+      return I18n.message("workflow.timeout.result.reminded");
     } catch (Exception e) {
         log.error(I18n.message("workflow.timeout.remind.failed", new Object[]{task.getId(), e.getMessage()}), e);
-      return "催办失败: " + e.getMessage();
+      return I18n.message("workflow.timeout.result.remind_failed", new Object[]{e.getMessage()});
     }
   }
 

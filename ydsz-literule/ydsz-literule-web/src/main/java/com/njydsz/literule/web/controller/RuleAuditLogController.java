@@ -24,6 +24,7 @@ import com.njydsz.common.util.diff.DiffReport;
 import com.njydsz.common.util.diff.FieldDiff;
 import com.njydsz.literule.domain.vo.AuditLogEntryVO;
 import com.njydsz.literule.server.audit.RuleAuditLogService;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 规则审计日志查询接口（P3-5）
@@ -171,8 +172,8 @@ public class RuleAuditLogController {
       limit = DEFAULT_LIMIT;
     }
     try {
-      LocalDateTime start = LocalDateTime.parse(startTime);
-      LocalDateTime end = LocalDateTime.parse(endTime);
+      LocalDateTime start = DateUtils.parseIso(startTime);
+      LocalDateTime end = DateUtils.parseIso(endTime);
       return YdszResponse.success(
           auditLogService.queryByTimeRange(start, end, limit).stream()
               .map(this::toAuditLogVO)

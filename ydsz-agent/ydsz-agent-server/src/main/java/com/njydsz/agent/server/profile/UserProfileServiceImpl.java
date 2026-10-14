@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -83,15 +84,16 @@ public class UserProfileServiceImpl implements UserProfileService {
     private final UserProfileRepository userProfileRepository;
     private final AgentProperties agentProperties;
 
-    /** LLM 画像分析器（可选组件） */
+    /** LLM 画像分析器（可选组件，通过 ObjectProvider 注入 + null 保护） */
     private final LlmProfileAnalyzer llmProfileAnalyzer;
 
     public UserProfileServiceImpl(UserProfileRepository userProfileRepository,
                                   AgentProperties agentProperties,
-                                  LlmProfileAnalyzer llmProfileAnalyzer) {
+                                  ObjectProvider<LlmProfileAnalyzer> llmProfileAnalyzerProvider) {
         this.userProfileRepository = userProfileRepository;
         this.agentProperties = agentProperties;
-        this.llmProfileAnalyzer = llmProfileAnalyzer;
+        // null 保护：LlmProfileAnalyzer Bean 不存在时使用 null，业务代码中已有 null 判断
+        this.llmProfileAnalyzer = llmProfileAnalyzerProvider.getIfAvailable();
     }
 
     @Override

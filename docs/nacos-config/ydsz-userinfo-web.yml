@@ -18,12 +18,13 @@ ydsz:
       threshold: 10
       window-seconds: 60
     field-encryption:
-      enabled: true
+      # 本地开发默认禁用（密钥通过 YDSZ_FIELD_ENC_KEY_V1 环境变量注入）
+      enabled: ${YDSZ_ENABLED:false}
       default-key-version: 1
-      failure-strict: THROW
+      failure-strategy: THROW
       masked-value: "****"
       keys:
-        1: ${YDSZ_FIELD_ENC_KEY_V1:}
+        1: ${YDSZ_FIELD_ENC_KEY_V1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
 
   tenant:
     enabled: false

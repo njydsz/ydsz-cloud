@@ -1,5 +1,6 @@
 package com.njydsz.gateway.config;
 
+import com.njydsz.common.util.date.DateUtils;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -230,7 +231,7 @@ public class ApiDeprecationManager {
 
     // 尝试纯日期格式（补全为当天 UTC 23:59:59）
     try {
-      LocalDate date = LocalDate.parse(trimmed);
+      LocalDate date = DateUtils.parseDateIso(trimmed);
       ZonedDateTime zdt =
           date.atTime(23, 59, 59).atZone(ZoneOffset.UTC);
       return zdt.format(RFC1123_FORMATTER);

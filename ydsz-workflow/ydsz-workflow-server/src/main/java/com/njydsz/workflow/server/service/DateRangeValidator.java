@@ -92,7 +92,7 @@ public final class DateRangeValidator {
     }
 
     // 校验范围不超过 MAX_RANGE_DAYS
-    long rangeDays = ChronoUnit.DAYS.between(startDate, endDate);
+    long rangeDays = DateUtils.daysBetween(startDate, endDate);
     if (rangeDays > MAX_RANGE_DAYS) {
       throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID,
           I18n.message("workflow.date.range_exceed", new Object[] {MAX_RANGE_DAYS, rangeDays}));

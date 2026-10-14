@@ -47,6 +47,7 @@ import com.njydsz.workflow.server.service.FlowI18nService;
 import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
 import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
 import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * 审批数据分析 Controller（P2-2）
@@ -414,7 +415,7 @@ public class FlowAnalyticsController {
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit,
-      jakarta.servlet.http.HttpServletResponse response) throws IOException {
+      HttpServletResponse response) throws IOException {
     String fileName = "approver_efficiency_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
@@ -445,7 +446,7 @@ publishDataExportAudit("流程分析", "approver_efficiency", rows.size());
   public void exportFlowEfficiency(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
-      jakarta.servlet.http.HttpServletResponse response) throws IOException {
+      HttpServletResponse response) throws IOException {
     String fileName = "flow_efficiency_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION,

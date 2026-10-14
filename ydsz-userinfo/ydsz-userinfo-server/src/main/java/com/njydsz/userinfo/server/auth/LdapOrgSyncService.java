@@ -39,6 +39,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.config.LdapProperties;
 import com.njydsz.userinfo.server.config.LdapSyncProperties;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * LDAP/AD 组织架构同步服务。

@@ -23,6 +23,8 @@ import com.njydsz.generator.entity.GenTableMeta;
 import com.njydsz.generator.enums.DbDialectEnum;
 import com.njydsz.generator.repository.GenColumnMetaRepository;
 import com.njydsz.generator.repository.GenTableMetaRepository;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * 表&列元数据领域服务。
@@ -42,10 +44,10 @@ public class TableMetadataService {
   /** 主键列表初始容量。 */
   private static final int PK_LIST_CAPACITY = 8;
   /** 枚举值正则：匹配 字段名(值1=标签1,值2=标签2) 格式。 */
-  private static final java.util.regex.Pattern ENUM_PATTERN =
-      java.util.regex.Pattern.compile("\\(([^)]+)\\)");
+  private static final Pattern ENUM_PATTERN =
+      Pattern.compile("\\(([^)]+)\\)");
   /** 基类审计字段集合（这些字段由 MpBaseAuditEntity / MpBaseIdEntity 提供）。 */
-  private static final java.util.Set<String> AUDIT_FIELD_COLUMNS = java.util.Set.of(
+  private static final java.util.Set<String> AUDIT_FIELD_COLUMNS = Set.of(
       "id", "tenant_id", "created_at", "updated_at", "created_by", "updated_by",
       "is_deleted", "deleted", "creator_id", "updater_id");
 

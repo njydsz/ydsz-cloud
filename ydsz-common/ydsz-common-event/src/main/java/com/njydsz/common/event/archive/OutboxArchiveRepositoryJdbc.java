@@ -76,7 +76,7 @@ public class OutboxArchiveRepositoryJdbc implements OutboxArchiveRepository {
             + archiveTableName
             + " (id, aggregate_id, aggregate_type, event_type, payload,"
             + " status, retry_count, max_retries, tenant_id, idempotency_key,"
-            + " trace_id, schema_version, compressed,"
+            + " trace_id, schema_version, is_compressed,"
             + " created_at, updated_at, sent_at, archived_at, error_message)"
             + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -112,7 +112,7 @@ public class OutboxArchiveRepositoryJdbc implements OutboxArchiveRepository {
             + archiveTableName
             + " (id, aggregate_id, aggregate_type, event_type, payload,"
             + " status, retry_count, max_retries, tenant_id, idempotency_key,"
-            + " trace_id, schema_version, compressed,"
+            + " trace_id, schema_version, is_compressed,"
             + " created_at, updated_at, sent_at, archived_at, error_message)"
             + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -252,7 +252,7 @@ public class OutboxArchiveRepositoryJdbc implements OutboxArchiveRepository {
           .tenantId(rs.getString("tenant_id"))
           .idempotencyKey(rs.getString("idempotency_key"))
           .schemaVersion(rs.getInt("schema_version"))
-          .isCompressed(rs.getBoolean("compressed"))
+          .isCompressed(rs.getBoolean("is_compressed"))
           .traceId(rs.getString("trace_id"))
           .build();
     }

@@ -14,6 +14,7 @@ import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 import com.njydsz.nextwiki.server.cache.NextwikiCacheService;
+import java.util.List;
 
 /**
  * 配额应用服务。
@@ -188,8 +189,8 @@ public class QuotaApplicationService {
   private java.util.List<String> resolveSpaceAdminIds(String scopeId) {
     return spaceRepository.findById(scopeId)
         .filter(space -> space.getOwnerId() != null && !space.getOwnerId().isBlank())
-        .map(space -> java.util.List.of(space.getOwnerId()))
-        .orElse(java.util.List.of());
+        .map(space -> List.of(space.getOwnerId()))
+        .orElse(List.of());
   }
 
   /**

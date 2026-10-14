@@ -13,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -64,6 +65,7 @@ import com.njydsz.message.server.service.core.MessageSendService;
 import com.njydsz.message.server.service.core.MessageSendTxService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.core.MessageTraceService;
+import java.util.concurrent.CompletionException;
 
 /**
  * 消息服务实现（核心）。
@@ -112,7 +114,8 @@ public class MessageServiceImpl implements MessageService {
   /** P2-3: 消息队列操作（可选,未配置 MQ 时为 null） */
   private final ObjectProvider<MessageQueueOperations> mqProducerProvider;
 
-  /** 批次服务（批量异步发送） */
+  /** 批次服务（批量异步发送，@Lazy 打破与 BatchServiceImpl 的循环依赖） */
+  @Lazy
   private final BatchService batchService;
 
   /** P1-1: 发送 / 查询子服务（从本类拆分，降低 God Class 复杂度） */
@@ -437,7 +440,7 @@ public class MessageServiceImpl implements MessageService {
                 try {
                   return I18nContextPropagator.wrap(callable, currentLocale).call();
                 } catch (Exception e) {
-                  throw new java.util.concurrent.CompletionException(e);
+                  throw new CompletionException(e);
                 }
               },
               cascadeExecutor);

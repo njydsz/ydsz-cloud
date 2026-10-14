@@ -112,6 +112,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- opentelemetry-api：解决 ClassNotFoundException: io.opentelemetry.api.GlobalOpenTelemetry -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+        </dependency>
         <!-- mapstruct (provided): 注入 domain 层 NextwikiStructMapper（@Mapper 接口），编译期需解析 ReportingPolicy 枚举值 -->
         <dependency>
             <groupId>org.mapstruct</groupId>

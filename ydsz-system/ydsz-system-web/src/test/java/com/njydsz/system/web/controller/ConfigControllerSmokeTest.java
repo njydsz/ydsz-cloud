@@ -53,12 +53,20 @@ class ConfigControllerSmokeTest extends BaseControllerMockTest {
       ConfigVO vo = new ConfigVO();
       vo.setId("config-001");
       vo.setConfigKey("ydsz.test.key");
+      vo.setConfigValue("test-value-001");
       PageResponse<List<ConfigVO>> pageResult = PageResponse.success(1L, 1L, 20L, List.of(vo));
       when(configService.page(any(ConfigPageQuery.class))).thenReturn(pageResult);
 
       mockMvc.perform(get("/config/page").param("pageNum", "1").param("pageSize", "20"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE))
+          // 内层 PageResponse 分页元数据
+          .andExpect(jsonPath("$.data.pageNum").value(1))
+          .andExpect(jsonPath("$.data.pageSize").value(20))
+          .andExpect(jsonPath("$.data.total").value(1))
+          // 内层 data 列表字段存在性 + 值约束
+          .andExpect(jsonPath("$.data.data[0].id").value("config-001"))
+          .andExpect(jsonPath("$.data.data[0].configKey").value("ydsz.test.key"));
     }
   }
 
@@ -76,7 +84,11 @@ class ConfigControllerSmokeTest extends BaseControllerMockTest {
 
       mockMvc.perform(get("/config/{id}", "config-001"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE))
+          // 正例校验：data 信封结构完整性
+          .andExpect(jsonPath("$.data").isMap())
+          .andExpect(jsonPath("$.data.id").value("config-001"))
+          .andExpect(jsonPath("$.data.configKey").value("ydsz.test.key"));
     }
   }
 

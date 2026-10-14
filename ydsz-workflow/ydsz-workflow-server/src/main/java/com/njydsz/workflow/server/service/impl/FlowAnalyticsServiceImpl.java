@@ -25,6 +25,7 @@ import com.njydsz.workflow.domain.vo.FlowTrendVO;
 import com.njydsz.workflow.server.excel.vo.FlowApproverEfficiencyExportVO;
 import com.njydsz.workflow.server.excel.vo.FlowEfficiencyExportVO;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
+import java.util.stream.Collectors;
 
 /**
  * 审批数据分析服务实现
@@ -512,7 +513,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
         approverEfficiency(startTime, endTime, tenantId, limit);
     return sourceList.stream()
         .map(this::toApproverEfficiencyExport)
-        .collect(java.util.stream.Collectors.toCollection(() -> new java.util.ArrayList<>(sourceList.size())));
+        .collect(Collectors.toCollection(() -> new ArrayList<>(sourceList.size())));
   }
 
   @Override
@@ -522,7 +523,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
         flowEfficiencyComparison(startTime, endTime, tenantId);
     return sourceList.stream()
         .map(this::toFlowEfficiencyExport)
-        .collect(java.util.stream.Collectors.toCollection(() -> new java.util.ArrayList<>(sourceList.size())));
+        .collect(Collectors.toCollection(() -> new ArrayList<>(sourceList.size())));
   }
 
   /**

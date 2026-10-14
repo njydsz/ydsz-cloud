@@ -191,8 +191,9 @@ public class LlmClientRouter implements LlmClient {
   /**
    * 获取已注册的全部 Provider 名称。
    *
-     * @return Provider 名称的不可修改列表
+   * @return Provider 名称的不可修改列表
    */
+  @Override
   public List<String> getAvailableProviders() {
     return List.copyOf(clients.keySet());
   }

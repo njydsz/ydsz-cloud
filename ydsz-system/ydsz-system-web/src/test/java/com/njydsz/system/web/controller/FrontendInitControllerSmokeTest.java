@@ -37,8 +37,8 @@ class FrontendInitControllerSmokeTest extends BaseControllerMockTest {
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(frontendInitService.getInitData()).thenReturn(new FrontendInitVO());
-    when(frontendInitService.getInitDataWithDicts(anyList())).thenReturn(new FrontendInitVO());
+    when(frontendInitService.getInitData()).thenReturn(FrontendInitVO.builder().build());
+    when(frontendInitService.getInitDataWithDicts(anyList())).thenReturn(FrontendInitVO.builder().build());
   }
 
   @Nested

@@ -30,6 +30,7 @@ import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.metric.MessageMetrics;
+import java.util.concurrent.CompletionException;
 
 /**
  * 定时消息调度扫描器，扫描到期 SCHEDULED 消息并在分布式锁内并发触发发送。
@@ -133,7 +134,7 @@ public class ScheduledMessageScanner {
                         try {
                           return I18nContextPropagator.wrap(callable, currentLocale).call();
                         } catch (Exception e) {
-                          throw new java.util.concurrent.CompletionException(e);
+                          throw new CompletionException(e);
                         }
                       },
                       dispatcher);

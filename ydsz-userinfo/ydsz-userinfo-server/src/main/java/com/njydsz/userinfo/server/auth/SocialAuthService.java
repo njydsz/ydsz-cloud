@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
@@ -38,7 +38,6 @@ import com.njydsz.userinfo.domain.vo.SocialAccountVO;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SocialAuthService {
 
   /** State Redis Key 前缀（用于 CSRF 防护） */
@@ -54,6 +53,24 @@ public class SocialAuthService {
 
   /** CSPRNG 安全随机数生成器（用于 OAuth2 state 参数，防 CSRF 熵优于 UUID v4） */
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+  /**
+   * 手写构造器（替代 @RequiredArgsConstructor），显式声明依赖注入。
+   *
+   * <p>第一个参数使用 {@link ObjectProvider} 包装：SocialAuthProperties 作为 domain 配置 VO，
+   * 在某些环境下可能尚未注册（如部分自动化测试或 Bean 加载顺序变更），通过 {@link ObjectProvider#getIfAvailable()}
+   * 实现 null 保护，避免启动时因找不到该 Bean 而崩溃。
+   */
+  public SocialAuthService(
+      ObjectProvider<SocialAuthProperties> socialAuthPropertiesProvider,
+      SocialAccountRepository socialAccountRepository,
+      Map<String, SocialAuthProvider> socialAuthProviderMap,
+      RedisStringOps redisStringOps) {
+    this.socialAuthProperties = socialAuthPropertiesProvider.getIfAvailable();
+    this.socialAccountRepository = socialAccountRepository;
+    this.socialAuthProviderMap = socialAuthProviderMap;
+    this.redisStringOps = redisStringOps;
+  }
 
   /**
    * 生成指定平台的授权 URL。

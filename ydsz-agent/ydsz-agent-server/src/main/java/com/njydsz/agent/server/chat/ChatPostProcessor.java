@@ -15,6 +15,7 @@ import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.event.AgentEventPublisher;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 import com.njydsz.agent.server.quota.TenantQuotaService;
+import java.util.List;
 
 /**
  * 对话后处理器 — 封装 LLM 调用成功后的副作用操作（成本核算、配额记录、记忆保存、事件发布）。
@@ -138,7 +139,7 @@ public class ChatPostProcessor {
     if (response != null) {
       return new ChatResponse(
           response.getId(), response.getModel(), assistantMsg, usage,
-          response.getFinishReason(), java.util.List.of(), actualCost);
+          response.getFinishReason(), List.of(), actualCost);
     }
     return null;
   }

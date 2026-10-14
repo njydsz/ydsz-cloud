@@ -39,6 +39,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-agent-domain</artifactId>
         </dependency>
+        <!-- infra 模块 test 依赖（集成测试 + 现有单测需要 RepositoryImpl / CacheKeyBuilder） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-agent-infra</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- P1: 遵循 DDD 分层，server 层不直接依赖 infra 层；infra 实现由 web/app 层通过组件扫描注入 -->
         <!-- P1-A1: 显式声明 common-auth（使用 @EnableYdszAuth / @AuthApiPermission 等能力） -->
         <!-- ydsz-common-core: explicit declaration for direct usage (was transitive via common-web) -->
@@ -143,6 +149,12 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- ArchUnit：DDD 分层架构合规门禁（YDIZ-DDD-001 P0 编译期拦截） -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
             <scope>test</scope>
         </dependency>
 

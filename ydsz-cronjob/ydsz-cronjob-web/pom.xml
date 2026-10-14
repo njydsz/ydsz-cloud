@@ -89,6 +89,11 @@
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-safe</artifactId>
     </dependency>
+    <!-- opentelemetry-api：TraceContext 需要 opentelemetry-api，解决 ClassNotFoundException: io.opentelemetry.api.GlobalOpenTelemetry -->
+    <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-api</artifactId>
+    </dependency>
     <!-- P3-2: Excel 导出能力（任务列表/执行日志流式导出，使用 ydsz-common-excel） -->
     <dependency>
         <groupId>com.njydsz</groupId>

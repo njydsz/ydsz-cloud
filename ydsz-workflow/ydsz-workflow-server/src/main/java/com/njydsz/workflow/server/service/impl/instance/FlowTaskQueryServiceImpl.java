@@ -189,6 +189,9 @@ private static final int MAX_PAGE_SIZE = 100;
       }
     }
     // 3. ROLE/DEPT 匹配 — P1-9: 批量 IN 查询替代循环中的 N 次单条查询
+    // TODO: N+1 治理 — 整体 3 次 DB 查询（selectTodoByAssignee + findByIds + selectTodoByAssignees），
+    // 当 roleCodes/deptIds 较大时（>100），IN 子句超 PG 参数上限
+    // 修复建议： 将 IN 拆批（每批 ≤500），或改为 JOIN ydsz_flow_user 表一次查询
     int estimatedSize = (roleCodes != null ? roleCodes.size() : 0) + (deptIds != null ? deptIds.size() : 0);
     Collection<String> multiAssignees = new ArrayList<>(Math.max(estimatedSize, MIN_MULTI_ASSIGNEE_CAPACITY));
     if (roleCodes != null) {

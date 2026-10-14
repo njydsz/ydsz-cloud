@@ -5,8 +5,8 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +22,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.dto.RuleDependencyAddDTO;
@@ -51,13 +52,35 @@ import com.njydsz.literule.server.spi.RuleDependencyProvider;
 @Slf4j
 @RestController
 @RequestMapping("/literule/rules")
-@RequiredArgsConstructor
 @Validated
 @Tag(name = "规则依赖", description = "规则间依赖关系管理与级联禁用分析")
 public class RuleDependencyController {
 
-  /** 规则依赖服务（SPI，由 project 模块提供实现） */
+  /** 规则依赖服务（SPI，由 project 模块提供实现，可选依赖） */
   private final RuleDependencyProvider ruleDependencyProvider;
+
+  /**
+   * 手写构造器（替代 @RequiredArgsConstructor），将 RuleDependencyProvider 改为 ObjectProvider 注入 + null 保护，
+   * 避免因缺少 RuleDependencyProvider Bean 导致启动失败。
+   *
+   * @param ruleDependencyProviderProvider SPI 提供者（可选）
+   */
+  public RuleDependencyController(
+      ObjectProvider<RuleDependencyProvider> ruleDependencyProviderProvider) {
+    this.ruleDependencyProvider = ruleDependencyProviderProvider.getIfAvailable();
+  }
+
+  /**
+   * 校验 SPI 提供者是否可用，null 时抛出业务异常。
+   */
+  private RuleDependencyProvider requireProvider() {
+    if (ruleDependencyProvider == null) {
+      throw BusinessException.builder()
+          .key("literule.rule.dependency.provider.not.implemented")
+          .build();
+    }
+    return ruleDependencyProvider;
+  }
 
   /**
    * 添加规则依赖
@@ -88,7 +111,7 @@ public class RuleDependencyController {
     Boolean cascade = dto.getIsCascadeOnDisable() == null ? false : dto.getIsCascadeOnDisable();
     String description = dto.getDescription();
     return YdszResponse.success(
-        ruleDependencyProvider.add(
+        requireProvider().add(
             ruleCode, dependsOn, depType, cascade, description, operator));
   }
 
@@ -112,7 +135,7 @@ public class RuleDependencyController {
   @DeleteMapping("/{ruleCode}/dependencies/{dependsOnRuleCode}")
   public YdszResponse<Void> removeDependency(
       @PathVariable String ruleCode, @PathVariable String dependsOnRuleCode) {
-    ruleDependencyProvider.remove(ruleCode, dependsOnRuleCode);
+    requireProvider().remove(ruleCode, dependsOnRuleCode);
     return YdszResponse.success();
   }
 
@@ -125,7 +148,7 @@ public class RuleDependencyController {
   @Operation(summary = "查询规则正向依赖")
   @GetMapping("/{ruleCode}/dependencies")
   public YdszResponse<List<RuleDependencyVO>> listDependencies(@PathVariable String ruleCode) {
-    return YdszResponse.success(ruleDependencyProvider.listDependencies(ruleCode));
+    return YdszResponse.success(requireProvider().listDependencies(ruleCode));
   }
 
   /**
@@ -137,7 +160,7 @@ public class RuleDependencyController {
   @Operation(summary = "查询规则反向依赖")
   @GetMapping("/{ruleCode}/dependents")
   public YdszResponse<List<RuleDependencyVO>> listDependents(@PathVariable String ruleCode) {
-    return YdszResponse.success(ruleDependencyProvider.listDependents(ruleCode));
+    return YdszResponse.success(requireProvider().listDependents(ruleCode));
   }
 
   /**
@@ -152,6 +175,6 @@ public class RuleDependencyController {
   @GetMapping("/{ruleCode}/cascading-disable")
   public YdszResponse<List<StringVO>> cascadingDisable(@PathVariable String ruleCode) {
     return YdszResponse.success(
-        ruleDependencyProvider.cascadingDisable(ruleCode).stream().map(StringVO::new).toList());
+        requireProvider().cascadingDisable(ruleCode).stream().map(StringVO::new).toList());
   }
 }

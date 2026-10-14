@@ -9,7 +9,6 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.excel.core.ExcelFacade;
@@ -20,6 +19,7 @@ import com.njydsz.system.server.vo.DictItemExcelVO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.service.DictItemBatchService;
 import com.njydsz.system.server.service.DictItemImportService;
+import java.util.stream.Collectors;
 
 
 /**
@@ -103,7 +103,7 @@ public class DictItemImportServiceImpl implements DictItemImportService {
 
     // 转换 ImportVO → VO，补齐默认值
     List<DictItemVO> voList =
-        importList.stream().map(this::toVo).collect(java.util.stream.Collectors.toList());
+        importList.stream().map(this::toVo).collect(Collectors.toList());
 
     // 委托 batchSave 执行事务性批量插入（复用现有去重/唯一性校验/版本快照逻辑）
     Map<String, Object> batchResult = batchService.batchSave(voList);

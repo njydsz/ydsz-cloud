@@ -2,6 +2,8 @@ package com.njydsz.agent.domain.config.properties;
 
 import java.time.Duration;
 
+import org.springframework.stereotype.Component;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +18,7 @@ import lombok.NoArgsConstructor;
  * @author ydsz-team
  * @since 26.09.17
  */
+@Component
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

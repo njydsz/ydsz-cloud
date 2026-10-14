@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import java.util.ArrayList;
 
 /**
  * 内部 API IP 访问控制配置。
@@ -42,7 +43,7 @@ public class InternalApiIpAccessConfig {
   @Bean
   public FilterRegistrationBean<IpAccessFilter> internalApiIpFilterRegistration() {
     IpAccessFilter filter = new IpAccessFilter(ipAccessService, null,
-        new java.util.ArrayList<>(0),
+        new ArrayList<>(0),
         java.util.Arrays.asList("/internal/*", "/api/internal/*"));
     FilterRegistrationBean<IpAccessFilter> registration = new FilterRegistrationBean<>(filter);
     registration.setName("internalApiIpFilter");

@@ -81,8 +81,8 @@ public class RuleDecisionTableController {
   /** 决策表管理服务（P0-3）：可选注入，未启用决策表时为空 */
   private final ObjectProvider<DecisionTableAdminService> decisionTableAdminServiceProvider;
 
-  /** 决策表评估服务（SPI，由 project 模块提供实现） */
-  private final DecisionTableEvalProvider decisionTableEvalProvider;
+  /** 决策表评估服务（SPI，由 project 模块提供实现，使用 ObjectProvider 允许可选注入） */
+  private final ObjectProvider<DecisionTableEvalProvider> decisionTableEvalProvider;
 
   /** Excel Web 导出支持（统一 HTTP 下载入口） */
   private final ExcelWebSupport excelWebSupport;
@@ -181,7 +181,11 @@ public class RuleDecisionTableController {
   @PostMapping("/decision-tables/{tableCode}/evaluate")
   public YdszResponse<List<Map<String, Object>>> evaluateDecisionTable(
       @PathVariable String tableCode, @RequestBody Map<String, Object> facts) {
-    return YdszResponse.success(decisionTableEvalProvider.evaluate(tableCode, facts));
+    DecisionTableEvalProvider provider = decisionTableEvalProvider.getIfAvailable();
+    if (provider == null) {
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "决策表评估服务未启用");
+    }
+    return YdszResponse.success(provider.evaluate(tableCode, facts));
   }
 
   /**

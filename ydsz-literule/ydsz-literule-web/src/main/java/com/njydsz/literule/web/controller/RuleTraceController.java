@@ -39,6 +39,7 @@ import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.config.RuleTraceQueryService;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 规则执行追踪 Controller
@@ -237,8 +238,8 @@ public class RuleTraceController {
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "startTime 和 endTime 不能为空");
     }
 
-    LocalDateTime startTime = LocalDateTime.parse(startTimeStr);
-    LocalDateTime endTime = LocalDateTime.parse(endTimeStr);
+    LocalDateTime startTime = DateUtils.parseIso(startTimeStr);
+    LocalDateTime endTime = DateUtils.parseIso(endTimeStr);
 
     // 按时间范围查询历史 trace（可选按 ruleCode 过滤）
     List<RuleExecutionTraceVO> traces =

@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
@@ -57,7 +58,8 @@ import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
   UserLoginRiskProperties.class,
   JdbcProvisionProperties.class,
   RememberMeProperties.class,
-  ScimProperties.class
+  ScimProperties.class,
+  SocialAuthProperties.class
 })
 public class UserInfoConfiguration {
 

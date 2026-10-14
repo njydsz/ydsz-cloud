@@ -14,6 +14,7 @@ import com.njydsz.agent.domain.state.AgentStateKey;
 import com.njydsz.agent.domain.state.AgentStateStore;
 import com.njydsz.agent.domain.workspace.AgentWorkspace;
 import com.njydsz.agent.domain.workspace.AgentWorkspaceStore;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * Redis 工作区存储实现 — 生产环境跨副本共享 Agent 工作区状态。
@@ -211,7 +212,7 @@ public class RedisAgentWorkspaceStore implements AgentWorkspaceStore {
       return null;
     }
     try {
-      return LocalDateTime.parse(String.valueOf(value));
+      return DateUtils.parseIso(String.valueOf(value));
     } catch (Exception e) {
       return null;
     }

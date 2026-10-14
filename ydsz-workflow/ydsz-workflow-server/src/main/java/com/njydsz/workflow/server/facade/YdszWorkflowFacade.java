@@ -346,6 +346,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   @Override
   public int passAllTodoTasks(String userId, String comment) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
+    // TODO: N+1 治理 — 一键通过仅取第 1 页（100条），超过 100 条的待办不会被处理
+    // 修复建议： 分页循环拉取全部待办，或多线程分批调用 batchPass
     PageResponse<List<FlowRunTaskVO>> pageResult =
         taskService.listTodoByAssigneePage(String.valueOf(userId), tenantId, 1, 100);
     List<FlowRunTaskVO> todos = MapUtils.safeCastList(pageResult.getData(), FlowRunTaskVO.class);
@@ -423,6 +425,9 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
     List<FlowTimelineVO> timeline = new ArrayList<>(LIST_INIT_CAPACITY_32);
 
+    // TODO: N+1 治理 — 时间线查询执行 3 次独立 DB 查询（历史任务 + 审计日志 + 当前待办），
+    // 每次调用产生 3 轮 DB IO，高频查看时放大 N 倍
+    // 修复建议： 合并为单次 JOIN 查询（UNION ALL），或为时间线数据增加 Redis 缓存（TTL 30s）
     // 2. 获取历史任务列表（通过 Repository，符合 §34.2.3）
     List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(id);
     for (FlowHisTaskVO his : hisTasks) {

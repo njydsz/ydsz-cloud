@@ -483,7 +483,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
       response.getHeaders().add("X-RateLimit-Reset", String.valueOf(remainingSeconds));
       // Retry-After 同时提供相对秒数和绝对时间戳（RFC 9110 / ISO 8601）
       response.getHeaders().add("Retry-After", String.valueOf(remainingSeconds));
-      Instant resetAt = Instant.now().plus(remainingSeconds, ChronoUnit.SECONDS);
+      Instant resetAt = Instant.now().plusSeconds(remainingSeconds);
       response.getHeaders().add("X-RateLimit-Reset-Time", resetAt.toString());
     }
 

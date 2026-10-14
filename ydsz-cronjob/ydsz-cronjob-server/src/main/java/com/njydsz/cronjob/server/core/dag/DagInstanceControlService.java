@@ -20,6 +20,7 @@ import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * DAG 工作流控制服务（P1-4 暂停/恢复/手动重试）。
@@ -120,7 +121,7 @@ public class DagInstanceControlService {
     LocalDateTime now = LocalDateTime.now();
     long durationMs =
         instance.getStartedAt() != null
-            ? ChronoUnit.MILLIS.between(instance.getStartedAt(), now)
+            ? DateUtils.millisBetween(instance.getStartedAt(), now)
             : 0;
     int updated = dagInstanceRepository.markCanceled(dagInstanceId, now, durationMs);
     if (updated == 0) {

@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Component;
@@ -56,7 +57,9 @@ public class DagCronScheduler {
   /** 防止上一轮扫描未完成时重入 */
   private final AtomicBoolean scanning = new AtomicBoolean(false);
 
-  private final LeaderElector leaderElector;
+  /** Leader 选举服务（可选注入，未启用 leader 时通过 ObjectProvider 返回 null） */
+  private final ObjectProvider<LeaderElector> leaderElectorProvider;
+
   private final CronjobProperties cronjobProperties;
   private final JobDagRepository jobDagRepository;
   private final JobDagService jobDagService;
@@ -72,6 +75,11 @@ public class DagCronScheduler {
     if (!cronjobProperties.getLeader().isEnabled()) {
       return;
     }
+    // LeaderElector Bean 可能不存在（未启用 leader 或 Redis 不可用时条件不满足），跳过扫描
+    LeaderElector leaderElector = leaderElectorProvider.getIfAvailable();
+    if (leaderElector == null) {
+      return;
+    }
     String leaderRole = cronjobProperties.getLeader().getRole();
     if (!leaderElector.isLeader(leaderRole)) {
       return;
@@ -81,7 +89,7 @@ public class DagCronScheduler {
       return;
     }
     try {
-      doScan(leaderRole, leaderElector.getEpoch(leaderRole));
+      doScan(leaderRole, leaderElector.getEpoch(leaderRole), leaderElector);
     } catch (Exception e) {
       log.error("[DagCronScheduler] 扫描异常: reason={}", e.getMessage(), e);
     } finally {
@@ -92,10 +100,11 @@ public class DagCronScheduler {
   /**
    * 执行一次 DAG 到期扫描。
    *
-   * @param leaderRole Leader 角色名
-   * @param scanEpoch 扫描开始时捕获的 Leader 任期号（fencing）
+   * @param leaderRole  Leader 角色名
+   * @param scanEpoch   扫描开始时捕获的 Leader 任期号（fencing）
+   * @param leaderElector Leader 选举服务实例（已确认非 null）
    */
-  private void doScan(String leaderRole, long scanEpoch) {
+  private void doScan(String leaderRole, long scanEpoch, LeaderElector leaderElector) {
     List<JobDagVO> cronDags = jobDagService.listCronEnabledDags();
     if (cronDags.isEmpty()) {
       return;

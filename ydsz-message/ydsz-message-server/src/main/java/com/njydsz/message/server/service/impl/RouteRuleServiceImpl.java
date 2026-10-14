@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.builder.CacheBuilder;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.PageResponse;
@@ -33,6 +34,7 @@ import com.njydsz.message.domain.query.MsgRouteRuleQuery;
 import com.njydsz.message.domain.repository.MsgRouteRuleRepository;
 import com.njydsz.message.domain.vo.MsgRouteRuleVO;
 import com.njydsz.message.server.service.config.RouteRuleService;
+import jakarta.annotation.PostConstruct;
 
 /**
  * 消息路由规则服务实现。
@@ -63,14 +65,8 @@ public class RouteRuleServiceImpl implements RouteRuleService {
   /** 缓存名称（用于健康检查和监控） */
   private static final String CACHE_NAME = "message:route-rule";
 
-  /** YdszCache 本地一级缓存（规则列表，key 为 ROUTE_RULE_CACHE_KEY） */
-  private final Cache<String, List<MsgRouteRuleVO>> localCache =
-      YdszCache.<String, List<MsgRouteRuleVO>>newBuilder()
-          .name(CACHE_NAME)
-          .maximumSize(LOCAL_CACHE_MAX_SIZE)
-          .expireAfterWrite(localCacheTtlSeconds, TimeUnit.SECONDS)
-          .recordStats()
-          .build();
+  /** YdszCache 本地一级缓存（规则列表，key 为 ROUTE_RULE_CACHE_KEY），延迟到 @PostConstruct 初始化 */
+  private Cache<String, List<MsgRouteRuleVO>> localCache;
 
   /** 路由规则 Repository */
   private final MsgRouteRuleRepository msgRouteRuleRepository;
@@ -80,6 +76,24 @@ public class RouteRuleServiceImpl implements RouteRuleService {
 
   /** Redis 模板（路由规则缓存） */
   private final RedisStringOps redisStringOps;
+
+  /**
+   * 初始化本地缓存（延迟到 @PostConstruct，确保 @Value 注入完成后再构建缓存）。
+   *
+   * <p>YdszCache.expireAfterWrite 要求值必须大于 0，若配置值小于等于 0 则跳过过期设置（永不过期）。
+   */
+  @PostConstruct
+  private void initLocalCache() {
+    CacheBuilder<String, List<MsgRouteRuleVO>> builder = YdszCache.<String, List<MsgRouteRuleVO>>newBuilder()
+        .name(CACHE_NAME)
+        .maximumSize(LOCAL_CACHE_MAX_SIZE)
+        .recordStats();
+    // expireAfterWrite 仅在大于 0 时设置，避免 0 或负值导致 IllegalArgumentException
+    if (localCacheTtlSeconds > 0) {
+      builder.expireAfterWrite(localCacheTtlSeconds, TimeUnit.SECONDS);
+    }
+    this.localCache = builder.build();
+  }
 
   /**
    * {@inheritDoc}

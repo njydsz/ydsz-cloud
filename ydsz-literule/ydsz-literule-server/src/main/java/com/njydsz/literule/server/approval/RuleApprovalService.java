@@ -13,8 +13,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.lock.core.DistributedLocker;
@@ -52,7 +52,6 @@ import com.njydsz.common.locales.util.I18nMessages;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class RuleApprovalService {
     /** 集合初始容量 */
     private static final int COLLECTION_CAPACITY = 16;
@@ -74,11 +73,30 @@ public class RuleApprovalService {
 
     private final RuleConfigProvider configProvider;
 
-    /** 分布式锁（P1-3：替代 synchronized，支持集群部署） */
+    /** 分布式锁（P1-3：替代 synchronized，支持集群部署），可选注入（Bean 不存在时退化为无锁模式） */
     private final DistributedLocker distributedLocker;
 
     /** 国际化消息 */
     private final I18nMessages i18n;
+
+    /**
+     * 构造审批流服务
+     *
+     * <p>使用 {@link ObjectProvider} 注入 {@link DistributedLocker}，避免因 Bean 不存在时抛出
+     *NoSuchBeanDefinitionException 导致启动失败。当分布式锁不可用时，退化为进程内 synchronized 模式。
+     *
+     * @param configProvider 规则配置提供者
+     * @param distributedLockerProvider 分布式锁提供者（可选）
+     * @param i18n 国际化消息
+     */
+    public RuleApprovalService(RuleConfigProvider configProvider,
+        ObjectProvider<DistributedLocker> distributedLockerProvider,
+        I18nMessages i18n) {
+        this.configProvider = configProvider;
+        // 分布式锁为可选依赖：存在则使用，不存在则退化为无锁兜底
+        this.distributedLocker = distributedLockerProvider.getIfAvailable();
+        this.i18n = i18n;
+    }
 
     /** 审批流配置注册表（flowCode -> ApprovalFlow） */
     private final Map<String, ApprovalFlow> flowRegistry = new ConcurrentHashMap<>();
@@ -227,11 +245,17 @@ public class RuleApprovalService {
    * @since 1.4.0
    */
   private <T> T executeWithLock(String lockKey, Supplier<T> action) {
+    // 分布式锁不可用时退化为进程内 synchronized 锁（单实例部署安全）
+    if (distributedLocker == null) {
+      synchronized (this) {
+        return action.get();
+      }
+    }
     String lockValue = null;
     try {
       lockValue = distributedLocker.tryLock(lockKey, LOCK_WAIT_TIME, LOCK_LEASE_TIME, TimeUnit.SECONDS);
       if (lockValue == null) {
-      throw new SysException(i18n.resolve("literule.approval.lock_acquire_failed", new Object[]{LOCK_WAIT_TIME, lockKey}));
+        throw new SysException(i18n.resolve("literule.approval.lock_acquire_failed", new Object[]{LOCK_WAIT_TIME, lockKey}));
       }
       return action.get();
     } catch (InterruptedException e) {

@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.njydsz.workflow.domain.entity.FlowJoinTokenEntity;
+import java.time.LocalDateTime;
 
 /**
  * 并行网关 join token Mapper
@@ -109,6 +110,6 @@ public interface FlowJoinTokenMapper extends BaseMapper<FlowJoinTokenEntity> {
    */
   int deleteCompletedBefore(
       @Param("statusList") List<String> statusList,
-      @Param("updatedAtThreshold") java.time.LocalDateTime updatedAtThreshold,
+      @Param("updatedAtThreshold") LocalDateTime updatedAtThreshold,
       @Param("limit") int limit);
 }

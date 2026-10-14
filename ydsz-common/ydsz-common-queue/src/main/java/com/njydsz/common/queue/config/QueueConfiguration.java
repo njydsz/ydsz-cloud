@@ -80,10 +80,11 @@ public class QueueConfiguration {
   private final ObjectProvider<RedisStringOps> redisStringOpsProvider;
 
   public QueueConfiguration(
-      QueueProperties queueProperties,
+      ObjectProvider<QueueProperties> queuePropertiesProvider,
       ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
       ObjectProvider<RedisStringOps> redisStringOpsProvider) {
-    this.queueProperties = queueProperties;
+    // 使用 ObjectProvider 解决多个 QueueProperties Bean 的歧义问题，取第一个可用实例
+    this.queueProperties = queuePropertiesProvider.getIfAvailable();
     this.redisTemplateProvider = redisTemplateProvider;
     this.redisStringOpsProvider = redisStringOpsProvider;
   }

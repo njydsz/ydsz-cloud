@@ -151,7 +151,8 @@ public class FlowTaskCoreService {
   /** 流程节点仓储，查询节点配置（审批人/权限/SLA 等） */
   private final FlowNodeRepository nodeRepository;
 
-  /** 流程推进引擎，会签完成后推进到下一节点 */
+  /** 流程推进引擎，会签完成后推进到下一节点（@Lazy 打破循环依赖） */
+  @Lazy
   private final DefaultFlowAdvancer advancer;
 
   /** 流程实例服务，更新实例状态和变量 */

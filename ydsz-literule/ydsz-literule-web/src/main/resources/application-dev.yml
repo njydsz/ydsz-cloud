@@ -6,6 +6,7 @@ spring:
       - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-literule-web.yml"
   main:
     allow-circular-references: true
+    lazy-initialization: true
 
 datasource:
   hikari:

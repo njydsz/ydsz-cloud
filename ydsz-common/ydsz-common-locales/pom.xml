@@ -39,6 +39,12 @@
             <artifactId>spring-boot-autoconfigure</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- swagger-annotations（@Operation / @Tag OpenAPI 注解，provided 仅编译期需要） -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!-- spring-context（提供 MessageSource / MessageSourceAccessor / ReloadableResourceBundleMessageSource）
              LocalesAutoConfiguration 创建 MessageSource Bean -->
         <dependency>
@@ -51,6 +57,12 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- swagger-annotations-jakarta（I18nAdminController 使用 @Operation 等注解） -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
             <optional>true</optional>
         </dependency>
         <!-- JUnit Jupiter (单元测试) -->

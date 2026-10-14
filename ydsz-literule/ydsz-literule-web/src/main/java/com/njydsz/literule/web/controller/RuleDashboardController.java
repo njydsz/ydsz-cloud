@@ -77,7 +77,7 @@ public class RuleDashboardController {
   public YdszResponse<RuleDashboardOverviewVO> overview() {
     DashboardDataProvider service = getDashboardService();
     if (service == null) {
-      return YdszResponse.success(new RuleDashboardOverviewVO());
+      return YdszResponse.success(RuleDashboardOverviewVO.builder().build());
     }
     return YdszResponse.success(service.getOverview());
   }
@@ -94,7 +94,7 @@ public class RuleDashboardController {
       @RequestParam(value = "timeRange", defaultValue = "24h") String timeRange) {
     DashboardDataProvider service = getDashboardService();
     if (service == null) {
-      return YdszResponse.success(new RuleDashboardTrendVO());
+      return YdszResponse.success(RuleDashboardTrendVO.builder().build());
     }
     return YdszResponse.success(service.getTrends(timeRange));
   }
@@ -109,7 +109,7 @@ public class RuleDashboardController {
   public YdszResponse<RuleDashboardDistributionVO> distribution() {
     DashboardDataProvider service = getDashboardService();
     if (service == null) {
-      return YdszResponse.success(new RuleDashboardDistributionVO());
+      return YdszResponse.success(RuleDashboardDistributionVO.builder().build());
     }
     return YdszResponse.success(service.getDistribution());
   }
@@ -143,7 +143,7 @@ public class RuleDashboardController {
   public YdszResponse<RuleDashboardRealtimeVO> realtime() {
     DashboardDataProvider service = getDashboardService();
     if (service == null) {
-      return YdszResponse.success(new RuleDashboardRealtimeVO());
+      return YdszResponse.success(RuleDashboardRealtimeVO.builder().build());
     }
     return YdszResponse.success(service.getRealtime());
   }

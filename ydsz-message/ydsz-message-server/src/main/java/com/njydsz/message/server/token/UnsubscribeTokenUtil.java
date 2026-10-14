@@ -2,7 +2,8 @@ package com.njydsz.message.server.token;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Base64;
 
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.message.server.config.MessageProperties;
 
@@ -74,7 +76,7 @@ public class UnsubscribeTokenUtil {
           .build();
     }
     int ttlDays = Math.max(1, messageProperties.getUnsubscribe().getTtlDays());
-    long expiresAt = Instant.now().plus(ttlDays, ChronoUnit.DAYS).getEpochSecond();
+    long expiresAt = LocalDateTime.now().plusDays(ttlDays).toInstant(ZoneOffset.UTC).getEpochSecond();
     String payload = buildPayload(userId, topicCode, channel, expiresAt);
     String sig = sign(payload);
     return Base64.getUrlEncoder()

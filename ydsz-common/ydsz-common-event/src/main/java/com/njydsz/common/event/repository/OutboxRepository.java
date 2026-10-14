@@ -38,7 +38,7 @@ import com.njydsz.common.event.model.OutboxStatus;
  * @since 26.09.19 E-2 字段对齐：Java 字段 idempotencyKey ↔ DDL 列名 idempotency_key
  * @since 26.09.19 E-1 error_message 智能截断：保留首部 800 字符 + 尾部 1200 字符，确保根因不丢
  * @since 26.09.19 O-4 增加 schema_version 列读写，默认值 1
- * @since 26.09.19 P3 增加 compressed 列读写，标记 payload 是否 GZIP 压缩
+ * @since 26.09.19 P3 增加 is_compressed 列读写，标记 payload 是否 GZIP 压缩
  */
 public class OutboxRepository {
 
@@ -109,7 +109,7 @@ public class OutboxRepository {
     params.put("idempotency_key", message.getIdempotencyKey());
     params.put("trace_id", message.getTraceId());
     params.put("schema_version", message.getSchemaVersion());
-    params.put("compressed", message.isCompressed());
+    params.put("is_compressed", message.isCompressed());
     jdbcInsert.execute(params);
   }
 
@@ -130,7 +130,7 @@ public class OutboxRepository {
             + tableName
             + " (id, aggregate_id, aggregate_type, event_type, payload,"
             + " status, retry_count, max_retries, next_retry_at, created_at, updated_at,"
-            + " tenant_id, idempotency_key, trace_id, schema_version, compressed)"
+            + " tenant_id, idempotency_key, trace_id, schema_version, is_compressed)"
             + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     jdbcTemplate.batchUpdate(
@@ -600,7 +600,7 @@ public class OutboxRepository {
   /**
    * Outbox 消息行映射器
    *
-   * <p>静态内部类，复用单一实例。自动读取 compressed 字段，压缩的 payload 在读取时需由调用方解压 （当前为透明映射，consumer 根据 isCompressed 判断）。
+   * <p>静态内部类，复用单一实例。自动读取 is_compressed 字段，压缩的 payload 在读取时需由调用方解压 （当前为透明映射，consumer 根据 isCompressed 判断）。
    */
   static final class OutboxRowMapper implements RowMapper<OutboxMessage> {
 
@@ -639,7 +639,7 @@ public class OutboxRepository {
           .tenantId(rs.getString("tenant_id"))
           .idempotencyKey(rs.getString("idempotency_key"))
           .schemaVersion(rs.getInt("schema_version"))
-          .isCompressed(rs.getBoolean("compressed"))
+          .isCompressed(rs.getBoolean("is_compressed"))
           .traceId(rs.getString("trace_id"))
           .build();
     }

@@ -68,6 +68,16 @@
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
+    <!-- opentelemetry-api：ydsz-common-sentry 通过 opentelemetry 做链路追踪，运行需要此依赖 -->
+    <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-api</artifactId>
+    </dependency>
+    <!-- common-notify：NotifyService 类需要，解决 ClassNotFoundException: com.njydsz.common.notify.core.NotifyService -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-notify</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>

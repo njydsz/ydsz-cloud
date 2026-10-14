@@ -134,6 +134,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-safe</artifactId>
         </dependency>
+        <!-- opentelemetry-api：解决 ClassNotFoundException: io.opentelemetry.api.GlobalOpenTelemetry -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+        </dependency>
 
             <!-- 单元测试基础设施：JUnit 5 + AssertJ + Mockito（云顶编码规范 §14.1） -->
         <dependency>

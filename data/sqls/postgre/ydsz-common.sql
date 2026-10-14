@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
     next_retry_at            TIMESTAMP(3)            ,
     error_message            TEXT                    ,
     schema_version           INTEGER                 NOT NULL DEFAULT 1,
-    compressed               BOOLEAN                 NOT NULL DEFAULT FALSE,
+    is_compressed            SMALLINT                NOT NULL DEFAULT 0,
     trace_id                 VARCHAR(36)             ,
     idempotency_key          VARCHAR(64)             ,
     sent_at                  TIMESTAMP(3)            ,
@@ -66,7 +66,7 @@ COMMENT ON COLUMN ydsz_comm_outbox.max_retries IS '最大重试次数';
 COMMENT ON COLUMN ydsz_comm_outbox.next_retry_at IS '下次重试时间（指数退避）';
 COMMENT ON COLUMN ydsz_comm_outbox.error_message IS '最后一次失败的错误信息';
 COMMENT ON COLUMN ydsz_comm_outbox.schema_version IS '事件 schema 版本（向前兼容）';
-COMMENT ON COLUMN ydsz_comm_outbox.compressed IS 'payload 是否 GZIP 压缩存储';
+COMMENT ON COLUMN ydsz_comm_outbox.is_compressed IS 'payload 是否 GZIP 压缩存储（0=否 1=是）';
 COMMENT ON COLUMN ydsz_comm_outbox.tenant_id IS '租户 ID（多租户隔离）';
 COMMENT ON COLUMN ydsz_comm_outbox.trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_comm_outbox.idempotency_key IS '幂等去重 ID';
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
     idempotency_key VARCHAR(128)    DEFAULT NULL,
     trace_id                 VARCHAR(36)     DEFAULT NULL,
     schema_version  INT             NOT NULL DEFAULT 1,
-    compressed      BOOLEAN         NOT NULL DEFAULT FALSE,
+    is_compressed  SMALLINT        NOT NULL DEFAULT 0,
     sent_at         TIMESTAMP       DEFAULT NULL,
     archived_at     TIMESTAMP       NOT NULL,
     error_message   TEXT            DEFAULT NULL,
@@ -284,7 +284,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_search_index_partitioned
     tags            TEXT[],
     locale          VARCHAR(16)  DEFAULT 'zh-CN',
     metadata        JSONB,
-    active_flag       BOOLEAN      DEFAULT TRUE,
+    active_flag     SMALLINT                NOT NULL DEFAULT 1,
     created_at      TIMESTAMPTZ  DEFAULT NOW(),
     updated_at      TIMESTAMPTZ  DEFAULT NOW(),
     CONSTRAINT pk_search_partitioned PRIMARY KEY (tenant_id, id, doc_type),
@@ -316,3 +316,4 @@ CREATE TABLE IF NOT EXISTS ydzs_search_idx_part_7 PARTITION OF ydsz_comm_search_
     FOR VALUES WITH (MODULUS 8, REMAINDER 7);
 
 COMMENT ON TABLE ydsz_comm_search_index_partitioned IS '搜索全文索引分区表（按 tenant_id HASH 分区，原 ydzs_wiki_search_index 升级）';
+COMMENT ON COLUMN ydsz_comm_search_index_partitioned.active_flag IS '是否激活（0=否 1=是）';

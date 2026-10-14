@@ -16,6 +16,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -287,8 +288,11 @@ public class RedisConfiguration {
    *
    * <p>仅在 Redis 端开启 Keyspace Notifications 且 ydsz.redis.key-expiration.enabled=true 时生效。
    *
+   * <p>使用 {@code @Qualifier("redisMessageListenerContainer")} 精确注入由本配置类创建的监听容器，
+   * 避免因其他模块（如 WebSocket 集群）也创建了 {@link RedisMessageListenerContainer} Bean 导致歧义。
+   *
    * @param applicationContext Spring 应用上下文
-   * @param listenerContainer Redis 消息监听容器
+   * @param listenerContainer 由本配置创建的 Redis 消息监听容器
    * @param redisProperties Redis 配置属性
    * @return 过期事件监听注册表实例
    */
@@ -297,7 +301,7 @@ public class RedisConfiguration {
   @ConditionalOnBean(RedisMessageListenerContainer.class)
   public RedisKeyExpireListenerRegistry redisKeyExpireListenerRegistry(
       ApplicationContext applicationContext,
-      RedisMessageListenerContainer listenerContainer,
+      @Qualifier("redisMessageListenerContainer") RedisMessageListenerContainer listenerContainer,
       RedisProperties redisProperties) {
     return new RedisKeyExpireListenerRegistry(applicationContext, listenerContainer, redisProperties);
   }
@@ -444,6 +448,9 @@ public class RedisConfiguration {
    * <p>除 {@code RedisTemplate} 外还需 {@link RedisMessageListenerContainer} 已存在（见上方 {@link
    * #redisMessageListenerContainer}），否则订阅能力无法装配，仅发布功能可用。
    *
+   * <p>使用 {@code @Qualifier("redisMessageListenerContainer")} 精确注入由本配置类创建的监听容器，
+   * 避免因其他模块（如 WebSocket 集群）也创建了 {@link RedisMessageListenerContainer} Bean 导致歧义。
+   *
    * @param redisTemplate 基础模板，不会为 null
    * @param listenerContainer 消息监听容器，不会为 null
    * @return Pub/Sub 操作封装实例
@@ -453,7 +460,7 @@ public class RedisConfiguration {
   @ConditionalOnBean({RedisTemplate.class, RedisMessageListenerContainer.class})
   public RedisPubSubOps redisPubSubOps(
       RedisTemplate<String, Object> redisTemplate,
-      RedisMessageListenerContainer listenerContainer) {
+      @Qualifier("redisMessageListenerContainer") RedisMessageListenerContainer listenerContainer) {
     return new RedisPubSubOps(redisTemplate, listenerContainer);
   }
 

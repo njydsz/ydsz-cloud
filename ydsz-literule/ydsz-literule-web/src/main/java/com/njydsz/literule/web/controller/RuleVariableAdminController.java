@@ -5,8 +5,8 @@ import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +29,7 @@ import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.vo.VariableDefinitionVO;
+import com.njydsz.literule.server.expression.EmptyVariableRegistry;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
 import com.njydsz.literule.server.expression.VariableDefinition;
 import com.njydsz.literule.server.expression.VariableRegistry;
@@ -45,16 +46,28 @@ import com.njydsz.literule.server.expression.VariableRegistry;
 @Slf4j
 @RestController
 @RequestMapping("/literule/variables")
-@RequiredArgsConstructor
 @Validated
 @Tag(name = "规则变量管理", description = "变量注册表 CRUD、变量分类查询")
 public class RuleVariableAdminController {
 
-  /** 变量注册表（由消费方提供数据库实现） */
+  /** 变量注册表（由消费方提供数据库实现，缺失时回退到空注册表） */
   private final VariableRegistry variableRegistry;
 
   /** 表达式校验服务 */
   private final ExpressionValidationService expressionValidationService;
+
+  /**
+   * 手写构造器：使用 ObjectProvider 解决 VariableRegistry Bean 缺失问题。
+   *
+   * <p>当容器中不存在 VariableRegistry Bean 时，回退到 EmptyVariableRegistry，
+   * 保持向后兼容（不触发 UNDEFINED_VARIABLE 校验）。
+   */
+  public RuleVariableAdminController(
+      ObjectProvider<VariableRegistry> variableRegistryProvider,
+      ExpressionValidationService expressionValidationService) {
+    this.variableRegistry = variableRegistryProvider.getIfAvailable(EmptyVariableRegistry::new);
+    this.expressionValidationService = expressionValidationService;
+  }
 
   /**
    * 列出全部已启用变量（支持按类别过滤）

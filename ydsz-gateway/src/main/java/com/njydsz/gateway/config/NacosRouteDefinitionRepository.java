@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.JsonType;
+import org.springframework.core.io.ClassPathResource;
 
 /**
  * Nacos 动态路由仓库。
@@ -225,8 +226,8 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
    */
   private boolean loadRoutesFromLocalFallback() {
     try {
-      org.springframework.core.io.ClassPathResource resource =
-          new org.springframework.core.io.ClassPathResource("routes-nacos.yaml");
+      ClassPathResource resource =
+          new ClassPathResource("routes-nacos.yaml");
       if (!resource.exists()) {
         log.debug("[NacosRoutes] 本地兜底文件 routes-nacos.yaml 不存在");
         return false;

@@ -1,0 +1,30 @@
+## Velocity implicit template placeholder
+## 此文件为 VelocityEngine 全局宏库占位文件，提供 textFirstLower / textFirstUpper / textCamelCase / textRemovePrefix 等宏。
+
+## 首字母小写
+#macro(textFirstLower $str)
+#set($str = $str.substring(0,1).toLowerCase() + $str.substring(1))
+#end
+
+## 首字母大写
+#macro(textFirstUpper $str)
+#set($str = $str.substring(0,1).toUpperCase() + $str.substring(1))
+#end
+
+## 驼峰命名（去除下划线后首字母大写）
+#macro(textCamelCase $str)
+#set($result = "")
+#foreach($part in $str.split("_"))
+#if($part.length() > 0)
+#set($result = $result + $part.substring(0,1).toUpperCase() + $part.substring(1).toLowerCase())
+#end
+#end
+#set($result = $result.substring(0,1).toLowerCase() + $result.substring(1))
+#end
+
+## 去除表前缀
+#macro(textRemovePrefix $str $prefix)
+#if($str.startsWith($prefix))
+#set($str = $str.substring($prefix.length()))
+#end
+#end

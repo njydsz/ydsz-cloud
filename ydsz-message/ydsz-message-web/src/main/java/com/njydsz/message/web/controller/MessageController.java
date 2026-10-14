@@ -51,6 +51,8 @@ import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.domain.vo.MsgLogViews;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.domain.vo.MsgLogExportVO;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 
 /**
  * 消息发送 Controller。
@@ -221,7 +223,7 @@ public class MessageController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/log/export")
   public void exportLogs(MessageLogQueryDTO query,
-      jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+      HttpServletResponse response) throws java.io.IOException {
     String fileName = "msg_logs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
@@ -234,7 +236,7 @@ public class MessageController {
     query.setIsUseSearchAfter(false);
 
     final int pageSize = 200;
-    List<MsgLogExportVO> rows = new java.util.ArrayList<>();
+    List<MsgLogExportVO> rows = new ArrayList<>();
     int pageNum = 1;
     while (true) {
       query.setPageNum(pageNum);

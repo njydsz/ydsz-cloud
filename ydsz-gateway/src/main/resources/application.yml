@@ -5,6 +5,18 @@
 #  公共配置（datasource / redis / mybatis-plus）由 Nacos ydsz-common.yaml 提供
 # =====================================================================
 
+server:
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+    min-response-size: 1024
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: true
+        same-site: strict
+
 spring:
   main:
     # 允许循环引用（DistributedLockAutoConfiguration 内部存在自引用）

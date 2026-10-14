@@ -6,6 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -45,6 +47,7 @@ import com.njydsz.common.locales.util.MessageSourceHolder;
 @RestController
 @RequestMapping("/api/admin/i18n")
 @RequiredArgsConstructor
+@Tag(name = "i18n-admin", description = "i18n 翻译管理 API（配置/翻译/缺失检测/缓存管理）")
 public class I18nAdminController {
 
   private final I18nProperties i18nProperties;
@@ -55,6 +58,7 @@ public class I18nAdminController {
    * @return 配置属性的安全视图
    */
   @GetMapping("/config")
+  @Operation(summary = "回显当前 i18n 配置")
   public Map<String, Object> getConfig() {
     Map<String, Object> config = new LinkedHashMap<>();
     config.put("defaultLocale", i18nProperties.getDefaultLocale());
@@ -74,6 +78,7 @@ public class I18nAdminController {
    * @return key 及其在各 Locale 下的翻译结果
    */
   @GetMapping("/translate")
+  @Operation(summary = "查询 key 在所有已知 Locale 下的翻译值")
   public Map<String, Object> translate(@RequestParam String key) {
     Map<String, Object> result = new LinkedHashMap<>();
     result.put("key", key);
@@ -103,6 +108,7 @@ public class I18nAdminController {
    * @return 默认 Locale 存在而目标 Locale 缺失的 key 清单（最多 500 个）
    */
   @GetMapping("/missing")
+  @Operation(summary = "列出指定 Locale 缺失的 key")
   public Map<String, Object> findMissing(@RequestParam(required = false) String localeTag) {
     Map<String, Object> result = new LinkedHashMap<>();
     if (localeTag == null || localeTag.isEmpty()) {
@@ -131,6 +137,7 @@ public class I18nAdminController {
    * @return 已知 locale tags
    */
   @GetMapping("/languages")
+  @Operation(summary = "查询已知语言标签集合")
   public Map<String, Object> getLanguages() {
     Map<String, Object> result = new LinkedHashMap<>();
     result.put("knownLocaleTags", KnownLocaleTags.DEFAULT_KNOWN_TAGS);
@@ -144,6 +151,7 @@ public class I18nAdminController {
    * @return 当前覆盖层的所有条目
    */
   @GetMapping("/overrides")
+  @Operation(summary = "查询运行时覆盖快照")
   public Map<String, Object> getOverrides() {
     Map<String, Object> result = new LinkedHashMap<>();
     result.put("count", MessageSourceHolder.snapshotOverrides().size());
@@ -158,6 +166,7 @@ public class I18nAdminController {
    * @return 操作结果（including 前一覆盖值，首次为 null）
    */
   @PutMapping("/override")
+  @Operation(summary = "写入/更新运行时覆盖翻译")
   public Map<String, Object> putOverride(@RequestBody OverrideRequest request) {
     String previous =
         MessageSourceHolder.override(request.getKey(), request.getLocale(), request.getTranslatedText());
@@ -182,6 +191,7 @@ public class I18nAdminController {
    * @return 操作结果
    */
   @PostMapping("/override/remove")
+  @Operation(summary = "移除运行时覆盖")
   public Map<String, Object> removeOverride(
       @RequestParam String key, @RequestParam String locale) {
     String removed = MessageSourceHolder.removeOverride(key, locale);
@@ -198,6 +208,7 @@ public class I18nAdminController {
    * @return 操作摘要
    */
   @PostMapping("/reload")
+  @Operation(summary = "清空所有 i18n 缓存")
   public Map<String, Object> reload() {
     int clearedOverrides = MessageSourceHolder.clearOverrides();
     MessageSourceHolder.clearCaches();

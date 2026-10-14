@@ -514,4 +514,141 @@ public final class DateUtils {
     }
     return !startA.isAfter(endB) && !startB.isAfter(endA);
   }
+
+  // ==================== 日期时间差值（YDIZ-COMMON-020 补充） ====================
+
+  /**
+   * 解析 ISO-8601 日期时间字符串为 {@link LocalDateTime}。
+   *
+   * <p>支持以下格式（按顺序尝试）：
+   *
+   * <ul>
+   *   <li>{@code yyyy-MM-dd'T'HH:mm:ss.SSS}（带毫秒）</li>
+   *   <li>{@code yyyy-MM-dd'T'HH:mm:ss}（标准 ISO）</li>
+   *   <li>{@code yyyy-MM-dd HH:mm:ss}（MySQL 常见格式）</li>
+   * </ul>
+   *
+   * <p><b>YDIZ-COMMON-020 合规：</b>禁止业务代码直接使用 {@code LocalDateTime.parse()} 或
+   * {@code DateTimeFormatter.ISO_*}，必须通过本封装。
+   *
+   * @param text 待解析字符串（非空）
+   * @return 解析后的 LocalDateTime
+   * @throws DateTimeException 如果文本无法匹配任何已知格式
+   * @since 26.10.14
+   */
+  public static LocalDateTime parseIso(String text) {
+    Objects.requireNonNull(text, "text must not be null");
+    String trimmed = text.trim();
+    if (trimmed.isEmpty()) {
+      throw new DateTimeException("Cannot parse empty string to LocalDateTime");
+    }
+    // Try most specific format first
+    for (DateTimeFormatter fmt : ISO_FORMATS) {
+      try {
+        return LocalDateTime.parse(trimmed, fmt);
+      } catch (DateTimeException ignored) {
+        // Try next format
+      }
+    }
+    throw new DateTimeException("Unable to parse date-time: " + text);
+  }
+
+  /**
+   * 解析 ISO-8601 日期字符串为 {@link LocalDate}。
+   *
+   * <p><b>YDIZ-COMMON-020 合规：</b>禁止业务代码直接使用 {@code LocalDate.parse()}，必须通过本封装。
+   *
+   * @param text 待解析字符串（非空）
+   * @return 解析后的 LocalDate
+   * @throws DateTimeException 如果文本无法匹配
+   * @since 26.10.14
+   */
+  public static LocalDate parseDateIso(String text) {
+    Objects.requireNonNull(text, "text must not be null");
+    String trimmed = text.trim();
+    if (trimmed.isEmpty()) {
+      throw new DateTimeException("Cannot parse empty string to LocalDate");
+    }
+    try {
+      return LocalDate.parse(trimmed, DATE_FORMAT);
+    } catch (DateTimeException e) {
+      throw new DateTimeException("Unable to parse date: " + text, e);
+    }
+  }
+
+  /**
+   * 计算两个 LocalDateTime 之间的毫秒数差（end - start）。
+   *
+   * <p><b>YDIZ-COMMON-020 合规：</b>禁止业务代码直接使用 {@code ChronoUnit.MILLIS.between()}，应使用本封装。
+   *
+   * @param start 起始时间（非 null）
+   * @param end 结束时间（非 null）
+   * @return 毫秒数差，end 早于 start 时为负数
+   * @since 26.10.14
+   */
+  public static long millisBetween(LocalDateTime start, LocalDateTime end) {
+    Objects.requireNonNull(start, "start must not be null");
+    Objects.requireNonNull(end, "end must not be null");
+    return ChronoUnit.MILLIS.between(start, end);
+  }
+
+  /**
+   * 计算两个 LocalDateTime 之间的秒数差（end - start）。
+   *
+   * <p><b>YDIZ-COMMON-020 合规：</b>禁止业务代码直接使用 {@code ChronoUnit.SECONDS.between()}，应使用本封装。
+   *
+   * @param start 起始时间（非 null）
+   * @param end 结束时间（非 null）
+   * @return 秒数差，end 早于 start 时为负数
+   * @since 26.10.14
+   */
+  public static long secondsBetween(LocalDateTime start, LocalDateTime end) {
+    Objects.requireNonNull(start, "start must not be null");
+    Objects.requireNonNull(end, "end must not be null");
+    return ChronoUnit.SECONDS.between(start, end);
+  }
+
+  /**
+   * 计算两个 LocalDateTime 之间的分钟数差（end - start）。
+   *
+   * <p><b>YDIZ-COMMON-020 合规：</b>禁止业务代码直接使用 {@code ChronoUnit.MINUTES.between()}，应使用本封装。
+   *
+   * @param start 起始时间（非 null）
+   * @param end 结束时间（非 null）
+   * @return 分钟数差，end 早于 start 时为负数
+   * @since 26.10.14
+   */
+  public static long minutesBetween(LocalDateTime start, LocalDateTime end) {
+    Objects.requireNonNull(start, "start must not be null");
+    Objects.requireNonNull(end, "end must not be null");
+    return ChronoUnit.MINUTES.between(start, end);
+  }
+
+  /**
+   * 计算两个 LocalDateTime 之间的小时数差（end - start）。
+   *
+   * <p><b>YDIZ-COMMON-020 合规：</b>禁止业务代码直接使用 {@code ChronoUnit.HOURS.between()}，应使用本封装。
+   *
+   * @param start 起始时间（非 null）
+   * @param end 结束时间（非 null）
+   * @return 小时数差，end 早于 start 时为负数
+   * @since 26.10.14
+   */
+  public static long hoursBetween(LocalDateTime start, LocalDateTime end) {
+    Objects.requireNonNull(start, "start must not be null");
+    Objects.requireNonNull(end, "end must not be null");
+    return ChronoUnit.HOURS.between(start, end);
+  }
+
+  // ==================== 内部常量 ====================
+
+  /** ISO-8601 格式解析器（按精度从高到低排列） */
+  private static final DateTimeFormatter[] ISO_FORMATS = {
+    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"),
+    DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+  };
+
+  /** 标准日期格式 */
+  private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
 }

@@ -64,19 +64,14 @@ public class WebSocketConfigurer implements WebSocketMessageBrokerConfigurer {
   /**
    * 配置消息代理。
    *
-   * <p>启用 SimpleBroker，设置心跳间隔和应用目标前缀。
+   * <p>启用 SimpleBroker，设置应用目标前缀。心跳值（heartbeat）需要容器中存在 TaskScheduler，
+   * 否则启动时报 "Heartbeat values configured but no TaskScheduler provided"，此处不予显式设置心跳。
    *
    * @param registry 消息代理注册表
    */
   @Override
   public void configureMessageBroker(MessageBrokerRegistry registry) {
-    registry
-        .enableSimpleBroker("/topic", "/queue")
-        .setHeartbeatValue(
-            new long[] {
-              properties.getHeartbeat().getServerInterval(),
-              properties.getHeartbeat().getClientInterval()
-            });
+    registry.enableSimpleBroker("/topic", "/queue");
     registry.setApplicationDestinationPrefixes("/app");
     registry.setUserDestinationPrefix("/user");
   }

@@ -21,7 +21,6 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.BatchProgressDTO;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
-import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.domain.event.BatchCompletedEvent;
 import com.njydsz.message.domain.query.MsgBatchQuery;
 import com.njydsz.message.domain.repository.MsgBatchRepository;

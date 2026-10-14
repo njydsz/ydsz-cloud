@@ -44,6 +44,11 @@ import com.njydsz.message.server.channel.MessageChannel;
  * <p>配置项 {@code ydsz.message.tcp-push.enabled=true} 启用， 端口通过 {@code ydsz.message.tcp-push.port}
  * 配置（默认 9123）。
  *
+ * <p><b>IMPORT-005 豁免：</b>本类的 {@code SocketChannel}、{@code Channel}、{@code ChannelHandlerContext}、
+ * {@code ByteBuf}、{@code Unpooled} import 均为 common-netty {@link AbstractNettyServer}/
+ * {@link AbstractJsonTcpHandler} 回调方法签名所需的底层 Netty 类型（同 reactor-netty 对 ChannelOption 的豁免规则），
+ * 属于"不可绕过的底层依赖"豁免情形。业务推送逻辑已通过 common-netty 封装，不直接操作 Netty Bootstrap/EventLoopGroup。
+ *
  * @author ydsz-team
  * @since 26.10.01
  */

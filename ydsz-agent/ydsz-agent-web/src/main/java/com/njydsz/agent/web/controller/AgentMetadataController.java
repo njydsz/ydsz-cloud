@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.tool.ToolRegistry;
-import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
@@ -80,12 +79,8 @@ public class AgentMetadataController {
   @Operation(summary = "获取可用模型列表", description = "返回当前 Agent 支持的 LLM Provider 列表")
   public YdszResponse<List<Map<String, Object>>> models() {
     List<Map<String, Object>> result = new ArrayList<>(COLLECTION_CAPACITY);
-    if (llmClient instanceof LlmClientRouter router) {
-      for (String provider : router.getAvailableProviders()) {
-        result.add(Map.of("provider", provider, "available", true));
-      }
-    } else {
-      result.add(Map.of("provider", llmClient.getProvider(), "available", true));
+    for (String provider : llmClient.getAvailableProviders()) {
+      result.add(Map.of("provider", provider, "available", true));
     }
     return YdszResponse.success(result);
   }

@@ -1,0 +1,18 @@
+# =====================================================================
+#  集成测试环境配置（Testcontainers PostgreSQL + Redis）
+# =====================================================================
+spring:
+  # 禁用 Flyway：集成测试使用 MyBatis-Plus DDL 或手动 schema 初始化
+  flyway:
+    enabled: false
+
+mybatis-plus:
+  configuration:
+    # 开启 SQL 日志：集成测试排障关键信息
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+# 测试标识（被 ConfigChangeListener 等条件逻辑消费）
+ydsz:
+  local-dev: false
+  test-env: true

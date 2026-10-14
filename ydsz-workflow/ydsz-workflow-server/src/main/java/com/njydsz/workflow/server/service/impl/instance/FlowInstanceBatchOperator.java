@@ -163,6 +163,10 @@ public class FlowInstanceBatchOperator {
       return 0;
     }
     int count = 0;
+    // TODO: N+1 治理 — 循环内逐条调用 terminate（每条触发独立事务 + DB 写入），
+    // 并逐实例查询子流程（instanceRepository.findChildren），批量 N 个实例产生 O(N) 次 DB 查询
+    // 修复建议：1) 批量查询所有实例的子流程 → 一次性收集全部待终止 ID → 单次批量更新
+    //          2) 或改为分批事务提交（每批 50-100 条），减少事务开销
     for (String instanceId : instanceIds) {
       try {
         // 委托生命周期管理器执行（独立事务）

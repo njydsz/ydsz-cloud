@@ -889,7 +889,7 @@ public class AgentAutoConfiguration {
     return new UserProfileServiceImpl(
         userProfileRepository,
         properties,
-        llmProfileAnalyzer.getIfAvailable());
+        llmProfileAnalyzer);
   }
 
   // ========================= BI 洞察报告 Bean 注册 =========================

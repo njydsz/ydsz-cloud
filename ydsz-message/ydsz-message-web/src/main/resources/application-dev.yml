@@ -6,6 +6,7 @@ spring:
       - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-message-web.yml"
   main:
     allow-circular-references: true
+    lazy-initialization: true
 
 datasource:
   hikari:
@@ -20,4 +21,8 @@ logging:
 ydsz:
   i18n:
     validate-on-startup: false
+  websocket:
+    enabled: false
+  sentry:
+    enabled: false
   local-dev: true

@@ -4,7 +4,6 @@ package com.njydsz.message.server.service.impl.batch;
 import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +34,7 @@ import com.njydsz.message.server.service.TemplateService;
 import com.njydsz.message.server.service.batch.AggregateService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.template.MessageTemplateRenderer;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 消息聚合服务实现。
@@ -351,7 +351,7 @@ public class AggregateServiceImpl implements AggregateService {
     params.put("group", batch.getAggregateGroup());
     // F5: 时间范围参数
     if (batch.getFirstMessageAt() != null && batch.getLastMessageAt() != null) {
-      long windowMinutes = ChronoUnit.MINUTES.between(batch.getFirstMessageAt(), batch.getLastMessageAt());
+      long windowMinutes = DateUtils.minutesBetween(batch.getFirstMessageAt(), batch.getLastMessageAt());
       params.put("timeWindowMinutes", Math.max(windowMinutes, 1));
       params.put("firstMessageAt", batch.getFirstMessageAt());
       params.put("lastMessageAt", batch.getLastMessageAt());

@@ -36,6 +36,7 @@ import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.file.util.FileOps;
+import com.njydsz.common.file.util.FileTypeValidator;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.locales.util.I18n;
@@ -116,13 +117,16 @@ public class FileApplicationService {
   /** 统一领域事件发布门面（可选依赖，未配置时安全降级） */
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
+  /** 文件类型校验器（Magic Number 校验；来自 ydzs-common-file） */
+  private final ObjectProvider<FileTypeValidator> fileTypeValidatorProvider;
+
   /** 文件夹复制服务（分批复制子树，每批独立事务） */
   private final FolderCopyService folderCopyService;
 
   /** 事务管理器（用于创建编程式事务模板） */
   private final PlatformTransactionManager transactionManager;
 
-  /** 批量任务线程池（使用 ydsz-common-thread 统一管理的 nextwikiTaskExecutor） */
+  /** 批量任务线程池（使用 ydsz-common-thread 统一管理的 nextwikiBatchImportExecutor，null 时降级为 Runnable::run 同步执行） */
   private final Executor batchTaskExecutor;
 
   /** 缓存服务（文件详情、目录列表、配额用量 Redis 缓存） */
@@ -135,10 +139,11 @@ public class FileApplicationService {
   private TransactionTemplate transactionTemplate;
 
   /**
-   * 构造器 — 手动声明以支持 @Qualifier 精确指定线程池 Bean。
+   * 构造器 — 手动声明以支持 ObjectProvider 精确指定线程池 Bean + null 降级保护。
    *
-   * <p>使用 @Qualifier("nextwikiTaskExecutor") 在构造器参数级别消歧，
-   * 避免 Spring 容器中存在多个 Executor 类型 Bean 时抛出歧义异常。
+   * <p>使用 @Qualifier("nextwikiBatchImportExecutor") 在构造器参数级别消歧，
+   * ObjectProvider.getIfAvailable() 避免 Spring 容器中存在多个 Executor 类型 Bean 时抛出歧义异常，
+   * null 时使用 Runnable::run 同步执行降级。
    */
   public FileApplicationService(
       SnowflakeIdGenerator snowflakeIdGenerator,
@@ -157,9 +162,10 @@ public class FileApplicationService {
       VirusScanApplicationService virusScanApplicationService,
       ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider,
       ObjectProvider<DomainEventPublisher> eventPublisherProvider,
+      ObjectProvider<FileTypeValidator> fileTypeValidatorProvider,
       FolderCopyService folderCopyService,
       PlatformTransactionManager transactionManager,
-      @Qualifier("nextwikiTaskExecutor") Executor batchTaskExecutor,
+      @Qualifier("nextwikiBatchImportExecutor") ObjectProvider<Executor> batchTaskExecutorProvider,
       NextwikiCacheService cacheService,
       NextwikiStructMapper mapper,
       NextwikiProperties properties) {
@@ -179,9 +185,12 @@ public class FileApplicationService {
     this.virusScanApplicationService = virusScanApplicationService;
     this.searchIndexBridgeProvider = searchIndexBridgeProvider;
     this.eventPublisherProvider = eventPublisherProvider;
+    this.fileTypeValidatorProvider = fileTypeValidatorProvider;
     this.folderCopyService = folderCopyService;
     this.transactionManager = transactionManager;
-    this.batchTaskExecutor = batchTaskExecutor;
+    // null 保护：线程池 Bean 不存在时降级为 Runnable::run 同步执行
+    Executor resolved = batchTaskExecutorProvider.getIfAvailable();
+    this.batchTaskExecutor = resolved != null ? resolved : Runnable::run;
     this.cacheService = cacheService;
     this.mapper = mapper;
     this.properties = properties;
@@ -1141,7 +1150,7 @@ public class FileApplicationService {
     }
   }
 
-  /** 上传安全校验：文件大小 + 扩展名黑名单 */
+  /** 上传安全校验：文件大小 + 扩展名黑名单 + Magic Number */
   private void validateUpload(MultipartFile file) {
     if (file == null || file.isEmpty()) {
       throw new BusinessException(NextwikiExceptionCode.FILE_UPLOAD_EMPTY);
@@ -1154,6 +1163,11 @@ public class FileApplicationService {
     String filename = FileOps.sanitizeFileName(file.getOriginalFilename());
     if (filename == null || filename.isEmpty()) {
       throw new BusinessException(NextwikiExceptionCode.FILE_NAME_EMPTY);
+    }
+    // Magic Number 校验（YDIZ-COMMON-061 P1 强制）
+    FileTypeValidator validator = fileTypeValidatorProvider.getIfAvailable();
+    if (validator != null) {
+      validator.validate(file);
     }
     String suffix = FileOps.extractSuffix(filename);
     if (BLOCKED_EXTENSIONS.contains(suffix)) {

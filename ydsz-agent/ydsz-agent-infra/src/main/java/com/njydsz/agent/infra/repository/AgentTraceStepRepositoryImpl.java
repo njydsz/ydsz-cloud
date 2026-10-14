@@ -36,7 +36,7 @@ public class AgentTraceStepRepositoryImpl implements AgentTraceStepRepository {
   public boolean insert(AgentTraceStepDTO dto) {
     AgentTraceStep entity = converter.dtoToEntity(dto);
     return agentTraceStepMapper.batchInsert(
-        java.util.List.of(entity)) > 0;
+        List.of(entity)) > 0;
   }
 
   @Override

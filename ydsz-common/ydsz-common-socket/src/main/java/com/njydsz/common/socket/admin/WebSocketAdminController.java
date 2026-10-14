@@ -3,7 +3,10 @@ package com.njydsz.common.socket.admin;
 import java.util.HashMap;
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,13 +45,22 @@ import com.njydsz.common.socket.session.LocalSessionRegistry;
  */
 @RestController
 @RequestMapping("/admin/ws")
-@RequiredArgsConstructor
+@Data
+@Tag(name = "ws-admin", description = "WebSocket 运维诊断 API（Session 管理/推送诊断）")
 public class WebSocketAdminController {
 
-  private final RealtimePushTemplate pushTemplate;
-  private final LocalSessionRegistry sessionRegistry;
-  private final WebSocketMessageDispatcher messageDispatcher;
-  private final WebSocketMetrics webSocketMetrics;
+  @Autowired
+  private RealtimePushTemplate pushTemplate;
+
+  @Autowired
+  private LocalSessionRegistry sessionRegistry;
+
+  /** C→S 消息分发器（可选，仅在 ydsz.websocket.c2s.enabled=true 时可用） */
+  @Autowired(required = false)
+  private WebSocketMessageDispatcher messageDispatcher;
+
+  @Autowired
+  private WebSocketMetrics webSocketMetrics;
 
   /**
    * 模块实时统计（UX-002 /admin/ws/stats）。
@@ -56,6 +68,7 @@ public class WebSocketAdminController {
    * @return Map 形式统计数据，直接序列化为 JSON 返回
    */
   @GetMapping("/stats")
+  @Operation(summary = "模块实时统计")
   public Map<String, Object> stats() {
     Map<String, Object> result = new HashMap<>(16);
     result.put("sessionCount", sessionRegistry.getTotalSessionCount());
@@ -83,6 +96,7 @@ public class WebSocketAdminController {
    * @return 本地 Session 快照映射
    */
   @GetMapping("/sessions")
+  @Operation(summary = "查询指定用户本地 Session")
   public Map<String, Object> sessions(@RequestParam String userId) {
     Map<String, Object> result = new HashMap<>(8);
     result.put("userId", userId);
@@ -97,6 +111,7 @@ public class WebSocketAdminController {
    * @return 操作结果
    */
   @DeleteMapping("/sessions/{sessionId}")
+  @Operation(summary = "强制断开指定 Session")
   public Map<String, Object> killSession(@PathVariable String sessionId) {
     Map<String, Object> result = new HashMap<>(8);
     try {
@@ -125,6 +140,7 @@ public class WebSocketAdminController {
    * @return 推送结果
    */
   @PostMapping("/push/direct")
+  @Operation(summary = "管理端强制推送到指定用户")
   public Map<String, Object> directPush(
       @RequestParam String userId,
       @RequestParam String type,
@@ -151,6 +167,7 @@ public class WebSocketAdminController {
    * @return HTTP 200 + 简易状态
    */
   @GetMapping("/ping")
+  @Operation(summary = "健康检查")
   public ResponseEntity<String> ping() {
     return ResponseEntity.ok("pong");
   }

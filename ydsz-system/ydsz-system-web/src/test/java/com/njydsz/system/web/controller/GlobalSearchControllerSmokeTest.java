@@ -54,13 +54,13 @@ class GlobalSearchControllerSmokeTest extends BaseControllerMockTest {
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    SearchResponse searchResponse = new SearchResponse();
+    SearchResponse searchResponse = SearchResponse.builder().build();
     when(unifiedSearchService.search(any())).thenReturn(searchResponse);
-    when(unifiedSearchService.suggest(any())).thenReturn(new SearchSuggestion());
+    when(unifiedSearchService.suggest(any())).thenReturn(SearchSuggestion.builder().build());
     when(searchAnalyticsService.getHotKeywords(any(Integer.class))).thenReturn(List.of());
     when(searchAnalyticsService.getZeroResultKeywords(any(Integer.class))).thenReturn(List.of());
     when(searchAnalyticsService.getSummary()).thenReturn(new SearchAnalyticsSummary(
-        "0", "0", "0.00%", "0", "0"));
+        0L, 0L, 0.0, 0, 0));
   }
 
   @Nested

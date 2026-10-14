@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.config.properties.A2aProperties;
@@ -45,6 +46,7 @@ import com.njydsz.common.json.tree.ObjectNode;
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(prefix = "ydsz.agent.a2a", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class HttpA2aClient implements A2aClient {
 
   /** A2A 协议 JSON-RPC 方法名常量 */

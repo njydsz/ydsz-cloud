@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.validation.annotation.Validated;
@@ -65,23 +64,32 @@ import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
 @Slf4j
 @RestController
 @RequestMapping("/literule/rules")
-@RequiredArgsConstructor
 @Validated
 @Tag(name = "规则集市场", description = "规则集发布、安装、版本管理与压测")
 public class RulePackController {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
-
   /** 规则包服务（SPI，由 project 模块提供实现） */
   private final RulePackProvider rulePackProvider;
 
-  /** 规则压测服务（P2-9）：可选注入，RuleAdminService 未装配时为空 */
+  /** 规则压测服务（P2-9）：可选注入，未装配时为 null */
   private final ObjectProvider<RuleStressTestService> ruleStressTestServiceProvider;
 
   /** Web 层转换器（Spring 单例注入） */
   @Resource
   private LiteruleWebConverter literuleWebConverter;
+
+  /**
+   * 手写构造器：将 RulePackProvider 第一个参数改为 ObjectProvider + null 保护，
+   * 避免启动时因找不到该 Bean 而崩溃。
+   */
+  public RulePackController(
+      ObjectProvider<RulePackProvider> rulePackProviderProvider,
+      ObjectProvider<RuleStressTestService> ruleStressTestServiceProvider) {
+    this.rulePackProvider = rulePackProviderProvider.getIfAvailable();
+    this.ruleStressTestServiceProvider = ruleStressTestServiceProvider;
+  }
 
   /**
    * 列出全部规则集（市场首页）

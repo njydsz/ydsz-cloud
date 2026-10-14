@@ -888,12 +888,14 @@ public class LiteRuleAutoConfiguration {
   @ConditionalOnMissingBean
   public RuleApprovalService ruleApprovalService(
       RuleConfigProvider configProvider,
-      DistributedLocker distributedLocker,
+      ObjectProvider<DistributedLocker> distributedLockerProvider,
       ObjectProvider<ApprovalRecordRepository> recordRepoProvider,
       ObjectProvider<ApprovalPermissionChecker> permissionCheckerProvider,
       ObjectProvider<RuleApprovalWorkflowBridge> workflowBridgeProvider,
       I18nMessages i18nMessages) {
-    RuleApprovalService service = new RuleApprovalService(configProvider, distributedLocker, i18nMessages);
+    // ObjectProvider 由 Spring 自动注入（若无 DistributedLocker Bean，getIfAvailable() 返回 null 不抛异常）
+    RuleApprovalService service = new RuleApprovalService(configProvider,
+        distributedLockerProvider, i18nMessages);
     ApprovalRecordRepository recordRepo = recordRepoProvider.getIfAvailable();
     if (recordRepo != null) {
       service.setRecordRepository(recordRepo);

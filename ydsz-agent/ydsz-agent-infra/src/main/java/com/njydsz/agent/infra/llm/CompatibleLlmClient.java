@@ -38,7 +38,10 @@ import com.njydsz.common.json.tree.ObjectNode;
 import io.netty.channel.ChannelOption;
 
 /**
- * 兼容 Chat Completions API 的 LLM 客户端实现
+ * 兼容 Chat Completions API 的 LLM 客户端
+ *
+ * <p><b>IMPORT-005 豁免：</b>{@code ChannelOption} 为 reactor-netty API 直接要求的底层 Netty 类型参数
+ * （{@code HttpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, ...)} 不可绕过），属既定豁免情形。实现
  *
  * <p>覆盖所有兼容 Chat Completions API 的 Provider：
  *

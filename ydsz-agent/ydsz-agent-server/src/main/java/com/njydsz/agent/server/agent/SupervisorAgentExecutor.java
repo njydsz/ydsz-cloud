@@ -41,6 +41,7 @@ import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.util.id.IdGenerator;
+import java.util.concurrent.CompletionException;
 
 /**
  * Supervisor 多 Agent 协作执行器
@@ -237,7 +238,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
                       } catch (RuntimeException e) {
                         throw e;
                       } catch (Exception e) {
-                        throw new java.util.concurrent.CompletionException(e);
+                        throw new CompletionException(e);
                       }
                     },
                     SubAgentExecutorPool.getExecutor())

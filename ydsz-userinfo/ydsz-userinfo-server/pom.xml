@@ -169,8 +169,35 @@
             <artifactId>jjwt-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
-        <!--
-            P0-FIX: 删除 spring-boot-starter-mail 直接依赖。
+        <!-- Testcontainers：集成测试数据库/缓存真实环境（云顶编码规范 §14.3） -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- ydzs-userinfo-infra（测试域）：提供 RepositoryImpl + MyBatis Mapper 用于集成测试 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-userinfo-infra</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Spring Boot Test：@SpringBootTest + @DynamicPropertySource 支持 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- P0-FIX: 删除 spring-boot-starter-mail 直接依赖。
             SmtpAlertNotificationChannel 改为通过 ydsz-common-notify 的 NotifyHelper 发邮件，
             底层 JavaMailSender 由 common-notify 统一装配（YDIZ-NOTIFY 规范）。
         -->
@@ -199,6 +226,12 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- ArchUnit：DDD 分层架构合规门禁（YDIZ-DDD-001 P0 编译期拦截） -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
             <scope>test</scope>
         </dependency>
 

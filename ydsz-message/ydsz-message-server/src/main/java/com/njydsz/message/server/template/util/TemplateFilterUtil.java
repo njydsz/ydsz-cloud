@@ -103,7 +103,7 @@ public class TemplateFilterUtil {
       }
       if (value instanceof String str) {
         // 尝试解析 ISO 格式
-        return DateUtils.formatLocalDateTime(LocalDateTime.parse(str), fmt);
+        return DateUtils.formatLocalDateTime(DateUtils.parseIso(str), fmt);
       }
       if (value instanceof Long ts) {
         return DateUtils.formatLocalDateTime(

@@ -9,7 +9,9 @@ import com.njydsz.common.thread.util.ExecutorUtils.BlockingQueueType;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -21,8 +23,10 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
@@ -263,7 +267,7 @@ public class WebSocketAutoConfiguration {
       WebSocketAuditService auditService,
       WebSocketProperties properties,
       @Autowired(required = false) WebSocketHandshakeRateLimiter handshakeRateLimiter,
-      @Autowired(required = false) WebSocketGracefulShutdown gracefulShutdown) {
+      @Lazy @Autowired(required = false) WebSocketGracefulShutdown gracefulShutdown) {
     log.info("[WebSocket] 注册 JWT 握手鉴权拦截器 (含连接数检查 + 审计 + 网关透传 P1-5 + 握手限流 SEC-001 + 优雅停机 ARCH-003)");
     return new WebSocketAuthInterceptor(
         tokenService, connectionLimiter, auditService, properties, handshakeRateLimiter, gracefulShutdown);
@@ -498,7 +502,7 @@ public class WebSocketAutoConfiguration {
   public WebSocketSessionEventListener webSocketSessionEventListener(
       OnlineUserService onlineUserService,
       OfflineMessageStore offlineMessageStore,
-      SimpMessagingTemplate messagingTemplate,
+      @Lazy SimpMessagingTemplate messagingTemplate,
       @Autowired(required = false) WebSocketHeartbeatHandler heartbeatHandler,
       @Autowired(required = false) WebSocketAuditService auditService,
       @Autowired(required = false) List<WebSocketConnectionListener> connectionListeners,
@@ -909,9 +913,12 @@ public class WebSocketAutoConfiguration {
    * <p>仅当 classpath 存在 Spring Web（{@code RestController} 可见）时装配，避免在非 web 工程中因导入
    * {@code WebSocketAdminController} 出现 ClassNotFoundException。
    *
+   * <p>{@code WebSocketMessageDispatcher} 通过 {@code @Autowired(required = false)} 注入 Controller，
+   * 未启用 C→S 路由时传 null，不影响其他运维端点的正常运行。
+   *
    * @param pushTemplate 推送模板，用于 /push/direct 诊断推送
    * @param sessionRegistry 本地会话注册表
-   * @param messageDispatcher C-S 消息分发器
+   * @param messageDispatcher C-S 消息分发器（可为 null）
    * @param webSocketMetrics WebSocket 指标收集器
    * @return Admin REST Controller
    */
@@ -920,9 +927,14 @@ public class WebSocketAutoConfiguration {
   public WebSocketAdminController webSocketAdminController(
       RealtimePushTemplate pushTemplate,
       LocalSessionRegistry sessionRegistry,
-      WebSocketMessageDispatcher messageDispatcher,
+      ObjectProvider<WebSocketMessageDispatcher> messageDispatcherProvider,
       WebSocketMetrics webSocketMetrics) {
-    return new WebSocketAdminController(pushTemplate, sessionRegistry, messageDispatcher, webSocketMetrics);
+    WebSocketAdminController controller = new WebSocketAdminController();
+    controller.setPushTemplate(pushTemplate);
+    controller.setSessionRegistry(sessionRegistry);
+    controller.setMessageDispatcher(messageDispatcherProvider.getIfAvailable());
+    controller.setWebSocketMetrics(webSocketMetrics);
+    return controller;
   }
 
   /** No-op 集群发布者（集群未启用时的降级实现，始终返回 false 触发本地推送）。 */

@@ -62,5 +62,5 @@ public interface ExportTaskRepository {
    * @param expireBefore 过期时间阈值
    * @return 删除条数
    */
-  int deleteExpired(java.time.LocalDateTime expireBefore);
+  int deleteExpired(LocalDateTime expireBefore);
 }

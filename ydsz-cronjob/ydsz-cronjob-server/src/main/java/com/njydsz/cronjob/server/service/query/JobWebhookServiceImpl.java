@@ -13,7 +13,6 @@ import com.njydsz.cronjob.domain.constants.CronjobConstants;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
-import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
 import com.njydsz.cronjob.domain.service.JobWebhookService;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;

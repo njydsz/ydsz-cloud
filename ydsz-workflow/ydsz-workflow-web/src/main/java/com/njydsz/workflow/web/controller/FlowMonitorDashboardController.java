@@ -719,7 +719,7 @@ public class FlowMonitorDashboardController {
       return DateUtils.parseLocalDateTime(str, DateUtils.DEFAULT_DATE_TIME_PATTERN);
     } catch (Exception e) {
       try {
-        return LocalDate.parse(str).atStartOfDay();
+        return DateUtils.parseDateIso(str).atStartOfDay();
       } catch (Exception ex) {
         log.warn(I18n.message("workflow.monitor.datetime.parse.failed", new Object[]{str}));
         return null;

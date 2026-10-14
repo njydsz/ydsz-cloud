@@ -135,6 +135,8 @@ public class FlowInstanceQueryService {
           list, FlowInstanceVO::getInitiatorId, FlowInstanceVO::setInitiatorName, NameType.USER);
     } catch (Exception e) {
       log.warn("[FlowInstanceQuery] 批量富化 initiatorName 失败，降级为单条: {}", e.getMessage());
+      // TODO: N+1 治理 — 降级路径仍产生 N 次 API 调用（每个 instance 一次 enrichOne），高并发下可能击穿名称服务
+      // 修复建议：在 NameAssembler 层增加熔断+缓存降级，空列表快速返回，避免逐条调用
       // 降级：单条富化
       for (FlowInstanceVO inst : list) {
         if (inst != null
@@ -246,6 +248,10 @@ public class FlowInstanceQueryService {
     } catch (Exception e) {
       log.debug("[Flow] 数据权限片段构建失败（无登录用户上下文）: {}", e.getMessage());
     }
+    // TODO: N+1 治理 — findPage + countPage 产生两次 DB 查询（COUNT + SELECT），
+    // 当分页结果集较大时 COUNT 全表扫描耗时严重
+    // 修复建议： PostgreSQL 可用 EstimateCount（pg_class.reltuples）替代精确 COUNT，
+    //          或缓存 COUNT 结果（相同查询条件 5 秒内复用）
     List<FlowInstanceVO> list = instanceRepository.findPage(query);
     long total = instanceRepository.countPage(query);
     return PageResponse.success(total, (long) query.getPageNum(), (long) query.getPageSize(), list);

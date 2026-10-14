@@ -60,6 +60,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
 import com.njydsz.cronjob.server.vo.JobExportVO;
 import com.njydsz.cronjob.server.vo.JobLogExportVO;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * 任务调度 Controller
@@ -500,7 +501,7 @@ public class JobController {
   @GetMapping("/export")
   public void exportJobs(@RequestParam(required = false) String keyword,
       @RequestParam(required = false) String status, @RequestParam(required = false) String group,
-      jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+      HttpServletResponse response) throws java.io.IOException {
     String fileName = "jobs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
@@ -552,7 +553,7 @@ public class JobController {
   @GetMapping("/log/export")
   public void exportJobLogs(@RequestParam(required = false) String jobKey,
       @RequestParam(required = false) String status,
-      jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+      HttpServletResponse response) throws java.io.IOException {
     String fileName = "job_logs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION,

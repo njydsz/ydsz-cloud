@@ -12,6 +12,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.teamrun.TeamRun;
@@ -51,7 +52,16 @@ public class TeamRunOrchestrationService {
 
 
     private final TeamRunRepository teamRunRepository;
-    private final AgentExecutionService agentExecutionService;
+
+    /**
+     * Agent 执行服务（SPI，由具体业务模块实现）。
+     *
+     * <p>使用 ObjectProvider 延迟获取，无实现方时降级处理，避免启动失败。
+     */
+    private final ObjectProvider<AgentExecutionService> agentExecutionServiceProvider;
+
+    /** 解析后的 Agent 执行服务实例（null 表示不可用） */
+    private AgentExecutionService agentExecutionService;
 
     /** 用于并行执行的线程池（IO 密集型，VirtualThread） */
     private final ExecutorService executorService =
@@ -64,9 +74,11 @@ public class TeamRunOrchestrationService {
     private static final int MAX_MEMBERS_PER_TEAM_RUN = 10;
 
     public TeamRunOrchestrationService(TeamRunRepository teamRunRepository,
-                                         AgentExecutionService agentExecutionService) {
+                                         ObjectProvider<AgentExecutionService> agentExecutionServiceProvider) {
         this.teamRunRepository = Objects.requireNonNull(teamRunRepository, "teamRunRepository 不能为 null");
-        this.agentExecutionService = Objects.requireNonNull(agentExecutionService, "agentExecutionService 不能为 null");
+        this.agentExecutionServiceProvider = Objects.requireNonNull(agentExecutionServiceProvider, "agentExecutionServiceProvider 不能为 null");
+        // 延迟解析 AgentExecutionService
+        this.agentExecutionService = this.agentExecutionServiceProvider.getIfAvailable();
     }
 
     /**
@@ -339,7 +351,10 @@ public class TeamRunOrchestrationService {
         teamRunRepository.save(current);
 
         try {
-            // 调用 Agent 执行服务
+            // 调用 Agent 执行服务（不可用时降级抛出业务异常）
+            if (agentExecutionService == null) {
+                throw new TeamRunException(I18n.message("agent.error.teamrun.execution_service_unavailable"));
+            }
             String result = agentExecutionService.execute(
                     member.getAgentCode(),
                     member.getInputContext(),
@@ -373,6 +388,9 @@ public class TeamRunOrchestrationService {
      */
     private TeamRunMember executeMemberSync(TeamRun teamRun, TeamRunMember member) {
         try {
+            if (agentExecutionService == null) {
+                return member.withError("AgentExecutionService 不可用");
+            }
             String result = agentExecutionService.execute(
                     member.getAgentCode(),
                     member.getInputContext(),

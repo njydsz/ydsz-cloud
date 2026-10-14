@@ -2,7 +2,6 @@ package com.njydsz.workflow.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +11,7 @@ import com.njydsz.workflow.domain.repository.FlowJoinTokenRepository;
 import com.njydsz.workflow.domain.entity.FlowJoinTokenEntity;
 import com.njydsz.workflow.infra.mapper.FlowJoinTokenMapper;
 import com.njydsz.common.auth.util.SecurityUtils;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 并行网关 join token 仓储实现（Infra 层）。
@@ -57,7 +57,7 @@ public class FlowJoinTokenRepositoryImpl implements FlowJoinTokenRepository {
     }
 
     FlowJoinTokenEntity entity = new FlowJoinTokenEntity();
-    entity.setId(UUID.randomUUID().toString().replace("-", ""));
+    entity.setId(String.valueOf(IdGenerator.nextId()));
     entity.setInstanceId(instanceId);
     entity.setJoinNodeCode(joinNodeCode);
     entity.setTotalBranches(totalBranches);

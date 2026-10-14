@@ -99,10 +99,10 @@ class SemanticLlmCacheTest {
     void normalMessages_extractsCorrectly() {
       List<ChatMessage> messages =
           List.of(
-              new ChatMessage(MessageRole.SYSTEM, "系统提示词1"),
-              new ChatMessage(MessageRole.USER, "用户消息1"),
-              new ChatMessage(MessageRole.SYSTEM, "最终系统提示词"),
-              new ChatMessage(MessageRole.USER, "最终用户消息"));
+              ChatMessage.system("系统提示词1"),
+              ChatMessage.user("用户消息1", "conv-001"),
+              ChatMessage.system("最终系统提示词"),
+              ChatMessage.user("最终用户消息", "conv-001"));
 
       var result = SemanticLlmCache.extractCacheableContent(messages);
 
@@ -129,7 +129,7 @@ class SemanticLlmCacheTest {
     @DisplayName("仅包含 null 内容的消息 → 返回空字符串键值")
     void nullContentMessages_returnsEmptyEntry() {
       List<ChatMessage> messages =
-          List.of(new ChatMessage(MessageRole.SYSTEM, null), new ChatMessage(MessageRole.USER, null));
+          List.of(ChatMessage.system(null), ChatMessage.user(null, "conv-null"));
 
       var result = SemanticLlmCache.extractCacheableContent(messages);
       assertThat(result).isNotNull();

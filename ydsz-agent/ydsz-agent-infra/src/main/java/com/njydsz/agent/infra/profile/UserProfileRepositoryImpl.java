@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.agent.domain.entity.UserProfile;
@@ -30,11 +31,27 @@ import com.njydsz.agent.domain.profile.UserProfileRepository;
 @RequiredArgsConstructor
 public class UserProfileRepositoryImpl implements UserProfileRepository {
 
-  private final BaseMapper<UserProfile> userProfileMapper;
+  /** 用户画像 Mapper（ObjectProvider 包装，允许 MyBatis-Plus 未配置时启动不报错） */
+  private final ObjectProvider<BaseMapper<UserProfile>> userProfileMapperProvider;
+
+  /**
+   * 获取 BaseMapper 实例（延迟解析，若不可用则抛出明确异常提示开发者检查配置）。
+   *
+   * @return BaseMapper 实例
+   * @throws IllegalStateException 如果 Mapper Bean 不可用
+   */
+  private BaseMapper<UserProfile> mapper() {
+    BaseMapper<UserProfile> mapper = userProfileMapperProvider.getIfAvailable();
+    if (mapper == null) {
+      throw new IllegalStateException(
+          "BaseMapper<UserProfile> 不可用，请检查 agent 模块的 MyBatis-Plus 配置（@MapperScan 或 Mapper 接口）");
+    }
+    return mapper;
+  }
 
   @Override
   public Optional<UserProfile> findByUserId(String userId) {
-    return Optional.ofNullable(userProfileMapper.selectById(userId));
+    return Optional.ofNullable(mapper().selectById(userId));
   }
 
   @Override
@@ -43,12 +60,12 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
       return;
     }
     prepareTimestamps(profile);
-    UserProfile existing = userProfileMapper.selectById(profile.getUserId());
+    UserProfile existing = mapper().selectById(profile.getUserId());
     if (existing == null) {
-      userProfileMapper.insert(profile);
+      mapper().insert(profile);
       log.debug("用户画像已创建: userId={}", profile.getUserId());
     } else {
-      userProfileMapper.updateById(profile);
+      mapper().updateById(profile);
       log.debug("用户画像已更新(upsert): userId={}", profile.getUserId());
     }
   }
@@ -59,7 +76,7 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
       return;
     }
     prepareTimestamps(profile);
-    userProfileMapper.updateById(profile);
+    mapper().updateById(profile);
   }
 
   @Override
@@ -67,7 +84,7 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
     if (limit <= 0) {
       return Collections.emptyList();
     }
-    return userProfileMapper.selectList(
+    return mapper().selectList(
         new LambdaQueryWrapper<UserProfile>()
             .orderByDesc(UserProfile::getLastInteractionAt)
             .last("LIMIT " + limit));
@@ -75,7 +92,7 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
 
   @Override
   public void deleteByUserId(String userId) {
-    userProfileMapper.deleteById(userId);
+    mapper().deleteById(userId);
   }
 
   /**

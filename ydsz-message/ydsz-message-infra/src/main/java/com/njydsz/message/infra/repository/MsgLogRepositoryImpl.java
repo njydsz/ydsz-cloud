@@ -22,6 +22,7 @@ import com.njydsz.message.domain.entity.MsgLog;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 消息发送日志仓储实现（Infra 层）。
@@ -192,14 +193,14 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
     }
     if (query.getStartTime() != null && !query.getStartTime().isBlank()) {
       try {
-        wrapper.ge("created_at", LocalDateTime.parse(query.getStartTime()));
+        wrapper.ge("created_at", DateUtils.parseIso(query.getStartTime()));
       } catch (DateTimeParseException e) {
         log.debug(I18n.message("message.log.infra.mlogrepo.date.format.mismatch.skip"), e);
       }
     }
     if (query.getEndTime() != null && !query.getEndTime().isBlank()) {
       try {
-        wrapper.le("created_at", LocalDateTime.parse(query.getEndTime()));
+        wrapper.le("created_at", DateUtils.parseIso(query.getEndTime()));
       } catch (DateTimeParseException e) {
         log.debug(I18n.message("message.log.infra.mlogrepo.date.format.mismatch.skip"), e);
       }

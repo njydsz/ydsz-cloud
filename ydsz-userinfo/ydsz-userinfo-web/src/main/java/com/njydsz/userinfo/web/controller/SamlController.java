@@ -26,6 +26,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.server.auth.SamlService;
@@ -65,6 +66,8 @@ import com.njydsz.common.locales.util.I18n;
 @RestController
 @RequestMapping("/saml")
 @RequiredArgsConstructor
+// 仅在 ydsz.userinfo.saml.enabled=true 时注册，与 SamlService 条件一致，避免 Bean 缺失导致启动失败
+@ConditionalOnProperty(prefix = "ydsz.userinfo.saml", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class SamlController {
 
   /** SAML 2.0 SP 服务 */

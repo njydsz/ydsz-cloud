@@ -28,6 +28,7 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 流程历史数据归档 Service 实现
@@ -203,7 +204,7 @@ FlowArchiveCursorVO cursor = archiveCursorRepository.findByTypeAndTenant(
     LocalDateTime maxEndAt = null;
     if (cursorValue != null) {
       try {
-        maxEndAt = LocalDateTime.parse(cursorValue);
+        maxEndAt = DateUtils.parseIso(cursorValue);
       } catch (Exception e) {
         log.warn("[FlowHistoryArchive] 游标值解析失败: {}", cursorValue);
       }

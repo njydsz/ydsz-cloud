@@ -19,6 +19,7 @@ import com.njydsz.generator.entity.GenTemplate;
 import com.njydsz.generator.repository.GenTemplateRepository;
 import com.njydsz.generator.vo.DiffLineVO;
 import com.njydsz.generator.vo.TemplateValidateVO;
+import java.io.StringWriter;
 
 /**
  * 模板领域服务。
@@ -193,7 +194,7 @@ public class TemplateService {
     }
     try {
       VelocityContext ctx = new VelocityContext();
-      Velocity.evaluate(ctx, new java.io.StringWriter(),
+      Velocity.evaluate(ctx, new StringWriter(),
           "validateCheck", content);
       return TemplateValidateVO.builder()
           .isValid(true)

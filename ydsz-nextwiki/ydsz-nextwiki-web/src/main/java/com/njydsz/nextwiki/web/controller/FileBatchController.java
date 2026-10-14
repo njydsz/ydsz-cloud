@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +27,8 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.vo.DiffResultVO;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
@@ -99,8 +102,8 @@ public class FileBatchController {
   /** 文件应用服务（封装批量操作/版本管理/星标等业务编排） */
   private final FileApplicationService fileApplicationService;
 
-  /** 批量任务异步执行服务 */
-  private final BatchTaskService batchTaskService;
+  /** 批量任务异步执行服务（可选Bean，使用 ObjectProvider 避免启动时创建失败） */
+  private final ObjectProvider<BatchTaskService> batchTaskServiceProvider;
 
   /** 版本对比应用服务 */
   private final VersionDiffApplicationService versionDiffApplicationService;
@@ -248,7 +251,7 @@ public class FileBatchController {
       @RequestBody List<String> nodeIds,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-    String taskId = batchTaskService.submitBatchDelete(nodeIds, userId);
+    String taskId = getBatchTaskService().submitBatchDelete(nodeIds, userId);
     return YdszResponse.success(taskId);
   }
 
@@ -273,7 +276,7 @@ public class FileBatchController {
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     String taskId =
-        batchTaskService.submitBatchMove(request.getNodeIds(), request.getTargetParentId(), userId);
+        getBatchTaskService().submitBatchMove(request.getNodeIds(), request.getTargetParentId(), userId);
     return YdszResponse.success(taskId);
   }
 
@@ -287,7 +290,7 @@ public class FileBatchController {
   @Operation(summary = "查询批量任务状态")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VIEW)
   public YdszResponse<BatchTaskStatus> getBatchTaskStatus(@PathVariable String taskId) {
-    BatchTaskStatus status = batchTaskService.getTaskStatus(taskId);
+    BatchTaskStatus status = getBatchTaskService().getTaskStatus(taskId);
     return YdszResponse.success(status);
   }
 
@@ -314,5 +317,19 @@ public class FileBatchController {
 
     fileApplicationService.toggleStar(nodeId, userId);
     return YdszResponse.success();
+  }
+
+  /**
+   * 获取 BatchTaskService 实例（通过 ObjectProvider 延迟解析，避免启动时 Bean 缺失）。
+   *
+   * @return BatchTaskService 实例
+   * @throws BusinessException 如果 Bean 不可用（错误码 W01023）
+   */
+  private BatchTaskService getBatchTaskService() {
+    BatchTaskService service = batchTaskServiceProvider.getIfAvailable();
+    if (service == null) {
+      throw new BusinessException(NextwikiExceptionCode.FILE_SERVICE_UNAVAILABLE);
+    }
+    return service;
   }
 }

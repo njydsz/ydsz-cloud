@@ -109,8 +109,9 @@ public class TracingAutoConfiguration {
       if (OpenTelemetryTraceContext.isAvailable()) {
         return new OpenTelemetryTraceContext();
       }
-    } catch (Exception e) {
-      log.info("[Sentry] OpenTelemetry SDK 不可用, 跳过");
+    } catch (Throwable e) {
+      // 捕获 Error（如 NoClassDefFoundError），OTel API 不在 classpath 时降级
+      log.info("[Sentry] OpenTelemetry SDK 不可用, 跳过: {}", e.getMessage());
     }
     return null;
   }

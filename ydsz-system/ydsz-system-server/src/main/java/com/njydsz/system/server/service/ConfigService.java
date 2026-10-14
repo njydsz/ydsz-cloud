@@ -10,6 +10,7 @@ import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.server.vo.ImportResultVO;
+import java.util.HashMap;
 
 
 
@@ -349,7 +350,7 @@ public interface ConfigService {
    * @return 开关名 → 开关值 的映射；无开关配置时返回空 Map
    */
   default Map<String, Object> getFeatureFlags() {
-    Map<String, Object> flags = new java.util.HashMap<>(16);
+    Map<String, Object> flags = new HashMap<>(16);
     for (ConfigVO config : listPublicConfigs()) {
       String flagKey = extractFeatureFlagKey(config);
       if (flagKey == null) {

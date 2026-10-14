@@ -1,7 +1,5 @@
 package com.njydsz.system.web.controller;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +31,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.system.domain.feature.FeatureFlagDTO;
 import com.njydsz.system.domain.query.FeatureFlagPageQuery;
@@ -71,7 +70,8 @@ public class FeatureFlagAdminController {
   private static final AtomicLong ID_SEED = new AtomicLong(1);
 
   /** 日期时间格式 */
-  private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+  /** 日期格式（与 DateTimeFormatter.ISO_LOCAL_DATE_TIME 等价） */
+  private static final String DATE_FMT = "yyyy-MM-dd'T'HH:mm:ss";
 
   /**
    * 分页查询特性开关列表。
@@ -136,7 +136,7 @@ public class FeatureFlagAdminController {
     vo.setCurrentValue(dto.getCurrentValue());
     vo.setDescription(dto.getDescription());
     vo.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
-    String now = LocalDateTime.now().format(DATE_FMT);
+    String now = DateUtils.formatNow(DATE_FMT);
     vo.setCreatedAt(now);
     vo.setUpdatedAt(now);
     STORE.put(id, vo);
@@ -179,7 +179,7 @@ public class FeatureFlagAdminController {
     vo.setCurrentValue(dto.getCurrentValue());
     vo.setDescription(dto.getDescription());
     vo.setStatus(dto.getStatus() != null ? dto.getStatus() : vo.getStatus());
-    vo.setUpdatedAt(LocalDateTime.now().format(DATE_FMT));
+    vo.setUpdatedAt(DateUtils.formatNow(DATE_FMT));
     STORE.put(dto.getId(), vo);
     log.info("[FeatureFlagAdmin] updated: key={}, id={}", dto.getFlagKey(), dto.getId());
     return YdszResponse.success(Boolean.TRUE);

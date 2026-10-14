@@ -17,6 +17,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.tenant.redis.TenantAwareRedisKey;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * Redis 对话记忆实现
@@ -232,7 +233,7 @@ public class RedisConversationMemory implements ConversationMemory {
         usage = new TokenUsage(sm.promptTokens, sm.completionTokens);
       }
       LocalDateTime createdAt =
-          sm.createdAt != null ? LocalDateTime.parse(sm.createdAt) : LocalDateTime.now();
+          sm.createdAt != null ? DateUtils.parseIso(sm.createdAt) : LocalDateTime.now();
       // 反序列化多模态内容（v2+ 数据；v1 旧数据该字段为 null，安全跳过）
       MessageContent multimodalContent = null;
       if (sm.multimodalContent != null && !sm.multimodalContent.isBlank()) {

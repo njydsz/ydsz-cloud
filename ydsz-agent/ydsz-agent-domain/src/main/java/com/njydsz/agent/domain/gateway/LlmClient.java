@@ -71,6 +71,20 @@ public interface LlmClient {
   String getProvider();
 
   /**
+   * 获取当前客户端支持的全部 Provider 名称列表。
+   *
+   * <p>默认实现返回仅包含自身 {@link #getProvider()} 的单元素列表（单 Provider 客户端通用）；
+   * 路由器实现（{@code LlmClientRouter}）覆写为返回所有已注册的 Provider 名称。
+   *
+   * <p>该方法将 Provider 枚举能力下沉至 domain 接口，消除 web 层对 infra 路由器类型的显式依赖。
+   *
+   * @return Provider 名称列表（不可为 null，至少包含一个元素）
+   */
+  default List<String> getAvailableProviders() {
+    return List.of(getProvider());
+  }
+
+  /**
    * 文本向量化（Embedding）
    *
    * <p>将输入文本转化为高维浮点向量，用于语义相似度计算。 Provider 需兼容 OpenAI Embeddings API 格式（{@code POST /embeddings}）。

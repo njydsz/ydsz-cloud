@@ -118,6 +118,11 @@
             <artifactId>ydsz-common-lock</artifactId>
         </dependency>
 
+        <!-- opentelemetry-api：解决 ClassNotFoundException: io.opentelemetry.api.GlobalOpenTelemetry -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+        </dependency>
         <!-- spring-boot-starter-test: MockMvc / spring-test / JsonPath / JUnit Jupiter + Mockito） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

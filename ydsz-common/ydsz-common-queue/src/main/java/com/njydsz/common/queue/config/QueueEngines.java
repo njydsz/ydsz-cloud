@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.queue.IMessageQueue;
@@ -55,7 +54,6 @@ import com.njydsz.common.queue.service.IMessageSubscriber;
  * @author ydsz-team
  * @since 26.09.20
  */
-@Component
 @Slf4j
 public class QueueEngines {
 

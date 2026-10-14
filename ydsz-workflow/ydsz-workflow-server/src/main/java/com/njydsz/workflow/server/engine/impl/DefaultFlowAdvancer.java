@@ -55,7 +55,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
 
   private final FlowInstanceRepository instanceRepository;
   private final FlowRunTaskRepository taskRepository;
-  private final FlowTaskService taskService;
+  /** 流程任务服务（@Lazy 打破与 FlowTaskService → FlowInstanceService → DefaultFlowAdvancer 的循环依赖） */
+  @Lazy private final FlowTaskService taskService;
   private final FlowInstanceService instanceService;
   private final DefaultFlowVariableStrategy variableStrategy;
 

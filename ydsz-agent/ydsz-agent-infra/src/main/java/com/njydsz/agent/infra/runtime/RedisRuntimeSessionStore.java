@@ -20,6 +20,7 @@ import com.njydsz.agent.domain.runtime.RuntimeSession;
 import com.njydsz.agent.domain.runtime.RuntimeSessionStore;
 import com.njydsz.agent.domain.state.AgentStateKey;
 import com.njydsz.agent.domain.state.AgentStateStore;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 基于 Redis 的 Agent 运行时会话存储实现 — 支持多副本共享与重启恢复。
@@ -362,7 +363,7 @@ public class RedisRuntimeSessionStore implements RuntimeSessionStore {
       return null;
     }
     try {
-      return LocalDateTime.parse(String.valueOf(value));
+      return DateUtils.parseIso(String.valueOf(value));
     } catch (Exception e) {
       return null;
     }
