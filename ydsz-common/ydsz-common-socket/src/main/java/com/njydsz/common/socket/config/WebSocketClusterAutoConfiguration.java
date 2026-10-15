@@ -55,6 +55,7 @@ public class WebSocketClusterAutoConfiguration {
    */
   @Bean
   @ConditionalOnBean(type = "org.springframework.data.redis.core.StringRedisTemplate")
+  @ConditionalOnBean(SimpMessagingTemplate.class)
   public WebSocketClusterPublisher webSocketClusterPublisher(
       org.springframework.data.redis.core.StringRedisTemplate redisTemplate,
       WebSocketProperties properties,
@@ -73,6 +74,7 @@ public class WebSocketClusterAutoConfiguration {
    * @return 集群广播订阅者实例
    */
   @Bean
+  @ConditionalOnBean(SimpMessagingTemplate.class)
   public WebSocketClusterSubscriber webSocketClusterSubscriber(
       SimpMessagingTemplate messagingTemplate, LocalSessionRegistry sessionRegistry) {
     log.info("[WS-Cluster] 注册 WebSocketClusterSubscriber（含 KICK 处理器）");
@@ -88,7 +90,7 @@ public class WebSocketClusterAutoConfiguration {
    * @return Redis 消息监听容器实例
    */
   @Bean
-  @ConditionalOnBean(RedisConnectionFactory.class)
+  @ConditionalOnBean({RedisConnectionFactory.class, WebSocketClusterSubscriber.class})
   public RedisMessageListenerContainer wsClusterListenerContainer(
       RedisConnectionFactory connectionFactory,
       WebSocketClusterSubscriber subscriber,

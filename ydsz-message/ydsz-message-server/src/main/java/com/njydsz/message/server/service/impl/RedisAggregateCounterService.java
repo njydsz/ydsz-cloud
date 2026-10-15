@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.lock.core.DistributedLocker;
+import org.springframework.beans.factory.ObjectProvider;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.domain.constant.MessageConstants;
 
@@ -39,7 +40,11 @@ public class RedisAggregateCounterService {
 
 
   private final RedisStringOps redisStringOps;
-  private final DistributedLocker distributedLocker;
+  private final ObjectProvider<DistributedLocker> distributedLockerProvider;
+
+  private DistributedLocker getDistributedLocker() {
+    return distributedLockerProvider.getIfAvailable();
+  }
 
   /** 默认聚合窗口（分钟） */
   private static final long DEFAULT_AGGREGATE_WINDOW_MINUTES = 30L;

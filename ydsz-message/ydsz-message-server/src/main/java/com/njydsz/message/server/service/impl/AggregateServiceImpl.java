@@ -159,7 +159,10 @@ public class AggregateServiceImpl implements AggregateService {
           .build();
     } finally {
       if (lockValue != null) {
-        distributedLocker.unlock(lockKey, lockValue);
+        DistributedLocker locker2 = getDistributedLocker();
+        if (locker2 != null) {
+          locker2.unlock(lockKey, lockValue);
+        }
       }
     }
   }
