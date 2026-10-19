@@ -3,6 +3,8 @@
 #  通过 bootstrap.yml shared-configs 引入
 #  依赖 common: tenant, cache, redis, sentry, json, i18n, thread
 # =====================================================================
+server:
+  port: 9010
 ydsz:
   core:
     feature-flags:

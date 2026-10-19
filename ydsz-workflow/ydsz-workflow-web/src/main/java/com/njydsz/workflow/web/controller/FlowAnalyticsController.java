@@ -1,6 +1,8 @@
 package com.njydsz.workflow.web.controller.analytics;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -420,7 +422,7 @@ public class FlowAnalyticsController {
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
         "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
-            + "filename*=UTF-8''" + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+            + "filename*=UTF-8''" + URLEncoder.encode(fileName, StandardCharsets.UTF_8)
                 .replace("+", "%20"));
     String tenantId = TenantContextHolder.getTenantId();
     List<FlowApproverEfficiencyExportVO> rows =
@@ -451,7 +453,7 @@ publishDataExportAudit("流程分析", "approver_efficiency", rows.size());
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
         "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
-            + "filename*=UTF-8''" + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+            + "filename*=UTF-8''" + URLEncoder.encode(fileName, StandardCharsets.UTF_8)
                 .replace("+", "%20"));
     String tenantId = TenantContextHolder.getTenantId();
     List<FlowEfficiencyExportVO> rows =

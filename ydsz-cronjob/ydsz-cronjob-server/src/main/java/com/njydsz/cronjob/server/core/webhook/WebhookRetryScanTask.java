@@ -2,6 +2,7 @@ package com.njydsz.cronjob.server.core.webhook;
 
 import java.io.IOException;
 import java.net.URI;
+import jakarta.annotation.PostConstruct;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -98,7 +99,7 @@ public class WebhookRetryScanTask implements ScanTask {
   /**
    * 初始化 HttpClient（延迟加载，等待 @Value 注入完成）。
    */
-  @jakarta.annotation.PostConstruct
+  @PostConstruct
   private void initHttpClient() {
     this.httpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(connectTimeoutSeconds))

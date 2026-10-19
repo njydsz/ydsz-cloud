@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.server.channel.MessageChannel;
@@ -96,7 +97,6 @@ public class PushChannel implements MessageChannel {
                     .findFirst()
                     .orElseThrow(
                         () ->
-                            new IllegalStateException(
-                                "无可用 PUSH provider，请检查 PushProvider Bean 注册")));
+                            new SysException("push.provider.not.found")));
   }
 }

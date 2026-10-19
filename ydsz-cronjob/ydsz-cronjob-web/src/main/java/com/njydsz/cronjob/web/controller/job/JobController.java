@@ -1,5 +1,7 @@
 package com.njydsz.cronjob.web.controller.job;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -506,7 +508,7 @@ public class JobController {
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
         "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
-            + "filename*=UTF-8''" + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+            + "filename*=UTF-8''" + URLEncoder.encode(fileName, StandardCharsets.UTF_8)
                 .replace("+", "%20"));
 
     final int pageSize = 200;
@@ -558,7 +560,7 @@ public class JobController {
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
         "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
-            + "filename*=UTF-8''" + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+            + "filename*=UTF-8''" + URLEncoder.encode(fileName, StandardCharsets.UTF_8)
                 .replace("+", "%20"));
 
     final int pageSize = 200;

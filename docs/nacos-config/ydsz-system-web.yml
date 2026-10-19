@@ -3,6 +3,8 @@
 #  通过 bootstrap.yml shared-configs 引入
 #  依赖 common: jdbc, json, tenant, thread, i18n, sentry, search, audit, excel, safe, feign, lock
 # =====================================================================
+server:
+  port: 9001
 spring:
   datasource:
     hikari:

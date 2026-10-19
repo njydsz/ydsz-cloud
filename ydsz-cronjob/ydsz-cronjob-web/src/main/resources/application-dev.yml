@@ -22,6 +22,8 @@ logging:
     org.springframework: INFO
     root: INFO
 ydsz:
+  websocket:
+    enabled: false
   i18n:
     validate-on-startup: false
   sentry:

@@ -3,6 +3,8 @@
 #  通过 bootstrap.yml shared-configs 引入
 #  依赖 common: jdbc, json, tenant(thread,sentry,search,audit,feign,lock,safe,auth,util,core,domain,base,exception,redis)
 # =====================================================================
+server:
+  port: 9002
 ydsz:
   json:
     warmup-classes:

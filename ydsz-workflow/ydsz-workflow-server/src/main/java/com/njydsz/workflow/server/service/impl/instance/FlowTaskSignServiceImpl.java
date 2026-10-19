@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.service.impl.instance;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,7 +80,7 @@ public class FlowTaskSignServiceImpl {
   /** 用户仓储，写入/查询流程用户 */
   private final FlowUserRepository userRepository;
 
-  private final FlowTaskSupport support;
+  @Lazy private final FlowTaskSupport support;
 
   // ============================== 加签（P1-7） ==============================
 

@@ -80,7 +80,7 @@ spring:
       # 密码加密（Jasypt）启动时解密
     url: ${NACOS_DB_URL:jdbc:postgresql://127.0.0.1:5432/ydsz_cloud?currentSchema=public&stringtype=unspecified}
     username: ${NACOS_DB_USERNAME:postgres}
-    password: ${NACOS_DB_PASSWORD:}
+    password: ${NACOS_DB_PASSWORD:Limw1020}
     driver-class-name: org.postgresql.Driver
 
   # -------------------------------------------------------------------
@@ -202,6 +202,10 @@ management:
 #  ydsz.* 自定义配置
 # ---------------------------------------------------------------------
 ydsz:
+
+  # ============================================================
+  #  本地开发全局开关（各模块在此基础上细化）
+  # ============================================================
 
   # ============================================================
   #  消息队列（ydsz-common-queue）
@@ -378,6 +382,7 @@ ydsz:
   #  Sentry 监控（ydsz-common-sentry）
   # ============================================================
   sentry:
+    enabled: false   # 本地开发默认关闭 Sentry
     app-name: ydsz-cloud-common
     metrics:
       primary: micrometer

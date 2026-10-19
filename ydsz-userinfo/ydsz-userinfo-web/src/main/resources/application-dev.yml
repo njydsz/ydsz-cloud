@@ -8,9 +8,6 @@ spring:
     allow-circular-references: true
     lazy-initialization: true
 
-# 禁用 WebSocket（本地开发不需要，避免 TaskScheduler 注入冲突导致 "Heartbeat values configured but no TaskScheduler provided"）
-ydsz:
-
 datasource:
   hikari:
     connection-timeout: 5000

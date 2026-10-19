@@ -54,8 +54,7 @@ public class WebSocketClusterAutoConfiguration {
    * @return 集群广播发布者实例
    */
   @Bean
-  @ConditionalOnBean(type = "org.springframework.data.redis.core.StringRedisTemplate")
-  @ConditionalOnBean(SimpMessagingTemplate.class)
+  @ConditionalOnBean(value = {org.springframework.data.redis.core.StringRedisTemplate.class, SimpMessagingTemplate.class})
   public WebSocketClusterPublisher webSocketClusterPublisher(
       org.springframework.data.redis.core.StringRedisTemplate redisTemplate,
       WebSocketProperties properties,

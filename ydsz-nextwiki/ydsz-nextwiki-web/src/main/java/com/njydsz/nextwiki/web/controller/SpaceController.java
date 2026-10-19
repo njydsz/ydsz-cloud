@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -247,8 +249,8 @@ public class SpaceController {
   @Schema(description = "创建空间请求")
   public static class CreateSpaceRequest {
     @Schema(description = "空间名称", required = true)
-    @jakarta.validation.constraints.NotBlank(message = "空间名称不能为空")
-    @jakarta.validation.constraints.Size(max = 128, message = "空间名称不能超过128个字符")
+    @NotBlank(message = "空间名称不能为空")
+    @Size(max = 128, message = "空间名称不能超过128个字符")
     private String name;
 
     @Schema(description = "空间描述")
@@ -277,11 +279,11 @@ public class SpaceController {
   @Schema(description = "添加成员请求")
   public static class AddMemberRequest {
     @Schema(description = "目标用户ID", required = true)
-    @jakarta.validation.constraints.NotBlank(message = "用户ID不能为空")
+    @NotBlank(message = "用户ID不能为空")
     private String userId;
 
     @Schema(description = "角色：owner / admin / editor / viewer", required = true)
-    @jakarta.validation.constraints.NotBlank(message = "角色不能为空")
+    @NotBlank(message = "角色不能为空")
     private String role;
   }
 }

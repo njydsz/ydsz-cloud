@@ -319,7 +319,19 @@ public enum CoreExceptionCode implements ExceptionCode {
    *
    * @return 处理结果
    */
-  NOTIFY_ERROR("B02056", "notify.error", 500, false, 0);
+  NOTIFY_ERROR("B02056", "notify.error", 500, false, 0),
+  /**
+   * SMS 提供者未配置
+   *
+   * @return 处理结果
+   */
+  SMS_PROVIDER_NOT_FOUND("B02057", "sms.provider.not.found", 503, false, 0),
+  /**
+   * PUSH 推送提供者未配置
+   *
+   * @return 处理结果
+   */
+  PUSH_PROVIDER_NOT_FOUND("B02058", "push.provider.not.found", 503, false, 0);
 
   // ==================== 字段定义 ====================
 

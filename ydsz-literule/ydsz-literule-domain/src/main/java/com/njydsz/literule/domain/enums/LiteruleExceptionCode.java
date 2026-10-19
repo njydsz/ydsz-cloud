@@ -126,6 +126,9 @@ public enum LiteruleExceptionCode implements ExceptionCode {
   /** 租户隔离校验失败 */
   TENANT_ISOLATION_REQUIRED("B93518", "literule.tenant.isolation.required", 403),
 
+  /** 审批参数不能为空 */
+  APPROVAL_PARAM_REQUIRED("B93519", "literule.approval.param.required"),
+
   // ==================== B93601-B93699 安全/沙箱/熔断 ====================
 
   /** 审批越权操作 */

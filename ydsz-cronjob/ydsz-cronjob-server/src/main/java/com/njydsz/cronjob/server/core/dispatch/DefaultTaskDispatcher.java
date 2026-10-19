@@ -27,10 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.event.api.DomainEvent;
@@ -102,9 +101,8 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
  * @since 26.10.01
  */
 @Slf4j
-@Configuration
+@Service
 @RequiredArgsConstructor
-@ConditionalOnMissingBean(TaskDispatcher.class)
 public class DefaultTaskDispatcher implements TaskDispatcher {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;

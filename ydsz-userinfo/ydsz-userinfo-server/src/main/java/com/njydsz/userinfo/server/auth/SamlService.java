@@ -375,7 +375,7 @@ public class SamlService {
       factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
       return factory.newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
     } catch (Exception e) {
-      throw new SamlException("PARSE", "XML 文档解析失败: " + e.getMessage(), e);
+      throw new SamlException("PARSE", i18n.resolve("userinfo.saml.xml_parse_error", new Object[]{e.getMessage()}), e);
     }
   }
 

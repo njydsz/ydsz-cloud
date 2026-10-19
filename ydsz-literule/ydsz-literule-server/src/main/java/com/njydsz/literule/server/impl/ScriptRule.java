@@ -22,6 +22,7 @@ import javax.script.Compilable;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -709,7 +710,7 @@ public class ScriptRule implements Rule {
   /**
    * 求值已编译脚本（P0-2 辅助方法）
    *
-   * <p>将 checked 的 {@link javax.script.ScriptException} 转为 unchecked， 使其可用于 {@link
+   * <p>将 checked 的 {@link ScriptException} 转为 unchecked， 使其可用于 {@link
    * java.util.concurrent.CompletableFuture#supplyAsync}。
    *
    * @param bindings 脚本绑定变量
@@ -719,7 +720,7 @@ public class ScriptRule implements Rule {
   private Object evalScript(Bindings bindings) {
     try {
       return compiledScript.eval(bindings);
-    } catch (javax.script.ScriptException e) {
+    } catch (ScriptException e) {
       throw RuleEvaluationException.evaluationError(
           getCode(), "script-eval", e);
     }

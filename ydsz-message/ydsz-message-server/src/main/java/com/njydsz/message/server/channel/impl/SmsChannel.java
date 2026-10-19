@@ -154,7 +154,7 @@ public class SmsChannel implements MessageChannel {
                     .findFirst()
                     .orElseThrow(
                         () ->
-                            new IllegalStateException("无可用 SMS provider，请检查 SmsProvider Bean 注册")));
+                            new SysException("sms.provider.not.found")));
   }
 
   /**

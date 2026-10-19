@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -185,7 +187,7 @@ public class SpaceTemplateController {
   @Schema(description = "创建模板请求")
   public static class CreateTemplateRequest {
     @Schema(description = "模板名称", required = true)
-    @jakarta.validation.constraints.NotBlank(message = "模板名称不能为空")
+    @NotBlank(message = "模板名称不能为空")
     private String name;
 
     @Schema(description = "模板描述")
@@ -195,7 +197,7 @@ public class SpaceTemplateController {
     private String category;
 
     @Schema(description = "模板结构JSON（定义目录树）", required = true)
-    @jakarta.validation.constraints.NotBlank(message = "模板结构不能为空")
+    @NotBlank(message = "模板结构不能为空")
     private String structureJson;
   }
 
@@ -221,7 +223,7 @@ public class SpaceTemplateController {
   @Schema(description = "使用模板创建空间请求")
   public static class UseTemplateRequest {
     @Schema(description = "新空间名称", required = true)
-    @jakarta.validation.constraints.NotBlank(message = "空间名称不能为空")
+    @NotBlank(message = "空间名称不能为空")
     private String spaceName;
   }
 }

@@ -2,6 +2,8 @@
 #  YDSZ 规则引擎 — 微服务端配置（Nacos 数据中心）
 #  依赖 common: auth,base,domain,exception,web,core,safe,lock,audit,feign,json,excel
 # =====================================================================
+server:
+  port: 9007
 ydsz:
   tenant:
     mode: SINGLE

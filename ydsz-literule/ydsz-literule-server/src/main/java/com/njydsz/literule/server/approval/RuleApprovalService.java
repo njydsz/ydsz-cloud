@@ -989,7 +989,7 @@ public class RuleApprovalService {
   /** 校验字符串非空 */
   private void requireNonBlank(String value, String name) {
     if (value == null || value.isBlank()) {
-      throw new SysException(name + " 不能为空");
+      throw new SysException(i18n.resolve("literule.approval.param.required", new Object[]{name}));
     }
   }
 

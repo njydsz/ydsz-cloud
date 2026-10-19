@@ -3,6 +3,8 @@
 #  通过 bootstrap.yml shared-configs 引入
 #  依赖 common: auth,base,exception,feign,util,domain,web,core,audit,lock,safe,excel
 # =====================================================================
+server:
+  port: 9006
 ydsz:
   tenant:
     enabled: true
