@@ -154,7 +154,11 @@ public enum CoreErrorCode implements ResultCode {
   /** 外部服务拒绝 */
   EXTERNAL_SERVICE_REJECTED(CoreExceptionCode.EXTERNAL_SERVICE_REJECTED),
   /** 通知发送失败 */
-  NOTIFY_ERROR(CoreExceptionCode.NOTIFY_ERROR);
+  NOTIFY_ERROR(CoreExceptionCode.NOTIFY_ERROR),
+  /** SMS 提供者未配置 */
+  SMS_PROVIDER_NOT_FOUND(CoreExceptionCode.SMS_PROVIDER_NOT_FOUND),
+  /** PUSH 推送提供者未配置 */
+  PUSH_PROVIDER_NOT_FOUND(CoreExceptionCode.PUSH_PROVIDER_NOT_FOUND);
 
   // ======================== 字段与委托 ========================
 

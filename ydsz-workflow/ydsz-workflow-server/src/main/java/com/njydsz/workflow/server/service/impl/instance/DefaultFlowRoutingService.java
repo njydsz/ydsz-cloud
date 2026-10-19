@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +44,6 @@ import com.njydsz.workflow.server.engine.expr.ExpressionEvaluator;
  */
 @Slf4j
 @Service
-@ConditionalOnMissingBean(DefaultFlowRoutingService.class)
 public class DefaultFlowRoutingService {
     /** 集合初始容量 */
     private static final int COLLECTION_CAPACITY = 16;
@@ -56,8 +55,8 @@ public class DefaultFlowRoutingService {
   /** 同节点最大驳回次数（超过判定为循环驳回） */
   private static final int MAX_REJECT_COUNT = 3;
 
-  /** 表达式求值器，评估路由条件表达式 */
-  private final ExpressionEvaluator expressionEvaluator;
+  /** 表达式求值器（可选），评估路由条件表达式 */
+  private final ObjectProvider<ExpressionEvaluator> expressionEvaluatorProvider;
 
   /** 运行时任务仓储，查询卡单/超期任务 */
   private final FlowRunTaskRepository taskRepository;
@@ -69,14 +68,19 @@ public class DefaultFlowRoutingService {
   private final FlowInstanceRepository instanceRepository;
 
   public DefaultFlowRoutingService(
-      ExpressionEvaluator expressionEvaluator,
+      ObjectProvider<ExpressionEvaluator> expressionEvaluatorProvider,
       FlowRunTaskRepository taskRepository,
       FlowAuditLogRepository auditLogRepository,
       FlowInstanceRepository instanceRepository) {
-    this.expressionEvaluator = expressionEvaluator;
+    this.expressionEvaluatorProvider = expressionEvaluatorProvider;
     this.taskRepository = taskRepository;
     this.auditLogRepository = auditLogRepository;
     this.instanceRepository = instanceRepository;
+  }
+
+  /** 获取表达式求值器（可能为空） */
+  private ExpressionEvaluator getEvaluator() {
+    return expressionEvaluatorProvider.getIfAvailable();
   }
 
   // ============================== 路由评估 ==============================
@@ -94,7 +98,12 @@ public class DefaultFlowRoutingService {
       return null;
     }
     try {
-      Object result = expressionEvaluator.eval(conditionExpression, variables);
+      ExpressionEvaluator evaluator = getEvaluator();
+      if (evaluator == null) {
+        log.debug("[FlowRoute] 表达式求值器不可用，跳过路由评估: expr={}", conditionExpression);
+        return null;
+      }
+      Object result = evaluator.eval(conditionExpression, variables);
       if (result == null) {
         log.debug("[FlowRoute] 路由表达式评估结果为 null: expr={}", conditionExpression);
         return null;
@@ -120,7 +129,11 @@ public class DefaultFlowRoutingService {
       return true;
     }
     try {
-      boolean result = expressionEvaluator.evalBoolean(conditionExpression, variables);
+      ExpressionEvaluator evaluator = getEvaluator();
+      if (evaluator == null) {
+        return true;
+      }
+      boolean result = evaluator.evalBoolean(conditionExpression, variables);
       log.debug("[FlowRoute] 条件评估: expr={} -> {}", conditionExpression, result);
       return result;
     } catch (Exception e) {

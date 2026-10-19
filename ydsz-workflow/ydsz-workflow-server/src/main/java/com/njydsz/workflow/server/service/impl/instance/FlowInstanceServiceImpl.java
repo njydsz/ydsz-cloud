@@ -5,8 +5,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -65,7 +65,6 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FlowInstanceServiceImpl implements FlowInstanceService {
 
   /** 流程实例生命周期管理器：负责启动/终止/挂起/激活/完成/撤回/回滚/重审等写操作 */
@@ -79,6 +78,17 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
   /** 流程变量管理器：负责变量读取/写入/解析 */
   private final FlowInstanceVariableManager variableManager;
+
+  public FlowInstanceServiceImpl(
+      @Lazy FlowInstanceLifecycleManager lifecycleManager,
+      FlowInstanceBatchOperator batchOperator,
+      FlowInstanceQueryService queryService,
+      FlowInstanceVariableManager variableManager) {
+    this.lifecycleManager = lifecycleManager;
+    this.batchOperator = batchOperator;
+    this.queryService = queryService;
+    this.variableManager = variableManager;
+  }
 
   /**
    * 启动流程实例

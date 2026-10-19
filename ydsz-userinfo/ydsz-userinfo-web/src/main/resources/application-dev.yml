@@ -19,6 +19,8 @@ logging:
     org.springframework: INFO
     root: INFO
 ydsz:
+  websocket:
+    enabled: false
   local-dev: true
   i18n:
     validate-on-startup: false

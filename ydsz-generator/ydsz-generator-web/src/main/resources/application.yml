@@ -17,7 +17,7 @@ spring:
   datasource:
     url: ${NACOS_GEN_DB_URL:jdbc:postgresql://127.0.0.1:5432/ydsz_cloud_gen?currentSchema=public&stringtype=unspecified}
     username: ${NACOS_GEN_DB_USERNAME:postgres}
-    password: ${NACOS_GEN_DB_PASSWORD:}
+    password: ${NACOS_GEN_DB_PASSWORD:Limw1020}
     driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
