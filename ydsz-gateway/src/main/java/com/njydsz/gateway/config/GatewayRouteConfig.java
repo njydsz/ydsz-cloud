@@ -54,5 +54,6 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class GatewayRouteConfig {
 
-  // 本地开发环境不使用 Nacos 动态路由，路由定义见 application.yml 中的 spring.cloud.gateway.routes
+  // 本地开发环境不使用 Nacos 动态路由，路由定义见 application.yml 中的
+  // spring.cloud.gateway.server.webflux.routes（Gateway 5.x 生效前缀）
 }

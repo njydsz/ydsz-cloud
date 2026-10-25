@@ -321,7 +321,11 @@ ydsz:
     #   排查 VirtualThread pinning 的核心原则：
     #     1. 禁止在 synchronized 块内执行 BlockingQueue.take()/Thread.sleep()/IO
     #     2. 使用 ReentrantLock 替代 synchronized 进行互斥
-    pools: {}
+    #
+    #   注意：此处不要声明空的 pools: {}。该键在共享配置中优先级高于各模块
+    #   yml，会把模块定义的 pools（userIo / nextwikiTask / auditAsync 等）
+    #   整体覆盖为空，导致 @Async("xxxExecutor") 找不到线程池 Bean。
+    #   线程池统一定义在各模块自己的 docs/nacos-config/ydsz-*-web.yml 中。
 
   # ============================================================
   #  审计日志（ydsz-common-audit）— 基础框架配置

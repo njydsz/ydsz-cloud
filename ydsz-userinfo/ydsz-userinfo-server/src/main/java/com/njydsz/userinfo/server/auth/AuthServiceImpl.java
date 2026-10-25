@@ -152,6 +152,9 @@ public class AuthServiceImpl implements AuthService {
 
         return buildLoginResult(user, roles, tokenResult);
       });
+    } catch (BusinessException e) {
+      // 业务异常（用户不存在/密码错误/验证码错误/账号锁定等）直接透传，避免被包装成 500 系统异常
+      throw e;
     } catch (Throwable t) {
       throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }

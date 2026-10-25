@@ -169,6 +169,12 @@
             <artifactId>jjwt-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- JJWT JSON 序列化实现（缺失时签发 Token 抛 UnavailableImplementationException） -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <scope>runtime</scope>
+        </dependency>
         <!-- Testcontainers：集成测试数据库/缓存真实环境（云顶编码规范 §14.3） -->
         <dependency>
             <groupId>org.testcontainers</groupId>

@@ -27,74 +27,77 @@ spring:
       - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-gateway.yml"
   cloud:
     gateway:
-      # 本地开发环境静态路由定义（无 Nacos 动态路由时的替代方案）
-      discovery:
-        locator:
-          enabled: false
-      routes:
-        # System 模块 - 系统引擎（含审计、字典、配置、租户、内部 API）
-        - id: ydsz-system
-          uri: http://localhost:9001
-          predicates:
-            - Path=/api/system/**,/api/admin/audit/**,/api/app/**,/api/config/**,/api/dict/**,/api/dashboard/**,/api/feature-flag/**,/api/error-codes/**,/api/repeat-submit/**,/api/search/**,/api/tenant/**,/api/tenant-plan/**,/api/variable/**,/api/permission/api/**,/api/file/**,/api/monitor/**,/api/internal/config/**,/api/internal/dict/**,/api/internal/app/**
-          filters:
-            - StripPrefix=1
-        # Userinfo 模块 - RBAC 身份认证与组织架构
-        - id: ydsz-userinfo
-          uri: http://localhost:9002
-          predicates:
-            - Path=/api/auth/**,/api/auth-policy/**,/api/role/**,/api/permission/**,/api/menu/**,/api/user/**,/api/userinfo/**,/api/dept/**,/api/company/**,/api/post/**,/api/captcha/**,/api/apikey/**,/api/cas/**,/api/sso/**,/api/saml/**,/api/saml-idp-config/**,/api/oauth2/**,/api/webauthn/**,/api/language/**,/api/profile/**,/api/scim/**,/api/self-service/**,/api/social-client-config/**,/api/devices/**,/api/admin/ldap/**,/api/admin/oauth2/**,/api/admin/security/**,/api/admin/sessions/**,/api/admin/users/**
-          filters:
-            - StripPrefix=1
-        # Message 模块 - 消息引擎
-        - id: ydsz-message
-          uri: http://localhost:9004
-          predicates:
-            - Path=/api/message/**,/api/notify/**,/api/internal/message/**
-          filters:
-            - StripPrefix=1
-        # CronJob 模块 - 任务引擎
-        - id: ydsz-cronjob
-          uri: http://localhost:9006
-          predicates:
-            - Path=/api/cronjob/**,/api/job/**,/api/internal/cronjob/**
-          filters:
-            - StripPrefix=1
-        # Workflow 模块 - 流程引擎
-        - id: ydsz-workflow
-          uri: http://localhost:9005
-          predicates:
-            - Path=/api/workflow/**,/api/process/**,/api/internal/engine/**
-          filters:
-            - StripPrefix=1
-        # Agent 模块 - 智能引擎
-        - id: ydsz-agent
-          uri: http://localhost:9008
-          predicates:
-            - Path=/api/agent/**
-          filters:
-            - StripPrefix=1
-        # NextWiki 模块 - 文件/知识库引擎
-        - id: ydsz-nextwiki
-          uri: http://localhost:9003
-          predicates:
-            - Path=/api/wiki/**,/api/nextwiki/**,/api/internal/space/**,/api/internal/quota/**
-          filters:
-            - StripPrefix=1
-        # Literule 模块 - 规则引擎
-        - id: ydsz-literule
-          uri: http://localhost:9007
-          predicates:
-            - Path=/api/literule/**,/api/rule/**,/api/internal/literule/**
-          filters:
-            - StripPrefix=1
-        # Generator 模块 - 代码生成引擎
-        - id: ydsz-generator
-          uri: http://localhost:9009
-          predicates:
-            - Path=/api/generator/**
-          filters:
-            - StripPrefix=1
+      # Spring Cloud Gateway 5.x（WebFlux）生效前缀为 spring.cloud.gateway.server.webflux
+      server:
+        webflux:
+          # 本地开发环境静态路由定义（无 Nacos 动态路由时的替代方案）
+          discovery:
+            locator:
+              enabled: false
+          routes:
+            # System 模块 - 系统引擎（含审计、字典、配置、租户、内部 API）
+            - id: ydsz-system
+              uri: http://localhost:9001
+              predicates:
+                - Path=/api/system/**,/api/admin/audit/**,/api/app/**,/api/config/**,/api/dict/**,/api/dashboard/**,/api/feature-flag/**,/api/error-codes/**,/api/repeat-submit/**,/api/search/**,/api/tenant/**,/api/tenant-plan/**,/api/variable/**,/api/permission/api/**,/api/file/**,/api/monitor/**,/api/internal/config/**,/api/internal/dict/**,/api/internal/app/**
+              filters:
+                - StripPrefix=1
+            # Userinfo 模块 - RBAC 身份认证与组织架构
+            - id: ydsz-userinfo
+              uri: http://localhost:9002
+              predicates:
+                - Path=/api/auth/**,/api/auth-policy/**,/api/role/**,/api/permission/**,/api/menu/**,/api/user/**,/api/userinfo/**,/api/dept/**,/api/company/**,/api/post/**,/api/captcha/**,/api/apikey/**,/api/cas/**,/api/sso/**,/api/saml/**,/api/saml-idp-config/**,/api/oauth2/**,/api/webauthn/**,/api/language/**,/api/profile/**,/api/scim/**,/api/self-service/**,/api/social-client-config/**,/api/devices/**,/api/admin/ldap/**,/api/admin/oauth2/**,/api/admin/security/**,/api/admin/sessions/**,/api/admin/users/**
+              filters:
+                - StripPrefix=1
+            # Message 模块 - 消息引擎
+            - id: ydsz-message
+              uri: http://localhost:9004
+              predicates:
+                - Path=/api/message/**,/api/notify/**,/api/internal/message/**
+              filters:
+                - StripPrefix=1
+            # CronJob 模块 - 任务引擎
+            - id: ydsz-cronjob
+              uri: http://localhost:9006
+              predicates:
+                - Path=/api/cronjob/**,/api/job/**,/api/internal/cronjob/**
+              filters:
+                - StripPrefix=1
+            # Workflow 模块 - 流程引擎
+            - id: ydsz-workflow
+              uri: http://localhost:9005
+              predicates:
+                - Path=/api/workflow/**,/api/process/**,/api/internal/engine/**
+              filters:
+                - StripPrefix=1
+            # Agent 模块 - 智能引擎
+            - id: ydsz-agent
+              uri: http://localhost:9008
+              predicates:
+                - Path=/api/agent/**
+              filters:
+                - StripPrefix=1
+            # NextWiki 模块 - 文件/知识库引擎
+            - id: ydsz-nextwiki
+              uri: http://localhost:9003
+              predicates:
+                - Path=/api/wiki/**,/api/nextwiki/**,/api/internal/space/**,/api/internal/quota/**
+              filters:
+                - StripPrefix=1
+            # Literule 模块 - 规则引擎
+            - id: ydsz-literule
+              uri: http://localhost:9007
+              predicates:
+                - Path=/api/literule/**,/api/rule/**,/api/internal/literule/**
+              filters:
+                - StripPrefix=1
+            # Generator 模块 - 代码生成引擎
+            - id: ydsz-generator
+              uri: http://localhost:9009
+              predicates:
+                - Path=/api/generator/**
+              filters:
+                - StripPrefix=1
   autoconfigure:
     exclude:
       # 线程池 / 文档 / Sentry / WebMVC 自动配置（网关为 WebFlux reactive 栈）

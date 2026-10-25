@@ -137,7 +137,14 @@ public class UserInfoMetrics extends SentryMetricsAdapter {
    * @param sample 来自 {@link #startTimer()} 的采样句柄，不可为 null（为 null 将抛 NPE）
    */
   public void stopTimer(Timer.Sample sample) {
-    sample.stop(timer("auth_duration_ms"));
+    if (sample == null) {
+      return;
+    }
+    // 指标后端未启用时 timer(...) 可能返回 null，监控缺失不能影响认证主链路
+    Timer authTimer = timer("auth_duration_ms");
+    if (authTimer != null) {
+      sample.stop(authTimer);
+    }
   }
 
   /**

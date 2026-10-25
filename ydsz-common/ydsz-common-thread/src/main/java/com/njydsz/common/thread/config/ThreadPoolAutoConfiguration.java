@@ -21,8 +21,12 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.SearchStrategy;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.env.Environment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Role;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -159,8 +163,12 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    */
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  @ConditionalOnMissingBean(name = "threadPoolRegistrar")
-  public ThreadPoolRegistrar threadPoolRegistrar(ThreadPoolProperties properties) {
+  @ConditionalOnMissingBean(name = "threadPoolRegistrar", search = SearchStrategy.CURRENT)
+  public ThreadPoolRegistrar threadPoolRegistrar(
+      ThreadPoolProperties properties, Environment environment) {
+    // BDRPP 在 ConfigurationPropertiesBindingPostProcessor 注册之前被实例化，
+    // 此时注入的 properties 尚未绑定，必须手动从 Environment 绑定，否则线程池配置永远为空
+    Binder.get(environment).bind("ydsz.thread", Bindable.ofInstance(properties));
     return new ThreadPoolRegistrar(properties);
   }
 
