@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,7 +88,6 @@ import com.njydsz.workflow.server.service.impl.CountersignStrategyFactory;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FlowTaskCoreService {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
@@ -97,19 +96,29 @@ public class FlowTaskCoreService {
   // ============================== 子服务委托 ==============================
 
   /** 任务创建服务（复杂创建逻辑委托） */
-  @Lazy private final FlowTaskCreateService flowTaskCreateService;
+  @Autowired
+  @Lazy
+  private FlowTaskCreateService flowTaskCreateService;
 
   /** 任务签收服务（签收逻辑委托） */
-  @Lazy private final FlowTaskClaimService flowTaskClaimService;
+  @Autowired
+  @Lazy
+  private FlowTaskClaimService flowTaskClaimService;
 
   /** 任务操作服务（转办 / 委派 / 跳转 / 撤回逻辑委托） */
-  @Lazy private final FlowTaskOperateService flowTaskOperateService;
+  @Autowired
+  @Lazy
+  private FlowTaskOperateService flowTaskOperateService;
 
   /** 任务催办服务（实例级 / 节点级催办逻辑委托） */
-  @Lazy private final FlowTaskUrgeService flowTaskUrgeService;
+  @Autowired
+  @Lazy
+  private FlowTaskUrgeService flowTaskUrgeService;
 
   /** 超时 / 挂起 / 激活 / 取消服务（超时 / 挂起 / 激活 / 取消逻辑委托） */
-  @Lazy private final FlowTaskTimeoutService flowTaskTimeoutService;
+  @Autowired
+  @Lazy
+  private FlowTaskTimeoutService flowTaskTimeoutService;
 
   // ============================== 审计和指标类型常量 ==============================
 
@@ -143,53 +152,74 @@ public class FlowTaskCoreService {
   // ============================== 通过 / 驳回所需依赖 ==============================
 
   /** 运行时任务仓储，查询/更新任务状态 */
-  private final FlowRunTaskRepository taskRepository;
+  @Autowired
+  private FlowRunTaskRepository taskRepository;
 
   /** 流程实例仓储，查询实例状态和流程变量 */
-  private final FlowInstanceRepository instanceRepository;
+  @Autowired
+  private FlowInstanceRepository instanceRepository;
 
   /** 流程节点仓储，查询节点配置（审批人/权限/SLA 等） */
-  private final FlowNodeRepository nodeRepository;
+  @Autowired
+  private FlowNodeRepository nodeRepository;
 
   /** 流程推进引擎，会签完成后推进到下一节点（@Lazy 打破循环依赖） */
+  @Autowired
   @Lazy
-  private final DefaultFlowAdvancer advancer;
+  private DefaultFlowAdvancer advancer;
 
   /** 流程实例服务，更新实例状态和变量 */
-  private final FlowInstanceService instanceService;
+  @Autowired
+  private FlowInstanceService instanceService;
 
-  /** 跨子 Service 共享的任务校验/审计/事件辅助 */
-  private final FlowTaskSupport support;
+  /** 跨子 Service 共享的任务校验/审计/事件辅助（@Autowired @Lazy 打破循环依赖） */
+  @Autowired
+  @Lazy
+  private FlowTaskSupport support;
 
   /** 任务事件通知服务，推送任务通过/驳回通知 */
-  private final FlowTaskNotificationService notificationService;
+  @Autowired
+  private FlowTaskNotificationService notificationService;
 
   /** 委派代理审计服务，记录代理人审批操作 */
-  @Lazy private final FlowTaskAuditService auditService;
+  @Autowired
+  @Lazy
+  private FlowTaskAuditService auditService;
 
   /** 会签策略工厂，根据 performType 选择会签策略 */
-  private final CountersignStrategyFactory strategyFactory;
+  @Autowired
+  private CountersignStrategyFactory strategyFactory;
 
   /** 表单字段权限服务，校验表单字段读写权限 */
-  private final FlowFormFieldPermService formFieldPermService;
+  @Autowired
+  private FlowFormFieldPermService formFieldPermService;
 
   /** P0-3: 表单引擎服务 */
-  private final FlowFormEngineService formEngineService;
+  @Autowired
+  private FlowFormEngineService formEngineService;
 
   /** P1-6: 审批附件服务 */
-  @Lazy private final FlowAttachmentService attachmentService;
+  @Autowired
+  @Lazy
+  private FlowAttachmentService attachmentService;
 
   /** 任务归档服务，完成当前任务后写入历史任务表 */
-  private final FlowTaskArchiveService archiveService;
+  @Autowired
+  private FlowTaskArchiveService archiveService;
 
   /** P1-7: 待办数 WebSocket 推送服务 */
-  @Lazy private final FlowTodoCountPushService todoCountPushService;
+  @Autowired
+  @Lazy
+  private FlowTodoCountPushService todoCountPushService;
 
   /** P1-2: 流程定义缓存服务（解析 startNode 下游第一节点） */
-  @Lazy private final FlowDefinitionCacheService definitionCacheService;
+  @Autowired
+  @Lazy
+  private FlowDefinitionCacheService definitionCacheService;
 
   /** P2-3: Prometheus 指标（可能为 null：测试环境） */
-  private final FlowMetrics flowMetrics;
+  @Autowired
+  private FlowMetrics flowMetrics;
 
   // ============================== 任务创建 ==============================
 

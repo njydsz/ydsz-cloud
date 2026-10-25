@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.web.controller;
 
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -35,7 +36,7 @@ class TokenExchangeControllerSmokeTest extends BaseControllerMockTest {
     CrossDomainTokenService crossDomainTokenService = org.mockito.Mockito.mock(CrossDomainTokenService.class);
     TokenService tokenService = org.mockito.Mockito.mock(TokenService.class);
     SessionManager sessionManager = org.mockito.Mockito.mock(SessionManager.class);
-    when(crossDomainTokenService.isTrustedDomain(anyString(), anyString())).thenReturn(true);
+    when(crossDomainTokenService.isTrustedDomain(anyString(), anyList())).thenReturn(true);
     when(tokenService.validateAccessToken(anyString())).thenReturn(true);
     TokenExchangeController controller = new TokenExchangeController(
         ssoProperties, crossDomainTokenService, tokenService, sessionManager);

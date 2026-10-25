@@ -36,6 +36,7 @@ import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 流程任务驳回服务实现。
@@ -67,8 +68,10 @@ public class FlowTaskRejectService {
   /** 流程实例服务，更新实例状态 */
   private final FlowInstanceService instanceService;
 
-  /** 跨子 Service 共享的任务校验/审计/事件辅助 */
-  private final FlowTaskSupport support;
+  /** 跨子 Service 共享的任务校验/审计/事件辅助（@Autowired @Lazy 打破循环依赖） */
+  @Autowired
+  @Lazy
+  private FlowTaskSupport support;
 
   /** 任务归档服务，完成当前任务后写入历史任务表 */
   private final FlowTaskArchiveService archiveService;

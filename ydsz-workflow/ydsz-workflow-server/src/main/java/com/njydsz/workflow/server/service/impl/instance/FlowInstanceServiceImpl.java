@@ -81,7 +81,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
   public FlowInstanceServiceImpl(
       @Lazy FlowInstanceLifecycleManager lifecycleManager,
-      FlowInstanceBatchOperator batchOperator,
+      @Lazy FlowInstanceBatchOperator batchOperator,
       FlowInstanceQueryService queryService,
       FlowInstanceVariableManager variableManager) {
     this.lifecycleManager = lifecycleManager;

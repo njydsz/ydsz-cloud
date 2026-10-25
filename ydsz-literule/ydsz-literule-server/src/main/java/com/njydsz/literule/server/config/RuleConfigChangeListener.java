@@ -1,7 +1,7 @@
 package com.njydsz.literule.server.config;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.config.hotreload.ConfigChangeListener;
@@ -17,18 +17,24 @@ import com.njydsz.common.config.hotreload.ConfigChangeListener;
  * <p><b>设计说明：</b>本监听器实现 {@link ConfigChangeListener} 接口， 由 {@code ydsz-common-config} 的 {@code
  * ConfigChangeBridge} 自动分发配置变更事件， 替代原有的自建配置变更监听机制（保留 {@link RuleHotReloader} 中的业务逻辑）。
  *
+ * <p><b>容错设计：</b>使用 {@link ObjectProvider} 惰性获取 {@link RuleHotReloader}，当条件装配未能创建该 Bean
+ * （如 RuleConfigProvider 初始化失败）时，本监听器仍可正常启动，仅热刷新功能静默降级。
+ *
  * @author ydsz-team
  * @since 26.10.01
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class RuleConfigChangeListener implements ConfigChangeListener {
 
   /** LiteRule 配置属性前缀 */
   private static final String LITERULE_CONFIG_PREFIX = "ydsz.literule.";
 
-  private final RuleHotReloader ruleHotReloader;
+  private final ObjectProvider<RuleHotReloader> ruleHotReloaderProvider;
+
+  public RuleConfigChangeListener(ObjectProvider<RuleHotReloader> ruleHotReloaderProvider) {
+    this.ruleHotReloaderProvider = ruleHotReloaderProvider;
+  }
 
   /**
    * 接收配置变更回调
@@ -48,9 +54,14 @@ public class RuleConfigChangeListener implements ConfigChangeListener {
     log.info("[LiteRule] 配置变更通知: key={}, {} -> {}", key, oldValue, newValue);
 
     // 核心配置变更时触发全量刷新
+    RuleHotReloader reloader = ruleHotReloaderProvider.getIfAvailable();
+    if (reloader == null) {
+      log.warn("[LiteRule] RuleHotReloader 不可用，跳过规则全量刷新（key={}）", key);
+      return;
+    }
     if (key.contains("hot-reload") || key.contains("cache") || key.contains("dry-run")) {
       log.info("[LiteRule] 核心配置 {} 已变更，触发规则全量刷新", key);
-      ruleHotReloader.fullReload("CONFIG_CHANGE");
+      reloader.fullReload("CONFIG_CHANGE");
     }
   }
 }

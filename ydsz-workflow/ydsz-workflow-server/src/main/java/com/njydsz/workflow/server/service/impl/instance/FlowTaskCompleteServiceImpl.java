@@ -3,8 +3,8 @@ package com.njydsz.workflow.server.service.impl.instance;
 import java.util.List;
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +23,6 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FlowTaskCompleteServiceImpl {
 
   /** 任务创建子服务，处理 SERVICE/FOREACH/LEVEL_APPROVAL 节点任务生成 */
@@ -46,6 +45,31 @@ public class FlowTaskCompleteServiceImpl {
 
   /** 超时/挂起/激活/取消子服务 */
   private final FlowTaskTimeoutService timeoutService;
+
+  /**
+   * 构造器注入依赖。
+   *
+   * <p>使用 {@code @Lazy} 注解打破与 {@link FlowTaskCreateService} 的循环依赖：
+   * FlowTaskCreateService → FlowTaskSupport → ProjectInitiationFlowListener →
+   * FlowSubProcessServiceImpl → YdszWorkflowFacade → FlowTaskServiceImpl →
+   * FlowTaskBatchServiceImpl → FlowTaskCompleteServiceImpl → FlowTaskCreateService
+   */
+  public FlowTaskCompleteServiceImpl(
+      @Lazy FlowTaskCreateService createService,
+      FlowTaskClaimService claimService,
+      FlowTaskPassService passService,
+      FlowTaskRejectService rejectService,
+      FlowTaskOperateService operateService,
+      FlowTaskUrgeService urgeService,
+      FlowTaskTimeoutService timeoutService) {
+    this.createService = createService;
+    this.claimService = claimService;
+    this.passService = passService;
+    this.rejectService = rejectService;
+    this.operateService = operateService;
+    this.urgeService = urgeService;
+    this.timeoutService = timeoutService;
+  }
 
   // ============================== 创建任务 ==============================
 

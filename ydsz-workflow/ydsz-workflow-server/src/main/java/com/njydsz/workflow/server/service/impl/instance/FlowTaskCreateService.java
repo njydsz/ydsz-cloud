@@ -44,6 +44,7 @@ import com.njydsz.workflow.server.engine.FlowServiceNodeExecutor;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 import com.njydsz.workflow.server.service.FlowGroupResolver;
@@ -182,8 +183,10 @@ public class FlowTaskCreateService {
   private final FlowNodeRepository nodeRepository;
 
 
-  /** 流程推进引擎，AUTO_PASS 递归推进到下一节点 */
-  private final DefaultFlowAdvancer advancer;
+  /** 流程推进引擎，AUTO_PASS 递归推进到下一节点（@Autowired @Lazy 打破与 DefaultFlowAdvancer → FlowTaskService → FlowTaskBatchServiceImpl → FlowTaskCompleteServiceImpl 的循环依赖） */
+  @Autowired
+  @Lazy
+  private DefaultFlowAdvancer advancer;
 
   /** 变量策略，解析节点 ext JSON 中的条件表达式 */
   private final DefaultFlowVariableStrategy variableStrategy;
@@ -191,8 +194,10 @@ public class FlowTaskCreateService {
   /** 审批人解析器，从节点配置解析实际审批人/候选人列表 */
   private final FlowAssigneeResolver assigneeResolver;
 
-  /** 跨子 Service 共享的任务校验/审计/事件辅助 */
-  private final FlowTaskSupport support;
+  /** 跨子 Service 共享的任务校验/审计/事件辅助（@Autowired @Lazy 打破循环依赖） */
+  @Autowired
+  @Lazy
+  private FlowTaskSupport support;
 
   /** 任务归档服务，完成任务后写入历史任务表 */
   private final FlowTaskArchiveService archiveService;

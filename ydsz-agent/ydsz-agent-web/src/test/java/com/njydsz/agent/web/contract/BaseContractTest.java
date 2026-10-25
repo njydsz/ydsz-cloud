@@ -1,4 +1,4 @@
-package com.njydsz.agent.server.contract;
+package com.njydsz.agent.web.contract;
 
 import com.njydsz.agent.web.AgentApplication;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;

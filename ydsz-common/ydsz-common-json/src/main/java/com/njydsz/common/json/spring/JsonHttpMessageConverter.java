@@ -186,8 +186,12 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
 
       // P1-B：检测控制器方法上的 @JsonView 注解，如果存在则按视图过滤字段
       byte[] bytes = serializeWithView(o);
-      // 设置 Content-Length，避免 HTTP chunked 编码开销
-      outputMessage.getHeaders().setContentLength(bytes.length);
+      // 设置 Content-Length，避免 HTTP chunked 编码开销。Spring 7 中 headers 可能是 ReadOnlyHttpHeaders，需容错
+      try {
+        outputMessage.getHeaders().setContentLength(bytes.length);
+      } catch (UnsupportedOperationException ignored) {
+        // headers 已是只读（如 error dispatch 场景），跳过 Content-Length，由框架使用 chunked 编码
+      }
       StreamUtils.copy(bytes, out);
       // 不手动 flush，由 Spring 框架统一管理输出流生命周期
     } catch (Exception e) {

@@ -29,6 +29,7 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 流程任务操作服务实现。
@@ -58,8 +59,10 @@ public class FlowTaskOperateService {
   private final FlowNodeRepository nodeRepository;
 
 
-  /** 跨子 Service 共享的任务校验/审计/事件辅助 */
-  private final FlowTaskSupport support;
+  /** 跨子 Service 共享的任务校验/审计/事件辅助（@Autowired @Lazy 打破循环依赖） */
+  @Autowired
+  @Lazy
+  private FlowTaskSupport support;
 
   /** 任务归档服务，完成任务后写入历史任务表 */
   private final FlowTaskArchiveService archiveService;

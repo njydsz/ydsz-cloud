@@ -132,6 +132,8 @@ ydsz:
       - ydsz_department
       - ydsz_post
       - ydsz_language
+      - ydsz_gen_template_group
+      - ydsz_gen_template
   # JDBC 安全加固（ydsz-common-jdbc）
   jdbc:
     sql-firewall:

@@ -158,9 +158,9 @@ public class FileHealthIndicator implements HealthIndicator {
       details.put("maxFileSize", fileProperties.getMaxFileSize());
 
       return Health.up().withDetails(details).build();
-    } catch (Exception e) {
-      log.warn("[FileHealthIndicator] storage health check failed: {}", e.getMessage());
-      details.put("error", e.getMessage());
+    } catch (Throwable e) {
+      log.warn("[FileHealthIndicator] storage health check failed: {}", e.toString());
+      details.put("error", e.toString());
       return Health.down().withDetails(details).build();
     }
   }

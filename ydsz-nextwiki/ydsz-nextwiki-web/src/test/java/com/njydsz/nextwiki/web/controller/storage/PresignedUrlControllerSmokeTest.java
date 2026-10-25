@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -39,7 +40,9 @@ class PresignedUrlControllerSmokeTest extends BaseControllerMockTest {
   @BeforeEach
   void setUp() {
     fileStorage = mock(IFileStorage.class);
-    controller = new PresignedUrlController(fileStorage);
+    ObjectProvider<IFileStorage> fileStorageProvider = mock(ObjectProvider.class);
+    when(fileStorageProvider.getIfAvailable()).thenReturn(fileStorage);
+    controller = new PresignedUrlController(fileStorageProvider);
     mockMvc = standaloneSetup(controller);
   }
 

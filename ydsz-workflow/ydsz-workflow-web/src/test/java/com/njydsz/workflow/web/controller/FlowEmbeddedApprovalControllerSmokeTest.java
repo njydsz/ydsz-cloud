@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
+import com.njydsz.workflow.web.controller.integration.FlowEmbeddedApprovalController;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;
 import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 

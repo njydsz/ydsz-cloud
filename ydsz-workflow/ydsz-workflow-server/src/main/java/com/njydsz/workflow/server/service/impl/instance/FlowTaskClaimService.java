@@ -2,8 +2,8 @@ package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +28,6 @@ import com.njydsz.workflow.server.metrics.FlowMetrics;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FlowTaskClaimService {
 
   private final FlowRunTaskRepository taskRepository;
@@ -37,6 +36,18 @@ public class FlowTaskClaimService {
 
   /** P2-3: Prometheus 指标（可能为 null：测试环境） */
   private final FlowMetrics flowMetrics;
+
+  /** 构造器注入依赖，@Lazy 打破与 FlowTaskSupport 的循环引用。 */
+  public FlowTaskClaimService(
+      FlowRunTaskRepository taskRepository,
+      @Lazy FlowTaskSupport support,
+      FlowTaskAuditService auditService,
+      FlowMetrics flowMetrics) {
+    this.taskRepository = taskRepository;
+    this.support = support;
+    this.auditService = auditService;
+    this.flowMetrics = flowMetrics;
+  }
 
   /**
    * 签收任务。

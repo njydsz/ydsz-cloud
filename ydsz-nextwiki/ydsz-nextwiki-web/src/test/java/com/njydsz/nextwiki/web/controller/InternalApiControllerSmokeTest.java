@@ -45,7 +45,7 @@ class InternalApiControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when get space by ID succeeds")
     void should_return_200_when_get_space_by_id_succeeds() throws Exception {
-      when(internalQueryService.getSpaceById("space-001")).thenReturn(new SpaceVO());
+      when(internalQueryService.getSpaceById("space-001")).thenReturn(SpaceVO.builder().build());
 
       mockMvc.perform(get("/internal/space/get").param("spaceId", "space-001"))
           .andExpect(status().isOk())

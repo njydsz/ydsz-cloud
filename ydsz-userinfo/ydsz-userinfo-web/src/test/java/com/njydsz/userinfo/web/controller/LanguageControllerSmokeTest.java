@@ -61,7 +61,7 @@ class LanguageControllerSmokeTest extends BaseControllerMockTest {
 
   @Nested
   @DisplayName("GET /language/list")
-  class List {
+  class ListQuery {
 
     @Test
     @DisplayName("should return 200 when list succeeds")

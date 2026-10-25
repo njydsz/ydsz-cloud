@@ -15,6 +15,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.tenant.SystemTenantContextRunner;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.generator.entity.GenTemplate;
 import com.njydsz.generator.entity.GenTemplateGroup;
@@ -34,6 +35,7 @@ import com.njydsz.generator.repository.GenTemplateRepository;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@org.springframework.context.annotation.Profile("template-init")
 public class TemplateDataInitializer {
 
   /** 模板文件后缀。 */
@@ -50,11 +52,13 @@ public class TemplateDataInitializer {
    */
   @EventListener(ApplicationReadyEvent.class)
   public void onApplicationReady() {
-    log.info("[TemplateDataInitializer] 检查模板数据是否需要初始化...");
-    List<GenTemplateGroup> groups = groupRepository.findAllByOrderBysortAsc();
-    for (GenTemplateGroup group : groups) {
-      syncGroupTemplates(group);
-    }
+    SystemTenantContextRunner.run(() -> {
+      log.info("[TemplateDataInitializer] 检查模板数据是否需要初始化...");
+      List<GenTemplateGroup> groups = groupRepository.findAllByOrderBysortAsc();
+      for (GenTemplateGroup group : groups) {
+        syncGroupTemplates(group);
+      }
+    });
   }
 
   private void syncGroupTemplates(GenTemplateGroup group) {

@@ -30,7 +30,7 @@ class UserinfoSearchControllerSmokeTest extends BaseControllerMockTest {
   @BeforeEach
   void setUp() {
     UnifiedSearchService unifiedSearchService = org.mockito.Mockito.mock(UnifiedSearchService.class);
-    when(unifiedSearchService.search(org.mockito.ArgumentMatchers.any())).thenReturn(new SearchResponse());
+    when(unifiedSearchService.search(org.mockito.ArgumentMatchers.any())).thenReturn(SearchResponse.empty(1, 20));
     UserinfoSearchController controller = new UserinfoSearchController(unifiedSearchService);
     mockMvc = standaloneSetup(controller);
   }

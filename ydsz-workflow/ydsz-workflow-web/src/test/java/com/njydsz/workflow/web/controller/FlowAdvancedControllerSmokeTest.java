@@ -17,10 +17,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.workflow.server.engine.FlowUrgeLimiter;
-import com.njydsz.workflow.server.service.FlowAssigneeDedupService;
 import com.njydsz.workflow.server.service.FlowInstanceMergeService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.FlowReportService;
+import com.njydsz.workflow.server.service.impl.instance.FlowAssigneeDedupService;
+import com.njydsz.workflow.web.controller.instance.FlowAdvancedController;
 
 /**
  * {@link FlowAdvancedController} Smoke Test。

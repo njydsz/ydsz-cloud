@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
-import com.njydsz.literule.server.spi.VariableRegistry;
+import com.njydsz.literule.server.expression.VariableRegistry;
 
 /**
  * {@link RuleVariableAdminController} Smoke Test。

@@ -43,7 +43,7 @@ class AgentControllerSmokeTest extends BaseControllerMockTest {
 
     when(agentFacade.getHistory("conv-001")).thenReturn(List.of());
 
-    AgentController agentController = new AgentController(ssePushChannelFactory, agentFacade, requestGuard);
+    AgentController agentController = new AgentController(ssePushChannelFactory, agentFacade, () -> requestGuard);
     mockMvc = standaloneSetup(agentController);
   }
 

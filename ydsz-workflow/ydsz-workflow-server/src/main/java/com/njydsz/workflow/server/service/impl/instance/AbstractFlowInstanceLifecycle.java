@@ -11,9 +11,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -86,7 +86,6 @@ import com.njydsz.workflow.server.service.FlowTimerService;
  * @since 26.10.01
  */
 @Slf4j
-@RequiredArgsConstructor
 public abstract class AbstractFlowInstanceLifecycle {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
@@ -102,54 +101,72 @@ public abstract class AbstractFlowInstanceLifecycle {
   protected static final int BATCH_START_MAX_SIZE = 100;
 
   /** 流程实例仓储 */
-  protected final FlowInstanceRepository instanceRepository;
+  @Autowired
+  protected FlowInstanceRepository instanceRepository;
 
   /** 流程定义服务 */
-  protected final FlowDefinitionService definitionService;
+  @Autowired
+  protected FlowDefinitionService definitionService;
 
   /** 流程推进引擎 */
-  protected final DefaultFlowAdvancer advancer;
+  @Autowired
+  protected DefaultFlowAdvancer advancer;
 
   /** 流程任务服务 */
-  protected final FlowTaskService taskService;
+  @Autowired
+  @Lazy
+  protected FlowTaskService taskService;
 
   /** 运行时任务仓储 */
-  protected final FlowRunTaskRepository taskRepository;
+  @Autowired
+  protected FlowRunTaskRepository taskRepository;
 
   /** 流程节点仓储 */
-  protected final FlowNodeRepository nodeRepository;
+  @Autowired
+  protected FlowNodeRepository nodeRepository;
 
   /** Prometheus 指标收集（可能为 null：测试环境） */
-  protected final FlowMetrics flowMetrics;
+  @Autowired
+  protected FlowMetrics flowMetrics;
 
   /** 事件支持组件 */
-  protected final FlowTaskSupport flowTaskSupport;
+  @Autowired
+  @Lazy
+  protected FlowTaskSupport flowTaskSupport;
 
   /** 子流程服务 */
-  protected final FlowSubProcessService subProcessService;
+  @Autowired
+  protected FlowSubProcessService subProcessService;
 
   /** 抄送服务 */
-  protected final FlowCcService ccService;
+  @Autowired
+  protected FlowCcService ccService;
 
   /** 流程自动触发服务 */
-  protected final FlowAutoTriggerService autoTriggerService;
+  @Autowired
+  protected FlowAutoTriggerService autoTriggerService;
 
   /** BPMN 事件订阅服务 */
+  @Autowired
   @Lazy
-  protected final FlowEventSubscriptionService eventSubscriptionService;
+  protected FlowEventSubscriptionService eventSubscriptionService;
 
   /** 审计日志仓储 */
-  protected final FlowAuditLogRepository auditLogRepository;
+  @Autowired
+  protected FlowAuditLogRepository auditLogRepository;
 
   /** 历史任务仓储 */
-  protected final FlowHisTaskRepository hisTaskRepository;
+  @Autowired
+  protected FlowHisTaskRepository hisTaskRepository;
 
   /** 定时器服务 */
+  @Autowired
   @Lazy
-  protected final FlowTimerService timerService;
+  protected FlowTimerService timerService;
 
   /** 跨服务名称解析门面 */
-  protected final NameAssembler nameAssembler;
+  @Autowired
+  protected NameAssembler nameAssembler;
 
   // ============================== 子类需实现的策略方法 ==============================
 

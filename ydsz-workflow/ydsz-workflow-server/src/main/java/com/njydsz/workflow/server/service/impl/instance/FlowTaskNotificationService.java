@@ -6,6 +6,8 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.context.RequestContext;
@@ -28,7 +30,9 @@ import com.njydsz.workflow.server.engine.listener.FlowListenerEventType;
 @RequiredArgsConstructor
 public class FlowTaskNotificationService {
 
-  private final FlowTaskSupport support;
+  @Autowired
+  @Lazy
+  private FlowTaskSupport support;
 
   /**
    * 任务完成事件（无 vars）

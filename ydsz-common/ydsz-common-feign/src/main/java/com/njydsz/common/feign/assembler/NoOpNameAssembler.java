@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import com.njydsz.common.core.assembler.NameType;
+
 /**
  * NameAssembler 兜底空实现。
  *

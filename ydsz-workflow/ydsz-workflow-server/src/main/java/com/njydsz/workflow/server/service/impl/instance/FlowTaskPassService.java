@@ -36,6 +36,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 import com.njydsz.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.workflow.server.service.impl.CountersignStrategyFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 流程任务通过服务实现。
@@ -73,8 +74,10 @@ public class FlowTaskPassService {
   /** BPMN 终止事件处理器 */
   private final FlowTerminateEventHandler terminateEventHandler;
 
-  /** 跨子 Service 共享的任务校验/审计/事件辅助 */
-  private final FlowTaskSupport support;
+  /** 跨子 Service 共享的任务校验/审计/事件辅助（@Autowired @Lazy 打破循环依赖） */
+  @Autowired
+  @Lazy
+  private FlowTaskSupport support;
 
   /** 任务事件通知服务，推送任务通过通知 */
   private final FlowTaskNotificationService notificationService;

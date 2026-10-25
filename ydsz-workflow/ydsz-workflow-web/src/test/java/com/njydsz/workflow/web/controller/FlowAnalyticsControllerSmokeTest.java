@@ -21,6 +21,7 @@ import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 import com.njydsz.workflow.server.service.FlowI18nService;
+import com.njydsz.workflow.web.controller.analytics.FlowAnalyticsController;
 
 /**
  * {@link FlowAnalyticsController} Smoke Test。

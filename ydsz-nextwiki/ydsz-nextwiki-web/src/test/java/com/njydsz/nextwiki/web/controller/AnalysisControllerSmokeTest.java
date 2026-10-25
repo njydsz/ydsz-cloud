@@ -49,7 +49,7 @@ class AnalysisControllerSmokeTest extends BaseControllerMockTest {
     @DisplayName("should return 200 when get analysis overview succeeds")
     void should_return_200_when_get_analysis_overview_succeeds() throws Exception {
       StorageAnalysisApplicationService.StorageOverview overview =
-          new StorageAnalysisApplicationService.StorageOverview();
+          StorageAnalysisApplicationService.StorageOverview.builder().build();
       when(storageAnalysisService.getUserOverview("user-001")).thenReturn(overview);
 
       mockMvc.perform(get("/nextwiki/analysis/overview")

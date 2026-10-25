@@ -72,9 +72,4 @@ class SecurityDashboardControllerSmokeTest extends BaseControllerMockTest {
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
     }
   }
-
-  @SuppressWarnings("unchecked")
-  private static <T> T any(Class<T> clazz) {
-    return org.mockito.ArgumentMatchers.any(clazz);
-  }
 }

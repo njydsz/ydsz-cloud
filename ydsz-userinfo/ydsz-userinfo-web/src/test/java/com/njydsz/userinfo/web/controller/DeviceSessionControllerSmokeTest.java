@@ -31,7 +31,7 @@ class DeviceSessionControllerSmokeTest extends BaseControllerMockTest {
   @BeforeEach
   void setUp() {
     DeviceSessionService deviceSessionService = org.mockito.Mockito.mock(DeviceSessionService.class);
-    when(deviceSessionService.listActiveSessions(org.mockito.ArgumentMatchers.anyString()))
+    when(deviceSessionService.listMyDevices(org.mockito.ArgumentMatchers.anyString()))
         .thenReturn(List.of());
     DeviceSessionController controller = new DeviceSessionController(deviceSessionService);
     mockMvc = standaloneSetup(controller);

@@ -5,6 +5,8 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.code.YdszResultCode;
@@ -15,6 +17,8 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowUrgeLimiter;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 
 /**
  * 流程任务催办服务实现。
@@ -36,7 +40,10 @@ public class FlowTaskUrgeService {
 
   private final FlowRunTaskRepository taskRepository;
   private final FlowInstanceRepository instanceRepository;
-  private final FlowTaskSupport support;
+
+  @Autowired
+  @Lazy
+  private FlowTaskSupport support;
   private final FlowUrgeLimiter urgeLimiter;
 
   /** P2-3: Prometheus 指标（可能为 null：测试环境） */

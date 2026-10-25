@@ -3,8 +3,9 @@ package com.njydsz.workflow.server.timer;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -35,17 +36,20 @@ import com.njydsz.workflow.domain.vo.FlowTimerVO;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class FlowTimeoutJob {
 
   /** 单次扫描最大处理数量，防止单次处理过多任务 */
   private static final int MAX_BATCH_SIZE = 100;
 
-  private final FlowTimerRepository timerRepository;
+  @Autowired
+  private FlowTimerRepository timerRepository;
 
-  private final FlowRunTaskRepository runTaskRepository;
+  @Autowired
+  private FlowRunTaskRepository runTaskRepository;
 
-  private final FlowTimeoutHandler timeoutHandler;
+  @Autowired
+  @Lazy
+  private FlowTimeoutHandler timeoutHandler;
 
   /**
    * 每 60 秒扫描超时任务并执行对应策略

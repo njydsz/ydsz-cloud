@@ -44,7 +44,7 @@ class DepartmentControllerSmokeTest extends BaseControllerMockTest {
 
   @Nested
   @DisplayName("GET /dept/list")
-  class List {
+  class ListQuery {
 
     @Test
     @DisplayName("should return 200 when list succeeds")

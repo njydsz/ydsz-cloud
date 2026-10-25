@@ -239,6 +239,9 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
 
   @Override
   protected void processSelect(Select select, int index, String sql, Object obj) {
+    if (select != null && allSelectTablesIgnored(select)) {
+      return;
+    }
     List<TenantFieldValue> values = resolveTenantValues();
     processSelectBody(select, values);
   }
@@ -411,13 +414,15 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
 
   @Override
   protected void processInsert(Insert insert, int index, String sql, Object obj) {
+    if (insert.getTable() != null && shouldIgnoreTable(insert.getTable().getName())) {
+      return;
+    }
+
     List<TenantFieldValue> values = resolveTenantValues();
 
     Table table = insert.getTable();
     if (table != null) {
       applySchemaToTable(table);
-    }
-    if (table != null && !shouldIgnoreTable(table.getName())) {
       List<Column> columns = insert.getColumns();
       if (columns == null) {
         log.warn("INSERT 语句未显式声明列，跳过租户字段注入，table={}", table.getName());
@@ -471,13 +476,15 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
 
   @Override
   protected void processUpdate(Update update, int index, String sql, Object obj) {
+    if (update.getTable() != null && shouldIgnoreTable(update.getTable().getName())) {
+      return;
+    }
+
     List<TenantFieldValue> values = resolveTenantValues();
 
     Table table = update.getTable();
     if (table != null) {
       applySchemaToTable(table);
-    }
-    if (table != null && !shouldIgnoreTable(table.getName())) {
       Expression tenantCondition = buildTenantConditions(table, values);
       update.setWhere(mergeWhere(update.getWhere(), tenantCondition));
     }
@@ -485,13 +492,15 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
 
   @Override
   protected void processDelete(Delete delete, int index, String sql, Object obj) {
+    if (delete.getTable() != null && shouldIgnoreTable(delete.getTable().getName())) {
+      return;
+    }
+
     List<TenantFieldValue> values = resolveTenantValues();
 
     Table table = delete.getTable();
     if (table != null) {
       applySchemaToTable(table);
-    }
-    if (table != null && !shouldIgnoreTable(table.getName())) {
       Expression tenantCondition = buildTenantConditions(table, values);
       delete.setWhere(mergeWhere(delete.getWhere(), tenantCondition));
     }
@@ -570,6 +579,77 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
       return true;
     }
     return ignoreTables.contains(tableName.toLowerCase());
+  }
+
+  /**
+   * 检查 Select 语句中所有引用的表是否均在 ignoreTables 中。
+   *
+   * <p>递归遍历 FROM 项、JOIN、CTE 和子查询，任一表不在忽略列表中即返回 false。
+   *
+   * @param select Select AST 节点
+   * @return true=全部表均在忽略列表中，可跳过租户隔离
+   */
+  private boolean allSelectTablesIgnored(Select select) {
+    if (select == null) {
+      return true;
+    }
+    Set<String> tableNames = new LinkedHashSet<>();
+    collectSelectTables(select, tableNames);
+    if (tableNames.isEmpty()) {
+      return true;
+    }
+    for (String name : tableNames) {
+      if (!shouldIgnoreTable(name)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private void collectSelectTables(Select select, Set<String> tableNames) {
+    if (select == null) {
+      return;
+    }
+    var withItems = select.getWithItemsList();
+    if (withItems == null) {
+      withItems = List.of();
+    }
+    for (WithItem withItem : withItems) {
+      if (withItem != null && withItem.getSelect() != null) {
+        collectSelectTables(withItem.getSelect(), tableNames);
+      }
+    }
+    if (select instanceof PlainSelect) {
+      collectPlainSelectTables((PlainSelect) select, tableNames);
+    } else if (select instanceof SetOperationList) {
+      List<Select> selects = ((SetOperationList) select).getSelects();
+      if (selects != null) {
+        for (Select sub : selects) {
+          collectSelectTables(sub, tableNames);
+        }
+      }
+    } else if (select instanceof ParenthesedSelect) {
+      collectSelectTables(((ParenthesedSelect) select).getSelect(), tableNames);
+    }
+  }
+
+  private void collectPlainSelectTables(PlainSelect plain, Set<String> tableNames) {
+    FromItem fromItem = plain.getFromItem();
+    if (fromItem instanceof Table) {
+      tableNames.add(((Table) fromItem).getName());
+    } else if (fromItem instanceof ParenthesedSelect) {
+      collectSelectTables(((ParenthesedSelect) fromItem).getSelect(), tableNames);
+    }
+    List<Join> joins = plain.getJoins();
+    if (joins != null) {
+      for (Join join : joins) {
+        if (join.getRightItem() instanceof Table) {
+          tableNames.add(((Table) join.getRightItem()).getName());
+        } else if (join.getRightItem() instanceof ParenthesedSelect) {
+          collectSelectTables(((ParenthesedSelect) join.getRightItem()).getSelect(), tableNames);
+        }
+      }
+    }
   }
 
   /**

@@ -1,5 +1,6 @@
 package com.njydsz.nextwiki.web.controller;
 
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -50,11 +51,12 @@ class WopiControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when check file info succeeds")
     void should_return_200_when_check_file_info_succeeds() throws Exception {
-      FileNodeVO node = new FileNodeVO();
-      node.setName("test.docx");
-      node.setFile(true);
-      node.setSize(1024L);
-      node.setUpdatedAt(LocalDateTime.now());
+      FileNodeVO node = FileNodeVO.builder()
+          .name("test.docx")
+          .nodeType(FileNodeVO.TYPE_FILE)
+          .size(1024L)
+          .updatedAt(LocalDateTime.now())
+          .build();
       when(wopiFileService.findFileOptional("file-001"))
           .thenReturn(java.util.Optional.of(node));
 

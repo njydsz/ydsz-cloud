@@ -37,14 +37,14 @@ class CompanyControllerSmokeTest extends BaseControllerMockTest {
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(companyService.listAll()).thenReturn(List.of());
+    when(companyService.list()).thenReturn(List.of());
     when(companyService.tree()).thenReturn(List.of());
     when(companyService.getById("company-001")).thenReturn(null);
   }
 
   @Nested
   @DisplayName("GET /company/list")
-  class List {
+  class ListQuery {
 
     @Test
     @DisplayName("should return 200 when list succeeds")

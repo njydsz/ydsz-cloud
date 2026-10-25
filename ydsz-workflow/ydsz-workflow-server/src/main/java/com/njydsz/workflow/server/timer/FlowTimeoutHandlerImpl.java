@@ -1,7 +1,8 @@
 package com.njydsz.workflow.server.timer;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
@@ -30,16 +31,18 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class FlowTimeoutHandlerImpl implements FlowTimeoutHandler {
 
   /** 默认管理员用户 ID（转交目标兜底） */
   private static final String DEFAULT_ADMIN_USER_ID = "1";
 
-  private final FlowTaskService taskService;
+  @Autowired
+  @Lazy
+  private FlowTaskService taskService;
 
   /** 审计日志仓储，记录超时审计 */
-  private final FlowAuditLogRepository auditLogRepository;
+  @Autowired
+  private FlowAuditLogRepository auditLogRepository;
 
   /** {@inheritDoc} */
   @Override

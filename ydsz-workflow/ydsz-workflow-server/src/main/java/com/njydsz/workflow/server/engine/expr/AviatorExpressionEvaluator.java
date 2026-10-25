@@ -40,7 +40,6 @@ import com.njydsz.common.locales.util.I18n;
 @Slf4j
 @Component
 @ConditionalOnClass(AviatorEvaluator.class)
-@ConditionalOnMissingBean(ExpressionEvaluator.class)
 public class AviatorExpressionEvaluator implements ExpressionEvaluator {
 
 

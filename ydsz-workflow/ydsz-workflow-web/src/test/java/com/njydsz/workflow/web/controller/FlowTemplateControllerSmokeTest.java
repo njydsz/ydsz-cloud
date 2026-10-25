@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
+import com.njydsz.workflow.web.controller.definition.FlowTemplateController;
 import com.njydsz.workflow.server.service.FlowTemplateRecommendService;
 import com.njydsz.workflow.server.service.FlowTemplateService;
 

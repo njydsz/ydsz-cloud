@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.YdszResultCode;
@@ -81,8 +82,8 @@ public class FlowAiAgentNodeExecutor {
     /** 提示词模板变量替换器 */
   private final FlowVariableReplacer variableReplacer;
 
-  /** AI Agent 服务客户端 */
-  private final AgentServiceClient agentServiceClient;
+  /** AI Agent 服务客户端（ObjectProvider：允许 agent-api 不在 classpath 时可选注入） */
+  private final ObjectProvider<AgentServiceClient> agentServiceClientProvider;
 
   /** AI Agent 执行线程池（P0-1：虚拟线程每任务一线程，IO 密集型） */
   private final ExecutorService aiAgentExecutor;
@@ -94,9 +95,9 @@ public class FlowAiAgentNodeExecutor {
    * @param agentServiceClient AI Agent 服务客户端
    */
   public FlowAiAgentNodeExecutor(FlowVariableReplacer variableReplacer,
-      AgentServiceClient agentServiceClient) {
+      ObjectProvider<AgentServiceClient> agentServiceClientProvider) {
     this.variableReplacer = variableReplacer;
-    this.agentServiceClient = agentServiceClient;
+    this.agentServiceClientProvider = agentServiceClientProvider;
     this.aiAgentExecutor = ExecutorUtils.newVirtualThreadExecutor("workflow-ai-agent-");
     log.info(I18n.message("workflow.ai.agent.executor.init", new Object[]{}));
   }
@@ -116,6 +117,12 @@ public class FlowAiAgentNodeExecutor {
     AiAgentNodeConfigVO config = node.getAiAgentNodeConfig();
     String nodeCode = node.getNodeCode();
 
+    AgentServiceClient agentServiceClient = agentServiceClientProvider.getIfAvailable();
+    if (agentServiceClient == null) {
+      log.warn(I18n.message("workflow.ai.agent.client.unavailable", new Object[]{nodeCode, instanceId}));
+      return applyFallback(config, instanceId, nodeCode, "AgentServiceClient 不可用（agent-api 未部署）");
+    }
+
     // 校验 agentId
     if (!config.hasValidAgentId()) {
       log.warn(I18n.message("workflow.ai.agent.missing.agentId", new Object[]{nodeCode, config.getFallbackStrategy()}));
@@ -130,8 +137,8 @@ public class FlowAiAgentNodeExecutor {
     try {
       return SentryObservation.<Boolean>time("workflow.node.execute", null, null, () -> {
         // 执行（带重试）
-        AgentExecutionResult result = executeWithRetry(config, resolvedPrompt, context, instanceId,
-            nodeCode);
+        AgentExecutionResult result = executeWithRetry(agentServiceClient, config, resolvedPrompt,
+            context, instanceId, nodeCode);
 
         if (result == null) {
           log.warn(I18n.message("workflow.ai.agent.returned.null", new Object[]{instanceId, nodeCode}));
@@ -157,14 +164,15 @@ public class FlowAiAgentNodeExecutor {
    * @param nodeCode 节点编码（日志用）
    * @return Agent 执行结果，全部重试失败时返回 null
    */
-  private AgentExecutionResult executeWithRetry(AiAgentNodeConfigVO config, String prompt,
+  private AgentExecutionResult executeWithRetry(AgentServiceClient agentServiceClient,
+      AiAgentNodeConfigVO config, String prompt,
       Map<String, Object> context, String instanceId, String nodeCode) {
     int maxAttempts = config.isRetryFallback() ? config.getRetryMax() + 1 : 1;
     AgentExecutionResult lastResult = null;
 
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        lastResult = executeSingleAttempt(config, prompt, context);
+        lastResult = executeSingleAttempt(agentServiceClient, config, prompt, context);
         // 非错误结果（通过或驳回）直接返回
         if (lastResult != null && lastResult.confidence() > 0) {
           return lastResult;
@@ -191,7 +199,8 @@ public class FlowAiAgentNodeExecutor {
    * @param context 上下文
    * @return Agent 执行结果
    */
-  private AgentExecutionResult executeSingleAttempt(AiAgentNodeConfigVO config, String prompt,
+  private AgentExecutionResult executeSingleAttempt(AgentServiceClient agentServiceClient,
+      AiAgentNodeConfigVO config, String prompt,
       Map<String, Object> context) {
     // 使用 CompletableFuture + 线程池实现超时控制
     // P1-4：捕获当前请求 Locale，确保异步线程中 i18n 解析正确

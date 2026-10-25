@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.api.client.AgentExecuteClient;
@@ -47,7 +47,7 @@ import com.njydsz.workflow.domain.gateway.AgentServiceClient;
  */
 @Slf4j
 @Component
-@ConditionalOnMissingBean(AgentServiceClient.class)
+@ConditionalOnClass(name = "com.njydsz.agent.domain.dto.ChatResponseDTO")
 public class HttpAgentServiceClient implements AgentServiceClient {
 
   /** 无法从回复内容推断语义时的默认置信度 */

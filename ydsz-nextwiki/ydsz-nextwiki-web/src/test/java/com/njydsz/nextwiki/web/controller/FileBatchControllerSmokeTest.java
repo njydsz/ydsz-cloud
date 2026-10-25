@@ -55,7 +55,7 @@ class FileBatchControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list file versions succeeds")
     void should_return_200_when_list_file_versions_succeeds() throws Exception {
-      when(fileApplicationService.getVersionHistory("node-001")).thenReturn(List.of(new FileVersionVO()));
+      when(fileApplicationService.getVersionHistory("node-001")).thenReturn(List.of(FileVersionVO.builder().build()));
 
       mockMvc.perform(get("/nextwiki/files/node-001/versions"))
           .andExpect(status().isOk())

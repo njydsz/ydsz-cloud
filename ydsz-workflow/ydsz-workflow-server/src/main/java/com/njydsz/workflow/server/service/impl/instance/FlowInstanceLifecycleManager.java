@@ -9,6 +9,7 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,67 +81,8 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
   private static final String PERM_INSTANCE_REOPEN = "workflow:instance:reopen";
 
   /** 流程变量管理器，负责变量读写与解析 */
-  private final FlowInstanceVariableManager variableManager;
-
-  /**
-   * 构造函数
-   *
-   * @param instanceRepository 流程实例仓储
-   * @param definitionService 流程定义服务
-   * @param advancer 流程推进引擎
-   * @param taskService 流程任务服务（@Lazy 打破循环依赖：FlowInstanceLifecycleManager → FlowTaskService →
-   *                   FlowTaskCoreService → FlowInstanceService → FlowInstanceLifecycleManager）
-   * @param taskRepository 运行时任务仓储
-   * @param nodeRepository 流程节点仓储
-   * @param flowMetrics Prometheus 指标
-   * @param flowTaskSupport 事件支持组件
-   * @param subProcessService 子流程服务
-   * @param ccService 抄送服务
-   * @param autoTriggerService 自动触发服务
-   * @param eventSubscriptionService 事件订阅服务
-   * @param auditLogRepository 审计日志仓储
-   * @param hisTaskRepository 历史任务仓储
-   * @param timerService 定时器服务
-   * @param nameAssembler 名称解析门面
-   * @param variableManager 流程变量管理器
-   */
-  public FlowInstanceLifecycleManager(
-      FlowInstanceRepository instanceRepository,
-      FlowDefinitionService definitionService,
-      DefaultFlowAdvancer advancer,
-      @Lazy FlowTaskService taskService,
-      FlowRunTaskRepository taskRepository,
-      FlowNodeRepository nodeRepository,
-      FlowMetrics flowMetrics,
-      @Lazy FlowTaskSupport flowTaskSupport,
-      @Lazy FlowSubProcessService subProcessService,
-      FlowCcService ccService,
-      FlowAutoTriggerService autoTriggerService,
-      FlowEventSubscriptionService eventSubscriptionService,
-      FlowAuditLogRepository auditLogRepository,
-      FlowHisTaskRepository hisTaskRepository,
-      FlowTimerService timerService,
-      NameAssembler nameAssembler,
-      FlowInstanceVariableManager variableManager) {
-    super(
-        instanceRepository,
-        definitionService,
-        advancer,
-        taskService,
-        taskRepository,
-        nodeRepository,
-        flowMetrics,
-        flowTaskSupport,
-        subProcessService,
-        ccService,
-        autoTriggerService,
-        eventSubscriptionService,
-        auditLogRepository,
-        hisTaskRepository,
-        timerService,
-        nameAssembler);
-    this.variableManager = variableManager;
-  }
+  @Autowired
+  private FlowInstanceVariableManager variableManager;
 
   // ============================== 子类策略实现 ==============================
 

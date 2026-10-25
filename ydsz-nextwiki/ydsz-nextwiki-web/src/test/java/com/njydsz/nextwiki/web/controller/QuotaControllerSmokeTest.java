@@ -45,7 +45,7 @@ class QuotaControllerSmokeTest extends BaseControllerMockTest {
     @DisplayName("should return 200 when get quota info succeeds")
     void should_return_200_when_get_quota_info_succeeds() throws Exception {
       when(quotaApplicationService.getQuotaInfo("user", "user-001"))
-          .thenReturn(new com.njydsz.nextwiki.domain.vo.StorageQuotaVO());
+          .thenReturn(com.njydsz.nextwiki.domain.vo.StorageQuotaVO.builder().build());
 
       mockMvc.perform(get("/nextwiki/quota/info").param("scopeId", "user-001"))
           .andExpect(status().isOk())

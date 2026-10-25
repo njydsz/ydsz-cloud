@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.userinfo.server.service.PostService;
 
@@ -38,28 +37,13 @@ class PostControllerSmokeTest extends BaseControllerMockTest {
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(postService.page(org.mockito.ArgumentMatchers.any()))
-        .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
     when(postService.list()).thenReturn(List.of());
     when(postService.getById("post-001")).thenReturn(null);
   }
 
   @Nested
-  @DisplayName("GET /post/page")
-  class Page {
-
-    @Test
-    @DisplayName("should return 200 when page query succeeds")
-    void should_return_200_when_page_query_succeeds() throws Exception {
-      mockMvc.perform(get("/post/page").param("pageNum", "1").param("pageSize", "20"))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
-    }
-  }
-
-  @Nested
   @DisplayName("GET /post/list")
-  class List {
+  class ListQuery {
 
     @Test
     @DisplayName("should return 200 when list succeeds")

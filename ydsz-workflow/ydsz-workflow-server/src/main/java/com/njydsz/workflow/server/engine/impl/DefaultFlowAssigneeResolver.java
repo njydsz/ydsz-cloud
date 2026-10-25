@@ -20,7 +20,6 @@ import com.njydsz.workflow.domain.gateway.FlowAssigneeResolver;
  */
 @Slf4j
 @Component
-@ConditionalOnMissingBean(FlowAssigneeResolver.class)
 public class DefaultFlowAssigneeResolver implements FlowAssigneeResolver {
 
   /** {@inheritDoc} */
