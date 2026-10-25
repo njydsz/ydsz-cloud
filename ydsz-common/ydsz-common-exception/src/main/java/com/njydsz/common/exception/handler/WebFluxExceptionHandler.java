@@ -10,9 +10,12 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.exception.code.CoreExceptionCode;
@@ -61,6 +64,12 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
 
   /** 非法参数兜底文案（i18n key 解析失败时使用，避免泄露内部异常细节） */
   private static final String DEFAULT_ILLEGAL_ARGUMENT_MESSAGE = "非法参数";
+
+  /** 资源不存在兜底文案（i18n key 解析失败时使用） */
+  private static final String DEFAULT_RESOURCE_NOT_FOUND_MESSAGE = "资源不存在";
+
+  /** 客户端请求错误兜底文案（i18n key 解析失败时使用，掩码异常原始描述） */
+  private static final String DEFAULT_CLIENT_ERROR_MESSAGE = "请求无法处理";
 
   private final MessageSource messageSource;
 
@@ -254,6 +263,97 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
         e);
 
     return buildSystemErrorResponse(e, exchange);
+  }
+
+  /**
+   * 处理携带 HTTP 状态码的响应异常（路由未命中、方法不支持等）。
+   *
+   * <p>WebFlux 的 DispatcherHandler 在无匹配路由或静态资源缺失时抛出 {@link ResponseStatusException}
+   * （含其子类 NoResourceFoundException）。若不单独处理，会被兜底的 {@code Exception} 处理器降级为
+   * 500 + SYSTEM_ERROR，既掩盖真实状态码，也让探活/扫描流量污染系统异常指标。
+   *
+   * @param e 异常对象
+   * @param exchange WebFlux 请求上下文
+   * @return 与原始状态码一致的统一错误响应
+   */
+  @ExceptionHandler(ResponseStatusException.class)
+  public ResponseEntity<Object> handleResponseStatusException(
+      ResponseStatusException e, ServerWebExchange exchange) {
+    recordMetrics(e);
+    String path = exchange.getRequest().getPath().value();
+    HttpStatusCode status = e.getStatusCode();
+    CoreExceptionCode errorCode = mapResponseStatus(status);
+
+    if (status.is5xxServerError()) {
+      log.error(
+          "{}响应状态异常 | 路径: {} | 状态码: {} | 错误码: {} | 消息: {}",
+          getLogPrefix(),
+          path,
+          status.value(),
+          errorCode.getCode(),
+          e.getMessage(),
+          e);
+    } else {
+      log.warn(
+          "{}响应状态异常 | 路径: {} | 状态码: {} | 错误码: {}",
+          getLogPrefix(),
+          path,
+          status.value(),
+          errorCode.getCode());
+    }
+
+    boolean notFound = status.value() == HttpStatus.NOT_FOUND.value();
+    String message =
+        notFound
+            ? resolveMessage(
+                "resource.not.found.detail",
+                new Object[] {path},
+                DEFAULT_RESOURCE_NOT_FOUND_MESSAGE)
+            : resolveMessage(
+                errorCode.getKey(),
+                null,
+                status.is4xxClientError()
+                    ? DEFAULT_CLIENT_ERROR_MESSAGE
+                    : DEFAULT_SYSTEM_ERROR_MESSAGE);
+
+    Object body =
+        buildStandardErrorResponse(
+            errorCode.getCode(),
+            errorCode.getKey(),
+            message,
+            status.value(),
+            path,
+            errorCode.getLevel());
+    return ResponseEntity.status(status).body(body);
+  }
+
+  /**
+   * 将 HTTP 状态码映射为平台错误码。
+   *
+   * @param status 原始 HTTP 状态码
+   * @return 对应的核心异常码（未识别时按 4xx/5xx 归类兜底）
+   */
+  private static CoreExceptionCode mapResponseStatus(HttpStatusCode status) {
+    HttpStatus resolved = HttpStatus.resolve(status.value());
+    if (resolved == null) {
+      return status.is4xxClientError()
+          ? CoreExceptionCode.INVALID_REQUEST_FORMAT
+          : CoreExceptionCode.INTERNAL_ERROR;
+    }
+    return switch (resolved) {
+      case NOT_FOUND -> CoreExceptionCode.RESOURCE_NOT_FOUND;
+      case METHOD_NOT_ALLOWED -> CoreExceptionCode.METHOD_NOT_ALLOWED;
+      case CONFLICT -> CoreExceptionCode.CONFLICT;
+      case CONTENT_TOO_LARGE -> CoreExceptionCode.FILE_SIZE_EXCEEDED;
+      case TOO_MANY_REQUESTS -> CoreExceptionCode.RESOURCE_EXHAUSTED;
+      case SERVICE_UNAVAILABLE -> CoreExceptionCode.SERVICE_UNAVAILABLE;
+      case BAD_GATEWAY -> CoreExceptionCode.BAD_GATEWAY;
+      case GATEWAY_TIMEOUT -> CoreExceptionCode.GATEWAY_TIMEOUT;
+      case INTERNAL_SERVER_ERROR -> CoreExceptionCode.SYSTEM_ERROR;
+      default -> status.is4xxClientError()
+          ? CoreExceptionCode.INVALID_REQUEST_FORMAT
+          : CoreExceptionCode.INTERNAL_ERROR;
+    };
   }
 
   /**

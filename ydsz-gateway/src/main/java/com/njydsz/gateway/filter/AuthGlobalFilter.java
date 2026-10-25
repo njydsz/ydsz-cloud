@@ -1,5 +1,6 @@
 package com.njydsz.gateway.filter;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
 
@@ -114,28 +115,46 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
   /** 安全响应头配置（common-safe 统一配置） */
   private final SecurityHeaderProperties securityHeaderProperties;
 
-  /** 内部头签名密钥（独立配置，禁止复用 JWT 密钥） */
+  /** 内部头签名密钥（独立配置，禁止复用 JWT 密钥）。 */
   @Value("${ydsz.gateway.internal-sign-secret:}")
   private String internalSignSecret;
 
+  /** JWT 签名密钥，仅用于校验两个密钥未串用。 */
+  @Value("${ydsz.auth.token.secret-key:}")
+  private String tokenSecretKey;
+
   /**
-   * 启动时校验内部头签名密钥强度。
+   * 启动时校验内部头签名密钥强度（fail-closed）。
    *
-   * <p>HMAC-SHA256 安全要求密钥长度 ≥ 32 字节（256 bit）。
+   * <p>HMAC-SHA256 安全要求密钥长度 ≥ 32 字节（256 bit）。未配置或长度不足时直接阻止网关启动：
+   * 缺失密钥意味着 {@code X-User-*} 透传头无法签名，下游无法区分网关注入与客户端伪造，属于身份伪造风险，
+   * 不允许以 "仅告警" 的方式带病上线。
+   *
+   * <p>密钥来源：环境变量 {@code YDSZ_GATEWAY_INTERNAL_SIGN_SECRET}，或本地未入库的
+   * {@code docs/nacos-config/ydsz-config.local.yml}。
    */
   @PostConstruct
   private void validateSecret() {
-    if (internalSignSecret == null || internalSignSecret.isEmpty()) {
-      log.error("[AuthFilter] 内部头签名密钥未配置 (ydsz.gateway.internal-sign-secret),下游服务将无法验证内部头签名，存在身份伪造风险");
-      return;
+    if (internalSignSecret == null || internalSignSecret.isBlank()) {
+      throw new IllegalStateException(
+          "Internal-sign secret is not configured, please set YDSZ_GATEWAY_INTERNAL_SIGN_SECRET"
+              + " (ydsz.gateway.internal-sign-secret) with a random string of 32+ bytes");
     }
-    if (internalSignSecret.length() < MIN_INTERNAL_SECRET_LENGTH) {
-      log.error("[AuthFilter] 内部头签名密钥长度不足 (current={}, min={})",
-          internalSignSecret.length(), MIN_INTERNAL_SECRET_LENGTH);
+    if (internalSignSecret.getBytes(StandardCharsets.UTF_8).length < MIN_INTERNAL_SECRET_LENGTH) {
+      throw new IllegalStateException(
+          "Internal-sign secret length is less than "
+              + MIN_INTERNAL_SECRET_LENGTH
+              + " bytes, current byte length: "
+              + internalSignSecret.getBytes(StandardCharsets.UTF_8).length
+              + ", please use a more secure key");
     }
-    String source = System.getenv("YDSZ_GATEWAY_INTERNAL_SIGN_SECRET") != null
-        ? "YDSZ_GATEWAY_INTERNAL_SIGN_SECRET"
-        : (System.getenv("JWT_SECRET") != null ? "JWT_SECRET(fallback)" : "nacos-config");
+    if (internalSignSecret.equals(tokenSecretKey)) {
+      log.warn("[AuthFilter] 内部头签名密钥与 JWT 签名密钥相同，建议按密钥用途分离配置（域分离，降低单密钥泄露影响面）");
+    }
+    String source =
+        System.getenv("YDSZ_GATEWAY_INTERNAL_SIGN_SECRET") != null
+            ? "YDSZ_GATEWAY_INTERNAL_SIGN_SECRET"
+            : "config-file";
     log.info("[AuthFilter] 内部头签名密钥已加载, source={}, length={}", source, internalSignSecret.length());
   }
 

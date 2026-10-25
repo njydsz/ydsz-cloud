@@ -30,8 +30,13 @@ spring:
 # YDSZ · Gateway · SIT 环境特有配置
 # =====================================================================
 ydsz:
+  auth:
+    token:
+      # JWT 签名密钥仅由环境变量注入（与 ydsz-userinfo 一致），缺失时启动失败
+      secret-key: ${YDSZ_JWT_SECRET:}
   gateway:
-    internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:${JWT_SECRET:}}
+    # 内部头签名密钥：禁止回退到 JWT 密钥（密钥用途需域分离）
+    internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:}
     cors:
       allowed-origin: ${YDSZ_GATEWAY_CORS_ALLOWED_ORIGIN:https://sit.example.com}
       allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
@@ -62,12 +67,15 @@ springdoc:
 knife4j:
   production: true
 
+# P0-S3：/actuator/** 不经网关鉴权过滤器；gateway 端点可改写路由定义（SCG SpEL RCE 家族
+# 入口，如 CVE-2022-22947），共享环境一律关闭，路由变更走 Nacos gateway-routes.json。
 management:
   endpoint:
     gateway:
-      enabled: true
+      enabled: false
     health:
-      show-details: when-authorized
+      # always 会外泄数据库类型/校验语句、磁盘路径、PID、堆内存指纹
+      show-details: ${YDSZ_HEALTH_SHOW_DETAILS:when-authorized}
       group:
         liveness:
           include:
@@ -79,7 +87,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway,prometheus
+        include: health,info,prometheus
   metrics:
     tags:
       application: ${spring.application.name}

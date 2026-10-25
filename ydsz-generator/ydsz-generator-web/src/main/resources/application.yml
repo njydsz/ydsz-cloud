@@ -12,12 +12,14 @@ spring:
     name: ydzs-generator
   config:
     import:
-      - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-common.yml"
-      - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-generator-web.yml"
+      - "optional:file:${YDSZ_NACOS_CONFIG_DIR:../../docs/nacos-config}/ydsz-common.yml"
+      - "optional:file:${YDSZ_NACOS_CONFIG_DIR:../../docs/nacos-config}/ydsz-generator-web.yml"
+      # 本地凭据（未入库，见 ydsz-config.local.yml.example）占位符在此统一解析，顺序不影响结果
+      - "optional:file:${YDSZ_NACOS_CONFIG_DIR:../../docs/nacos-config}/ydsz-config.local.yml"
   datasource:
     url: ${NACOS_GEN_DB_URL:jdbc:postgresql://127.0.0.1:5432/ydsz_cloud_gen?currentSchema=public&stringtype=unspecified}
     username: ${NACOS_GEN_DB_USERNAME:postgres}
-    password: ${NACOS_GEN_DB_PASSWORD:Limw1020}
+    password: ${NACOS_GEN_DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
@@ -182,7 +184,8 @@ management:
         include: health,info,prometheus,metrics
   endpoint:
     health:
-      show-details: always
+      # P0-S3：组件细节仅在已鉴权时回显
+      show-details: when-authorized
     prometheus:
       access: read_only
   metrics:

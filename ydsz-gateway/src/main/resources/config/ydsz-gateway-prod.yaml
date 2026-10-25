@@ -46,8 +46,13 @@ spring:
 # YDSZ · Gateway · PROD 环境特有配置
 # =====================================================================
 ydsz:
+  auth:
+    token:
+      # P0-2: JWT 签名密钥仅由环境变量注入（与签发方 ydsz-userinfo 必须一致），缺失时启动失败
+      secret-key: ${YDSZ_JWT_SECRET:}
   gateway:
     # P0-2: 内部头签名密钥（生产环境必须通过环境变量注入强随机密钥）
+    # 禁止回退到 JWT 密钥：两类密钥用途不同，需域分离
     internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:}
     # P2-1: CORS 单一可信来源（生产环境禁止通配符）
     cors:
@@ -85,9 +90,10 @@ knife4j:
 management:
   endpoint:
     gateway:
-      enabled: true
+      # 与下方 exposure 排除保持一致：端点定义本身也不注册（双保险）
+      enabled: false
     health:
-      show-details: when-authorized
+      show-details: ${YDSZ_HEALTH_SHOW_DETAILS:when-authorized}
       group:
         liveness:
           include:
@@ -99,7 +105,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway,prometheus
+        # P0-S3：生产不暴露 gateway 端点（SCG 的 /actuator/gateway/** 历史上是
+        # 未鉴权路由改写导致 SpEL RCE 的入口，如 CVE-2022-22947 一族）；
+        # 路由变更统一走 Nacos gateway-routes.json 动态下发。
+        include: health,info,prometheus
   metrics:
     tags:
       application: ${spring.application.name}

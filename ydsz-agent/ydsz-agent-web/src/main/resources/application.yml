@@ -20,10 +20,11 @@ management:
     web:
       base-path: /actuator
       exposure:
-        include: health,info,metrics,beans,env
+        # P0-S3：beans/env 匿名可读会回显配置与 Bean 结构，不纳入暴露面
+        include: health,info,metrics,prometheus
   endpoint:
     health:
-      show-details: always
+      show-details: when-authorized
       probes:
         enabled: true
 

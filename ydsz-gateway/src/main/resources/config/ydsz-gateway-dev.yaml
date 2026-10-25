@@ -49,9 +49,13 @@ ydsz:
     warmup-classes:
       - com.njydsz.common.core.response.YdszResponse
       - org.springframework.cloud.gateway.route.RouteDefinition
+  auth:
+    token:
+      # JWT 签名密钥仅由环境变量注入（与 ydsz-userinfo 一致），缺失时启动失败
+      secret-key: ${YDSZ_JWT_SECRET:}
   gateway:
-    # P0-2: 内部头签名密钥（dev 环境回退到 JWT 密钥，生产环境必须通过环境变量注入）
-    internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:${JWT_SECRET:}}
+    # P0-2: 内部头签名密钥：禁止回退到 JWT 密钥（密钥用途需域分离）
+    internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:}
     # P2-1: CORS 单一可信来源（dev 环境允许本地开发服务器）
     cors:
       allowed-origin: ${YDSZ_GATEWAY_CORS_ALLOWED_ORIGIN:http://localhost:5173}
@@ -143,12 +147,17 @@ knife4j:
   production: false
 
 # Actuator 暴露端点
+# P0-S3：/actuator/** 匹配不到网关路由，不经过 AuthGlobalFilter，暴露面完全由 include 决定。
+# gateway 端点（可读写路由定义，SCG 历史 SpEL RCE 家族入口 CVE-2022-22947 等）一律关闭，
+# 路由变更统一走 Nacos gateway-routes.json 动态下发。
 management:
   endpoint:
     gateway:
-      enabled: true
+      enabled: false
     health:
-      show-details: when-authorized
+      # always 会外泄数据库类型/校验语句、磁盘路径、PID、堆内存指纹；
+      # 本地排障临时设 YDSZ_HEALTH_SHOW_DETAILS=always
+      show-details: ${YDSZ_HEALTH_SHOW_DETAILS:when-authorized}
       group:
         liveness:
           include:
@@ -160,7 +169,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway,prometheus
+        include: health,info,metrics,prometheus
   metrics:
     tags:
       application: ${spring.application.name}

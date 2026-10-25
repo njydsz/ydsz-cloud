@@ -21,10 +21,10 @@
 |---|------|------|------|---------|
 | S1 | ✅ **真实数据库口令作为环境变量默认值提交进仓库** | `docs/nacos-config/ydsz-common.yml:83`、`ydsz-generator-web.yml:11`、`docs/本地开发环境.md`（4 处明文），共 **5 个受版本控制文件**；引入自 commit `f8a65ea2c2` | `${VAR:默认值}` 是**失败即放行**：生产漏配环境变量时不会崩溃，而是用已泄露凭据静默连库 | 轮换 DB/Nacos/Redis 口令 → 删除默认值改为 fail-closed → 迁移到 Jasypt `ENC()`（`pom.xml:1011` 已声明却未使用）→ `git filter-repo` 清历史 → `.idea/workspace.xml` 出库 |
 | S2 | ✅ **网关 JWT 签名密钥是字面量而非占位符** | `ydsz-gateway/src/main/resources/application.yml:170` `secret-key: "ydsz-cloud-local-dev-secret-key-20261009-at-least-32-bytes-long"`，且 `config/ydsz-gateway-{dev,sit,uat,prod}.yaml` 无覆盖 | 任何有仓库读权限者可**自行签发 token**，等同鉴权体系失效 | 改 `${YDSZ_JWT_SECRET:}` + 启动期 `@PostConstruct` 断言非空且非 dev 默认值 |
-| S3 | ✅ **Actuator 免鉴权 + 暴露 `beans,env`，两份白名单互相矛盾** | 放行侧 `PathGuard.java:224` `"/actuator/**"`；收窄侧 `AuthGlobalFilter.java:87-90` 仅 health/info；暴露侧 `docs/nacos-config/ydsz-common.yml:181`、`ydsz-gateway/.../application.yml:200` 含 `beans,env` | `/actuator/env` 会 dump 全部 PropertySource —— S1/S2 的凭据可被直接读出，这是**外泄通道** | 统一为单一白名单来源（以 AuthGlobalFilter 为准），`exposure.include` 降为 `health,info,prometheus`，其余端点挂管理员鉴权 |
+| S3 | ✅ **Actuator 暴露面含 `beans,env`，且四处配置源互相漂移**（原报告"两份白名单矛盾"的因果判断有误，见下方校正） | 暴露侧 `docs/nacos-config/ydsz-common.yml`、`docs/nacos-config/ydsz-gateway.yml`、`ydsz-gateway/.../application.yml`、`config/ydsz-gateway-{dev,sit,uat,prod}.yaml` 四份 include 各不相同，dev/sit/uat 模板还保留 `management.endpoint.gateway.enabled: true` + include `gateway`。**校正**：`/actuator/**` 匹配不到任何 `RouteLocator`，GlobalFilter（含 `AuthGlobalFilter`）根本不会执行，`PathGuard.isWhiteList()` 实际只被 `CircuitBreakerGlobalFilter` 消费——所以"白名单"从来不是控制点，**include 是唯一控制手段** | `/actuator/env`、`/actuator/beans` 匿名可读，S1/S2 凭据可被直接 dump，这是**外泄通道**；`/actuator/gateway/**` 可读写路由定义（SCG SpEL RCE 家族，如 CVE-2022-22947） | include 收敛为 `health,info,metrics,prometheus,cache-metrics`，四源取同一值；`gateway` 端点在生产/共享环境 `enabled: false`；`show-details` 由 `always` 降为 `when-authorized` 并留 `YDSZ_HEALTH_SHOW_DETAILS` 排障开关；顺带修复未命中路径 500→404（详见 §十一） |
 | S4 | ✅ **11 个模块把配置导入写成 Windows 绝对路径**（共 **22 处** `file:D:/Code/open/ydsz-cloud/...`），含网关与生成器的**基础** `application.yml`（非 dev profile），且无 `optional:` 前缀 | grep 计数 22 | Linux / Docker / CI 上**根本起不来**；也解释了为何只有本机 `mvn compile` 能过 | 改 `optional:nacos:` + `file:${YDSZ_CONFIG_DIR:./config}/…`，配置目录入环境变量 |
-| S5 | ✅ **子应用资源 base 路径四套并存，深链必然 404/HTML-as-JS** | 运行时回退小写 `comm/constants/src/micro-apps.ts:203` `/ydsz-${name}/`；生成侧大写 `/YDSZ-${name}/`（`registry-adapter.ts:275`、`bash/gen-nginx-conf.mts:90`、`gen-registry.mts:82`）；构建被 `apps/system-web/vite.config.mts:16` `base:'/'` 覆盖；`.env.production:1` 的 `VITE_BASE=/system-web/` 成为死配置。已提交 nginx 用的是小写 `location /ydsz-userinfo-web/` | 子应用 `jse/index-*.js` 落到 `location /` 的 `try_files … /index.html`，**返回 HTML 当 JS 执行**，白屏 | 单一 `getProdEntry()` 供 loader/nginx/registry/构建共用；删 9 个 `withVendorExternals({base:'/'})`；新增 `gen:nginx:check` 门禁 |
-| S6 | ✅ **子应用 `index.html` 被缓存一年 immutable，发布不生效** | `bash/deploy/nginx-sub-apps.conf:9`（对整段 location 生效，而该 location 的 `try_files` 兜底正是 `index.html`）；主应用 `location /` 反而全量 `no-store`，丢掉了带 hash 资源的长期缓存 | 每次发布需用户强刷/清 CDN；同时主应用静态资源缓存策略反向劣化 | 按路径分块：hash 资源 `immutable`，`index.html`/SPA 兜底 `no-store`；修 `gen-nginx-conf.mts:105` |
+| S5 | ✅ **子应用资源 base 路径多源漂移，深链必然 404/HTML-as-JS**（复核后为 **5 类事实源、6 个口径值**，且无注册项声明 `prodPath`，回退值即线上生效值） | 小写回退 `comm/constants/src/micro-apps.ts:203` `/ydsz-${name}/`；大写回退 `registry-adapter.ts:275`、`bash/gen-nginx-conf.mts:90`、`gen-registry.mts:82`、`speculation-rules.ts:61`；第 5 种 `/YDSZ-{name去-web}/` 在 `plugin-sw.ts:56`（该 SW/PWA 插件**全仓零调用**）；构建被 9 个 `apps/*/vite.config.mts` `base:'/'` 覆盖；`.env.production` 的 `VITE_BASE=/system-web/`（缺 `ydsz-` 前缀）成死配置；`bash/deploy/Dockerfile` 用小写目录但**漏 COPY generator-web** | 子应用 `jse/index-*.js` 落到 `location /` 的 `try_files … /index.html`，**返回 HTML 当 JS 执行**，白屏 | 单一口径 `SUB_APP_BASE_PREFIX` + `defaultProdPath()`；构建期按 `readSubAppName()` 强制生产 base；6 个回退点归一；Dockerfile 补齐；新增 `pnpm check:base` 门禁断言 5 类事实源 + 产物引用一致（详见 §十一 B0-4） |
+| S6 | ✅ **nginx 静态缓存两层皆错 + 安全头静默丢失（实施中把根因从"snippet 一行"升级为"结构缺陷"）** | ① `bash/deploy/nginx-sub-apps.conf` 对整段 location 下 `immutable 1y`，而该 location 的 `try_files` 兜底正是 `index.html`；② 主应用 `location /` 反过来对**一切**（含 hash JS）下 `no-store`；③ `nginx.conf:165` 两条 **server 级扩展名正则**——nginx 在"最佳前缀匹配块不含嵌套 location"时让正则胜出，故它们同时劫持主应用与 9 个子应用的静态请求，块内既无 `root` 也无 `=404`，缺文件即由兜底返回 HTML；④ 同一块声明自有 `add_header`，按**不跨层继承**规则使 http 层 CSP/XFO/nosniff/Referrer/Permissions/HSTS 全部静默失效；⑤ 硬编码 `X-CDN-Cache "HIT"` 与真实命中无关 | 发布需强刷/清 CDN；主应用长期缓存反向劣化；静态响应裸奔（无 CSP）；`jse/index-*.js` 缺失时**HTML 当 JS 执行**白屏；观测数据误导排障 | 三层缓存（HTML `no-store` / hash 资源 `immutable`+`=404` / 图片字体 30d / `.map` 404）；`alias`→`root`；安全头单一来源 `security-headers.conf` 并在每个声明 `add_header` 的块重新 include；删除 server 级正则；新增 `pnpm check:nginx`（7 项不变量 + `--self-test` 用修复前反例证伪，8/8 命中）——详见 §十一 B0-5 |
 | S7 | ✅ **设计令牌管线断裂：146 个 `--ydsz-*` 定义从未被应用加载** | 定义在 `comm/@core/ui-kit/design-tokens/src/styles/variables.css`（**146 个变量**，无业务入口 import）；应用实际 import 的 `@ydsz/styles` → `base/design/src/design-tokens/default.css` / `dark.css` 各自 `--ydsz-` 计数为 **0**；消费侧 **29 个** `ydsz-ui` 组件文件用 `var(--ydsz-*)` 且**无 fallback** | kit 组件渲染在**未定义自定义属性**上（取初值），kit 暗色模式失效；且暗色选择器两套机制冲突（`.dark` vs `[data-theme='dark']`） | 把 `variables.css` 接入 `comm/styles` 入口（或生成进 default.css），统一暗色选择器，验收：10/10 构建产物 CSSOM 无未解析 `--ydsz-*` |
 | S8 | ✅ **契约/错误码 CI 门禁指向不存在的文件，恒失败** | `.github/workflows/ci.yml:184` `node bash/gen-error-codes.mjs --check`、`:237` `node bash/contract-notify.mjs`，而 commit `b67c45e67` 已把两者重命名为 `.mts`（磁盘仅 `gen-error-codes.mts`/`contract-notify.mts`）；CI 锁 Node 22，`.mts` 需 `--experimental-strip-types` | 前后端契约漂移检测**事实上从未运行**；`notify` 作业（`needs: contract`）连带失效 | 改文件名 + 加 `--experimental-strip-types`（或 Node 24）；把 `pnpm gen:api:check` 一并纳入门禁 |
 
@@ -189,10 +189,10 @@
 | **P1** | ◇ **页面状态容器 0 采用**：`YdPageStatus`（统一 loading/empty/error+retry）在业务侧引用 **0**；**129 个数据列表视图里 54 个（42%）既无 loading 也无 empty/error/retry**（`system-web/views/tenant`、`dict-item`、`message-web/views/message`、`userinfo-web/views/system/role`、`nextwiki-web/views/trash`、`workflow-web/views/task`）；骨架屏仅 1 个 app 视图 | 100% 列表页三态齐备；加 lint 规则禁止裸 `<YdTable>`/`<Grid>` |
 | **P1** | ✅ **筛选/分页/排序完全不进 URL**：`useRouteQuery` 0、`router.replace(…query` 0、`route.query` 仅 4 文件 | 刷新/分享/后退不丢状态；≥90% 列表页可用；e2e 深链断言 |
 | **P1** | ◇ **无未保存更改守卫**：`onBeforeRouteLeave` 0，表单无 `beforeunload` | 误关不丢数据（e2e 覆盖前 20 个 CRUD 表单） |
-| **P0** | ✅ **禁用缩放**：`main/index.html:12` `maximum-scale=1.0,user-scalable=0` | WCAG 1.4.4 全站失败 —— 删这两个指令 |
+| **P0** | ✅ **禁用缩放**：`main/index.html:12` `maximum-scale=1.0,user-scalable=0` | WCAG 1.4.4 全站失败 —— 删这两个指令 → **已落地，见 §十一 B0-8**（9 个入口归一 + `check:head` 门禁，含 minimum-scale 变体） |
 | **P1** | ◇ i18n 覆盖虚高：6 语言目录，zh-CN 叶键 2645 / en-US 2598（差 47）/ es·fr·ja·ko 各 **2341（缺 304）**，而 `bash/check-locales.mts:35` **只对 `['zh-CN','en-US']` 设门禁** → 4 种语言无约束；模板可见文本里 **3555 个硬编码中文字符**（agent-web 705、cronjob 479、message 426…）；16 条校验规则文案硬编码中文（如 `cronjob-web/src/views/job/job-form.vue:46-66`）；无 RTL（`dir="rtl"` 0）；`formatDate` 写死 `'YYYY-MM-DD'`（`base/shared/src/utils/date.ts:41`），无 `dayjs/locale` 引入、无 `Intl.NumberFormat` | `check:i18n` 覆盖 6 语言且键集相等；模板可见 CJK 硬编码 = 0；日期/数字 locale-aware |
 | **P1** | ◇ 表单细节：服务端错误按 INFO/WARN/ERROR/FATAL 分层 + 每码 `i18nKey` 已生成（`error-codes.generated.ts` 1181 行）**但无字段级回填**（与 §4 的 `fieldErrors` 断链同因）；无"跳到首个错误"；`autocomplete`/`inputmode`/`type="tel|email"` 在全部 app **0 处** | 100% 400/422 渲染到字段并聚焦首个无效项；语义 `type/autocomplete` 全覆盖 |
-| **P1** | ✅ **CSP 自堵字体与分析**：`nginx.conf:69` `font-src 'self' data:` 拦掉 `main/index.html:25` 的 `fonts.googleapis.com` 样式与 `fonts.gstatic.com` 字体（后者本身也是境内延迟 SPOF）；`script-src 'self'` 拦掉内联百度统计（`:41-52`） | 首屏 0 CSP 违规；字体自托管子集化；FCP ≤1800ms |
+| **P1** | ✅ **CSP 自堵字体与分析**：CSP 在 B0-5 后单一来源为 `bash/deploy/security-headers.conf:17`，其中 `font-src 'self' data:` + `style-src 'self' 'unsafe-inline'` 拦掉 `main/index.html:26` 的 `fonts.googleapis.com` 样式与 `:19` 的 `fonts.gstatic.com` 字体（后者本身也是境内延迟 SPOF）；`script-src 'self' 'strict-dynamic'` 拦掉 `:43` 的内联百度统计（8 个子应用 `apps/*-web/index.html:17` 同写法） | 首屏 0 CSP 违规；字体自托管子集化；FCP ≤1800ms → **已落地，见 §十一 B0-8**（三段死代码/无效探测移除 + 恢复路径写进注释；`rel=preconnect/dns-prefetch` 不受 CSP 约束这一事实已写入门禁消息） |
 | **P1** | ✅ **壳层无启动画面**：`main/index.html` body 仅 `<div id="app">`，importmap+shims+entry 执行期间纯白 | 首绘 ≤1000ms 且有 skeleton/boot splash + entry `modulepreload` |
 | **P2** | ◇ 响应式与桌面能力：`@media` 仅 3 处（apps+main+comm），`mobile-bridge` 只有 1 个消费者；无打印样式；无 browserslist；表格列持久化未找到；批量选择全站 5 处；防抖搜索 10 个 app 里只有 1 个 | 断点体系 + 列配置持久化 + 批量栏（`YdBulkActions`）≥80% 列表页 |
 | **P2** | ◇ 质量门禁打在 fixture 上：axe 只扫 `tests/a11y/fixtures/`（`page-a11y.spec.ts` 的 CORE_PAGES = login/dashboard/list），**从不扫真实子应用页面**；ADR-005 自己承认失去了运行时扫描能力；`vitest.config.ts:52` 覆盖率阈值 25% | 真实运行页面 axe critical=0（≥5 页）；阈值 25→60% |
@@ -226,6 +226,216 @@ NextWiki 搜索 trigram 化并去 `content` · DEBUG 日志降级 · 规则引�
 3. **减少副本数量级**：4 套 schema 副本、11 份 `CacheKeyBuilder`、35 个限流类、4 套幂等、5 套 ID 生成、3 套 IP ACL、3 套表格库、9 份 App 骨架薄 shim、`data/scripts/backup_logs/` 整份源码副本（435 文件）—— 每一项都已在制造漂移。**收敛比新增更有价值。**
 4. **删除"占位返回假数据"的实现**（Process Mining 类）：宁缺毋假。
 5. **安全项走独立通道**：S1 已进入 git 历史，需按凭据泄露事件处理（轮换 + 历史清除 + 审计访问日志），不要作为普通技术债排期。
+
+---
+
+## 十一、批次 0 落地记录（滚动更新）
+
+> 判定口径同 §十.1：改完必须给出**可复核的验证动作**，不以"文件已改"作为完成。
+
+### B0-1 凭据 fail-closed（S1/S2）— 已完成
+
+| 动作 | 落点 | 验证 |
+|------|------|------|
+| DB 口令去默认值 | `docs/nacos-config/ydsz-common.yml`、`ydsz-generator-web.yml:11`、`ydsz-generator-web/.../application.yml:20` → `${NACOS_DB_PASSWORD:}` / `${NACOS_GEN_DB_PASSWORD:}` | 空值时 HikariCP 认证失败即启动失败，不再静默用泄露凭据连库 |
+| JWT / 内部签名密钥占位符化 | `ydsz-gateway/.../application.yml`（`${YDSZ_JWT_SECRET:}`、`${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:}`）+ 4 份 `config/ydsz-gateway-{dev,sit,uat,prod}.yaml`；`ydsz-userinfo-web/.../application-dev.yml` 明文 dev 密钥删除 | 网关新增 `AuthGlobalFilter#validateSecret()`（`@PostConstruct`）：空值/短于 32 字节直接抛 `IllegalStateException`；与 JWT 密钥同值时 `log.warn` 提示域分离。实测启动日志 `内部头签名密钥已加载, source=config-file, length=48`，7.2s 起来 |
+| 本地凭据改为未入库 override | 新增 `docs/nacos-config/ydsz-config.local.yml.example`（入库模板，值全为 `""`）；真实 `ydsz-config.local.yml` 由本机生成、`chmod 600`、经 `.gitignore:31 *.local.*` 排除；`.gitignore` 补 `!docs/nacos-config/*.local.yml.example` 例外 | `git check-ignore` 复核：local 文件不入库、模板入库 |
+| 顺带纠正的隐性配置漂移 | 网关与 userinfo 原各自持有**不同的**已提交 JWT 密钥 → 本地 dev 下 userinfo 签发的 token 网关验不过。现两处同读 `${YDSZ_JWT_SECRET:}` | 密钥单一来源，文档已写明 |
+| 文档 | `docs/本地开发环境.md` 全量重写：无明文口令、一次性 `cp` + `openssl rand -base64 48`、MySQL 标注遗留、`YDSZ_NACOS_CONFIG_DIR` 说明 | — |
+| 移交项（非本 Agent 权限） | ①已入库口令**轮换**；②`git filter-repo` 清历史；③访问日志审计 | 属凭据泄露事件处置，需持有者/运维执行，见 §十.5 |
+
+### B0-3 去 Windows 绝对路径（S4）— 已完成
+
+22 处 `file:D:/Code/open/ydsz-cloud/docs/nacos-config/…` 全部改为
+`optional:file:${YDSZ_NACOS_CONFIG_DIR:../docs/nacos-config}/…`（网关用 `../`，9 个嵌套 `*-web` 用 `../../`），并追加本地凭据 override 的导入。`grep -c` 复核残留 **0**。
+> 设计要点：占位符默认值留空 + 本地 override 文件提供值 → **不依赖 import 顺序**（根级大写 key 与环境变量等价），Linux/Docker/CI 首次可启动。
+
+### B0-2 Actuator 暴露面收敛（S3）— 已完成（含 1 个新发现缺陷）
+
+收敛动作：
+- 四源统一为 `health,info,metrics,prometheus,cache-metrics`，全部剔除 `beans,env`；
+- `config/ydsz-gateway-{dev,sit,uat,prod}.yaml`：`endpoint.gateway.enabled` → `false`，include 去掉 `gateway`；
+- `show-details`：`always` → `${YDSZ_HEALTH_SHOW_DETAILS:when-authorized}`（生产默认收紧，本地排障显式开启）；
+- 复核：全仓 `show-details: always` 计数 **0**、include 含 `beans|env|configprops|heapdump|threaddump|loggers|gateway|shutdown` 计数 **0**（`data/scripts/backup_logs/` 内的整份源码副本除外，见下）。
+
+**新发现并已修**：WebFlux 侧未命中路径 / 未暴露端点返回 **HTTP 500 + `B01052`**，而非 404。根因是 `WebFluxExceptionHandler` 缺 `ResponseStatusException` 处理器，`DispatcherHandler` 抛出的 `NoResourceFoundException`（其父类即 `ResponseStatusException`，已用 javap 核实）落到兜底 `Exception` 分支 → `SYSTEM_ERROR`。MVC 侧 `MvcExceptionHandler:403` 本就有 `NoHandlerFoundException` → 404 `A04054` 的正确映射，两侧行为不对齐。
+修复：`ydsz-common-exception/.../WebFluxExceptionHandler.java` 新增 `handleResponseStatusException` + `mapResponseStatus`（按状态码映射 `RESOURCE_NOT_FOUND`/`METHOD_NOT_ALLOWED`/`CONFLICT`/`FILE_SIZE_EXCEEDED`/`RESOURCE_EXHAUSTED`/`SERVICE_UNAVAILABLE`/`BAD_GATEWAY`/`GATEWAY_TIMEOUT`…，i18n 复用 `resource.not.found.detail`，4xx 走 WARN 且不打栈、5xx 走 ERROR）。
+实测（网关 19010 短生命周期实例）：`/actuator/env`、`/actuator/beans`、`/api/nope-xyz`、`/nope` 均 **404 + `A04054` + `接口 /xxx 不存在`**，HTTP 状态与 body 内 `httpStatus` 一致；`/actuator/health`、`/actuator/health/{liveness,readiness}` 均 **200**。
+> 附带澄清：堆栈仅在 dev/test profile 下入 body（`ExceptionResponseBuilder` 的 `isDevOrTestProfile()`），**prod/sit/uat 并未泄露 stackTrace**，前次描述不得升级严重度。
+
+**排障副产物（供后续批次）**：
+- `/actuator/health` 曾整体 503，元凶是 `notify` 指示器 —— 但源码 `NotifyHealthIndicator:200-213` 已把"全部渠道未启用"判为 UP，**本机 Maven 仓库里装的是旧 jar** 才复现 DOWN。结论：这是**本地制品陈旧**而非线上缺陷；同时提示 `docs/本地开发环境.md` 应写明"改 common 后需 `mvn install` 对应模块"。
+- `discoveryComposite` / `lock` 报 UNKNOWN 源于 `bootstrap.yml` 中 `nacos.discovery.enabled: false`（网关按 IP 直连）；UNKNOWN 不会拉低复合状态，暂不处理。
+
+### B0-4 子应用 base 路径单一来源（S5）— 已完成（配置级），产物级验证被 B0-10 阻断
+
+原判定"四套并存"复核后实为 **5 类事实源、6 个口径值**，且**没有任何注册项声明 `prodPath`**，因此各处回退字面量就是线上生效值：
+
+| 事实源 | 修改前 | 修改后 |
+|--------|--------|--------|
+| `comm/constants/src/micro-apps.ts:203` `getProdEntry()` | 回退 `/ydsz-${name}/`（小写，正确） | 新增 `SUB_APP_BASE_PREFIX` + `defaultProdPath()`，`getProdEntry` 复用之；纠正 2 处仍写 `/YDSZ-` 的文档注释 |
+| `comm/effects/micro-kernel/src/registry-adapter.ts:275`（基座运行时 entry） | `/YDSZ-${name}/` ❌ | `/ydsz-${name}/` + 指向单一来源的注释 |
+| `comm/effects/micro-kernel/src/speculation-rules.ts:61` | `/YDSZ-${name}/` ❌ | 同上 |
+| `bash/gen-registry.mts:82`、`bash/gen-nginx-conf.mts:90` | `/YDSZ-${name}/` ❌ | `/ydsz-${name}/`（Node 侧无法 import TS，保留字面量但由门禁锁死） |
+| `conf/vite-config/src/plugin-sw.ts:56` | `/YDSZ-${name去-web}/` ❌（第 5 种变体） | `/ydsz-${appName}/`；**并发现 swPlugin 全仓零调用**（PWA 缓存层从未接线） |
+| `conf/vite-config/src/config/application.ts`（构建 base） | 子应用 `vite.config.mts` 写死 `base:'/'`，压掉 env → 产物发根路径 | 生产构建按 `readSubAppName()` 强制 `base=/ydsz-{name}-web/`（dev 与 main-web 不变），冲突时 warn |
+| `apps/*/.env.production` `VITE_BASE` | `/{name}-web/` ❌（且被 `base:'/'` 覆盖，形同死配置） | 9 个文件改为 `/ydsz-{name}-web/`（每文件仅 1 行 diff） |
+| `bash/deploy/Dockerfile` | 只 COPY 8 个子应用，**漏 `generator-web`** | 补齐 COPY |
+| 新增门禁 `bash/check-subapp-base.mts`（`pnpm check:base`） | — | 断言 canonical 前缀、6 个回退点无大写 `/YDSZ-`、`VITE_BASE`、Dockerfile COPY、nginx location、（若已构建）`dist/index.html` 资源前缀 |
+
+验证：`node bash/check-subapp-base.mts` 修复前报 **10 项失败**（9 个 VITE_BASE + 1 个 Dockerfile 缺 COPY），修复后 ✅；`gen-nginx-conf.mts --check` ✅（此前生成器出大写、已提交片段是小写，检查必然红）；`tsc --noEmit` 对改动文件除既有 `@ydsz/micro-kernel` 类型解析报错外无新增错误；顺带修掉 `application.ts` 里 `getAvailableStrategies` 未导入（一旦某 app 声明非法 `shareStrategy` 就 ReferenceError 的潜伏 Bug）。
+**未完成部分（诚实标注）**：子应用生产构建在 HEAD 即失败（`lucide-vue-next` 未被子应用声明，Rollup 解析期报错，先于产物生成，与本次 base 改动无关）→ 门禁第 6 项"产物 index.html 前缀"目前只能等构建恢复后生效；已建任务 **B0-10** 跟踪。
+
+### B0-5 nginx 静态缓存与安全头分层（S6）— 已完成（语法验证受限于本地无 nginx）
+
+**改前四类缺陷**（`bash/deploy/nginx.conf`，均为"看一眼看不出"的那类）：
+
+| # | 缺陷 | 机理 | 后果 |
+|---|------|------|------|
+| 1 | server 级正则 `location ~* \.(?:js\|css\|woff2?\|svg\|png…)$` | nginx 在"最佳前缀匹配块**不含嵌套 location**"时让 server 级正则胜出，于是它同时劫持主应用 `location /`、9 个子应用前缀块，甚至 `/api/`、`/ws/` 的静态化请求 | 该块只有 `expires 1y` 而无 `root/alias`，路径推导与应用目录错位；命中即拿不到应用级语义 |
+| 2 | 同一正则无差别 `max-age=31536000, immutable` | 与"入口 HTML 必须协商"冲突；主应用 `location /` 又对**一切**（含 hash JS）下发 `no-store` | 缓存策略两头都错：该长存的每次回源，不该长存的存一年 |
+| 3 | 块内声明了自有 `add_header` | `add_header` **不跨层继承**：当前层一旦声明，上层全部失效 | CSP、X-Frame-Options、nosniff、Referrer-Policy、Permissions-Policy、HSTS 在静态资源响应上静默消失 |
+| 4 | `add_header X-CDN-Cache "HIT"` / `CDN-Cache-Status "HIT"` | 硬编码，与真实命中无关 | 误导性观测数据（排障时首先怀疑错的地方） |
+
+**落地（6 文件 + 1 新门禁）**：
+
+| 文件 | 变更 |
+|------|------|
+| `ydsz-micro/bash/deploy/security-headers.conf`（新增） | 安全头单一来源；删除已废弃的 `X-XSS-Protection` 与空值头 `X-CSRF-Token ""`；注释写明"为何不能只放 http 层" |
+| `ydsz-micro/bash/deploy/nginx.conf:65` | http 层安全头改为 `include`；`:108` `location /` 改为分层块（HTML no-store / JS·CSS·WASM immutable+`=404` / 图片字体 30d / `.map` 404）；删除 2 条 server 级资源正则（原位留注释说明为何不得恢复）；`/health` 用 `default_type` 取代 `add_header Content-Type`（后者会连带丢安全头且与响应头重复） |
+| `ydsz-micro/bash/gen-nginx-conf.mts:99` `generateNginxSnippet()` | `alias` → `root /usr/share/nginx/html`（`alias` 在带嵌套 location 的块中语义不可靠）；输出三层缓存 + 嵌套 `.map` 404 + `try_files $uri =404` |
+| `ydsz-micro/bash/deploy/nginx-sub-apps.conf` | 由生成器重出（9 个应用 × 4 块） |
+| `ydsz-micro/bash/deploy/Dockerfile:59` | 新增 `COPY bash/deploy/security-headers.conf`（漏拷则 include 失败，容器起不来） |
+| `ydsz-micro/package.json:36` | 新增 `check:nginx`、`check:nginx:self-test` |
+| `ydsz-micro/bash/check-nginx-cache.mts`（新增） | 花括号配对解析 location 块与嵌套深度，校验 7 项不变量：I1 声明 `add_header` 必须 include 安全头；I2 一年缓存只允许出现在扩展名正则块且必须 `=404`；I3 HTML 兜底块必须 no-store 且无正数 max-age；I4 `.map` 必须 404；I5 禁止 `X-CDN-Cache`；I6 禁止 `expires`；I7 server 最外层禁止保留带 Cache-Control 的扩展名正则块 |
+
+**门禁自检（本项的核心增量）**：`--self-test` 用"修复前配置形态 + 1 条人为 `.map` 违规块"的临时夹具跑同一套检查，断言 8 类不变量**逐一命中**，命中不到即 exit 1。当前结果：反例检出 19 条缺陷、8/8 命中；真实配置 ✅ 通过。加这一步的原因见 §十——本仓已有若干"能跑但永不失败"的门禁，新写的检查若不证伪就等于没写。
+
+**未验证项（如实标注）**：本机无 nginx 二进制，`nginx -t` 未执行，嵌套 location / include 的**语法**正确性需在镜像构建或 CI 阶段确认；本脚本只保证**结构不变量**。解析器已处理 `return 200 '{"status":"UP"}'` 这类引号内成对花括号。
+
+**移交**：① CSP 与页面实际资源自相矛盾（`main/index.html:26` 引 Google Fonts、`:43` 内联百度统计脚本，在 `script-src 'self' 'strict-dynamic'` 与 `style-src 'self'` 下**都会被浏览器拦截**，即生产上这两段本就是死的）→ 归入 **B0-8**；② `check:base`/`check:nginx`/`gen:nginx:check` 尚未接入 CI，`.github/workflows/ci.yml` 目前只有 `pnpm check:size` 一处（`:310`）→ 归入 **B0-7**。
+
+### B0-6 设计令牌 CSS 接入（S7）— 已完成（浏览器渲染复核待做）
+
+**根因是两层叠加，单独看任何一层都像"没问题"**：
+
+| 层 | 事实 | 为什么隐蔽 |
+|----|------|-----------|
+| 1 无引用 | `@ydsz-core/design-tokens/src/styles/variables.css` 定义了 116 个 `--ydsz-*` 令牌，但全仓只有 `ydsz-ui` 的 playground 引过它 | 组件里到处是 `var(--ydsz-x, 兜底值)`，缺定义时**静默落到兜底值**，页面照常渲染，只是主题/暗色切换对这些组件完全无效 |
+| 2 构建外置 | 补上 import 后重新构建，产物 `dist/design.css` 里仍只有 1 个 `--ydsz-` 名 | `conf/vite-config/src/config/library.ts:67` 的 `external` 回调把"声明过的依赖 + `${pkg}/` 子路径"一律外置，**CSS 子路径也被外置** → 只在 `dist/index.mjs` 留一条 `import '…/variables.css'`，而应用按 `exports` 取的是 `dist/design.css` |
+
+**落地（10 文件 + 1 新门禁）**：
+
+| 文件 | 变更 |
+|------|------|
+| `comm/@core/ui-kit/design-tokens/src/styles/compat-aliases.css`（新增） | 19 条历史命名 → 规范令牌的别名；全部写成 `var()` 间接引用（不复制色值），暗色自动跟随。头部说明 `variables.css` 是 Figma 同步落盘目标、别名不得写进它 |
+| `comm/@core/ui-kit/design-tokens/src/styles/variables.css:208` | 暗色覆盖块选择器 `:root[data-theme='dark']` → `:root.dark, [data-theme='dark']`：两条主题链路写入 `data-theme` 的词表不同（`preferences` 写预设名 default/violet/…，`micro-kernel/use-theme-sync` 写 auto/light/dark），**唯一共同信号是 `.dark` 类**，且 `auto` 模式下 `data-theme` 根本对不上 |
+| `comm/@core/ui-kit/design-tokens/src/tokens/motion.ts:61` | 新增 `cssVarSuffix()`，`durationVar`/`easingVar` 经 camelCase→kebab 后再插值（门禁抓出的真实缺陷，见下） |
+| `comm/@core/ui-kit/design-tokens/src/tokens/transition-utils.ts:54` | `injectTransition().duration/easing` 原本自己又拼了一遍 `var(--ydsz-motion-…)`，与 `motion.ts` 的两个 builder 并存 → 改为委托，消除"同一 token 两条拼法" |
+| `comm/@core/ui-kit/design-tokens/package.json` | 补 `./styles/variables.css`、`./styles/compat-aliases.css` 两个 exports 子路径（该包无 build 脚本，`dist` 永不存在，只能按源码子路径暴露） |
+| `comm/@core/base/design/package.json` | 声明 `@ydsz-core/design-tokens: workspace:*`（此前跨包 import 属幽灵依赖） |
+| `comm/@core/base/design/src/design-tokens/index.ts:23` | 入口 import 两个令牌 CSS，接线闭合 |
+| `conf/vite-config/src/config/library.ts:67` | `external` 回调对 `.css` 一律返回 false，CSS 打进产物样式（根因 2 的修复点，全仓库包共享） |
+| `comm/@core/ui-kit/mobile-bridge/src/breakpoints/index.ts:36` | 删除 `BREAKPOINT_CSS_VARS`：`@media (min-width: var(--x))` 在 CSS 中非法、`--ydsz-bp-*` 从未定义、零消费者——这是一个**永远不可能生效的 API**，注释改为给出 `matchMedia` 正确写法；`src/index.ts` 同步去掉导出 |
+| `comm/@core/base/design/src/css/global.css:234` | 注释里的 `/views/*/` 提前闭合了块注释（esbuild `css-syntax-error` 告警来源） |
+| `package.json:38` | 新增 `check:tokens`、`check:tokens:self-test` |
+| `bash/check-design-tokens.mts`（新增） | 见下 |
+
+**产物级证据**：`comm/@core/base/design/dist/design.css` 中 `--ydsz-*` 名字数 **1 → 136**，`--ydsz-comp-bg` 与 `:root.dark` 覆盖块均在；消费链路已核实闭合：`main/src/setup/app.ts:21` + 9 个子应用 `src/main.ts` → `@ydsz/styles`（`comm/styles/src/index.ts:8`）→ `@ydsz-core/design` → 两个令牌 CSS。
+
+**门禁（断言"接线"而不是"文件存在"）**：A 入口 import 两个 CSS 且依赖已声明；B 全仓静态 `var(--ydsz-X)` 必须有定义（注释行不计，docs-site 的局部定义单独并入其定义集）；C **从 token 模块的模板字符串反推** JS 能拼出的变量名并逐个验证——取值集合来自形参类型声明（字面量联合 / `keyof typeof 对象` / 具名别名），支持 `var(${VAR_PREFIX}-…)` 常量展开与 `.toLowerCase()`、camel→kebab 变换，解析不出来则**硬失败**（不接受静默跳过）；D 暗色块必须命中 `.dark`；E 若 `dist/design.css` 存在则必须真的含全部定义（防根因 2 复发）；F 无消费的别名给警告。JS 侧自声明的运行时变量（`densityCSSVars` 拼出的 `--ydsz-density-*`）计入**定义**而非消费。
+
+`--self-test` 结果：反例命中 **4/4** 类缺陷（入口未 import / 未定义令牌 / 模板拼出名缺定义 / 类型枚举不出来），并含 2 条正向断言（常量前缀确实展开、JS 自声明不被误判）；真实配置 ✅ 通过（140 个定义覆盖 92 个静态消费名 + 100 个 JS 模板拼出名）。
+
+**门禁当场抓出的真实缺陷**：`EASING_TOKENS` 的 key 是 camelCase（`easeIn`/`easeOut`），`easingVar()` 直接插值 → 运行期拼出 `var(--ydsz-motion-easing-easeIn)`，而 CSS 定义是 `--ydsz-motion-easing-ease-in` → 所有走 `easingVar('easeIn')` 的过渡取空值、静默失效。已按上面两行修掉（builder 归一 + 委托）。
+
+**未验证项（如实标注）**：未启动 dev server 做浏览器渲染复核（颜色/暗色/密度切换的视觉确认）；本轮只做到"定义进入产物 + 消费名全部有定义"这一层。`pnpm gen:api:check` 目前因 i18n 缺键失败，与本项无关 → 见 B0-7。
+
+### B0-7 CI 接线 + 契约/错误码门禁（S8）— 已完成（一次性写盘再生待人工复核）
+
+**缺陷分三层，越往下越难看见**：
+
+| 层 | 缺陷 | 为什么一直没暴露 |
+|----|------|------------------|
+| L1 引用漂移 | `.github/workflows/ci.yml` 两处仍调 `bash/gen-error-codes.mjs`、`bash/contract-notify.mjs`，而脚本早已改名 `.mts` | contract job 长期 `Cannot find module`，团队把 job 红当噪声，真需要卡的契约漂移反而没人看 |
+| L2 新门禁自己漏扫 | 逐行解析器把 `run: \|` 判成"内容为 `\|` 的行内命令"（`\|` 属 `\S`），块体缩进行全部逃出扫描 | 修好后扫描命令 **43 → 74 条**，立刻抓出 L3 里三条 performance job 的缺陷（它们全写在 `run: \|` 块里） |
+| L3 被引用的东西本身坏了 | ① `bash/check-performance-regression.py` **根本不存在**；② 该 job 不带 `--config` 跑 `tests/performance/*`，拿到的是 a11y 配置（`testDir: tests/a11y` + webServer 起 4310 的 fixture 页）→ 要么过滤成 0 条用例，要么测的是 fixture 而非 `main/dist`；③ 基线步骤 `git show main:… \|\| echo "{}"`：PR 检出的是 `refs/pull/N/merge`，本地 `main` 常不存在 → 空基线，下游无阈值可比却照样"通过" | ① 由 L2 遮蔽；②③ 即使 job 跑绿也不产生任何断言 |
+
+**契约 / 错误码生成器本身（事故驱动，逐条已修）**：
+
+| # | 缺陷 | 后果 / 证据 |
+|---|------|-------------|
+| 1 | `args = [a for a in argv if not a.startswith('--')]` —— 未知 flag 静默丢弃，而"无 flag 即写盘" | **已发生事故**：一次 `python bash/gen-contract.py --help` 改写 41 个生成文件（16202 行）后才崩溃；已 `git checkout` 全量还原（diff 备查：`%TEMP%\ydsz-accidental-contract-regen.patch`，27920 行）。现 `parse_cli()` 白名单 flag，未知即 exit 2 并打印"本脚本默认写盘，参数不确定时绝不猜" |
+| 2 | `form_params` 存的是渲染好的 TS 字段**字符串**，FormData 组装循环却按 dict 取 `p["name"]` | 任何"multipart + 普通表单字段"的服务直接 `TypeError: string indices must be integers`（userinfo 命中）→ 整个 contract job 无法跑完，`--check` 的失败提示"请执行 pnpm gen:contract"把使用者推向一条必崩的命令 |
+| 3 | 上传函数只把 query 放进签名（`sig_parts` 从不含 form） | 产物函数体引用 `params?.xxx` 而 `params` 从未声明 → 生成的 SDK 不可编译 |
+| 4 | 无注解参数一律默认 `kind="query"` | `HttpServletRequest`/`HttpServletResponse` 等**容器注入参数进入客户端契约**，基线里还留下这两个 schema；已用 `SERVER_INJECTED_TYPES` 跳过（`gen-contract.py:826` 上方） |
+| 5 | `CLOUD_ROOT` 默认本机 `D:\Code\open\ydsz-cloud`；服务目录不存在时 `continue` 而不失败 | CI 忘设 `YDSZ_CLOUD_ROOT` → 8 个服务全部跳过、`--check` 退出 0：**契约门禁空跑且假绿**。现 `processed == 0` 即 exit 1 并打印实际 CLOUD_ROOT |
+| 6 | 文件头 docstring 里 `@path bash\gen-contract.py` 的 `\g` | `SyntaxWarning`（Python 3.12+ 升级为错误）；docstring 改 raw |
+| 7 | `--check` 失败只说"漂移了" | 现输出结构化差异清单（接口 ±、数据模型 ±、字段级差异给首个不同行号）+ 单服务重生成命令 |
+| 8 | `gen-error-codes.mts` 的 `collectJavaFiles` 无根约束 + `readdirSync` 不排序 + 去重"先扫到者胜" | `data/scripts/backup_logs/ydsz-message-20261010_180452/` 里的**旧树快照同样带 `@YdszExceptionCode`**，与活代码一起扫 → 产物内容与文件系统枚举顺序相关（跨机器 hash 可能不同），甚至可能由备份生成。现顶层只进 `ydsz-/ydzs-` 模块、跳过 `src/test`、目录名排序，重复码保留/忽略**打警告**并显示两侧消息 |
+
+**落地（13 文件）**：`bash/check-ci.mts`（新增，反例自检 7/7）、`bash/check-performance-regression.py`（新增，`--self-test` 8/8 正反例）、`playwright.perf.config.ts`（新增，testDir=tests/performance + webServer 起 `vite preview` 的 `main/dist`）、`tests/performance/web-vitals.spec.ts`（阈值改读 `main/.perf-budget.json`，消除与 Python 门的双源；指标写出路径改由 `configFile` 定位，不再依赖 `outputDir` 层级）、`.github/workflows/ci.yml`（`.mjs`→`.mts` 两处 + 新 `wiring` job）、`.github/workflows/performance.yml`（`pnpm test:perf` + 基线取不到即红）、`package.json`（`check:ci*`、`test:perf`）、`bash/gen-contract.py`、`bash/gen-error-codes.mts`。
+
+**为什么新开 `wiring` job 而不并进 `verify`**：`pnpm lint` 目前**完全无法运行**（`eslint.config.mjs` 加载即 `SyntaxError: Unexpected token '.'`，且 `@ydsz/eslint-config` 需先构建出 dist），verify 仍是红的；把新门禁塞进一个已知会红的 job 等于再次制造噪声。
+
+**当前门禁状态（逐条实测）**：`check:ci` ✅（9 job / 74 条 run 命令；B0-8 接线后为 9 job / 76 条）· `check:ci:self-test` ✅ 7/7 · `check:base` ✅ · `gen:nginx:check` ✅ · `check:nginx` ✅ · `check:nginx:self-test` ✅ 8/8 · `check:tokens` ✅ · `check:tokens:self-test` ✅ 4/4 · `python3 bash/check-performance-regression.py --self-test` ✅ 8/8 · `gen:error-codes --check` ❌ 1（真实漂移，待再生） · `gen-contract --check` ❌ 8 服务全部报漂移（生成器修正 + 基线陈旧）· `check:i18n` ❌（5 个 locale 文件 82 条缺键）。
+
+**契约报红的构成（不是回归，是首次真跑）**：8 服务端到端解析全部成功（1107 endpoints / 528 schemas，此前 userinfo 崩溃），漂移 = 本次 servlet/schema 污染清除 + 基线本身陈旧（system 单服务就有 24 个后端接口从未进入基线，如 `GET /feature-flag/page`、`DELETE /file/multipart/{uploadId}`）。**修复动作是一次可复核的全量再生成**（`python bash/gen-contract.py`，写盘）——我没有执行：它一次触及 40+ 生成文件，且写盘产物需人工审阅（`servletRequest` 之类缺陷正是靠审阅发现的）。
+
+**顺带抓出的后端真缺陷（新发现，需决策后再改）**：错误码命名空间冲突。`SystemExceptionCode.java:17-24` 自称拥有 B91–B96 段，而 message/cronjob/literule/agent 四个模块在 B91001/B92001/B93001/B94001… 上各自定义了完全不同的含义；`UserInfoExceptionCode.java:44` 与 `:110` 在同一条枚举里两次使用 `B30028`；`A00000` 在 `YdszResultCode` 与 `CoreExceptionCode` 各定义一次。产物级后果已核实：`comm/effects/request/src/error-codes.generated.ts:1174` 把 `B91001` 绑到 message 的 `TEMPLATE_NOT_FOUND`，system 的 `DICT_TYPE_NOT_FOUND`（同码）**根本没进产物** → 前端"字典类型不存在"会显示成 "Template not found"。归入 **B1-12**（改号涉及既有客户端兼容，须使用者拍板）。
+
+**诚实清单（本项未修 / 未验证）**：`pnpm lint` 仍不可用；`check:i18n` 仍红（含 `cepPushTest`/`cepPushPush` 这种两侧互缺、疑似拼写反了的键，需作者本意）；`format:check` 3309 个文件不一致 + 6 个文件解析失败，且 `data` 侧 `.dev-logs/`（203 个临时脚本）已入库并被 prettier 扫描 → 三者只能进 MANUAL_ONLY 并附理由（不是"以后再说"，`check:ci` 会持续提醒直到接线）；`gen:contract --check` 在 CI 的真实通过与否，取决于后端仓库 main 与前端基线的实际差距，本地这一轮只能证明"脚本能跑完、会失败、失败可读"。
+
+### B0-8 viewport 禁缩放 + CSP 自堵（§八 P0/P1 两行）— 已完成（浏览器视觉复核待做）
+
+**改前的真实状态（三层同时坏，且互相掩盖）**：
+
+| 层 | 证据 | 后果 |
+|----|------|------|
+| 可访问性 | `main/index.html:12` 与 8 个子应用 `apps/*-web/index.html:12` 全部写 `minimum-scale=1.0,maximum-scale=1.0,user-scalable=0` | 低视力用户无法双指放大，违反 WCAG 2.1 AA 1.4.4（Resize Text）；9/9 入口一致 → 不是笔误，是模板级缺陷 |
+| CSP 自堵 | `bash/deploy/security-headers.conf:17` 的 `script-src 'self' 'strict-dynamic'`、`style-src 'self' 'unsafe-inline'`、`font-src 'self' data:` vs `main/index.html:26` 的 Google Fonts 跨域样式表、`main/index.html:43` + 8 子应用 `:17` 的内联百度统计 | 这两段在生产**一直是死的**（浏览器直接拦），只在无 CSP 的 dev server 里跑 → "我们有站点统计"的错觉长期存在，实际一条数据都没上报 |
+| 无效开销 | `main/index.html:18-19`（fonts 两域）、`:41-42`（hm 的 preconnect + dns-prefetch） | `rel=preconnect` / `dns-prefetch` **不受 CSP 约束**，第三方 DNS+TCP+TLS 探测照发；隐私与首屏竞争带宽全在，收益为零 |
+
+**判定与取舍**：`_hmt` 在全仓无任何写入方（grep 命中 0），删除内联脚本不会留下悬空调用。第三方字体不改为自托管——`main/index.html:21-32` 已说明源字体尚未采购、产物不得 preload，且 `comm/@core/base/design/src/css/global.css:39` 的 `--ydsz-font-family: 'YDSZ Sans', 'Inter', system-ui` 本来就带系统回退；因此本项**只删掉"CSP 已拦掉的死代码"，把恢复路径写进注释**（统计改第一方外链 + 在 CSP 里显式放行分析域；字体改自托管 woff2），是否恢复由使用方决策，不由门禁替使用者拍板。附带收益：dev 与 prod 的字体表现从此一致（此前 dev 用 Inter、prod 静默回退）。
+
+**待办项里那句"自堵是否也拦掉自有资源"已核实为否**：微前端入口走的是 `dynamic import()`（`comm/effects/micro-kernel/src/loader.ts:417` 附近，fetch 仅用于 sha256 验签，执行仍是 import），micro-kernel 全目录 grep `eval(` / `new Function` 命中 **0** → 现 CSP 不需要 `'unsafe-eval'`；子应用资源与主应用同源（B0-5 的 nginx 路径前缀布局）→ `script-src 'self'` 放行；运行时注入样式由 `style-src 'unsafe-inline'` 覆盖；跨域图片/接口分别由 `img-src … https:`、`connect-src 'self' https: wss:` 覆盖。**结论：CSP 拦掉的只有第三方字体与内联统计两类，自有链路无损失**，因此 H6 把"不得出现 'unsafe-eval'"作为前提断言是安全的。
+
+**落盘（9 个入口 + 1 个新门禁 + 接线）**：`main/index.html`、`apps/{agent,cronjob,literule,message,nextwiki,system,userinfo,workflow}-web/index.html`（`-136 / +117`，viewport 统一为 `width=device-width, initial-scale=1.0`，两处防回归注释）；`bash/check-html-head.mts`（新增）；`package.json` 新增 `check:head` / `check:head:self-test`；`.github/workflows/ci.yml` 的 `wiring` job 新增 2 步。`apps/generator-web/index.html` 未改（本就合规，但纳入门禁扫描范围）。
+
+**门禁断言的是"结构不变量 + 自身前提"，不是"文件存在"**：
+- H1 viewport：必须存在、含 `width=device-width`；禁 `user-scalable=no|0`、禁**任何** `maximum-scale`、禁 `minimum-scale>=1`（三种写法都能封死缩放，只拦前两种等于留后门）；
+- H2 必须声明字符集（CJK 页面缺 charset 是乱码级缺陷）；H3 `<title>` 非空；
+- H4 禁无 `src` 的内联 `<script>`；H5 禁绝对/协议相对 URL 的 script src、`rel=stylesheet`、`rel=preconnect|dns-prefetch|prefetch`、`rel=preload as=font|script|style`，每条失败信息都写清"被哪条 CSP 指令拦"或"不受 CSP 约束但仍探测"；
+- **H6 校验门禁自己的前提**：`security-headers.conf` 必须真的下发 CSP，且 `script-src` 不含 `'unsafe-inline'`/`'unsafe-eval'`、`style-src`/`font-src` 不放行跨域——若有人为了让内联脚本"复活"而放宽 CSP，这本身就是缺陷，门禁会红而不是失去判断依据；
+- H7 `bash/gen-app.mts` 的 `indexHtml` 模板同样受 H1–H5 约束（**提取失败即报错**，不允许静默跳过；模板是缺陷的批量入口）；
+- 扫描目录即来源：`main/` + `apps/*/` 下每个含 `index.html` 的目录自动纳入（硬编码列表会在新增子应用时静默漏检），当前 10 个入口；扫到 0 个即失败。
+- 注释先剔除再判定——本仓的防回归说明正写着 `maximum-scale=1`，不剔注释就是门禁拦自己。
+
+**证伪证据（两种，都不依赖夹具）**：① `--self-test` 命中 14/14 类缺陷 + 1 条正向断言（合法 head 且只在注释里出现禁用写法 → 0 失败）；② 直接把 `git show HEAD` 的改前文件还原到临时目录跑 `--root`：`main/index.html` 与 `apps/system-web/index.html` 共报 **14 条**、退出码 1，覆盖 H1 三条、H4、H5 四类。改前状态必红，改后全绿——这才是"门禁生效"的判据。
+
+**实测**：`check:head` ✅（10 入口 + CSP 前提 + 脚手架模板）· `check:head:self-test` ✅ 14/14 · `check:ci` ✅（9 job / 76 条 run 命令全部可解析）· `check:ci:self-test` ✅ 7/7 · `check:nginx` / `check:nginx:self-test` ✅ 8/8 · `check:base` ✅ · `check:tokens` ✅。
+
+**顺带发现（不属本项，未改）**：脚手架模板 `bash/gen-app.mts:185` 把 `VITE_APP_STORE_SECURE_KEY=YDSZ-pmis-2026-secure-key` 硬编码进每个新应用的 `.env`（`apps/generator-web/.env:4` 是同一字面量），该值经 `comm/stores/src/setup.ts:88` 作为 secure-ls 的 AES 密钥在构建期注入 bundle——即"密钥"本身不具备秘密性，但**所有应用共用同一字面量**使单点泄露变成全域泄露。归入凭据轨（B0-1 的延续），需使用方决定"每应用独立密钥 + 非入库 override"的具体口径。
+
+**诚实清单（本项未修 / 未验证）**：未启动 dev server 做视觉复核（删掉 Google Fonts 后 dev 端字形回退到 system-ui，行高/字宽会微变，视觉基线属 B1-8）；百度统计"是否要恢复"未替使用方决定，只留下 CSP 兼容的恢复路径；`user-scalable` 修复只证明到"文本层写法正确 + 门禁会拦"这一层，真机上双指缩放是否可用需人工确认。
+
+### B0 进行中/待办
+
+| 项 | 状态 |
+|----|------|
+| B0-4 子应用 base 路径单一来源（S5） | ✅ 已完成（配置级 + 门禁；产物级验证待 B0-10） |
+| B0-5 nginx 缓存分层（S6） | ✅ 已完成（分层 + 安全头单一来源 + `check:nginx` 含 8/8 反例自检；`nginx -t` 待镜像内验证） |
+| B0-6 设计令牌 CSS 接入（S7） | ✅ 已完成（接线 + 构建外置根因修掉 + `check:tokens` 含 4/4 反例自检；顺带抓出 `easeIn`→`ease-in` 真实缺陷；浏览器渲染复核待做） |
+| B0-7 CI 契约/错误码门禁（S8） | ✅ 已完成（`.mjs`→`.mts` 修好 + 新 `wiring` job 8 门禁全绿 + `check:ci` 7/7 反例自检 + 补上缺失的性能退化门禁并证伪 8/8 + 生成器 8 类缺陷修掉含"空跑假绿"与"未知参数即写盘"）；**遗留**：一次性 `gen:contract` 全量再生成待人工复核；`pnpm lint` 仍不可用（eslint.config.mjs 加载报错）故 verify job 仍红 |
+| B0-11 错误码命名空间冲突（新发现，S8 副产物） | 待办 → 归 **B1-12**：system 的 B91/B92/B93/B94 段与 message/cronjob/literule/agent 重叠，userinfo 同枚举内 `B30028` 用两次，`A00000` 两处定义；产物里 `B91001` 已被 message 抢占，前端拿不到"字典类型不存在" |
+| B0-12 i18n / format 存量债（S8 副产物） | 待办：`check:i18n` 5 个 locale 文件 82 条缺键（含 `cepPushTest`/`cepPushPush` 疑似拼写反了）；`format:check` 3309 文件不一致 + 6 文件解析失败 + `.dev-logs/` 203 个临时脚本已入库；两者暂列 `check-ci.mts` 的 MANUAL_ONLY 并附理由 → 归 B1-9 |
+| B0-8 viewport 禁缩放 + CSP 自堵 | ✅ 已完成（9 个入口 viewport 归一 + 死掉的第三方引用移除并留恢复路径；`check:head` 含 14/14 反例自检，另用 `git show HEAD` 还原改前文件实测报 14 条退出码 1；顺带核实"CSP 未拦掉自有资源"）；**遗留**：dev 端字形回退的视觉复核待做、百度统计是否恢复由使用方决策 |
+| B0-13 脚手架硬编码存储加密密钥（B0-8 副产物） | 待办：`bash/gen-app.mts:185` 把 `VITE_APP_STORE_SECURE_KEY=YDSZ-pmis-2026-secure-key` 硬编码进每个新应用 `.env`（`apps/generator-web/.env:4` 同值），经 `comm/stores/src/setup.ts:88` 作 secure-ls AES 密钥构建期注入 bundle；密钥随 bundle 公开已无秘密性，但**全应用共用同一字面量**使单点泄露变全域泄露 → 归凭据轨（B0-1 延续），口径需使用方拍板 |
+| B0-9 网关路由双源漂移 | 待办（新发现，非原 S 系列） |
+| B0-10 子应用生产构建失败：`lucide-vue-next` 只被 4 个库包声明，apps 下 15 个文件直接 import（agent5/userinfo6/generator2/cronjob1/system1），pnpm 隔离 node_modules 下解析失败 → 至少 5/9 子应用 `build` 红 | 新发现（阻断 S5 产物级验收，并反证 CI 从未跑子应用构建） |
+| 网关内部头签名**下游从不验签**：仅网关生成签名，无服务设置 `ydsz.security.internal-sign.secret`，`InternalSignatureProperties.isEnabled` 默认 false | 新发现 → 归入 B1-11 |
+| `docs/nacos-config/ydsz-gateway.yml` 与 `application.yml` 的 include 曾不同（cache-metrics 有无） | 已随 B0-2 统一 |
+| `effective-excel-pom.xml`（含本机绝对路径）被提交入库 | 归入 B1-9 文档/仓库卫生 |
 
 ---
 

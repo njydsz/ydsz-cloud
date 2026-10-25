@@ -2,8 +2,10 @@
 spring:
   config:
     import:
-      - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-common.yml"
-      - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-system-web.yml"
+      - "optional:file:${YDSZ_NACOS_CONFIG_DIR:../../docs/nacos-config}/ydsz-common.yml"
+      - "optional:file:${YDSZ_NACOS_CONFIG_DIR:../../docs/nacos-config}/ydsz-system-web.yml"
+      # 本地凭据（未入库，见 ydsz-config.local.yml.example）占位符在此统一解析，顺序不影响结果
+      - "optional:file:${YDSZ_NACOS_CONFIG_DIR:../../docs/nacos-config}/ydsz-config.local.yml"
 
 datasource:
   hikari:

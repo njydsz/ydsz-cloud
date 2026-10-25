@@ -75,10 +75,13 @@ management:
     web:
       base-path: /actuator
       exposure:
-        include: health,info,metrics
+        # 与 ydsz-common.yml / application.yml 保持一致：多源覆盖下结果不漂移
+        # prometheus 为指标采集主路径，cache-metrics 由 ydsz-common-cache 提供
+        include: health,info,metrics,prometheus,cache-metrics
   endpoint:
     health:
-      show-details: always
+      # /actuator/** 不经网关路由，暴露即内网匿名可读，禁止 always 外泄组件细节
+      show-details: ${YDSZ_HEALTH_SHOW_DETAILS:when-authorized}
 
 skywalking:
   agent:

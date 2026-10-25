@@ -35,6 +35,8 @@ application-local.properties
 application-dev-local.yml
 bootstrap-local.yml
 *.orig
+# 例外：本地凭据 override 的模板必须入库（真实文件 ydsz-config.local.yml 仍被忽略）
+!docs/nacos-config/*.local.yml.example
 
 # ===== 操作系统文件 =====
 .DS_Store
@@ -49,6 +51,9 @@ Desktop.ini
 *.swo
 *~
 .idea_modules/
+# 本地启动脚本产出的运行时快照（含端点/配置回显，不入库）
+logs/
+.health-*.json
 
 # ===== 测试/覆盖率产物 =====
 coverage/

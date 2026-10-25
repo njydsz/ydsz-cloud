@@ -77,10 +77,12 @@ spring:
         stringtype: unspecified
         reWriteBatchedInserts: true
         ApplicationName: ydsz-cloud
-      # 密码加密（Jasypt）启动时解密
+    # 凭据 fail-closed：不提供任何默认密码。
+    # 生产/集成环境经 K8s Secret 或环境变量注入 NACOS_DB_PASSWORD（也支持 jasypt ENC(...) 密文）；
+    # 本地开发写入未入库的 docs/nacos-config/ydsz-config.local.yml（见同名 .example）。
     url: ${NACOS_DB_URL:jdbc:postgresql://127.0.0.1:5432/ydsz_cloud?currentSchema=public&stringtype=unspecified}
     username: ${NACOS_DB_USERNAME:postgres}
-    password: ${NACOS_DB_PASSWORD:Limw1020}
+    password: ${NACOS_DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
 
   # -------------------------------------------------------------------
@@ -171,17 +173,22 @@ logging:
     com.zaxxer.hikari: WARN
 
 # ---------------------------------------------------------------------
-#  Actuator 运维端点
+#  Actuator 暴露面收敛（P0-S3）：
+#  /actuator/** 不经过网关路由与鉴权过滤器，一旦暴露即为内网匿名可读，
+#  因此 beans / env / configprops / heapdump / loggers 一律不纳入 include。
+#  运维指标统一走 /actuator/prometheus。
 # ---------------------------------------------------------------------
 management:
   endpoints:
     web:
       base-path: /actuator
       exposure:
-        include: health,info,metrics,beans,env,cache-metrics,prometheus
+        include: health,info,metrics,prometheus,cache-metrics
   endpoint:
     health:
-      show-details: always
+      # always 会外泄数据库类型/校验语句、磁盘路径、PID、堆内存等指纹信息
+      # 本地排障（无 Spring Security 时 when-authorized 等同 never）可设 YDSZ_HEALTH_SHOW_DETAILS=always
+      show-details: ${YDSZ_HEALTH_SHOW_DETAILS:when-authorized}
       probes:
         enabled: true
   health:
@@ -334,6 +341,9 @@ ydsz:
     enabled: true
     app-key: ydsz-cloud-common
     storage-type: LOCAL
+    # 落库表名需与 data/sqls/flyway/V26.10.01.sql 的 ydsz_comm_audit_log 保持一致，
+    # 代码默认值 sys_audit_log 在库中不存在
+    sharding-base-table-name: ydsz_comm_audit_log
     record-request: true
     record-response: false
     sensitive-params:
@@ -468,9 +478,10 @@ ydsz:
       enabled: false
 
   # 本地开发使用文件系统存储（未部署 MinIO，且 minio 客户端为可选依赖）
+  # 默认落在用户目录下，避免相对路径随进程工作目录漂移，也避免上传件被误提交入库
   file:
     type: local
-    bucket: D:/Code/open/ydsz-cloud/data/files
+    bucket: ${YDSZ_LOCAL_FILE_DIR:${user.home}/.ydsz-cloud/files}
     domain: http://localhost:9010/files
 
 # =====================================================================

@@ -2,8 +2,10 @@
 spring:
   config:
     import:
-      - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-common.yml"
-      - "file:D:/Code/open/ydsz-cloud/docs/nacos-config/ydsz-userinfo-web.yml"
+      - "optional:file:${YDSZ_NACOS_CONFIG_DIR:../../docs/nacos-config}/ydsz-common.yml"
+      - "optional:file:${YDSZ_NACOS_CONFIG_DIR:../../docs/nacos-config}/ydsz-userinfo-web.yml"
+      # 本地凭据（未入库，见 ydsz-config.local.yml.example）；占位符在此统一解析，故顺序不影响结果
+      - "optional:file:${YDSZ_NACOS_CONFIG_DIR:../../docs/nacos-config}/ydsz-config.local.yml"
   main:
     allow-circular-references: true
     lazy-initialization: true
@@ -26,5 +28,6 @@ ydsz:
     validate-on-startup: false
   auth:
     token:
-      # 本地开发用 JWT 密钥（至少 256 bits / 32 bytes），生产环境应通过 Nacos 配置中心注入
-      secret-key: devSecretKeyForLocalDevelopmentOnly1234567890abcdefghijklmnopqr
+      # JWT 签名密钥：与网关必须一致，统一由 YDSZ_JWT_SECRET 注入（OS 环境变量或本地未入库 override）
+      # 缺失时 TokenProperties.validate() 直接阻止启动，不提供任何默认值
+      secret-key: ${YDSZ_JWT_SECRET:}
