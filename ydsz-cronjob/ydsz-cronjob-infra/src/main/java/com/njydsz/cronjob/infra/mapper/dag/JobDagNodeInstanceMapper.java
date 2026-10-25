@@ -48,9 +48,9 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
           + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
           + "       result_json, error_message, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
           + "FROM ydsz_job_dag_node_instance "
-          + "WHERE dag_instance_id = #{dagInstanceId} AND deleted = 0 "
+          + "WHERE dag_instance_id = #{dagInstanceId} AND is_deleted = 0 "
           + "ORDER BY created_at ASC")
   List<JobDagNodeInstance> selectByDagInstanceId(@Param("dagInstanceId") String dagInstanceId);
 
@@ -68,9 +68,9 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
           + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
           + "       result_json, error_message, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
           + "FROM ydsz_job_dag_node_instance "
-          + "WHERE dag_instance_id = #{dagInstanceId} AND job_id = #{jobId} AND deleted = 0")
+          + "WHERE dag_instance_id = #{dagInstanceId} AND job_id = #{jobId} AND is_deleted = 0")
   JobDagNodeInstance selectByDagInstanceAndJob(
       @Param("dagInstanceId") String dagInstanceId, @Param("jobId") String jobId);
 
@@ -94,9 +94,9 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
           + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
           + "       result_json, error_message, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
           + "FROM ydsz_job_dag_node_instance "
-          + "WHERE dag_instance_id = #{dagInstanceId} AND job_id = #{jobId} AND deleted = 0 "
+          + "WHERE dag_instance_id = #{dagInstanceId} AND job_id = #{jobId} AND is_deleted = 0 "
           + "ORDER BY created_at ASC")
   List<JobDagNodeInstance> selectAllByDagInstanceAndJob(
       @Param("dagInstanceId") String dagInstanceId, @Param("jobId") String jobId);
@@ -119,9 +119,9 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
           + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
           + "       result_json, error_message, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
           + "FROM ydsz_job_dag_node_instance "
-          + "WHERE job_id = #{jobId} AND node_status IN ('PENDING', 'RUNNING') AND deleted = 0 "
+          + "WHERE job_id = #{jobId} AND node_status IN ('PENDING', 'RUNNING') AND is_deleted = 0 "
           + "ORDER BY created_at ASC")
   List<JobDagNodeInstance> selectActiveByJobId(@Param("jobId") String jobId);
 
@@ -135,7 +135,7 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
   @Update(
       "UPDATE ydsz_job_dag_node_instance SET node_status = 'RUNNING', started_at = #{startedAt}, "
           + "       updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{id} AND node_status = 'PENDING' AND deleted = 0")
+          + "WHERE id = #{id} AND node_status = 'PENDING' AND is_deleted = 0")
   int markRunning(@Param("id") String id, @Param("startedAt") LocalDateTime startedAt);
 
   /**
@@ -155,7 +155,7 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
           + "       finished_at = #{finishedAt}, duration_ms = #{durationMs}, "
           + "       result_json = #{resultJson}, error_message = #{errorMessage}, "
           + "       log_id = #{logId}, updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{id} AND node_status = 'RUNNING' AND deleted = 0")
+          + "WHERE id = #{id} AND node_status = 'RUNNING' AND is_deleted = 0")
   int markFinished(
       @Param("id") String id,
       @Param("finalStatus") String finalStatus,
@@ -174,7 +174,7 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
   @Update(
       "UPDATE ydsz_job_dag_node_instance SET node_status = 'SKIPPED', "
           + "       updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{id} AND node_status = 'PENDING' AND deleted = 0")
+          + "WHERE id = #{id} AND node_status = 'PENDING' AND is_deleted = 0")
   int markSkipped(@Param("id") String id);
 
   /**
@@ -187,7 +187,7 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
       "UPDATE ydsz_job_dag_node_instance SET node_status = 'PENDING', "
           + "       retry_count = retry_count + 1, "
           + "       updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{id} AND node_status = 'FAILED' AND deleted = 0 "
+          + "WHERE id = #{id} AND node_status = 'FAILED' AND is_deleted = 0 "
           + "       AND retry_count < max_retries")
   int markRetry(@Param("id") String id);
 
@@ -204,9 +204,9 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
           + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
           + "       result_json, error_message, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
           + "FROM ydsz_job_dag_node_instance "
-          + "WHERE dag_instance_id = #{dagInstanceId} AND job_key = #{jobKey} AND deleted = 0 "
+          + "WHERE dag_instance_id = #{dagInstanceId} AND job_key = #{jobKey} AND is_deleted = 0 "
           + "LIMIT 1")
   JobDagNodeInstance selectByDagInstanceAndJobKey(
       @Param("dagInstanceId") String dagInstanceId, @Param("jobKey") String jobKey);
@@ -222,9 +222,9 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
           + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
           + "       result_json, error_message, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
           + "FROM ydsz_job_dag_node_instance "
-          + "WHERE dag_instance_id = #{dagInstanceId} AND node_status = #{status} AND deleted = 0 "
+          + "WHERE dag_instance_id = #{dagInstanceId} AND node_status = #{status} AND is_deleted = 0 "
           + "ORDER BY created_at ASC")
   List<JobDagNodeInstance> selectByDagInstanceIdAndStatus(
       @Param("dagInstanceId") String dagInstanceId, @Param("status") String status);
@@ -239,7 +239,7 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
   @Update(
       "UPDATE ydsz_job_dag_node_instance SET node_status = 'WAITING_FOR_APPROVAL', "
           + "       started_at = #{waitingAt}, updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{id} AND node_status = 'PENDING' AND deleted = 0")
+          + "WHERE id = #{id} AND node_status = 'PENDING' AND is_deleted = 0")
   int markWaitingForApproval(@Param("id") String id, @Param("waitingAt") LocalDateTime waitingAt);
 
   /**
@@ -256,9 +256,9 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
       "SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
           + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
           + "       result_json, error_message, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
           + "FROM ydsz_job_dag_node_instance "
-          + "WHERE node_status = 'WAITING_FOR_APPROVAL' AND deleted = 0 "
+          + "WHERE node_status = 'WAITING_FOR_APPROVAL' AND is_deleted = 0 "
           + "ORDER BY started_at ASC "
           + "LIMIT #{limit}")
   List<JobDagNodeInstance> findWaitingApprovalNodes(@Param("limit") int limit);

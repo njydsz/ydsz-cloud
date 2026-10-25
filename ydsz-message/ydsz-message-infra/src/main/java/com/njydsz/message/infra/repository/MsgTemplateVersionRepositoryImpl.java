@@ -45,7 +45,7 @@ public class MsgTemplateVersionRepositoryImpl implements MsgTemplateVersionRepos
     if (query.getAuditStatus() != null && !query.getAuditStatus().isBlank()) {
       wrapper.eq("audit_status", query.getAuditStatus());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     wrapper.orderByDesc("version");
     return converter.templateVersionListToVO(msgTemplateVersionMapper.selectList(wrapper));
   }
@@ -59,7 +59,7 @@ public class MsgTemplateVersionRepositoryImpl implements MsgTemplateVersionRepos
     if (query.getAuditStatus() != null && !query.getAuditStatus().isBlank()) {
       wrapper.eq("audit_status", query.getAuditStatus());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     return Optional.ofNullable(msgTemplateVersionMapper.selectOne(wrapper)).map(converter::entityToVO);
   }
 

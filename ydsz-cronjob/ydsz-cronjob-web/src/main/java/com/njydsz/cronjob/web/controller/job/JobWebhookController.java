@@ -114,7 +114,7 @@ public class JobWebhookController {
   /**
    * 删除 WebHook 订阅（逻辑删除）。
    *
-   * <p>将 {@code deleted=1} 标记为软删除，不再接收事件推送。 历史事件记录保留，便于审计追溯。
+   * <p>将 {@code is_deleted=1} 标记为软删除，不再接收事件推送。 历史事件记录保留，便于审计追溯。
    *
    * @param id WebHook ID
    * @return 统一响应结果

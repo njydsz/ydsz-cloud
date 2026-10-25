@@ -370,7 +370,7 @@ public class AppInfoServiceImpl implements AppInfoService {
   /**
    * 逻辑删除应用
    *
-   * <p>采用<b>逻辑删除</b>（{@code deleted=1} + {@code status=DISABLED}）， 不真正从 DB 删除，便于审计回溯。
+   * <p>采用<b>逻辑删除</b>（{@code is_deleted=1} + {@code status=DISABLED}）， 不真正从 DB 删除，便于审计回溯。
    *
    * <p><b>注意：</b>删除后 {@link #validateClient} 会拒绝该应用的密钥校验（仅接受 {@code ENABLED}）。
    *

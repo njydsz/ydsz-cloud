@@ -129,7 +129,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
   public int markExpired(LocalDateTime now) {
     QueryWrapper<MsgNotification> wrapper = new QueryWrapper<>();
     wrapper.lt("expired_at", now);
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     MsgNotification entity = new MsgNotification();
     entity.setIsDeleted(true);
     return msgNotificationMapper.update(entity, wrapper);
@@ -158,7 +158,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     if (query.getRecallStatus() != null && !query.getRecallStatus().isBlank()) {
       wrapper.eq("recall_status", query.getRecallStatus());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     return wrapper;
   }
 

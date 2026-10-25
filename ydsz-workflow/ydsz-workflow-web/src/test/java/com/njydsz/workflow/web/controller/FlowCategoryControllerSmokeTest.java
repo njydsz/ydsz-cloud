@@ -44,7 +44,7 @@ class FlowCategoryControllerSmokeTest extends BaseControllerMockTest {
 
   @Nested
   @DisplayName("GET /workflow/categories")
-  class List {
+  class ListCategories {
 
     @Test
     @DisplayName("should return 200 when list all categories succeeds")

@@ -128,7 +128,7 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
     QueryWrapper<MsgLog> wrapper = new QueryWrapper<>();
     wrapper.in("msg_id", msgIds);
     wrapper.eq("receiver", userId);
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     return converter.logListToVO(msgLogMapper.selectList(wrapper));
   }
 
@@ -205,7 +205,7 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
         log.debug(I18n.message("message.log.infra.mlogrepo.date.format.mismatch.skip"), e);
       }
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     return wrapper;
   }
 }

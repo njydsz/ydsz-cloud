@@ -52,6 +52,6 @@ public interface TenantMapper extends BaseMapper<Tenant> {
   @Update(
       "UPDATE ydsz_sys_tenant SET status = 'DISABLED', updated_by = 'system', updated_at = NOW() "
           + "WHERE status = 'ENABLED' AND expire_at IS NOT NULL AND expire_at < NOW() "
-          + "AND deleted = 0")
+          + "AND is_deleted = 0")
   int disableExpiredTenants();
 }

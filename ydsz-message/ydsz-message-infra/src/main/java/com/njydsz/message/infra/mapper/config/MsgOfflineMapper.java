@@ -36,7 +36,7 @@ public interface MsgOfflineMapper extends BaseMapper<MsgOffline> {
    */
   @Update(
       "UPDATE ydsz_msg_offline SET status = 'PUSHED', pushed_at = NOW() "
-          + "WHERE user_id = #{userId} AND status = 'PENDING' AND deleted = 0")
+          + "WHERE user_id = #{userId} AND status = 'PENDING' AND is_deleted = 0")
   int markPushedByUser(@Param("userId") String userId);
 
   /**
@@ -46,6 +46,6 @@ public interface MsgOfflineMapper extends BaseMapper<MsgOffline> {
    */
   @Update(
       "UPDATE ydsz_msg_offline SET status = 'EXPIRED' "
-          + "WHERE status = 'PENDING' AND expired_at < NOW() AND deleted = 0")
+          + "WHERE status = 'PENDING' AND expired_at < NOW() AND is_deleted = 0")
   int markExpired();
 }

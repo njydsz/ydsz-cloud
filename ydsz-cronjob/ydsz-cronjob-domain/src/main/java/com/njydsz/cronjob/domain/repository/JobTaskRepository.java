@@ -90,7 +90,7 @@ public interface JobTaskRepository {
   /**
    * 分页查询指定日志 ID 的子任务列表（按 created_at 升序）。
    *
-   * <p>仅查询 {@code deleted=0} 的子任务。
+   * <p>仅查询 {@code is_deleted=0} 的子任务。
    *
    * @param logId 执行日志 ID
    * @param page 页码（从 1 开始）

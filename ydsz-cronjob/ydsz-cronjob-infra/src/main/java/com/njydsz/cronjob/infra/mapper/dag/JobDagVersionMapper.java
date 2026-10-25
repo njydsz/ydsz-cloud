@@ -45,9 +45,9 @@ public interface JobDagVersionMapper extends BaseMapper<JobDagVersion> {
   @Select(
       "SELECT id, dag_id, dag_key, version, dag_definition, dag_name, "
           + "       trigger_type, cron_expression, fail_strategy, remark, changed_by, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
           + "FROM ydsz_job_dag_version "
-          + "WHERE dag_id = #{dagId} AND deleted = 0 "
+          + "WHERE dag_id = #{dagId} AND is_deleted = 0 "
           + "ORDER BY version DESC LIMIT #{limit}")
   List<JobDagVersion> selectByVersionDesc(@Param("dagId") String dagId, @Param("limit") int limit);
 
@@ -57,7 +57,7 @@ public interface JobDagVersionMapper extends BaseMapper<JobDagVersion> {
    * @param dagId DAG ID
    * @return 最新版本号；无记录返回 null
    */
-  @Select("SELECT MAX(version) FROM ydsz_job_dag_version WHERE dag_id = #{dagId} AND deleted = 0")
+  @Select("SELECT MAX(version) FROM ydsz_job_dag_version WHERE dag_id = #{dagId} AND is_deleted = 0")
   Integer selectMaxVersion(@Param("dagId") String dagId);
 
   /**
@@ -70,8 +70,8 @@ public interface JobDagVersionMapper extends BaseMapper<JobDagVersion> {
   @Select(
       "SELECT id, dag_id, dag_key, version, dag_definition, dag_name, "
           + "       trigger_type, cron_expression, fail_strategy, remark, changed_by, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
           + "FROM ydsz_job_dag_version "
-          + "WHERE dag_id = #{dagId} AND version = #{version} AND deleted = 0")
+          + "WHERE dag_id = #{dagId} AND version = #{version} AND is_deleted = 0")
   JobDagVersion selectByVersion(@Param("dagId") String dagId, @Param("version") int version);
 }

@@ -38,10 +38,13 @@ public class SearchHealthIndicator implements HealthIndicator {
       return Health.down().withDetail("error", "No search engine configured").build();
     }
     try {
-      boolean available = engineRegistry.isPrimaryAvailable();
-      Health.Builder builder = available ? Health.up() : Health.down();
+      boolean primaryAvailable = engineRegistry.isPrimaryAvailable();
+      // 主引擎不可用但存在可用兜底引擎时，搜索能力仍可用，仅标记降级
+      boolean anyAvailable = engineRegistry.getAllEngines().stream().anyMatch(e -> e.isAvailable());
+      Health.Builder builder = anyAvailable ? Health.up() : Health.down();
       builder.withDetail("primaryEngine", engineRegistry.getPrimary().getEngineName());
-      builder.withDetail("available", available);
+      builder.withDetail("available", primaryAvailable);
+      builder.withDetail("degraded", !primaryAvailable && anyAvailable);
       builder.withDetail("capability", engineRegistry.getPrimaryCapability().toString());
       builder.withDetail(
           "engines",

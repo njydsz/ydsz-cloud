@@ -62,7 +62,7 @@ class RuleAdminControllerSmokeTest extends BaseControllerMockTest {
 
   @Nested
   @DisplayName("GET /literule/rules")
-  class List {
+  class ListRules {
 
     @Test
     @DisplayName("should return 200 when list succeeds")

@@ -31,7 +31,7 @@ public interface EntityVersionMapper extends BaseMapper<EntityVersion> {
   /**
    * 按资源类型 + 资源键查询版本历史（按生效时间倒序）
    *
-   * <p>走 {@code idx_resource_type_key_version} 复合索引；返回该资源下所有有效版本（{@code deleted=0}），
+   * <p>走 {@code idx_resource_type_key_version} 复合索引；返回该资源下所有有效版本（{@code is_deleted=0}），
    * 最新版本排首位。
    *
    * @param resourceType 资源类型（CONFIG/DICT/VARIABLE）
@@ -40,7 +40,7 @@ public interface EntityVersionMapper extends BaseMapper<EntityVersion> {
    */
   @Select(
       "SELECT * FROM ydsz_sys_entity_version WHERE resource_type = #{resourceType} "
-          + "AND resource_key = #{resourceKey} AND deleted = 0 "
+          + "AND resource_key = #{resourceKey} AND is_deleted = 0 "
           + "ORDER BY effective_date DESC")
   List<EntityVersion> listByResourceTypeAndKey(
       @Param("resourceType") String resourceType, @Param("resourceKey") String resourceKey);
@@ -56,7 +56,7 @@ public interface EntityVersionMapper extends BaseMapper<EntityVersion> {
   @Select(
       "SELECT * FROM ydsz_sys_entity_version WHERE resource_type = #{resourceType} "
           + "AND resource_key = #{resourceKey} AND version = #{version} "
-          + "AND deleted = 0 LIMIT 1")
+          + "AND is_deleted = 0 LIMIT 1")
   EntityVersion selectByTypeAndKeyAndVersion(
       @Param("resourceType") String resourceType,
       @Param("resourceKey") String resourceKey,

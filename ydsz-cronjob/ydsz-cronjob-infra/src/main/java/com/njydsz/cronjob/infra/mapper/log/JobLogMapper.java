@@ -56,11 +56,11 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
           + "       l.status, l.error_message, l.params_json, l.result_json, l.trace_id, "
           + "       l.trigger_type, l.lock_holder, l.exec_node_id, l.exec_thread_id, "
           + "       l.shard_index, l.shard_total, "
-          + "       l.created_at, l.deleted "
+          + "       l.created_at, l.is_deleted "
           + "FROM ydsz_job_log l "
-          + "INNER JOIN ydsz_job j ON j.id = l.job_id AND j.deleted = 0 "
+          + "INNER JOIN ydsz_job j ON j.id = l.job_id AND j.is_deleted = 0 "
           + "WHERE l.status = 'RUNNING' "
-          + "  AND l.deleted = 0 "
+          + "  AND l.is_deleted = 0 "
           + "  AND j.timeout_ms IS NOT NULL "
           + "  AND j.timeout_ms > 0 "
           + "  AND l.start_time + (j.timeout_ms || ' milliseconds')::INTERVAL < #{now} "
@@ -91,11 +91,11 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
           + "       l.duration_ms, l.status, l.error_message, l.params_json, l.result_json, l.trace_id, "
           + "       l.trigger_type, l.lock_holder, l.exec_node_id, l.exec_thread_id, "
           + "       l.shard_index, l.shard_total, "
-          + "       l.created_at, l.deleted "
+          + "       l.created_at, l.is_deleted "
           + "FROM ydsz_job_log l "
-          + "INNER JOIN ydsz_job j ON j.id = l.job_id AND j.deleted = 0 "
+          + "INNER JOIN ydsz_job j ON j.id = l.job_id AND j.is_deleted = 0 "
           + "WHERE l.status = 'RUNNING' "
-          + "  AND l.deleted = 0 "
+          + "  AND l.is_deleted = 0 "
           + "  AND j.sla_ms IS NOT NULL "
           + "  AND j.sla_ms > 0 "
           + "  AND l.start_time + ((j.sla_ms * 0.8) || ' milliseconds')::INTERVAL <= #{now} "
@@ -117,7 +117,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
       "UPDATE ydsz_job_log "
           + "SET status = 'TIMEOUT', end_time = #{endTime}, duration_ms = #{durationMs}, "
           + "    error_message = #{errorMessage} "
-          + "WHERE id = #{id} AND status = 'RUNNING' AND deleted = 0")
+          + "WHERE id = #{id} AND status = 'RUNNING' AND is_deleted = 0")
   int markTimeout(
       @Param("id") String id,
       @Param("endTime") LocalDateTime endTime,
@@ -149,11 +149,11 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
           + "       l.status, l.error_message, l.params_json, l.result_json, l.trace_id, "
           + "       l.trigger_type, l.lock_holder, l.exec_node_id, l.exec_thread_id, "
           + "       l.shard_index, l.shard_total, l.is_slow, l.slow_threshold_ms, "
-          + "       l.created_at, l.deleted "
+          + "       l.created_at, l.is_deleted "
           + "FROM ydsz_job_log l "
-          + "INNER JOIN ydsz_job j ON j.id = l.job_id AND j.deleted = 0 "
+          + "INNER JOIN ydsz_job j ON j.id = l.job_id AND j.is_deleted = 0 "
           + "WHERE l.status IN ('SUCCESS','FAILED','TIMEOUT') "
-          + "  AND l.deleted = 0 "
+          + "  AND l.is_deleted = 0 "
           + "  AND l.duration_ms IS NOT NULL "
           + "  AND j.slow_threshold_ms IS NOT NULL "
           + "  AND j.slow_threshold_ms > 0 "
@@ -174,7 +174,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
   @Update(
       "UPDATE ydsz_job_log "
           + "SET is_slow = 1, slow_threshold_ms = #{slowThresholdMs} "
-          + "WHERE id = #{logId} AND is_slow = 0 AND deleted = 0")
+          + "WHERE id = #{logId} AND is_slow = 0 AND is_deleted = 0")
   int markSlow(@Param("logId") String logId, @Param("slowThresholdMs") long slowThresholdMs);
 
   /**
@@ -188,9 +188,9 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
           + "       status, error_message, params_json, result_json, trace_id, "
           + "       trigger_type, lock_holder, exec_node_id, exec_thread_id, "
           + "       shard_index, shard_total, "
-          + "       created_at, deleted "
+          + "       created_at, is_deleted "
           + "FROM ydsz_job_log "
-          + "WHERE status = 'RUNNING' AND deleted = 0 AND exec_node_id = #{nodeId}")
+          + "WHERE status = 'RUNNING' AND is_deleted = 0 AND exec_node_id = #{nodeId}")
   List<JobLog> selectRunningByNode(@Param("nodeId") String nodeId);
 
   /**
@@ -205,7 +205,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
           + "SET status = 'FAILED', end_time = #{now}, "
           + "    duration_ms = EXTRACT(EPOCH FROM (#{now} - start_time)) * 1000, "
           + "    error_message = 'Node went offline during execution' "
-          + "WHERE status = 'RUNNING' AND deleted = 0 AND exec_node_id = #{nodeId}")
+          + "WHERE status = 'RUNNING' AND is_deleted = 0 AND exec_node_id = #{nodeId}")
   int markFailedByNodeOffline(@Param("nodeId") String nodeId, @Param("now") LocalDateTime now);
 
   /**
@@ -218,7 +218,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
    */
   @Select(
       "SELECT DISTINCT exec_node_id FROM ydsz_job_log "
-          + "WHERE status = 'RUNNING' AND deleted = 0 AND exec_node_id IS NOT NULL")
+          + "WHERE status = 'RUNNING' AND is_deleted = 0 AND exec_node_id IS NOT NULL")
   List<String> selectRunningNodeIds();
 
   /**
@@ -233,9 +233,9 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
           + "       status, error_message, params_json, result_json, trace_id, "
           + "       trigger_type, lock_holder, exec_node_id, exec_thread_id, "
           + "       shard_index, shard_total, "
-          + "       created_at, deleted "
+          + "       created_at, is_deleted "
           + "FROM ydsz_job_log "
-          + "WHERE status = 'RUNNING' AND deleted = 0 AND start_time < #{threshold} "
+          + "WHERE status = 'RUNNING' AND is_deleted = 0 AND start_time < #{threshold} "
           + "ORDER BY start_time ASC "
           + "LIMIT #{limit}")
   List<JobLog> selectStuckTasks(
@@ -254,7 +254,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
       "SELECT COUNT(1) as total, "
           + "SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) as failed "
           + "FROM ydsz_job_log "
-          + "WHERE job_id = #{jobId} AND created_at >= #{since} AND deleted = 0")
+          + "WHERE job_id = #{jobId} AND created_at >= #{since} AND is_deleted = 0")
   Map<String, Object> countByJobIdSince(
       @Param("jobId") String jobId, @Param("since") LocalDateTime since);
 
@@ -275,7 +275,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
       "SELECT COALESCE(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY duration_ms), 0)::BIGINT "
           + "FROM ydsz_job_log "
           + "WHERE job_id = #{jobId} AND created_at >= #{since} "
-          + "AND status = 'SUCCESS' AND deleted = 0")
+          + "AND status = 'SUCCESS' AND is_deleted = 0")
   Long selectDurationP95(@Param("jobId") String jobId, @Param("since") LocalDateTime since);
 
   /**
@@ -290,7 +290,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
       "SELECT COUNT(1) as total, "
           + "SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) as failed "
           + "FROM ydsz_job_log "
-          + "WHERE created_at >= #{since} AND deleted = 0")
+          + "WHERE created_at >= #{since} AND is_deleted = 0")
   Map<String, Object> countSince(@Param("since") LocalDateTime since);
 
   /**
@@ -304,7 +304,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
   @Select(
       "SELECT COALESCE(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY duration_ms), 0)::BIGINT "
           + "FROM ydsz_job_log "
-          + "WHERE created_at >= #{since} AND status = 'SUCCESS' AND deleted = 0")
+          + "WHERE created_at >= #{since} AND status = 'SUCCESS' AND is_deleted = 0")
   Long selectDurationP95Global(@Param("since") LocalDateTime since);
 
   /**
@@ -320,9 +320,9 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
       "SELECT id, job_id, job_key, start_time, end_time, duration_ms, "
           + "       status, error_message, trace_id, trigger_type, "
           + "       exec_node_id, shard_index, shard_total, "
-          + "       created_at, deleted "
+          + "       created_at, is_deleted "
           + "FROM ydsz_job_log "
-          + "WHERE job_id = #{jobId} AND deleted = 0 "
+          + "WHERE job_id = #{jobId} AND is_deleted = 0 "
           + "ORDER BY start_time DESC "
           + "LIMIT #{limit}")
   List<JobLog> selectRecentByJobId(
@@ -345,9 +345,9 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
           + "SELECT id, job_id, job_key, start_time, end_time, duration_ms, "
           + "       status, error_message, trace_id, trigger_type, "
           + "       exec_node_id, shard_index, shard_total, "
-          + "       created_at, deleted "
+          + "       created_at, is_deleted "
           + "FROM ydsz_job_log "
-          + "WHERE deleted = 0 "
+          + "WHERE is_deleted = 0 "
           + "<if test='jobId != null'> AND job_id = #{jobId} </if>"
           + "<if test='status != null'> AND status = #{status} </if>"
           + "<if test='lastId != null'> AND id &lt; #{lastId} </if>"

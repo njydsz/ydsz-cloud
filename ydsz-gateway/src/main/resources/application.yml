@@ -32,39 +32,39 @@ spring:
         locator:
           enabled: false
       routes:
-        # Userinfo 模块 - RBAC 身份认证
-        - id: ydsz-userinfo
-          uri: http://localhost:9002
-          predicates:
-            - Path=/api/auth/**,/api/role/**,/api/permission/**
-          filters:
-            - StripPrefix=1
-        # System 模块 - 系统引擎
+        # System 模块 - 系统引擎（含审计、字典、配置、租户、内部 API）
         - id: ydsz-system
           uri: http://localhost:9001
           predicates:
-            - Path=/api/system/**
+            - Path=/api/system/**,/api/admin/audit/**,/api/app/**,/api/config/**,/api/dict/**,/api/dashboard/**,/api/feature-flag/**,/api/error-codes/**,/api/repeat-submit/**,/api/search/**,/api/tenant/**,/api/tenant-plan/**,/api/variable/**,/api/permission/api/**,/api/file/**,/api/monitor/**,/api/internal/config/**,/api/internal/dict/**,/api/internal/app/**
+          filters:
+            - StripPrefix=1
+        # Userinfo 模块 - RBAC 身份认证与组织架构
+        - id: ydsz-userinfo
+          uri: http://localhost:9002
+          predicates:
+            - Path=/api/auth/**,/api/auth-policy/**,/api/role/**,/api/permission/**,/api/menu/**,/api/user/**,/api/userinfo/**,/api/dept/**,/api/company/**,/api/post/**,/api/captcha/**,/api/apikey/**,/api/cas/**,/api/sso/**,/api/saml/**,/api/saml-idp-config/**,/api/oauth2/**,/api/webauthn/**,/api/language/**,/api/profile/**,/api/scim/**,/api/self-service/**,/api/social-client-config/**,/api/devices/**,/api/admin/ldap/**,/api/admin/oauth2/**,/api/admin/security/**,/api/admin/sessions/**,/api/admin/users/**
           filters:
             - StripPrefix=1
         # Message 模块 - 消息引擎
         - id: ydsz-message
           uri: http://localhost:9004
           predicates:
-            - Path=/api/message/**,/api/notify/**
+            - Path=/api/message/**,/api/notify/**,/api/internal/message/**
           filters:
             - StripPrefix=1
         # CronJob 模块 - 任务引擎
         - id: ydsz-cronjob
           uri: http://localhost:9006
           predicates:
-            - Path=/api/cronjob/**,/api/job/**
+            - Path=/api/cronjob/**,/api/job/**,/api/internal/cronjob/**
           filters:
             - StripPrefix=1
         # Workflow 模块 - 流程引擎
         - id: ydsz-workflow
           uri: http://localhost:9005
           predicates:
-            - Path=/api/workflow/**,/api/process/**
+            - Path=/api/workflow/**,/api/process/**,/api/internal/engine/**
           filters:
             - StripPrefix=1
         # Agent 模块 - 智能引擎
@@ -78,19 +78,19 @@ spring:
         - id: ydsz-nextwiki
           uri: http://localhost:9003
           predicates:
-            - Path=/api/wiki/**,/api/file/**,/api/nextwiki/**
+            - Path=/api/wiki/**,/api/nextwiki/**,/api/internal/space/**,/api/internal/quota/**
           filters:
             - StripPrefix=1
         # Literule 模块 - 规则引擎
         - id: ydsz-literule
           uri: http://localhost:9007
           predicates:
-            - Path=/api/literule/**,/api/rule/**
+            - Path=/api/literule/**,/api/rule/**,/api/internal/literule/**
           filters:
             - StripPrefix=1
         # Generator 模块 - 代码生成引擎
         - id: ydsz-generator
-          uri: http://localhost:9090
+          uri: http://localhost:9009
           predicates:
             - Path=/api/generator/**
           filters:
@@ -172,6 +172,8 @@ ydsz:
       refresh-token-expire-seconds: 604800
       issuer: "ydsz-cloud"
   gateway:
+    # 内部头签名密钥（与下游 ydsz.security.internal-sign.secret 保持一致，长度 >= 32 字节）
+    internal-sign-secret: "ydsz-cloud-local-dev-internal-sign-secret-20261025"
     deprecation:
       enabled: true
       apis: []

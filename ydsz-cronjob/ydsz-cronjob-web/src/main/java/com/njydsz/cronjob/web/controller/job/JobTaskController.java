@@ -71,7 +71,7 @@ public class JobTaskController {
   /**
    * 分页查询子任务。
    *
-   * <p>按 created_at 升序排列，最先生成的子任务排在前面（便于复现执行顺序）。 软删除的子任务（{@code deleted=1}）会被过滤。
+   * <p>按 created_at 升序排列，最先生成的子任务排在前面（便于复现执行顺序）。 软删除的子任务（{@code is_deleted=1}）会被过滤。
    *
    * @param logId 执行日志 ID
    * @param page 页码（默认 1，最小 1）

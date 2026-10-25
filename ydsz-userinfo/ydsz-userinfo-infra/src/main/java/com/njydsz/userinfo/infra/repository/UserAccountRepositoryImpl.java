@@ -133,7 +133,10 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
 
   @Override
   public long count(UserAccountPageQuery query) {
-    LambdaQueryWrapper<UserAccount> wrapper = buildWrapper(query);
+    // 聚合计数不接受 ORDER BY（PostgreSQL 会要求排序字段出现在 GROUP BY 中）
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    applyLikeFilters(wrapper, query);
+    applyEqFilters(wrapper, query);
     return userAccountMapper.selectCount(wrapper);
   }
 

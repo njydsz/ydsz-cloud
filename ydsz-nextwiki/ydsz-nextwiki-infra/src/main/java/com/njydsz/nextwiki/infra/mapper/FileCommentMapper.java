@@ -37,7 +37,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    */
   @Insert(
       "INSERT INTO ydsz_file_file_comment (id, file_node_id, content, parent_comment_id, resolved, position, edited, "
-          + "created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id) "
+          + "created_by, created_at, updated_by, updated_at, revision, is_deleted, tenant_id) "
           + "VALUES (#{id}, #{fileNodeId}, #{content}, #{parentCommentId}, #{resolved}, #{position}, #{edited}, "
           + "#{createdBy}, NOW(), #{updatedBy}, NOW(), 0, 0, #{tenantId})")
   int insertFileComment(FileComment entity);
@@ -49,7 +49,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    * @return 评论实体（不存在时为 null）
    */
   @Select(
-      "SELECT * FROM ydsz_file_file_comment WHERE id = #{id} AND deleted = 0")
+      "SELECT * FROM ydsz_file_file_comment WHERE id = #{id} AND is_deleted = 0")
   FileComment selectFileCommentById(@Param("id") String id);
 
   /**
@@ -59,7 +59,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    * @return 顶级评论列表
    */
   @Select(
-      "SELECT * FROM ydsz_file_file_comment WHERE file_node_id = #{fileNodeId} AND deleted = 0 "
+      "SELECT * FROM ydsz_file_file_comment WHERE file_node_id = #{fileNodeId} AND is_deleted = 0 "
           + "AND parent_comment_id IS NULL ORDER BY created_at ASC")
   List<FileComment> selectFileCommentsByFileNodeId(@Param("fileNodeId") String fileNodeId);
 
@@ -70,7 +70,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    * @return 回复列表
    */
   @Select(
-      "SELECT * FROM ydsz_file_file_comment WHERE parent_comment_id = #{parentCommentId} AND deleted = 0 "
+      "SELECT * FROM ydsz_file_file_comment WHERE parent_comment_id = #{parentCommentId} AND is_deleted = 0 "
           + "ORDER BY created_at ASC")
   List<FileComment> selectFileCommentReplies(@Param("parentCommentId") String parentCommentId);
 
@@ -82,7 +82,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    */
   @Update(
       "UPDATE ydsz_file_file_comment SET content = #{content}, edited = TRUE, updated_by = #{updatedBy}, "
-          + "updated_at = NOW(), revision = revision + 1 WHERE id = #{id} AND deleted = 0")
+          + "updated_at = NOW(), revision = revision + 1 WHERE id = #{id} AND is_deleted = 0")
   int updateFileComment(FileComment entity);
 
   /**
@@ -92,7 +92,7 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    * @return 受影响行数
    */
   @Update(
-      "UPDATE ydsz_file_file_comment SET deleted = 1, updated_at = NOW() WHERE id = #{id} AND deleted = 0")
+      "UPDATE ydsz_file_file_comment SET is_deleted = 1, updated_at = NOW() WHERE id = #{id} AND is_deleted = 0")
   int deleteFileComment(@Param("id") String id);
 
   /**
@@ -104,6 +104,6 @@ public interface FileCommentMapper extends BaseMapper<FileComment> {
    */
   @Update(
       "UPDATE ydsz_file_file_comment SET resolved = TRUE, updated_by = #{userId}, updated_at = NOW(), "
-          + "revision = revision + 1 WHERE id = #{id} AND deleted = 0")
+          + "revision = revision + 1 WHERE id = #{id} AND is_deleted = 0")
   int markFileCommentResolved(@Param("id") String id, @Param("userId") String userId);
 }

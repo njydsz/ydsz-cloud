@@ -48,7 +48,7 @@ public interface JobLogContentMapper extends BaseMapper<JobLogContent> {
   @Select(
       "SELECT id, log_id, job_key, line_no, log_level, content, created_at "
           + "FROM ydsz_job_log_content "
-          + "WHERE log_id = #{logId} AND deleted = 0 "
+          + "WHERE log_id = #{logId} AND is_deleted = 0 "
           + "ORDER BY line_no ASC "
           + "LIMIT #{limit} OFFSET #{offset}")
   List<JobLogContent> selectByLogId(
@@ -64,7 +64,7 @@ public interface JobLogContentMapper extends BaseMapper<JobLogContent> {
   @Select(
       "SELECT id, log_id, job_key, line_no, log_level, content, created_at "
           + "FROM ydsz_job_log_content "
-          + "WHERE log_id = #{logId} AND deleted = 0 AND line_no > #{fromLineNo} "
+          + "WHERE log_id = #{logId} AND is_deleted = 0 AND line_no > #{fromLineNo} "
           + "ORDER BY line_no ASC "
           + "LIMIT 500")
   List<JobLogContent> selectAfterLine(
@@ -76,7 +76,7 @@ public interface JobLogContentMapper extends BaseMapper<JobLogContent> {
    * @param logId 任务执行日志 ID
    * @return 总行数
    */
-  @Select("SELECT COUNT(1) FROM ydsz_job_log_content WHERE log_id = #{logId} AND deleted = 0")
+  @Select("SELECT COUNT(1) FROM ydsz_job_log_content WHERE log_id = #{logId} AND is_deleted = 0")
   int countByLogId(@Param("logId") String logId);
 
   /**
@@ -91,7 +91,7 @@ public interface JobLogContentMapper extends BaseMapper<JobLogContent> {
   @Select(
       "SELECT id, log_id, job_key, line_no, log_level, content, created_at "
           + "FROM ydsz_job_log_content "
-          + "WHERE log_id = #{logId} AND deleted = 0 AND content ILIKE '%' || #{keyword} || '%' "
+          + "WHERE log_id = #{logId} AND is_deleted = 0 AND content ILIKE '%' || #{keyword} || '%' "
           + "ORDER BY line_no ASC "
           + "LIMIT #{limit} OFFSET #{offset}")
   List<JobLogContent> selectByLogIdAndKeyword(

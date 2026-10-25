@@ -22,7 +22,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *       jdbc:
  *         enabled: true
  *         datasource-name: biz_db
- *         user-query: "SELECT id, username, real_name, email, phone, dept_code, status, updated_at FROM biz_user WHERE deleted = 0"
+ *         user-query: "SELECT id, username, real_name, email, phone, dept_code, status, updated_at FROM biz_user WHERE is_deleted = 0"
  *         field-mapping:
  *           id: externalId
  *           username: username
@@ -71,7 +71,7 @@ public class JdbcProvisionProperties {
    * 增量查询 SQL（可选）。
    *
    * <p>如配置了增量 SQL，将在 {@code WHERE} 条件中追加参数实现增量拉取。
-   * 示例：{@code SELECT ... FROM biz_user WHERE deleted = 0 AND updated_at > ?}
+   * 示例：{@code SELECT ... FROM biz_user WHERE is_deleted = 0 AND updated_at > ?}
    */
   private String incrementalQuery = "";
 

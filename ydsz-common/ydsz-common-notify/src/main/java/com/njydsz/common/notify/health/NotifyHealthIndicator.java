@@ -61,10 +61,12 @@ public class NotifyHealthIndicator implements HealthIndicator {
     try {
       Map<String, Object> channels = new LinkedHashMap<>(16);
       int configuredCount = 0;
+      int enabledCount = 0;
 
       // 邮件渠道
       NotifyProperties.EmailConfig email = notifyProperties.getEmail();
       if (email != null && email.isEnabled()) {
+        enabledCount++;
         boolean ready =
             email.getSmtpHost() != null
                 && !email.getSmtpHost().isEmpty()
@@ -81,6 +83,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
       // 短信渠道
       NotifyProperties.SmsConfig sms = notifyProperties.getSms();
       if (sms != null && sms.isEnabled()) {
+        enabledCount++;
         boolean ready =
             sms.getAccessKeyId() != null
                 && !sms.getAccessKeyId().isEmpty()
@@ -97,6 +100,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
       // 企业微信渠道
       NotifyProperties.WeComConfig wecom = notifyProperties.getWecom();
       if (wecom != null && wecom.isEnabled()) {
+        enabledCount++;
         boolean ready =
             wecom.getCorpId() != null
                 && !wecom.getCorpId().isEmpty()
@@ -113,6 +117,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
       // 钉钉渠道
       NotifyProperties.DingTalkConfig dingtalk = notifyProperties.getDingtalk();
       if (dingtalk != null && dingtalk.isEnabled()) {
+        enabledCount++;
         boolean ready =
             dingtalk.getAppKey() != null
                 && !dingtalk.getAppKey().isEmpty()
@@ -123,12 +128,13 @@ public class NotifyHealthIndicator implements HealthIndicator {
           configuredCount++;
         }
       } else {
-        channels.put("hmac", "disabled");
+        channels.put("dingtalk", "disabled");
       }
 
       // 飞书渠道
       NotifyProperties.FeishuConfig feishu = notifyProperties.getFeishu();
       if (feishu != null && feishu.isEnabled()) {
+        enabledCount++;
         boolean ready =
             feishu.getAppId() != null
                 && !feishu.getAppId().isEmpty()
@@ -139,12 +145,13 @@ public class NotifyHealthIndicator implements HealthIndicator {
           configuredCount++;
         }
       } else {
-        channels.put("webhook", "disabled");
+        channels.put("feishu", "disabled");
       }
 
       // 站内信渠道
       NotifyProperties.InsiteConfig insite = notifyProperties.getInsite();
       if (insite != null && insite.isEnabled()) {
+        enabledCount++;
         channels.put("insite", "ready");
         configuredCount++;
       } else {
@@ -190,13 +197,19 @@ public class NotifyHealthIndicator implements HealthIndicator {
               .withDetail("configuredChannels", configuredCount)
               .withDetails(channels);
 
+      // 仅当启用了渠道但均未就绪时判定为 DOWN；全部渠道禁用视为未启用通知能力，不影响整体健康
       if (configuredCount == 0) {
-        builder =
-            Health.down()
-                .withDetail("module", "notify")
-                .withDetail("reason", "no notification channel configured")
-                .withDetail("configuredChannels", 0)
-                .withDetails(channels);
+        if (enabledCount > 0) {
+          builder =
+              Health.down()
+                  .withDetail("module", "notify")
+                  .withDetail("reason", "enabled notification channels are not ready")
+                  .withDetail("enabledChannels", enabledCount)
+                  .withDetail("configuredChannels", 0)
+                  .withDetails(channels);
+        } else {
+          builder.withDetail("reason", "no notification channel enabled");
+        }
       }
 
       return builder.build();

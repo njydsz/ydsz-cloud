@@ -47,7 +47,7 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
  * <ul>
  *   <li>所有写方法（{@code create/update/delete}）开启 {@code @Transactional(rollbackFor =
  *       Exception.class)}， 确保「编码唯一性校验 + 写入」原子性
- *   <li>删除采用<b>逻辑删除</b>（{@code deleted=1}），保留审计轨迹
+ *   <li>删除采用<b>逻辑删除</b>（{@code is_deleted=1}），保留审计轨迹
  * </ul>
  *
  * <p><b>性能优化：</b>
@@ -121,7 +121,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
    * 查询当前租户全部分类
    *
    * <p>扁平结构返回（不构建树），按 {@code sortNum} 升序排序，{@code sortNum} 为 {@code null} 时按 {@code 0} 处理。
-   * 仅查询未删除（{@code deleted=0}）的分类。多租户隔离：{@code tenantId=null} 时回退到 {@link TenantContext}。
+   * 仅查询未删除（{@code is_deleted=0}）的分类。多租户隔离：{@code tenantId=null} 时回退到 {@link TenantContext}。
    *
    * @param tenantId 租户 ID（可空，回退 {@link TenantContext#getTenantId()}）
    * @return 分类列表（按 sortNum 升序），无数据返回空列表
@@ -358,7 +358,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
    *   <li>校验是否有关联的<b>流程定义</b>（{@code FlowDefinition.category} 引用当前分类）
    * </ul>
    *
-   * 任一校验不通过立即抛异常阻断。校验通过后置 {@code deleted=1}（逻辑删除），保留审计轨迹。
+   * 任一校验不通过立即抛异常阻断。校验通过后置 {@code is_deleted=1}（逻辑删除），保留审计轨迹。
    *
    * <p><b>幂等性：</b>分类不存在或已删除时直接返回（不抛异常）。
    *

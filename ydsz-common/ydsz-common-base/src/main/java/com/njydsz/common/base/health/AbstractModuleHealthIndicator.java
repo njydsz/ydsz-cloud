@@ -9,6 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
+import com.njydsz.common.core.context.TenantContext;
+import com.njydsz.common.core.context.TenantContextHolder;
+
 /**
  * 模块健康检查抽象基类。
  *
@@ -40,11 +43,16 @@ public abstract class AbstractModuleHealthIndicator implements HealthIndicator {
   @Override
   public final Health health() {
     Health.Builder builder = new Health.Builder();
+    TenantContext previous = TenantContextHolder.get();
+    // 健康探针是系统级只读检查，跳过租户隔离，避免无租户上下文时 fail-closed 拒绝 SQL
+    TenantContextHolder.set(TenantContext.skip());
     try {
       doHealthCheck(builder);
     } catch (Exception e) {
       log.warn("[Health] 健康检查异常: {}", e.getMessage(), e);
       builder.down().withDetail("error", extractMessage(e));
+    } finally {
+      TenantContextHolder.set(previous);
     }
     return builder.build();
   }

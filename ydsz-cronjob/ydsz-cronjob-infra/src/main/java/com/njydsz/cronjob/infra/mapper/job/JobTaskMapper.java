@@ -32,9 +32,9 @@ public interface JobTaskMapper extends BaseMapper<JobTask> {
    */
   @Select(
       "SELECT id, job_id, log_id, job_key, task_name, task_params, task_type, status, "
-          + "       result, error_message, exec_node_id, created_at, updated_at, deleted "
+          + "       result, error_message, exec_node_id, created_at, updated_at, is_deleted "
           + "FROM ydsz_job_task "
-          + "WHERE log_id = #{logId} AND deleted = 0 "
+          + "WHERE log_id = #{logId} AND is_deleted = 0 "
           + "ORDER BY created_at ASC")
   List<JobTask> selectByLogId(@Param("logId") String logId);
 
@@ -46,9 +46,9 @@ public interface JobTaskMapper extends BaseMapper<JobTask> {
    */
   @Select(
       "SELECT id, job_id, log_id, job_key, task_name, task_params, task_type, status, "
-          + "       result, error_message, exec_node_id, created_at, updated_at, deleted "
+          + "       result, error_message, exec_node_id, created_at, updated_at, is_deleted "
           + "FROM ydsz_job_task "
-          + "WHERE log_id = #{logId} AND status = 'PENDING' AND deleted = 0 "
+          + "WHERE log_id = #{logId} AND status = 'PENDING' AND is_deleted = 0 "
           + "ORDER BY created_at ASC")
   List<JobTask> selectPendingByLogId(@Param("logId") String logId);
 
@@ -61,7 +61,7 @@ public interface JobTaskMapper extends BaseMapper<JobTask> {
    */
   @Select(
       "SELECT COUNT(1) FROM ydsz_job_task "
-          + "WHERE log_id = #{logId} AND status = #{status} AND deleted = 0")
+          + "WHERE log_id = #{logId} AND status = #{status} AND is_deleted = 0")
   int countByLogIdAndStatus(@Param("logId") String logId, @Param("status") String status);
 
   /**
@@ -85,7 +85,7 @@ public interface JobTaskMapper extends BaseMapper<JobTask> {
       "UPDATE ydsz_job_task "
           + "SET status = #{status}, result = #{result}, error_message = #{errorMessage}, "
           + "    updated_at = #{now} "
-          + "WHERE id = #{id} AND deleted = 0")
+          + "WHERE id = #{id} AND is_deleted = 0")
   int updateStatus(
       @Param("id") String id,
       @Param("status") String status,
@@ -103,7 +103,7 @@ public interface JobTaskMapper extends BaseMapper<JobTask> {
    */
   @Update(
       "UPDATE ydsz_job_task SET exec_node_id = #{execNodeId}, updated_at = #{now} "
-          + "WHERE id = #{id} AND deleted = 0")
+          + "WHERE id = #{id} AND is_deleted = 0")
   int updateExecNodeId(
       @Param("id") String id,
       @Param("execNodeId") String execNodeId,

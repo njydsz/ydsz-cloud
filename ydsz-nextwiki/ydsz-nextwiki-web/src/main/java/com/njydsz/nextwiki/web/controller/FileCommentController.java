@@ -59,7 +59,7 @@ import com.njydsz.nextwiki.server.service.FileCommentService;
  *   <li>所有写操作均加 {@link Idempotent} 防重（5s TTL）
  *   <li>所有写操作均加 {@link Audit} 异步落库审计日志
  *   <li>所有接口加 {@link AuthApiPermission} 权限码校验（NEXTWIKI_FILE_*）
- *   <li>评论软删除（{@code deleted=1}），保留审计追溯
+ *   <li>评论软删除（{@code is_deleted=1}），保留审计追溯
  * </ul>
  *
  * <h3>接口路径</h3>
@@ -196,7 +196,7 @@ public class FileCommentController {
   }
 
   /**
-   * 删除评论（软删除，{@code deleted=1}）。
+   * 删除评论（软删除，{@code is_deleted=1}）。
    *
    * <p>软删除而非物理删除，便于审计追溯和上下文保留。 子评论（回复）不会被级联删除，但会随父评论在列表中隐藏。
    *

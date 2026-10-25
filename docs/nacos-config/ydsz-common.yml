@@ -184,6 +184,10 @@ management:
       show-details: always
       probes:
         enabled: true
+  health:
+    # 本地开发未部署 LDAP 服务，关闭其健康检查避免整体状态被拉低
+    ldap:
+      enabled: false
   metrics:
     tags:
       application: ${spring.application.name}
@@ -453,6 +457,17 @@ ydsz:
       fail-on-noop: true
       # Outbox 队列深度统计缓存时间（秒），减少 countByStatus 全表扫描频率，默认 5
       status-count-cache-seconds: 5
+
+  # 本地开发未配置 SMTP 等外部通知渠道，关闭默认启用的邮件渠道，避免健康检查误报 DOWN
+  notify:
+    email:
+      enabled: false
+
+  # 本地开发使用文件系统存储（未部署 MinIO，且 minio 客户端为可选依赖）
+  file:
+    type: local
+    bucket: D:/Code/open/ydsz-cloud/data/files
+    domain: http://localhost:9010/files
 
 # =====================================================================
 #  SkyWalking 链路追踪（基础配置，各模块可覆盖 service_name）

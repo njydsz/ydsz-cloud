@@ -95,7 +95,7 @@ public class MsgTemplateRepositoryImpl implements MsgTemplateRepository {
     if (query.getSceneCode() != null && !query.getSceneCode().isBlank()) {
       wrapper.eq("scene_code", query.getSceneCode());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     return wrapper;
   }
 

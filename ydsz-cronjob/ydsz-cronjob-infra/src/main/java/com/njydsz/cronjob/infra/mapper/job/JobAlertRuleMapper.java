@@ -46,9 +46,9 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRule> {
       "SELECT id, rule_name, job_id, job_key, alert_type, alert_level, "
           + "threshold, time_window_minutes, channels, receivers, "
           + "cooldown_minutes, enabled, source_type, last_alert_at, tenant_id, "
-          + "created_by, created_at, updated_by, updated_at, deleted "
+          + "created_by, created_at, updated_by, updated_at, is_deleted "
           + "FROM ydsz_job_alert_rule "
-          + "WHERE deleted = 0 AND enabled = 1")
+          + "WHERE is_deleted = 0 AND enabled = 1")
   List<JobAlertRule> selectAllEnabled();
 
   /**
@@ -63,9 +63,9 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRule> {
       "SELECT id, rule_name, job_id, job_key, alert_type, alert_level, "
           + "threshold, time_window_minutes, channels, receivers, "
           + "cooldown_minutes, enabled, source_type, last_alert_at, tenant_id, "
-          + "created_by, created_at, updated_by, updated_at, deleted "
+          + "created_by, created_at, updated_by, updated_at, is_deleted "
           + "FROM ydsz_job_alert_rule "
-          + "WHERE deleted = 0 AND enabled = 1 "
+          + "WHERE is_deleted = 0 AND enabled = 1 "
           + "AND (job_id = #{jobId} OR job_id IS NULL)")
   List<JobAlertRule> selectByJobIdOrGlobal(@Param("jobId") String jobId);
 
@@ -81,9 +81,9 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRule> {
       "SELECT id, rule_name, job_id, job_key, alert_type, alert_level, "
           + "threshold, time_window_minutes, channels, receivers, "
           + "cooldown_minutes, enabled, source_type, last_alert_at, tenant_id, "
-          + "created_by, created_at, updated_by, updated_at, deleted "
+          + "created_by, created_at, updated_by, updated_at, is_deleted "
           + "FROM ydsz_job_alert_rule "
-          + "WHERE alert_type = #{alertType} AND enabled = 1 AND deleted = 0")
+          + "WHERE alert_type = #{alertType} AND enabled = 1 AND is_deleted = 0")
   List<JobAlertRule> selectByAlertType(@Param("alertType") String alertType);
 
   /**
@@ -98,9 +98,9 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRule> {
       "SELECT id, rule_name, job_id, job_key, alert_type, alert_level, "
           + "threshold, time_window_minutes, channels, receivers, "
           + "cooldown_minutes, enabled, source_type, last_alert_at, tenant_id, "
-          + "created_by, created_at, updated_by, updated_at, deleted "
+          + "created_by, created_at, updated_by, updated_at, is_deleted "
           + "FROM ydsz_job_alert_rule "
-          + "WHERE job_id = #{jobId} AND source_type = 'SLA' AND deleted = 0")
+          + "WHERE job_id = #{jobId} AND source_type = 'SLA' AND is_deleted = 0")
   List<JobAlertRule> selectSlaRulesByJobId(@Param("jobId") String jobId);
 
   /**
@@ -117,7 +117,7 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRule> {
   @Update(
       "UPDATE ydsz_job_alert_rule "
           + "SET last_alert_at = #{newAlertAt}, updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{ruleId} AND deleted = 0 "
+          + "WHERE id = #{ruleId} AND is_deleted = 0 "
           + "AND (last_alert_at IS NULL OR last_alert_at < #{cooldownBefore})")
   int updateLastAlertAtIfNotInCooldown(
       @Param("ruleId") String ruleId,

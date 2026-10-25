@@ -45,7 +45,7 @@ public interface RolePermissionMapper extends BaseMapper<RolePermission> {
    */
   @Insert(
       "<script>"
-          + "INSERT INTO ydsz_idm_role_permission (id, role_id, permission_id, tenant_id, deleted) VALUES "
+          + "INSERT INTO ydsz_idm_role_permission (id, role_id, permission_id, tenant_id, is_deleted) VALUES "
           + "<foreach collection='list' item='item' separator=','>"
           + "(#{item.id}, #{item.roleId}, #{item.permissionId}, #{item.tenantId}, 0)"
           + "</foreach>"

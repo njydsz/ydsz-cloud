@@ -46,7 +46,7 @@ public interface FlowCommentMapper extends BaseMapper<FlowComment> {
   @Select(
       "SELECT * FROM ydsz_flow_comment "
           + "WHERE instance_id = #{instanceId} "
-          + "AND parent_comment_id IS NULL AND deleted = 0 "
+          + "AND parent_comment_id IS NULL AND is_deleted = 0 "
           + "ORDER BY created_at ASC")
   List<FlowComment> listRootComments(@Param("instanceId") String instanceId);
 
@@ -60,7 +60,7 @@ public interface FlowCommentMapper extends BaseMapper<FlowComment> {
    */
   @Select(
       "SELECT * FROM ydsz_flow_comment "
-          + "WHERE parent_comment_id = #{parentCommentId} AND deleted = 0 "
+          + "WHERE parent_comment_id = #{parentCommentId} AND is_deleted = 0 "
           + "ORDER BY created_at ASC")
   List<FlowComment> listReplies(@Param("parentCommentId") String parentCommentId);
 
@@ -76,6 +76,6 @@ public interface FlowCommentMapper extends BaseMapper<FlowComment> {
   @Select(
       "SELECT * FROM ydsz_flow_comment "
           + "WHERE instance_id = #{instanceId} "
-          + "AND deleted = 0 ORDER BY created_at ASC")
+          + "AND is_deleted = 0 ORDER BY created_at ASC")
   List<FlowComment> listByInstance(@Param("instanceId") String instanceId);
 }

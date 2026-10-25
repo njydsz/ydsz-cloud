@@ -16,6 +16,7 @@ import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.literule.domain.vo.RuleChainGraphVO;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
+import com.njydsz.literule.server.orchestrator.RuleChainGraph;
 import com.njydsz.literule.server.spi.GraphExecutionProvider;
 import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 
@@ -59,7 +60,8 @@ class RuleGraphControllerSmokeTest extends BaseControllerMockTest {
     @DisplayName("should return 200 when get graph succeeds")
     void should_return_200_when_get_graph_succeeds() throws Exception {
       when(ruleChainGraphProvider.getByRuleCode("RULE-001")).thenReturn(null);
-      when(literuleWebConverter.entityToVO(any())).thenReturn(new RuleChainGraphVO());
+      when(literuleWebConverter.entityToVO(any(RuleChainGraph.class)))
+          .thenReturn(new RuleChainGraphVO());
 
       mockMvc.perform(get("/literule/rules/RULE-001/graph"))
           .andExpect(status().isOk())

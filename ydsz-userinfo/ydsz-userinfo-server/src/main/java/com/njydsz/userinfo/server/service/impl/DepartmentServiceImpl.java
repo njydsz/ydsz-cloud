@@ -372,7 +372,7 @@ public class DepartmentServiceImpl implements DepartmentService {
   /**
    * 批量查询部门 ID → 部门名映射。
    *
-   * <p>实现：单条 SQL 完成（已自动追加 {@code deleted = 0} 条件）。
+   * <p>实现：单条 SQL 完成（已自动追加 {@code is_deleted = 0} 条件）。
    */
   @Override
   public Map<String, String> batchNamesByIds(Collection<String> deptIds) {

@@ -158,12 +158,12 @@ public interface JobMapper extends BaseMapper<Job> {
           + "       consecutive_fail_count, max_consecutive_fails, auto_resume_after_minutes, "
           + "       priority, version, slow_threshold_ms, job_type, max_retries, retry_interval_ms, "
           + "       retry_backoff, block_strategy, "
-          + "       created_by, created_at, updated_by, updated_at, deleted "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted "
           + "FROM ydsz_job "
           + "WHERE status = 'AUTO_PAUSED' "
           + "  AND auto_resume_after_minutes IS NOT NULL "
           + "  AND auto_resume_after_minutes > 0 "
-          + "  AND deleted = 0 "
+          + "  AND is_deleted = 0 "
           + "  AND updated_at + (auto_resume_after_minutes || ' minutes')::interval <= #{now}")
   List<Job> selectAutoResumeCandidates(@Param("now") LocalDateTime now);
 
@@ -176,7 +176,7 @@ public interface JobMapper extends BaseMapper<Job> {
   @Update(
       "UPDATE ydsz_job SET status = 'NORMAL', "
           + "       consecutive_fail_count = 0, updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{id} AND status = 'AUTO_PAUSED' AND deleted = 0")
+          + "WHERE id = #{id} AND status = 'AUTO_PAUSED' AND is_deleted = 0")
   int resumeAutoPaused(@Param("id") String id);
 
   /**
@@ -189,7 +189,7 @@ public interface JobMapper extends BaseMapper<Job> {
    */
   @Update(
       "UPDATE ydsz_job SET status = #{newStatus}, updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{id} AND status = #{oldStatus} AND deleted = 0")
+          + "WHERE id = #{id} AND status = #{oldStatus} AND is_deleted = 0")
   int casUpdateStatus(
       @Param("id") String id,
       @Param("oldStatus") String oldStatus,

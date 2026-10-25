@@ -23,7 +23,7 @@ import com.njydsz.userinfo.domain.entity.SocialAccount;
  *   <li>{@code idx_user_id} — 用户 ID 索引</li>
  * </ul>
  *
- * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有自定义 SQL 均显式追加 {@code deleted = 0} 条件。
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有自定义 SQL 均显式追加 {@code is_deleted = 0} 条件。
  *
  * @author ydsz-team
  * @since 26.10.01
@@ -42,7 +42,7 @@ public interface SocialAccountMapper extends BaseMapper<SocialAccount> {
    */
   @Select(
       "SELECT * FROM ydsz_idm_auth_social_account "
-          + "WHERE platform = #{platform} AND open_id = #{openId} AND deleted = 0")
+          + "WHERE platform = #{platform} AND open_id = #{openId} AND is_deleted = 0")
   SocialAccount selectByPlatformAndOpenId(
       @Param("platform") String platform, @Param("openId") String openId);
 
@@ -55,7 +55,7 @@ public interface SocialAccountMapper extends BaseMapper<SocialAccount> {
    */
   @Select(
       "SELECT * FROM ydsz_idm_auth_social_account "
-          + "WHERE user_id = #{userId} AND platform = #{platform} AND deleted = 0")
+          + "WHERE user_id = #{userId} AND platform = #{platform} AND is_deleted = 0")
   SocialAccount selectByUserIdAndPlatform(
       @Param("userId") String userId, @Param("platform") String platform);
 
@@ -65,7 +65,7 @@ public interface SocialAccountMapper extends BaseMapper<SocialAccount> {
    * @param userId 用户 ID
    * @return 社交账号绑定实体列表
    */
-  @Select("SELECT * FROM ydsz_idm_auth_social_account WHERE user_id = #{userId} AND deleted = 0")
+  @Select("SELECT * FROM ydsz_idm_auth_social_account WHERE user_id = #{userId} AND is_deleted = 0")
   List<SocialAccount> selectByUserId(@Param("userId") String userId);
 
   /**
@@ -76,8 +76,8 @@ public interface SocialAccountMapper extends BaseMapper<SocialAccount> {
    * @return 影响行数
    */
   @Delete(
-      "UPDATE ydsz_idm_auth_social_account SET deleted = 1, updated_at = CURRENT_TIMESTAMP "
-          + "WHERE user_id = #{userId} AND platform = #{platform} AND deleted = 0")
+      "UPDATE ydsz_idm_auth_social_account SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP "
+          + "WHERE user_id = #{userId} AND platform = #{platform} AND is_deleted = 0")
   int logicDeleteByUserIdAndPlatform(
       @Param("userId") String userId, @Param("platform") String platform);
 }

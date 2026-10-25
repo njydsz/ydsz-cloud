@@ -89,7 +89,7 @@ public class MsgSubscriptionRepositoryImpl implements MsgSubscriptionRepository 
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
       wrapper.eq("status", query.getStatus());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     // 处理排序
     if (query.getOrderItems() != null) {
       for (OrderItem item : query.getOrderItems()) {

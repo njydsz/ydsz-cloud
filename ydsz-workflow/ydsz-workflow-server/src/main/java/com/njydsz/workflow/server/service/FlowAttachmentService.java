@@ -21,7 +21,7 @@ import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
  * </ul>
  *
  * <p><b>存储策略：</b>附件文件存储在 common-file 模块提供的对象存储（MinIO/S3/Local）中，
- * 数据库仅记录元数据（文件名、大小、存储路径、上传人等）。删除为逻辑删除（deleted=1）。
+ * 数据库仅记录元数据（文件名、大小、存储路径、上传人等）。删除为逻辑删除（is_deleted=1）。
  *
  * @author ydsz-team
  * @since 26.10.01

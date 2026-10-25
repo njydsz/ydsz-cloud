@@ -81,7 +81,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
       wrapper.eq("status", query.getStatus());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     return converter.routeRuleListToVO(msgRouteRuleMapper.selectList(wrapper));
   }
 
@@ -104,7 +104,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
       wrapper.eq("status", query.getStatus());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     wrapper.orderByAsc("sort");
     IPage<MsgRouteRule> entityPage = msgRouteRuleMapper.selectPage(page, wrapper);
     List<MsgRouteRuleVO> vos = converter.routeRuleListToVO(entityPage.getRecords());
@@ -129,7 +129,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
       wrapper.eq("status", query.getStatus());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     return Optional.ofNullable(msgRouteRuleMapper.selectOne(wrapper)).map(converter::entityToVO);
   }
 

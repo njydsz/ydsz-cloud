@@ -78,7 +78,7 @@ public class MsgOfflineRepositoryImpl implements MsgOfflineRepository {
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
       wrapper.eq("status", query.getStatus());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     return wrapper;
   }
 

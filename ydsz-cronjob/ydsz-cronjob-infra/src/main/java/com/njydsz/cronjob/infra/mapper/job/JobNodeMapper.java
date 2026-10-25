@@ -101,7 +101,7 @@ public interface JobNodeMapper extends BaseMapper<JobNode> {
           + "<if test='responseTimeMs != null'>response_time_ms = #{responseTimeMs},</if>"
           + "<if test='consecutiveFailures != null'>consecutive_failures = #{consecutiveFailures},</if>"
           + "</set>"
-          + "WHERE node_id = #{nodeId} AND deleted = 0"
+          + "WHERE node_id = #{nodeId} AND is_deleted = 0"
           + "</script>")
   int updateByNodeId(JobNode node);
 
@@ -121,7 +121,7 @@ public interface JobNodeMapper extends BaseMapper<JobNode> {
           + "SET last_heartbeat = #{lastHeartbeat}, running_count = #{runningCount}, "
           + "    cpu_usage = #{cpuUsage}, mem_usage_pct = #{memUsagePct}, "
           + "    status = #{status} "
-          + "WHERE node_id = #{nodeId} AND deleted = 0")
+          + "WHERE node_id = #{nodeId} AND is_deleted = 0")
   int updateHeartbeat(
       @Param("nodeId") String nodeId,
       @Param("lastHeartbeat") LocalDateTime lastHeartbeat,
@@ -141,7 +141,7 @@ public interface JobNodeMapper extends BaseMapper<JobNode> {
   @Update(
       "UPDATE ydsz_job_node "
           + "SET status = #{status}, last_heartbeat = #{lastHeartbeat} "
-          + "WHERE node_id = #{nodeId} AND deleted = 0")
+          + "WHERE node_id = #{nodeId} AND is_deleted = 0")
   int updateStatus(
       @Param("nodeId") String nodeId,
       @Param("status") String status,
@@ -159,7 +159,7 @@ public interface JobNodeMapper extends BaseMapper<JobNode> {
   @Update(
       "UPDATE ydsz_job_node "
           + "SET response_time_ms = #{responseTimeMs}, updated_at = NOW() "
-          + "WHERE node_id = #{nodeId} AND deleted = 0")
+          + "WHERE node_id = #{nodeId} AND is_deleted = 0")
   int updateResponseTime(
       @Param("nodeId") String nodeId, @Param("responseTimeMs") long responseTimeMs);
 
@@ -173,7 +173,7 @@ public interface JobNodeMapper extends BaseMapper<JobNode> {
   @Update(
       "UPDATE ydsz_job_node "
           + "SET consecutive_failures = #{consecutiveFailures}, updated_at = NOW() "
-          + "WHERE node_id = #{nodeId} AND deleted = 0")
+          + "WHERE node_id = #{nodeId} AND is_deleted = 0")
   int updateConsecutiveFailures(
       @Param("nodeId") String nodeId, @Param("consecutiveFailures") int consecutiveFailures);
 }

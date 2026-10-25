@@ -51,9 +51,9 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
       "SELECT id, dag_id, dag_key, status, trigger_type, trigger_by, trigger_trace_id, "
           + "       context_json, started_at, finished_at, duration_ms, error_message, "
           + "       total_nodes, success_nodes, failed_nodes, skipped_nodes, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
           + "FROM ydsz_job_dag_instance "
-          + "WHERE dag_id = #{dagId} AND deleted = 0 "
+          + "WHERE dag_id = #{dagId} AND is_deleted = 0 "
           + "ORDER BY created_at DESC LIMIT #{limit}")
   List<JobDagInstance> selectByDagId(@Param("dagId") String dagId, @Param("limit") int limit);
 
@@ -67,9 +67,9 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
       "SELECT id, dag_id, dag_key, status, trigger_type, trigger_by, trigger_trace_id, "
           + "       context_json, started_at, finished_at, duration_ms, error_message, "
           + "       total_nodes, success_nodes, failed_nodes, skipped_nodes, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
           + "FROM ydsz_job_dag_instance "
-          + "WHERE status = #{status} AND deleted = 0 "
+          + "WHERE status = #{status} AND is_deleted = 0 "
           + "ORDER BY created_at ASC")
   List<JobDagInstance> selectByStatus(@Param("status") String status);
 
@@ -83,7 +83,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
    */
   @Update(
       "UPDATE ydsz_job_dag_instance SET status = #{toStatus}, updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{instanceId} AND status = #{fromStatus} AND deleted = 0")
+          + "WHERE id = #{instanceId} AND status = #{fromStatus} AND is_deleted = 0")
   int casUpdateStatus(
       @Param("instanceId") String instanceId,
       @Param("fromStatus") String fromStatus,
@@ -99,7 +99,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
   @Update(
       "UPDATE ydsz_job_dag_instance SET status = 'RUNNING', started_at = #{startedAt}, "
           + "       updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{instanceId} AND status = 'PENDING' AND deleted = 0")
+          + "WHERE id = #{instanceId} AND status = 'PENDING' AND is_deleted = 0")
   int markRunning(
       @Param("instanceId") String instanceId, @Param("startedAt") LocalDateTime startedAt);
 
@@ -123,7 +123,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
           + "       total_nodes = #{totalNodes}, success_nodes = #{successNodes}, "
           + "       failed_nodes = #{failedNodes}, skipped_nodes = #{skippedNodes}, "
           + "       updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{instanceId} AND status = 'RUNNING' AND deleted = 0")
+          + "WHERE id = #{instanceId} AND status = 'RUNNING' AND is_deleted = 0")
   int markFinished(
       @Param("instanceId") String instanceId,
       @Param("finalStatus") String finalStatus,
@@ -145,7 +145,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
   @Update(
       "UPDATE ydsz_job_dag_instance SET context_json = #{contextJson}, "
           + "       updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{instanceId} AND deleted = 0")
+          + "WHERE id = #{instanceId} AND is_deleted = 0")
   int updateContext(
       @Param("instanceId") String instanceId, @Param("contextJson") String contextJson);
 
@@ -166,7 +166,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
       "UPDATE ydsz_job_dag_instance "
           + "SET context_json = COALESCE(context_json, '{}'::jsonb) || #{mergeJson}::jsonb, "
           + "    updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{instanceId} AND deleted = 0")
+          + "WHERE id = #{instanceId} AND is_deleted = 0")
   int mergeContextAtomic(
       @Param("instanceId") String instanceId, @Param("mergeJson") String mergeJson);
 
@@ -178,7 +178,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
    */
   @Select(
       "SELECT COUNT(1) FROM ydsz_job_dag_instance "
-          + "WHERE dag_id = #{dagId} AND status IN ('RUNNING', 'PAUSED') AND deleted = 0")
+          + "WHERE dag_id = #{dagId} AND status IN ('RUNNING', 'PAUSED') AND is_deleted = 0")
   int countActiveInstances(@Param("dagId") String dagId);
 
   /**
@@ -191,7 +191,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
    */
   @Update(
       "UPDATE ydsz_job_dag_instance SET status = 'PAUSED', updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{instanceId} AND status = 'RUNNING' AND deleted = 0")
+          + "WHERE id = #{instanceId} AND status = 'RUNNING' AND is_deleted = 0")
   int markPaused(@Param("instanceId") String instanceId);
 
   /**
@@ -202,7 +202,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
    */
   @Update(
       "UPDATE ydsz_job_dag_instance SET status = 'RUNNING', updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{instanceId} AND status = 'PAUSED' AND deleted = 0")
+          + "WHERE id = #{instanceId} AND status = 'PAUSED' AND is_deleted = 0")
   int markResumed(@Param("instanceId") String instanceId);
 
   /**
@@ -216,7 +216,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
   @Update(
       "UPDATE ydsz_job_dag_instance SET status = 'CANCELED', finished_at = #{finishedAt}, "
           + "       duration_ms = #{durationMs}, updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{instanceId} AND status IN ('RUNNING', 'PAUSED') AND deleted = 0")
+          + "WHERE id = #{instanceId} AND status IN ('RUNNING', 'PAUSED') AND is_deleted = 0")
   int markCanceled(
       @Param("instanceId") String instanceId,
       @Param("finishedAt") LocalDateTime finishedAt,
@@ -229,7 +229,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
    * @return 实例数量
    */
   @Select("SELECT COUNT(1) FROM ydsz_job_dag_instance "
-      + "WHERE status = #{status} AND deleted = 0")
+      + "WHERE status = #{status} AND is_deleted = 0")
   long countByStatus(@Param("status") String status);
 
   /**
@@ -239,7 +239,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
    * @return 实例数量
    */
   @Select("SELECT COUNT(1) FROM ydsz_job_dag_instance "
-      + "WHERE DATE(created_at) = #{date} AND deleted = 0")
+      + "WHERE DATE(created_at) = #{date} AND is_deleted = 0")
   long countByDate(@Param("date") LocalDate date);
 
   /**
@@ -250,7 +250,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
    * @return 实例数量
    */
   @Select("SELECT COUNT(1) FROM ydsz_job_dag_instance "
-      + "WHERE status = #{status} AND DATE(created_at) = #{date} AND deleted = 0")
+      + "WHERE status = #{status} AND DATE(created_at) = #{date} AND is_deleted = 0")
   long countByStatusAndDate(@Param("status") String status, @Param("date") LocalDate date);
 
   /**
@@ -288,7 +288,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
           + "  <when test=\"counter == 'skipped'\">skipped_nodes = skipped_nodes + 1</when>"
           + "</choose>"
           + ", updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{instanceId} AND status = 'RUNNING' AND deleted = 0"
+          + "WHERE id = #{instanceId} AND status = 'RUNNING' AND is_deleted = 0"
           + "</script>")
   int incrementNodeCounter(
       @Param("instanceId") String instanceId, @Param("counter") String counter);
@@ -317,7 +317,7 @@ public interface JobDagInstanceMapper extends BaseMapper<JobDagInstance> {
           + "WHERE id = #{instanceId} "
           + "AND status = 'RUNNING' "
           + "AND total_nodes = success_nodes + failed_nodes + skipped_nodes "
-          + "AND deleted = 0")
+          + "AND is_deleted = 0")
   int tryFinalizeInstance(
       @Param("instanceId") String instanceId,
       @Param("finalStatus") String finalStatus,

@@ -172,7 +172,7 @@ public interface JobRepository {
   /**
    * 按任务分组分页查询任务列表（按 created_at 倒序）。
    *
-   * <p>仅查询 {@code deleted=0} 的任务。
+   * <p>仅查询 {@code is_deleted=0} 的任务。
    *
    * @param jobGroup 任务分组（精确匹配）
    * @param page 页码（从 1 开始）
@@ -184,7 +184,7 @@ public interface JobRepository {
   /**
    * 按任务分组和状态查询任务列表。
    *
-   * <p>仅查询 {@code deleted=0} 的任务，按 created_at 倒序。
+   * <p>仅查询 {@code is_deleted=0} 的任务，按 created_at 倒序。
    *
    * @param jobGroup 任务分组（精确匹配）
    * @param status 任务状态（NORMAL / PAUSED / ERROR / AUTO_PAUSED），可为 null 表示不限
@@ -225,7 +225,7 @@ public interface JobRepository {
   /**
    * 分页查询任务列表（按关键字/状态/分组过滤，按 created_at 倒序）。
    *
-   * <p>仅查询 {@code deleted=0} 的任务。
+   * <p>仅查询 {@code is_deleted=0} 的任务。
    *
    * @param keyword 关键字（任务名/KEY/Handler 模糊匹配，可为空）
    * @param status 状态过滤（可为空）
@@ -290,7 +290,7 @@ public interface JobRepository {
   int updateById(JobVO vo);
 
   /**
-   * 按 ID 逻辑删除任务（MyBatis Plus {@code @TableLogic} 自动置 deleted=1）。
+   * 按 ID 逻辑删除任务（MyBatis Plus {@code @TableLogic} 自动置 is_deleted=1）。
    *
    * @param id 任务 ID
    * @return 受影响行数

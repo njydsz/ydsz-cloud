@@ -96,7 +96,7 @@ public class JobGroupController {
   /**
    * 按任务分组分页查询任务列表。
    *
-   * <p>仅查询 {@code deleted=0} 的任务，按 {@code created_at} 倒序排列。 jobGroup 取自 {@code ydsz_job.job_group}
+   * <p>仅查询 {@code is_deleted=0} 的任务，按 {@code created_at} 倒序排列。 jobGroup 取自 {@code ydsz_job.job_group}
    * 字段，是任务定义时指定的业务域标识 （如 {@code ORDER-CENTER}、{@code FINANCE-DAILY} 等）。
    *
    * @param jobGroup 任务分组（{@code ydsz_job.job_group} 精确匹配，必填）
@@ -224,7 +224,7 @@ public class JobGroupController {
   /**
    * 查询所有任务分组及每组任务数（用于前端分组选择器/统计面板）。
    *
-   * <p>仅统计 {@code deleted=0} 的任务。jobGroup 为空的记录归入 {@code "default"} 分组。 返回的分组按插入顺序（{@link
+   * <p>仅统计 {@code is_deleted=0} 的任务。jobGroup 为空的记录归入 {@code "default"} 分组。 返回的分组按插入顺序（{@link
    * LinkedHashMap}）保留，方便前端稳定展示。
    *
    * <p>典型场景：任务新建/查询表单的"业务域"下拉选择器；分组统计面板。

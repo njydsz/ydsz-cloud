@@ -41,13 +41,13 @@ public interface ConfigMapper extends BaseMapper<Config> {
   /**
    * 按配置键查询启用的配置项
    *
-   * <p>走 {@code uk_tenant_group_key} 唯一索引前缀；仅返回 {@code status=ENABLED AND deleted=0} 的记录。
+   * <p>走 {@code uk_tenant_group_key} 唯一索引前缀；仅返回 {@code status=ENABLED AND is_deleted=0} 的记录。
    *
    * @param configKey 配置键
    * @return 配置 DO；不存在返回 {@code null}
    */
   @Select(
-      "SELECT * FROM ydsz_sys_config WHERE config_key = #{configKey} AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
+      "SELECT * FROM ydsz_sys_config WHERE config_key = #{configKey} AND is_deleted = 0 AND status = 'ENABLED' LIMIT 1")
   Config selectByConfigKey(@Param("configKey") String configKey);
 
   /**

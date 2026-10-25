@@ -30,7 +30,7 @@ public interface SocialClientMapper extends BaseMapper<SocialClient> {
    *
    * @return 已启用的平台配置列表
    */
-  @Select("SELECT * FROM ydsz_idm_auth_social_client WHERE status = 'ENABLED' AND deleted = 0 ORDER BY sort ASC")
+  @Select("SELECT * FROM ydsz_idm_auth_social_client WHERE status = 'ENABLED' AND is_deleted = 0 ORDER BY sort ASC")
   List<SocialClient> selectEnabledClients();
 
   /**
@@ -39,6 +39,6 @@ public interface SocialClientMapper extends BaseMapper<SocialClient> {
    * @param platform 平台标识
    * @return 客户端配置；不存在返回 null
    */
-  @Select("SELECT * FROM ydsz_idm_auth_social_client WHERE platform = #{platform} AND deleted = 0")
+  @Select("SELECT * FROM ydsz_idm_auth_social_client WHERE platform = #{platform} AND is_deleted = 0")
   SocialClient selectByPlatform(String platform);
 }

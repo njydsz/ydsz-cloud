@@ -48,8 +48,8 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
       "SELECT id, dag_key, dag_name, dag_definition, status, trigger_type, cron_expression, "
           + "       max_concurrent_instances, fail_strategy, description, next_fire_time, last_fire_time, "
           + "       fire_count, success_count, fail_count, version, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
-          + "FROM ydsz_job_dag WHERE dag_key = #{dagKey} AND deleted = 0")
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
+          + "FROM ydsz_job_dag WHERE dag_key = #{dagKey} AND is_deleted = 0")
   JobDag selectByDagKey(@Param("dagKey") String dagKey);
 
   /**
@@ -61,9 +61,9 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
       "SELECT id, dag_key, dag_name, dag_definition, status, trigger_type, cron_expression, "
           + "       max_concurrent_instances, fail_strategy, description, next_fire_time, last_fire_time, "
           + "       fire_count, success_count, fail_count, version, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
           + "FROM ydsz_job_dag "
-          + "WHERE status = 'ENABLED' AND trigger_type = 'CRON' AND deleted = 0")
+          + "WHERE status = 'ENABLED' AND trigger_type = 'CRON' AND is_deleted = 0")
   List<JobDag> selectCronEnabledDags();
 
   /**
@@ -75,8 +75,8 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
       "SELECT id, dag_key, dag_name, dag_definition, status, trigger_type, cron_expression, "
           + "       max_concurrent_instances, fail_strategy, description, next_fire_time, last_fire_time, "
           + "       fire_count, success_count, fail_count, version, "
-          + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
-          + "FROM ydsz_job_dag WHERE status = 'ENABLED' AND deleted = 0")
+          + "       created_by, created_at, updated_by, updated_at, is_deleted, tenant_id "
+          + "FROM ydsz_job_dag WHERE status = 'ENABLED' AND is_deleted = 0")
   List<JobDag> selectEnabledDags();
 
   /**
@@ -90,7 +90,7 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
   @Update(
       "UPDATE ydsz_job_dag SET fire_count = fire_count + 1, last_fire_time = #{fireTime}, "
           + "       next_fire_time = #{nextFireTime}, version = version + 1, updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{dagId} AND deleted = 0")
+          + "WHERE id = #{dagId} AND is_deleted = 0")
   int updateFireStats(
       @Param("dagId") String dagId,
       @Param("fireTime") LocalDateTime fireTime,
@@ -108,7 +108,7 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
           + "       success_count = success_count + CASE WHEN #{success} = 1 THEN 1 ELSE 0 END, "
           + "       fail_count = fail_count + CASE WHEN #{success} = 0 THEN 1 ELSE 0 END, "
           + "       version = version + 1, updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{dagId} AND deleted = 0")
+          + "WHERE id = #{dagId} AND is_deleted = 0")
   int updateResultStats(@Param("dagId") String dagId, @Param("success") boolean success);
 
   /**
@@ -125,7 +125,7 @@ public interface JobDagMapper extends BaseMapper<JobDag> {
   @Update(
       "UPDATE ydsz_job_dag SET next_fire_time = #{newNext}, version = version + 1, "
           + "       updated_at = CURRENT_TIMESTAMP "
-          + "WHERE id = #{dagId} AND next_fire_time = #{oldNext} AND deleted = 0")
+          + "WHERE id = #{dagId} AND next_fire_time = #{oldNext} AND is_deleted = 0")
   int advanceNextFireTime(
       @Param("dagId") String dagId,
       @Param("oldNext") LocalDateTime oldNext,

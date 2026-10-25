@@ -103,7 +103,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * 基于主键 ID 的简单游标分页（Keyset Pagination by id）。
    *
-   * <p>适用于深度分页场景（SLA 扫描、批量迁移）：SELECT ... WHERE id > #{lastId} AND deleted = 0 ORDER BY id ASC LIMIT N。
+   * <p>适用于深度分页场景（SLA 扫描、批量迁移）：SELECT ... WHERE id > #{lastId} AND is_deleted = 0 ORDER BY id ASC LIMIT N。
    * 相比 LIMIT/OFFSET 在大 offset 场景下有显著性能优势（O(log N) index seek vs O(N) scan）。
    *
    * <p>当 {@code lastId} 为 {@code null} 或空串时，查询从头开始。
@@ -307,7 +307,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * P1-6: SLA 扫描 — 拉取所有设置了 dueAt 且未完成的任务（用于 SLA 调度器扫描）
    *
-   * <p>扫描条件：task_status IN (PENDING, CLAIMED) AND due_at IS NOT NULL AND deleted = 0
+   * <p>扫描条件：task_status IN (PENDING, CLAIMED) AND due_at IS NOT NULL AND is_deleted = 0
    *
    * @param limit 单次扫描上限
    * @return 候选 SLA 任务列表
@@ -407,7 +407,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   /**
    * GAP-A1: 会签通过计数原子自增（带饱和守卫，防并发丢失更新与越界计数）。
    *
-   * <p>守卫条件：{@code approve_count IS NULL OR approve_finished < approve_count} + {@code deleted = 0}。
+   * <p>守卫条件：{@code approve_count IS NULL OR approve_finished < approve_count} + {@code is_deleted = 0}。
    * 不含任务状态守卫——并行会签首个办理人完成后该行即转 COMPLETED，其余办理人仍需计入票数。
    *
    * @param id 任务 ID

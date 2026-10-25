@@ -521,7 +521,7 @@ public class UserAccountServiceImpl implements UserAccountService {
    *
    * <p>批量逻辑删除用户，同时清理密码历史记录和发布删除事件。
    *
-   * <p>P0-9: 批量删除改为单条 {@code UPDATE ... SET deleted = 1 WHERE id IN (...)}，
+   * <p>P0-9: 批量删除改为单条 {@code UPDATE ... SET is_deleted = 1 WHERE id IN (...)}，
    * 替代逐个 {@code findById} + {@code deleteById} 的 N+1 循环。
    */
   @Override

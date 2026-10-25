@@ -32,7 +32,7 @@ import com.njydsz.userinfo.domain.entity.UserAccount;
  *
  * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
  *
- * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有自定义 SQL 均显式追加 {@code deleted = 0} 条件。
+ * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有自定义 SQL 均显式追加 {@code is_deleted = 0} 条件。
  *
  * @author ydsz-team
  * @since 26.10.01
@@ -65,7 +65,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
                     ELSE locked_until
                 END,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = #{id} AND deleted = 0
+            WHERE id = #{id} AND is_deleted = 0
             """)
   int increaseLoginFailCount(
       @Param("id") String id,
@@ -89,7 +89,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
                 last_login_at = CURRENT_TIMESTAMP,
                 last_login_ip = #{loginIp},
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = #{id} AND deleted = 0
+            WHERE id = #{id} AND is_deleted = 0
             """)
   int resetLoginSuccess(@Param("id") String id, @Param("loginIp") String loginIp);
 
@@ -104,7 +104,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
             <script>
             UPDATE ydsz_idm_account_user
             SET status = '1', updated_at = CURRENT_TIMESTAMP
-            WHERE deleted = 0 AND id IN
+            WHERE is_deleted = 0 AND id IN
             <foreach collection='ids' item='id' open='(' separator=',' close=')'>
               #{id}
             </foreach>
@@ -123,7 +123,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
             <script>
             UPDATE ydsz_idm_account_user
             SET status = '0', updated_at = CURRENT_TIMESTAMP
-            WHERE deleted = 0 AND id IN
+            WHERE is_deleted = 0 AND id IN
             <foreach collection='ids' item='id' open='(' separator=',' close=')'>
               #{id}
             </foreach>
@@ -141,8 +141,8 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
       """
             <script>
             UPDATE ydsz_idm_account_user
-            SET deleted = 1, updated_at = CURRENT_TIMESTAMP
-            WHERE deleted = 0 AND id IN
+            SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP
+            WHERE is_deleted = 0 AND id IN
             <foreach collection='ids' item='id' open='(' separator=',' close=')'>
               #{id}
             </foreach>
@@ -166,7 +166,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
                 login_fail_count = 0,
                 locked_until = NULL,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = #{id} AND deleted = 0
+            WHERE id = #{id} AND is_deleted = 0
             """)
   int updatePasswordAndResetFailCount(
       @Param("id") String id, @Param("newPasswordHash") String newPasswordHash);
@@ -192,7 +192,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
                 banned_by = #{bannedBy},
                 banned_at = CURRENT_TIMESTAMP,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = #{id} AND deleted = 0
+            WHERE id = #{id} AND is_deleted = 0
             """)
   int updateBanFields(
       @Param("id") String id,
@@ -216,7 +216,7 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
             SET locked_until = NULL,
                 login_fail_count = 0,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = #{id} AND deleted = 0
+            WHERE id = #{id} AND is_deleted = 0
             """)
   int unlockAccount(@Param("id") String id);
 }

@@ -45,7 +45,7 @@ public interface UserRoleMapper extends BaseMapper<UserRole> {
    */
   @Insert(
       "<script>"
-          + "INSERT INTO ydsz_idm_account_user_role (id, user_id, role_id, tenant_id, deleted) VALUES "
+          + "INSERT INTO ydsz_idm_account_user_role (id, user_id, role_id, tenant_id, is_deleted) VALUES "
           + "<foreach collection='list' item='item' separator=','>"
           + "(#{item.id}, #{item.userId}, #{item.roleId}, #{item.tenantId}, 0)"
           + "</foreach>"

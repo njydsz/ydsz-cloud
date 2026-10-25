@@ -34,6 +34,6 @@ public interface AuthPolicyMapper extends BaseMapper<AuthPolicy> {
    */
   @Select("SELECT * FROM ydsz_idm_auth_policy "
       + "WHERE (tenant_id = #{tenantId} OR (#{tenantId} IS NULL AND tenant_id IS NULL)) "
-      + "AND deleted = 0 LIMIT 1")
+      + "AND is_deleted = 0 LIMIT 1")
   AuthPolicy selectByTenantId(@Param("tenantId") String tenantId);
 }

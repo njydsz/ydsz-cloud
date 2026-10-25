@@ -38,7 +38,7 @@ import com.njydsz.workflow.domain.entity.FlowTimer;
 public interface FlowTimerMapper extends BaseMapper<FlowTimer> {
 
   /**
-   * 扫描到点的 PENDING 定时器（status = PENDING AND fire_at <= now AND deleted = 0）
+   * 扫描到点的 PENDING 定时器（status = PENDING AND fire_at <= now AND is_deleted = 0）
    *
    *
    * @param now 当前时间（用于判断定时器是否到期）

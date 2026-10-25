@@ -65,7 +65,7 @@ public class MsgBatchRepositoryImpl implements MsgBatchRepository {
     if (query.getSenderId() != null && !query.getSenderId().isBlank()) {
       wrapper.eq("sender_id", query.getSenderId());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     wrapper.last("LIMIT 1");
     MsgBatch entity = msgBatchMapper.selectOne(wrapper);
     return Optional.ofNullable(entity).map(converter::entityToVO);
@@ -89,7 +89,7 @@ public class MsgBatchRepositoryImpl implements MsgBatchRepository {
     if (query.getSenderId() != null && !query.getSenderId().isBlank()) {
       wrapper.eq("sender_id", query.getSenderId());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     wrapper.orderByDesc("created_at");
     return converter.batchListToVO(msgBatchMapper.selectList(wrapper));
   }

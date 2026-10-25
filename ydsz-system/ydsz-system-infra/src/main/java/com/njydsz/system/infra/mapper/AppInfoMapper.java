@@ -37,13 +37,13 @@ public interface AppInfoMapper extends BaseMapper<AppInfo> {
   /**
    * 按应用 Key 查询启用的应用信息（含 appSecret 用于密钥校验）
    *
-   * <p>仅返回 {@code status=ENABLED AND deleted=0} 的记录；返回的 DO 包含 {@code appSecret} 字段， <b>仅供</b>
+   * <p>仅返回 {@code status=ENABLED AND is_deleted=0} 的记录；返回的 DO 包含 {@code appSecret} 字段， <b>仅供</b>
    * {@code AppInfoService.validateClient} 内部 BCrypt 校验使用，<b>禁止</b>透传到 VO。
    *
    * @param appKey 应用 Key
    * @return 应用 DO（含 appSecret）；不存在返回 {@code null}
    */
   @Select(
-      "SELECT * FROM ydsz_sys_app_info WHERE app_key = #{appKey} AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
+      "SELECT * FROM ydsz_sys_app_info WHERE app_key = #{appKey} AND is_deleted = 0 AND status = 'ENABLED' LIMIT 1")
   AppInfo selectEnabledByAppKey(@Param("appKey") String appKey);
 }

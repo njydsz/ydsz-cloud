@@ -31,7 +31,7 @@ public interface SamlIdpConfigMapper extends BaseMapper<SamlIdpConfig> {
    * @param entityId IdP Entity ID
    * @return IdP 配置 DO；不存在返回 null
    */
-  @Select("SELECT * FROM ydsz_idm_identity_saml_config WHERE entity_id = #{entityId} AND deleted = 0")
+  @Select("SELECT * FROM ydsz_idm_identity_saml_config WHERE entity_id = #{entityId} AND is_deleted = 0")
   SamlIdpConfig selectByEntityId(String entityId);
 
   /**
@@ -39,6 +39,6 @@ public interface SamlIdpConfigMapper extends BaseMapper<SamlIdpConfig> {
    *
    * @return 已启用的 IdP 配置列表
    */
-  @Select("SELECT * FROM ydsz_idm_identity_saml_config WHERE status = 'ENABLED' AND deleted = 0 ORDER BY sort ASC")
+  @Select("SELECT * FROM ydsz_idm_identity_saml_config WHERE status = 'ENABLED' AND is_deleted = 0 ORDER BY sort ASC")
   List<SamlIdpConfig> selectEnabledConfigs();
 }

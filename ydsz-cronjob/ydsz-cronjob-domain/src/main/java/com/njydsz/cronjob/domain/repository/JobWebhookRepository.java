@@ -78,7 +78,7 @@ public interface JobWebhookRepository {
   /**
    * 分页查询 WebHook 订阅列表。
    *
-   * <p>仅查询 {@code deleted=0} 的订阅，按 created_at 倒序。
+   * <p>仅查询 {@code is_deleted=0} 的订阅，按 created_at 倒序。
    *
    * @param pageNum 页码（从 1 开始）
    * @param size 每页条数

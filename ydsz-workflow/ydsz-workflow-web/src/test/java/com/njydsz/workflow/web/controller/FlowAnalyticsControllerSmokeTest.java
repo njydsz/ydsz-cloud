@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
+import com.njydsz.workflow.domain.vo.FlowAnalyticsOverviewVO;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 import com.njydsz.workflow.server.service.FlowI18nService;
@@ -62,7 +63,8 @@ class FlowAnalyticsControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when analytics overview query succeeds")
     void should_return_200_when_overview_succeeds() throws Exception {
-      when(analyticsService.overview(any(), any(), anyString())).thenReturn(new HashMap<>());
+      when(analyticsService.overview(any(), any(), anyString()))
+          .thenReturn(new FlowAnalyticsOverviewVO());
 
       mockMvc.perform(get("/workflow/analytics/overview"))
           .andExpect(status().isOk())

@@ -123,7 +123,7 @@ public class ApiPermissionController {
    * @param id 主键 ID
    * @return 是否成功
    */
-  @Operation(summary = "删除接口权限", description = "逻辑删除（设置 deleted=1）")
+  @Operation(summary = "删除接口权限", description = "逻辑删除（设置 is_deleted=1）")
   @DeleteMapping("/{id}")
   @AuthApiPermission(apiCodes = "sys:permission:api-delete")
   public YdszResponse<Boolean> remove(@PathVariable String id) {

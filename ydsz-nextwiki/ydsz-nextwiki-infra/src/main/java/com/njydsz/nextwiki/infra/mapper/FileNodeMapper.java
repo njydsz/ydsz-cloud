@@ -111,7 +111,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
   @Update(
       "UPDATE ydsz_file_file_node SET path = CONCAT(#{newPathPrefix}, SUBSTRING(path, LENGTH(#{oldPathPrefix}) + 1)), "
           + "level = level + #{levelDelta}, updated_at = NOW() "
-          + "WHERE path LIKE CONCAT(#{oldPathPrefix}, '%') AND deleted = 0 AND id <> #{excludeId} "
+          + "WHERE path LIKE CONCAT(#{oldPathPrefix}, '%') AND is_deleted = 0 AND id <> #{excludeId} "
           + "AND tenant_id = #{tenantId}")
   int batchUpdatePathPrefix(
       @Param("oldPathPrefix") String oldPathPrefix,
@@ -129,8 +129,8 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    * @return 受影响行数
    */
   @Update(
-      "UPDATE ydsz_file_file_node SET deleted = 1, deleted_time = NOW(), updated_at = NOW() "
-          + "WHERE path LIKE CONCAT(#{pathPrefix}, '%') AND deleted = 0 AND id <> #{excludeId} "
+      "UPDATE ydsz_file_file_node SET is_deleted = 1, deleted_time = NOW(), updated_at = NOW() "
+          + "WHERE path LIKE CONCAT(#{pathPrefix}, '%') AND is_deleted = 0 AND id <> #{excludeId} "
           + "AND tenant_id = #{tenantId}")
   int batchSoftDeleteByPathPrefix(
       @Param("pathPrefix") String pathPrefix,
@@ -138,14 +138,14 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
       @Param("tenantId") String tenantId);
 
   /**
-   * 逻辑删除（设置 deleted=1 + deleted_time）。
+   * 逻辑删除（设置 is_deleted=1 + deleted_time）。
    *
    * @param id 节点 ID
    * @param originalPath 删除前的原始路径（供回收站还原）
    * @return 受影响行数
    */
   @Update(
-      "UPDATE ydsz_file_file_node SET deleted = 1, deleted_time = NOW(), "
+      "UPDATE ydsz_file_file_node SET is_deleted = 1, deleted_time = NOW(), "
           + "original_path = #{originalPath}, updated_at = NOW() WHERE id = #{id}")
   int softDelete(@Param("id") String id, @Param("originalPath") String originalPath);
 
@@ -159,7 +159,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    * @return 受影响行数
    */
   @Update(
-      "<script>UPDATE ydsz_file_file_node SET deleted = 1, deleted_time = NOW(), updated_at = NOW(), "
+      "<script>UPDATE ydsz_file_file_node SET is_deleted = 1, deleted_time = NOW(), updated_at = NOW(), "
           + "original_path = CASE id "
           + "<foreach collection='ids' item='id' separator=' '> "
           + "  WHEN #{id} THEN #{originalPaths[${index}]} "
@@ -167,7 +167,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
           + "END "
           + "WHERE id IN "
           + "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach> "
-          + "AND deleted = 0</script>")
+          + "AND is_deleted = 0</script>")
   int batchSoftDelete(
       @Param("ids") List<String> ids, @Param("originalPaths") List<String> originalPaths);
 
@@ -194,7 +194,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
           + "</foreach> END "
           + "WHERE id IN "
           + "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach> "
-          + "AND deleted = 0</script>")
+          + "AND is_deleted = 0</script>")
   int batchUpdateParentAndPath(
       @Param("ids") List<String> ids,
       @Param("targetParentId") String targetParentId,
@@ -208,7 +208,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    * @return 受影响行数
    */
   @Update(
-      "UPDATE ydsz_file_file_node SET deleted = 0, deleted_time = NULL, updated_at = NOW() WHERE id = #{id}")
+      "UPDATE ydsz_file_file_node SET is_deleted = 0, deleted_time = NULL, updated_at = NOW() WHERE id = #{id}")
   int restore(@Param("id") String id);
 
   /**
@@ -220,7 +220,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    */
   @Update(
       "UPDATE ydsz_file_file_node SET size = size + #{sizeDelta}, updated_at = NOW() "
-          + "WHERE id = #{id} AND deleted = 0")
+          + "WHERE id = #{id} AND is_deleted = 0")
   int updateSize(@Param("id") String id, @Param("sizeDelta") Long sizeDelta);
 
   /**
@@ -240,7 +240,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    * @return 文件数量
    */
   @Select(
-      "SELECT COUNT(*) FROM ydsz_file_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file'")
+      "SELECT COUNT(*) FROM ydsz_file_file_node WHERE created_by = #{userId} AND is_deleted = 0 AND node_type = 'file'")
   int countByUser(@Param("userId") String userId);
 
   /**
@@ -250,7 +250,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    * @return 文件夹数量
    */
   @Select(
-      "SELECT COUNT(*) FROM ydsz_file_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'folder'")
+      "SELECT COUNT(*) FROM ydsz_file_file_node WHERE created_by = #{userId} AND is_deleted = 0 AND node_type = 'folder'")
   int countFoldersByUser(@Param("userId") String userId);
 
   /**
@@ -260,7 +260,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    * @return 文件总大小（字节，无文件时为 0）
    */
   @Select(
-      "SELECT COALESCE(SUM(size), 0) FROM ydsz_file_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file'")
+      "SELECT COALESCE(SUM(size), 0) FROM ydsz_file_file_node WHERE created_by = #{userId} AND is_deleted = 0 AND node_type = 'file'")
   Long sumSizeByUser(@Param("userId") String userId);
 
   /**
@@ -271,7 +271,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    * @return 按大小降序排列的文件列表
    */
   @Select(
-      "SELECT * FROM ydsz_file_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file' "
+      "SELECT * FROM ydsz_file_file_node WHERE created_by = #{userId} AND is_deleted = 0 AND node_type = 'file' "
           + "ORDER BY size DESC LIMIT #{limit}")
   List<FileNode> findTopLargeFilesByUser(@Param("userId") String userId, @Param("limit") int limit);
 
@@ -283,7 +283,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    */
   @Select(
       "SELECT suffix, COUNT(*) AS file_count, COALESCE(SUM(size), 0) AS total_size "
-          + "FROM ydsz_file_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file' "
+          + "FROM ydsz_file_file_node WHERE created_by = #{userId} AND is_deleted = 0 AND node_type = 'file' "
           + "GROUP BY suffix ORDER BY total_size DESC")
   List<FileStatVO> statsBySuffixAndUser(@Param("userId") String userId);
 
@@ -296,7 +296,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    */
   @Select(
       "SELECT * FROM ydsz_file_file_node WHERE file_hash = #{fileHash} "
-          + "AND tenant_id = #{tenantId} AND deleted = 0 AND node_type = 'file' LIMIT 1")
+          + "AND tenant_id = #{tenantId} AND is_deleted = 0 AND node_type = 'file' LIMIT 1")
   FileNode findByFileHash(@Param("fileHash") String fileHash, @Param("tenantId") String tenantId);
 
   /**
@@ -310,7 +310,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    */
   @Select(
       "SELECT * FROM ydsz_file_file_node WHERE name = #{name} AND parent_id = #{parentId} "
-          + "AND created_by = #{createdBy} AND tenant_id = #{tenantId} AND deleted = 0")
+          + "AND created_by = #{createdBy} AND tenant_id = #{tenantId} AND is_deleted = 0")
   List<FileNode> findByNameAndParent(
       @Param("name") String name,
       @Param("parentId") String parentId,
@@ -330,7 +330,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    */
   @Select(
       "SELECT * FROM ydsz_file_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') "
-          + "AND deleted = 0 AND tenant_id = #{tenantId} "
+          + "AND is_deleted = 0 AND tenant_id = #{tenantId} "
           + "ORDER BY level ASC, sort ASC LIMIT #{limit} OFFSET #{offset}")
   List<FileNode> selectDescendantsByPage(
       @Param("folderPath") String folderPath,
@@ -347,7 +347,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    */
   @Select(
       "SELECT COUNT(*) FROM ydsz_file_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') "
-          + "AND deleted = 0 AND tenant_id = #{tenantId}")
+          + "AND is_deleted = 0 AND tenant_id = #{tenantId}")
   int countDescendantsByPath(
       @Param("folderPath") String folderPath, @Param("tenantId") String tenantId);
 
@@ -360,7 +360,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    */
   @Select(
       "SELECT * FROM ydsz_file_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') "
-          + "AND deleted = 0 AND tenant_id = #{tenantId}")
+          + "AND is_deleted = 0 AND tenant_id = #{tenantId}")
   List<FileNode> selectAllDescendantsByPath(
       @Param("folderPath") String folderPath, @Param("tenantId") String tenantId);
 
@@ -375,7 +375,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    */
   @Select(
       "<script>"
-          + "SELECT * FROM ydsz_file_file_node WHERE node_type = 'file' AND deleted = 0 "
+          + "SELECT * FROM ydsz_file_file_node WHERE node_type = 'file' AND is_deleted = 0 "
           + "AND updated_at &lt; #{threshold} "
           + "AND (storage_class IS NULL OR storage_class = 'STANDARD') "
           + "<if test='excludeSuffixes != null and excludeSuffixes != \"\"'>"
@@ -399,7 +399,7 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    * @return 冷数据数量
    */
   @Select(
-      "SELECT COUNT(*) FROM ydsz_file_file_node WHERE node_type = 'file' AND deleted = 0 "
+      "SELECT COUNT(*) FROM ydsz_file_file_node WHERE node_type = 'file' AND is_deleted = 0 "
           + "AND updated_at &lt; #{threshold} "
           + "AND (storage_class IS NULL OR storage_class = 'STANDARD')")
   long countColdNodes(@Param("threshold") LocalDateTime threshold);

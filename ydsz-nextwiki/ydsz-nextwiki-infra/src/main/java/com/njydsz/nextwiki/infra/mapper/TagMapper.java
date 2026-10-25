@@ -62,7 +62,7 @@ public interface TagMapper extends BaseMapper<Tag> {
    * @return 受影响行数
    */
   @Insert(
-      "INSERT INTO ydsz_file_file_tag (id, file_node_id, tag_id, created_by, created_at, updated_by, updated_at, revision, deleted) "
+      "INSERT INTO ydsz_file_file_tag (id, file_node_id, tag_id, created_by, created_at, updated_by, updated_at, revision, is_deleted) "
           + "VALUES (#{id}, #{fileNodeId}, #{tagId}, #{createdBy}, NOW(), #{updatedBy}, NOW(), 0, 0)")
   int insertFileTag(FileTag fileTag);
 
@@ -120,6 +120,6 @@ public interface TagMapper extends BaseMapper<Tag> {
   @Select(
       "SELECT ft.file_node_id FROM ydsz_file_file_tag ft "
           + "INNER JOIN ydsz_file_tag t ON ft.tag_id = t.id "
-          + "WHERE t.name LIKE CONCAT('%', #{tagName}, '%') AND ft.deleted = 0 AND t.deleted = 0")
+          + "WHERE t.name LIKE CONCAT('%', #{tagName}, '%') AND ft.is_deleted = 0 AND t.is_deleted = 0")
   List<String> findFileNodeIdsByTagName(@Param("tagName") String tagName);
 }

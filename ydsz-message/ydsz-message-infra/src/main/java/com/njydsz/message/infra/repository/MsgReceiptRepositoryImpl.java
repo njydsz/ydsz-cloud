@@ -47,7 +47,7 @@ public class MsgReceiptRepositoryImpl implements MsgReceiptRepository {
     if (query.getProviderCode() != null && !query.getProviderCode().isBlank()) {
       wrapper.eq("provider_code", query.getProviderCode());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     wrapper.orderByDesc("receipt_time");
     return converter.receiptListToVO(msgReceiptMapper.selectList(wrapper));
   }

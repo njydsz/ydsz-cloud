@@ -43,7 +43,7 @@ public interface FlowAttachmentMapper extends BaseMapper<FlowAttachment> {
    * @return 附件列表
    */
   @Select(
-      "SELECT * FROM ydsz_flow_attachment WHERE task_id = #{taskId} AND deleted = 0 ORDER BY created_at ASC")
+      "SELECT * FROM ydsz_flow_attachment WHERE task_id = #{taskId} AND is_deleted = 0 ORDER BY created_at ASC")
   List<FlowAttachment> selectByTask(@Param("taskId") String taskId);
 
   /**
@@ -53,6 +53,6 @@ public interface FlowAttachmentMapper extends BaseMapper<FlowAttachment> {
    * @return 附件列表
    */
   @Select(
-      "SELECT * FROM ydsz_flow_attachment WHERE instance_id = #{instanceId} AND deleted = 0 ORDER BY created_at ASC")
+      "SELECT * FROM ydsz_flow_attachment WHERE instance_id = #{instanceId} AND is_deleted = 0 ORDER BY created_at ASC")
   List<FlowAttachment> selectByInstance(@Param("instanceId") String instanceId);
 }

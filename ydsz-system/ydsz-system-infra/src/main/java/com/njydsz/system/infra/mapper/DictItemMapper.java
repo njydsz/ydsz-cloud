@@ -27,7 +27,7 @@ import com.njydsz.system.domain.entity.DictItem;
  *
  * <p><b>租户隔离：</b>所有查询自动由 MyBatis 拦截器注入 {@code tenant_id} 过滤条件。
  *
- * <p><b>逻辑删除：</b>实体配置了 {@code @TableLogic} 字段 {@code deleted}，删除为逻辑删除（{@code deleted=1}）。
+ * <p><b>逻辑删除：</b>实体配置了 {@code @TableLogic} 字段 {@code deleted}，删除为逻辑删除（{@code is_deleted=1}）。
  *
  * <p><b>索引利用：</b>{@code (type_code, item_code)} 命中 {@code idx_type_item} 唯一索引； 启用状态过滤后剩余数据量小（一般 100
  * 条以内），无需额外分页。
@@ -43,7 +43,7 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
   /**
    * 按类型编码和字典项编码查询启用的字典项
    *
-   * <p>走 {@code idx_type_item} 唯一索引，仅返回 {@code status=ENABLED AND deleted=0} 的记录。
+   * <p>走 {@code idx_type_item} 唯一索引，仅返回 {@code status=ENABLED AND is_deleted=0} 的记录。
    *
    * @param typeCode 字典类型编码
    * @param itemCode 字典项编码
@@ -51,7 +51,7 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
    */
   @Select(
       "SELECT * FROM ydsz_sys_dict_item WHERE type_code = #{typeCode} AND item_code = #{itemCode} "
-          + "AND deleted = 0 AND status = 'ENABLED' LIMIT 1")
+          + "AND is_deleted = 0 AND status = 'ENABLED' LIMIT 1")
   DictItem selectByTypeAndCode(
       @Param("typeCode") String typeCode, @Param("itemCode") String itemCode);
 
@@ -64,7 +64,7 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
    * @return 字典项列表（按 {@code sort} 升序）
    */
   @Select(
-      "SELECT * FROM ydsz_sys_dict_item WHERE type_code = #{typeCode} AND deleted = 0 AND status = 'ENABLED' "
+      "SELECT * FROM ydsz_sys_dict_item WHERE type_code = #{typeCode} AND is_deleted = 0 AND status = 'ENABLED' "
           + "ORDER BY sort ASC")
   List<DictItem> listEnabledByTypeCode(@Param("typeCode") String typeCode);
 

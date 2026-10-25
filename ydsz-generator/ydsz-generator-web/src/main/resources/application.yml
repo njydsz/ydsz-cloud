@@ -5,7 +5,7 @@
 server:
   port: 9009
   servlet:
-    context-path: /gen
+    context-path: /
 
 spring:
   application:

@@ -255,7 +255,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
    *
    * <ul>
    *   <li>{@code TenantLineInnerInterceptor} 自动追加 {@code WHERE tenant_id = ?}
-   *   <li>{@code @TableLogic} 自动追加 {@code deleted = 0}
+   *   <li>{@code @TableLogic} 自动追加 {@code is_deleted = 0}
    * </ul>
    *
    * 因此无需在 wrapper 中显式指定这些条件。

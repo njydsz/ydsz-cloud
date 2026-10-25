@@ -46,9 +46,9 @@ public interface JobWebhookMapper extends BaseMapper<JobWebhook> {
    */
   @Select(
       "SELECT id, name, event_type, job_key, job_group, callback_url, http_method, "
-          + "       headers, secret, status, created_at, updated_at, deleted "
+          + "       headers, secret, status, created_at, updated_at, is_deleted "
           + "FROM ydsz_job_webhook "
-          + "WHERE event_type = #{eventType} AND status = 'ACTIVE' AND deleted = 0")
+          + "WHERE event_type = #{eventType} AND status = 'ACTIVE' AND is_deleted = 0")
   List<JobWebhook> selectActiveByEventType(@Param("eventType") String eventType);
 
   /**
@@ -63,9 +63,9 @@ public interface JobWebhookMapper extends BaseMapper<JobWebhook> {
    */
   @Select(
       "SELECT id, name, event_type, job_key, job_group, callback_url, http_method, "
-          + "       headers, secret, status, created_at, updated_at, deleted "
+          + "       headers, secret, status, created_at, updated_at, is_deleted "
           + "FROM ydsz_job_webhook "
-          + "WHERE event_type = #{eventType} AND status = 'ACTIVE' AND deleted = 0 "
+          + "WHERE event_type = #{eventType} AND status = 'ACTIVE' AND is_deleted = 0 "
           + "  AND (job_key = #{jobKey} OR job_key IS NULL)")
   List<JobWebhook> selectActiveByEventAndJob(
       @Param("eventType") String eventType, @Param("jobKey") String jobKey);

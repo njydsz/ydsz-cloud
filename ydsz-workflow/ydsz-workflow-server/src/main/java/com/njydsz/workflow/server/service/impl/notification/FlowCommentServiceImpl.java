@@ -47,7 +47,7 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  *
  * <ul>
  *   <li><b>新增评论</b>：{@link #addComment} — 新增顶级评论 / 回复评论，支持 @提及解析
- *   <li><b>删除评论</b>：{@link #deleteComment} — 软删除（{@code deleted=1}），保留审计
+ *   <li><b>删除评论</b>：{@link #deleteComment} — 软删除（{@code is_deleted=1}），保留审计
  *   <li><b>多级回复树</b>：{@link #listCommentTree} / {@link #listByInstance} — 一次性查询评论 + 构建树形结构
  *   <li><b>@提及通知</b>：通过正则 {@link #MENTION_PATTERN} 解析 @userId， 调用 {@link FlowNotificationService}
  *       发送通知
@@ -60,7 +60,7 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  * <p><b>设计要点：</b>
  *
  * <ul>
- *   <li><b>软删除</b>：评论使用软删除（{@code deleted=1}），保留完整历史便于审计追溯
+ *   <li><b>软删除</b>：评论使用软删除（{@code is_deleted=1}），保留完整历史便于审计追溯
  *   <li><b>多租户隔离</b>：所有查询均带 {@code tenantId} 条件，<b>严禁跨租户访问</b>
  *   <li><b>回复场景校验</b>：父评论必须存在、未删除、且属于同一实例， 防止「跨实例回复」导致的数据混乱
  *   <li><b>循环依赖处理</b>：{@link FlowNotificationService} 使用 {@code @Lazy} 注入， 避免与 {@link

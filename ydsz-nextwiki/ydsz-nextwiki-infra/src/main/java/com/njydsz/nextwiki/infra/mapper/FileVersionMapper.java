@@ -105,11 +105,11 @@ public interface FileVersionMapper extends BaseMapper<FileVersion> {
    * @return 受影响行数
    */
   @Delete(
-      "DELETE FROM ydsz_file_file_version WHERE file_node_id = #{fileNodeId} AND deleted = 0 "
+      "DELETE FROM ydsz_file_file_version WHERE file_node_id = #{fileNodeId} AND is_deleted = 0 "
           + "AND id NOT IN ("
           + "  SELECT id FROM ("
           + "    SELECT id FROM ydsz_file_file_version "
-          + "    WHERE file_node_id = #{fileNodeId} AND deleted = 0 "
+          + "    WHERE file_node_id = #{fileNodeId} AND is_deleted = 0 "
           + "    ORDER BY version_number DESC LIMIT #{keepCount}"
           + "  ) AS keep_ids"
           + ")")

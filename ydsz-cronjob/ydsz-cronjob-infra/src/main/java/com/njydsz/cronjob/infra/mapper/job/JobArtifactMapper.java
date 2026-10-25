@@ -46,9 +46,9 @@ public interface JobArtifactMapper extends BaseMapper<JobArtifact> {
    */
   @Select(
       "SELECT id, job_id, log_id, job_key, artifact_name, artifact_type, storage_path, "
-          + "       size_bytes, content_type, metadata, expire_at, created_at, deleted "
+          + "       size_bytes, content_type, metadata, expire_at, created_at, is_deleted "
           + "FROM ydsz_job_artifact "
-          + "WHERE log_id = #{logId} AND deleted = 0 "
+          + "WHERE log_id = #{logId} AND is_deleted = 0 "
           + "ORDER BY created_at DESC")
   List<JobArtifact> selectByLogId(@Param("logId") String logId);
 

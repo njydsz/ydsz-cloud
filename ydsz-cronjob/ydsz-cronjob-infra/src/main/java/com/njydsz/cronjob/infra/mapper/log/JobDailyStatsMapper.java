@@ -50,9 +50,9 @@ public interface JobDailyStatsMapper extends BaseMapper<JobDailyStats> {
   @Select(
       "SELECT id, job_id, job_key, stats_date, fire_count, success_count, "
           + "fail_count, timeout_count, avg_duration_ms, max_duration_ms, "
-          + "min_duration_ms, p95_duration_ms, created_at, deleted "
+          + "min_duration_ms, p95_duration_ms, created_at, is_deleted "
           + "FROM ydsz_job_daily_stats "
-          + "WHERE job_id = #{jobId} AND deleted = 0 "
+          + "WHERE job_id = #{jobId} AND is_deleted = 0 "
           + "AND stats_date >= #{startDate} AND stats_date <= #{endDate} "
           + "ORDER BY stats_date ASC")
   List<JobDailyStats> selectByJobIdAndDateRange(
@@ -73,9 +73,9 @@ public interface JobDailyStatsMapper extends BaseMapper<JobDailyStats> {
   @Select(
       "SELECT id, job_id, job_key, stats_date, fire_count, success_count, "
           + "fail_count, timeout_count, avg_duration_ms, max_duration_ms, "
-          + "min_duration_ms, p95_duration_ms, created_at, deleted "
+          + "min_duration_ms, p95_duration_ms, created_at, is_deleted "
           + "FROM ydsz_job_daily_stats "
-          + "WHERE job_key = #{jobKey} AND deleted = 0 "
+          + "WHERE job_key = #{jobKey} AND is_deleted = 0 "
           + "AND stats_date >= #{startDate} AND stats_date <= #{endDate} "
           + "ORDER BY stats_date ASC")
   List<JobDailyStats> selectByJobKeyAndDateRange(
@@ -108,7 +108,7 @@ public interface JobDailyStatsMapper extends BaseMapper<JobDailyStats> {
           + "MIN(duration_ms) as min_duration_ms, "
           + "PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY duration_ms)::BIGINT as p95_duration_ms "
           + "FROM ydsz_job_log "
-          + "WHERE created_at >= #{start} AND created_at < #{end} AND deleted = 0 "
+          + "WHERE created_at >= #{start} AND created_at < #{end} AND is_deleted = 0 "
           + "GROUP BY job_id, job_key")
   List<Map<String, Object>> aggregateDaily(
       @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
@@ -116,7 +116,7 @@ public interface JobDailyStatsMapper extends BaseMapper<JobDailyStats> {
   /**
    * UPSERT 写入每日统计（PostgreSQL ON CONFLICT 语义）。
    *
-   * <p>冲突键为 {@code (job_id, stats_date, deleted)}（对应唯一约束 {@code uk_pjds_job_date}）。
+   * <p>冲突键为 {@code (job_id, stats_date, is_deleted)}（对应唯一约束 {@code uk_pjds_job_date}）。
    * 冲突时更新统计字段，保证同一任务同一天仅保留最新聚合结果（如重跑聚合时覆盖旧值）。
    *
    * @param stats 统计实体
@@ -126,12 +126,12 @@ public interface JobDailyStatsMapper extends BaseMapper<JobDailyStats> {
       "INSERT INTO ydsz_job_daily_stats (id, job_id, job_key, stats_date, "
           + "fire_count, success_count, fail_count, timeout_count, "
           + "avg_duration_ms, max_duration_ms, min_duration_ms, p95_duration_ms, "
-          + "created_at, deleted) "
+          + "created_at, is_deleted) "
           + "VALUES (#{stats.id}, #{stats.jobId}, #{stats.jobKey}, #{stats.statsDate}, "
           + "#{stats.fireCount}, #{stats.successCount}, #{stats.failCount}, #{stats.timeoutCount}, "
           + "#{stats.avgDurationMs}, #{stats.maxDurationMs}, #{stats.minDurationMs}, #{stats.p95DurationMs}, "
           + "CURRENT_TIMESTAMP, 0) "
-          + "ON CONFLICT (job_id, stats_date, deleted) DO UPDATE SET "
+          + "ON CONFLICT (job_id, stats_date, is_deleted) DO UPDATE SET "
           + "fire_count = EXCLUDED.fire_count, "
           + "success_count = EXCLUDED.success_count, "
           + "fail_count = EXCLUDED.fail_count, "

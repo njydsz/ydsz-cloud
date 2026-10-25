@@ -45,9 +45,9 @@ public interface GlueCodeMapper extends BaseMapper<GlueCode> {
    */
   @Select(
       "SELECT id, job_id, source_code, language, version, remark, "
-          + "       created_by, created_at, deleted "
+          + "       created_by, created_at, is_deleted "
           + "FROM ydsz_job_glue "
-          + "WHERE job_id = #{jobId} AND deleted = 0 "
+          + "WHERE job_id = #{jobId} AND is_deleted = 0 "
           + "ORDER BY version DESC "
           + "LIMIT 1")
   GlueCode selectLatestByJobId(@Param("jobId") String jobId);
@@ -60,9 +60,9 @@ public interface GlueCodeMapper extends BaseMapper<GlueCode> {
    */
   @Select(
       "SELECT id, job_id, source_code, language, version, remark, "
-          + "       created_by, created_at, deleted "
+          + "       created_by, created_at, is_deleted "
           + "FROM ydsz_job_glue "
-          + "WHERE job_id = #{jobId} AND deleted = 0 "
+          + "WHERE job_id = #{jobId} AND is_deleted = 0 "
           + "ORDER BY version DESC")
   List<GlueCode> selectAllByJobId(@Param("jobId") String jobId);
 }

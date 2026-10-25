@@ -104,7 +104,19 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
 
     // 检查返回类型及其字段是否包含 @SensitiveData 注解或匹配全局规则
     Class<?> returnTypeClass = returnType.getParameterType();
+    // Actuator/健康检查等框架类型由框架自身序列化，且其不可变结构无法被反射重建
+    if (isFrameworkType(returnTypeClass)) {
+      return false;
+    }
     return containsSensitiveAnnotation(returnTypeClass, returnType);
+  }
+
+  /** 判断是否为不需要脱敏的框架类型 */
+  private boolean isFrameworkType(Class<?> clazz) {
+    String name = clazz.getName();
+    return name.startsWith("org.springframework.boot.actuate")
+        || name.startsWith("org.springframework.boot.health")
+        || name.startsWith("org.springframework.boot.admin");
   }
 
   @Override
@@ -117,6 +129,11 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
       @NonNull ServerHttpRequest request,
       @NonNull ServerHttpResponse response) {
     if (body == null) {
+      return body;
+    }
+
+    // 框架类型（如 actuator 健康检查描述符）由框架自身序列化，其不可变结构无法被反射重建
+    if (isFrameworkType(body.getClass())) {
       return body;
     }
 

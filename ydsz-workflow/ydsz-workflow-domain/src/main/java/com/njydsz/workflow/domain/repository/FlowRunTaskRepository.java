@@ -253,7 +253,7 @@ public interface FlowRunTaskRepository {
    * 消除"读取 VO → 内存加一 → 整行回写"路径下的并发丢失更新。
    *
    * <p><b>守卫条件：</b>{@code approve_count IS NULL OR approve_finished < approve_count}
-   * （防止重复提交导致计数越过上限）+ {@code deleted = 0}。不含任务状态守卫——
+   * （防止重复提交导致计数越过上限）+ {@code is_deleted = 0}。不含任务状态守卫——
    * 并行会签中首个办理人完成后任务行即转 COMPLETED，其余办理人仍需计入票数。
    *
    * @param taskId 任务 ID
@@ -325,7 +325,7 @@ public interface FlowRunTaskRepository {
   /**
    * 查询实例下指定节点上已审批完成的 previous tasks。
    *
-   * <p>查询条件：instanceId + nodeCode + taskStatus IN ('COMPLETED','REJECTED') + deleted=0。
+   * <p>查询条件：instanceId + nodeCode + taskStatus IN ('COMPLETED','REJECTED') + is_deleted=0。
    * 用于任务创建时判断「跨节点去重」历史。
    *
    * @param instanceId 实例 ID
@@ -477,7 +477,7 @@ public interface FlowRunTaskRepository {
   /**
    * 查询办理人的全部待办任务（无分页，用于离职转交场景）。
    *
-   * <p>返回条件：assigneeId + deleted=0 + taskStatus IN (PENDING, CLAIMED)。
+   * <p>返回条件：assigneeId + is_deleted=0 + taskStatus IN (PENDING, CLAIMED)。
    *
    * @param assigneeId 办理人 ID
    * @return 运行时任务 VO 列表

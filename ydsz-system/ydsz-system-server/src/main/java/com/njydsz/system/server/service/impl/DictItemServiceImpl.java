@@ -362,7 +362,7 @@ public class DictItemServiceImpl implements DictItemService {
   /**
    * 逻辑删除字典项
    *
-   * <p>采用<b>逻辑删除</b>（{@code deleted=1} + {@code status=DISABLED}）， 不真正从 DB 删除，便于审计回溯。
+   * <p>采用<b>逻辑删除</b>（{@code is_deleted=1} + {@code status=DISABLED}）， 不真正从 DB 删除，便于审计回溯。
    *
    * <p>执行链路：
    *

@@ -126,7 +126,7 @@ public class MsgAggregateRepositoryImpl implements MsgAggregateRepository {
     if (query.getScheduledSendAtBefore() != null) {
       wrapper.le("scheduled_send_at", query.getScheduledSendAtBefore());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     return wrapper;
   }
 

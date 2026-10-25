@@ -72,7 +72,7 @@ public class MsgFeedbackRepositoryImpl implements MsgFeedbackRepository {
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
       wrapper.eq("status", query.getStatus());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     return wrapper;
   }
 

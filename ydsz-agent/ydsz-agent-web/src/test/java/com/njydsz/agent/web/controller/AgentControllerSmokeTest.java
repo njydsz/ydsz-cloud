@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.agent.server.agent.AgentFacade;
@@ -43,8 +44,16 @@ class AgentControllerSmokeTest extends BaseControllerMockTest {
 
     when(agentFacade.getHistory("conv-001")).thenReturn(List.of());
 
-    AgentController agentController = new AgentController(ssePushChannelFactory, agentFacade, () -> requestGuard);
+    AgentController agentController =
+        new AgentController(ssePushChannelFactory, agentFacade, guardProvider(requestGuard));
     mockMvc = standaloneSetup(agentController);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static ObjectProvider<AgentRequestGuard> guardProvider(AgentRequestGuard guard) {
+    ObjectProvider<AgentRequestGuard> provider = mock(ObjectProvider.class);
+    when(provider.getIfAvailable()).thenReturn(guard);
+    return provider;
   }
 
   @Nested

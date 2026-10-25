@@ -50,7 +50,7 @@ public class MsgTraceRepositoryImpl implements MsgTraceRepository {
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
       wrapper.eq("status", query.getStatus());
     }
-    wrapper.eq("deleted", 0);
+    wrapper.eq("is_deleted", 0);
     wrapper.orderByAsc("event_at");
     return converter.traceListToVO(msgTraceMapper.selectList(wrapper));
   }

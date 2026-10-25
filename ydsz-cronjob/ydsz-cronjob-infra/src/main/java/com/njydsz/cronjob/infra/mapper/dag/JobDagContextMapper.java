@@ -27,7 +27,7 @@ public interface JobDagContextMapper extends BaseMapper<JobDagContext> {
    * @return 节点上下文列表
    */
   @Select(
-      "SELECT * FROM ydsz_job_dag_context WHERE dag_instance_id = #{dagInstanceId} AND deleted = 0")
+      "SELECT * FROM ydsz_job_dag_context WHERE dag_instance_id = #{dagInstanceId} AND is_deleted = 0")
   List<JobDagContext> selectByDagInstanceId(@Param("dagInstanceId") String dagInstanceId);
 
   /**
@@ -38,7 +38,7 @@ public interface JobDagContextMapper extends BaseMapper<JobDagContext> {
    * @return 节点上下文，不存在返回 null
    */
   @Select(
-      "SELECT * FROM ydsz_job_dag_context WHERE dag_instance_id = #{dagInstanceId} AND node_key = #{nodeKey} AND deleted = 0 LIMIT 1")
+      "SELECT * FROM ydsz_job_dag_context WHERE dag_instance_id = #{dagInstanceId} AND node_key = #{nodeKey} AND is_deleted = 0 LIMIT 1")
   JobDagContext selectByDagInstanceAndNodeKey(
       @Param("dagInstanceId") String dagInstanceId, @Param("nodeKey") String nodeKey);
 
@@ -48,7 +48,7 @@ public interface JobDagContextMapper extends BaseMapper<JobDagContext> {
    * @param dagInstanceId DAG 实例 ID
    * @return 删除行数
    */
-  @Select("UPDATE ydsz_job_dag_context SET deleted = 1 WHERE dag_instance_id = #{dagInstanceId}")
+  @Select("UPDATE ydsz_job_dag_context SET is_deleted = 1 WHERE dag_instance_id = #{dagInstanceId}")
   int deleteByDagInstanceId(@Param("dagInstanceId") String dagInstanceId);
 
   /**

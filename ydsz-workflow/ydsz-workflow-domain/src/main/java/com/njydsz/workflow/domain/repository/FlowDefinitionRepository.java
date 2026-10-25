@@ -145,7 +145,7 @@ public interface FlowDefinitionRepository {
   /**
    * 根据流程编码查询最新已发布版本定义（P0-5 草稿提交场景）。
    *
-   * <p>仅返回 {@code publishStatus = 1 AND deleted = 0} 的最新版本，用于校验草稿对应的流程已可正式发起。
+   * <p>仅返回 {@code publishStatus = 1 AND is_deleted = 0} 的最新版本，用于校验草稿对应的流程已可正式发起。
    *
    * @param flowCode 流程编码
    * @param tenantId 租户 ID
@@ -156,7 +156,7 @@ public interface FlowDefinitionRepository {
   /**
    * 按分类查询已启用的流程定义列表。
    *
-   * <p>返回 {@code category = ? AND activityStatus = 1 AND publishStatus = 1 AND deleted = 0} 的定义列表，
+   * <p>返回 {@code category = ? AND activityStatus = 1 AND publishStatus = 1 AND is_deleted = 0} 的定义列表，
    * 按创建时间倒序排列。用于流程发起页按分类展示可发起的流程。
    *
    * @param categoryCode 流程分类编码

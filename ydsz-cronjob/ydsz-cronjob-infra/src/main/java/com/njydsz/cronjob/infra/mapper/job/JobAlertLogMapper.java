@@ -52,10 +52,10 @@ public interface JobAlertLogMapper extends BaseMapper<JobAlertLog> {
           + "       null as job_key, alert_type, alert_level, trigger_value, threshold, "
           + "       push_channels as channels, status as alert_status, fail_reason as error_message, "
           + "       provider_trace_id as trace_id, trigger_log_id, tenant_id, "
-          + "       created_by, created_at, updated_by, updated_at, deleted "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted "
           + "FROM ydsz_job_alert_dispatch "
           + "WHERE rule_id = #{ruleId} AND source_type = 'CRONJOB' "
-          + "  AND created_at &gt;= #{since} AND deleted = 0 "
+          + "  AND created_at &gt;= #{since} AND is_deleted = 0 "
           + "ORDER BY created_at DESC")
   List<JobAlertLog> selectByRuleIdSince(
       @Param("ruleId") String ruleId, @Param("since") LocalDateTime since);
@@ -72,10 +72,10 @@ public interface JobAlertLogMapper extends BaseMapper<JobAlertLog> {
           + "       null as job_key, alert_type, alert_level, trigger_value, threshold, "
           + "       push_channels as channels, status as alert_status, fail_reason as error_message, "
           + "       provider_trace_id as trace_id, trigger_log_id, tenant_id, "
-          + "       created_by, created_at, updated_by, updated_at, deleted "
+          + "       created_by, created_at, updated_by, updated_at, is_deleted "
           + "FROM ydsz_job_alert_dispatch "
           + "WHERE source_id = #{jobId} AND source_type = 'CRONJOB' "
-          + "  AND created_at >= #{since} AND deleted = 0 "
+          + "  AND created_at >= #{since} AND is_deleted = 0 "
           + "ORDER BY created_at DESC")
   List<JobAlertLog> selectByJobIdSince(
       @Param("jobId") String jobId, @Param("since") LocalDateTime since);

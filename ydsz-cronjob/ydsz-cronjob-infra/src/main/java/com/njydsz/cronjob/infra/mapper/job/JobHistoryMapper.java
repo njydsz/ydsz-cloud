@@ -48,9 +48,9 @@ public interface JobHistoryMapper extends BaseMapper<JobHistory> {
   @Select(
       "SELECT id, job_id, version, snapshot, change_type, before_snapshot, change_remark, "
           + "       job_name, job_key, handler, cron_expression, params_json, remark, "
-          + "       changed_by, changed_at, deleted "
+          + "       changed_by, changed_at, is_deleted "
           + "FROM ydsz_job_history "
-          + "WHERE job_id = #{jobId} AND deleted = 0 "
+          + "WHERE job_id = #{jobId} AND is_deleted = 0 "
           + "ORDER BY version DESC")
   List<JobHistory> selectByJobIdOrderByVersionDesc(@Param("jobId") String jobId);
 
@@ -64,9 +64,9 @@ public interface JobHistoryMapper extends BaseMapper<JobHistory> {
   @Select(
       "SELECT id, job_id, version, snapshot, change_type, before_snapshot, change_remark, "
           + "       job_name, job_key, handler, cron_expression, params_json, remark, "
-          + "       changed_by, changed_at, deleted "
+          + "       changed_by, changed_at, is_deleted "
           + "FROM ydsz_job_history "
-          + "WHERE job_id = #{jobId} AND version = #{version} AND deleted = 0")
+          + "WHERE job_id = #{jobId} AND version = #{version} AND is_deleted = 0")
   JobHistory selectByVersion(@Param("jobId") String jobId, @Param("version") Integer version);
 
   /**
