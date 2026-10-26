@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.web.controller;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -9,6 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -26,16 +29,15 @@ class CaptchaControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private CaptchaService captchaService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private CaptchaController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(captchaService.generateCaptcha(org.mockito.ArgumentMatchers.anyString())).thenReturn("base64img");
   }
 
   @Nested
@@ -45,9 +47,13 @@ class CaptchaControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when generate succeeds")
     void should_return_200_when_generate_succeeds() throws Exception {
+      // captchaKey 由 Controller 内部 UUID.randomUUID() 生成，无法预先声明固定值
+      when(captchaService.generateCaptcha(anyString())).thenReturn("base64img");
+
       mockMvc.perform(get("/captcha/generate"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE))
+          .andExpect(jsonPath("$.data.image").value("base64img"));
     }
   }
 }

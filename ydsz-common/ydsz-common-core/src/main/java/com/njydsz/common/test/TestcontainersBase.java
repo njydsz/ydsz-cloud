@@ -33,7 +33,9 @@ import org.testcontainers.utility.DockerImageName;
  * @author ydsz-team
  * @since 26.10.01
  */
-@Testcontainers
+// disabledWithoutDocker：无 Docker 环境下以"可见跳过"结束，而不是抛 Could not find a valid
+// Docker environment 把 mvn verify 变成与代码无关的红灯；Docker 可用时（CI）照常启动容器。
+@Testcontainers(disabledWithoutDocker = true)
 @ActiveProfiles("test")
 public abstract class TestcontainersBase {
 

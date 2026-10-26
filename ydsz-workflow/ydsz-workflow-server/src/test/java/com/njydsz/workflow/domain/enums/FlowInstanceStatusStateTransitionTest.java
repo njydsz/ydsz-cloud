@@ -128,16 +128,22 @@ class FlowInstanceStatusStateTransitionTest {
       assertThat(FlowInstanceStatus.SUSPENDED.canTransitTo(FlowInstanceStatus.COMPLETED)).isFalse();
     }
 
+    // 口径校正（2026-10-26）：这两条原断言 SUSPENDED → REJECTED / ERROR 为"非法"，与本枚举实现
+    // （case SUSPENDED -> RUNNING || TERMINATED || REJECTED || ERROR）、FlowInstanceStateMachine 的
+    // SUSPENDED 出边表与其类注释、以及 FlowInstanceStateMachineTest 的正向矩阵（同两条 = 合法）三处
+    // 直接冲突，全仓仅这两个用例持相反口径 → 判为这两个断言失真，改判为实现口径。
+    // ⚠️ 遗留待决策：业务上"挂起中的实例可否被直接驳回/判异常"没有文档结论；若要收紧为非法，
+    // 需要同时改枚举 + 状态机表 + 两处测试，并评估在途挂起实例的兼容性，不能只改测试或只改代码。
     @Test
-    @DisplayName("SUSPENDED 不能流转到 REJECTED")
-    void suspended_cannotTransitTo_rejected() {
-      assertThat(FlowInstanceStatus.SUSPENDED.canTransitTo(FlowInstanceStatus.REJECTED)).isFalse();
+    @DisplayName("SUSPENDED 可以流转到 REJECTED（现行实现口径）")
+    void suspended_canTransitTo_rejected() {
+      assertThat(FlowInstanceStatus.SUSPENDED.canTransitTo(FlowInstanceStatus.REJECTED)).isTrue();
     }
 
     @Test
-    @DisplayName("SUSPENDED 不能流转到 ERROR")
-    void suspended_cannotTransitTo_error() {
-      assertThat(FlowInstanceStatus.SUSPENDED.canTransitTo(FlowInstanceStatus.ERROR)).isFalse();
+    @DisplayName("SUSPENDED 可以流转到 ERROR（现行实现口径）")
+    void suspended_canTransitTo_error() {
+      assertThat(FlowInstanceStatus.SUSPENDED.canTransitTo(FlowInstanceStatus.ERROR)).isTrue();
     }
 
     @Test

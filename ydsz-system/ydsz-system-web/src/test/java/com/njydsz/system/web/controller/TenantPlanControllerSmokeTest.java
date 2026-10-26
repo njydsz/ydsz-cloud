@@ -12,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -32,23 +34,18 @@ class TenantPlanControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private TenantPlanService planService;
 
-  @org.mockito.Mock
+  @Mock
   private TenantPlanMenuService planMenuService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private TenantPlanController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(planService.page(any(TenantPlanPageQuery.class)))
-        .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
-    when(planService.listAll()).thenReturn(List.of());
-    when(planService.getById("plan-001")).thenReturn(null);
-    when(planMenuService.listByPlanId("plan-001")).thenReturn(List.of());
   }
 
   @Nested
@@ -58,6 +55,9 @@ class TenantPlanControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when page query succeeds")
     void should_return_200_when_page_query_succeeds() throws Exception {
+      when(planService.page(any(TenantPlanPageQuery.class)))
+          .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
+
       mockMvc.perform(get("/tenant-plan/page").param("pageNum", "1").param("pageSize", "20"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -71,7 +71,24 @@ class TenantPlanControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list all succeeds")
     void should_return_200_when_list_all_succeeds() throws Exception {
+      when(planService.listAll()).thenReturn(List.of());
+
       mockMvc.perform(get("/tenant-plan/list"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /tenant-plan/{id}")
+  class GetById {
+
+    @Test
+    @DisplayName("should return 200 when get by id succeeds")
+    void should_return_200_when_get_by_id_succeeds() throws Exception {
+      when(planService.getById("plan-001")).thenReturn(null);
+
+      mockMvc.perform(get("/tenant-plan/{id}", "plan-001"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
     }
@@ -84,6 +101,8 @@ class TenantPlanControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list menus succeeds")
     void should_return_200_when_list_menus_succeeds() throws Exception {
+      when(planMenuService.listByPlanId("plan-001")).thenReturn(List.of());
+
       mockMvc.perform(get("/tenant-plan/{planId}/menus", "plan-001"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

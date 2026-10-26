@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -29,24 +31,18 @@ class ConfigVersionControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private EntityVersionService entityVersionService;
 
-  @org.mockito.Mock
+  @Mock
   private ConfigService configService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private ConfigVersionController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(entityVersionService.listByResourceTypeAndKey(
-        EntityVersionService.RESOURCE_TYPE_CONFIG, "ydsz.test.key"))
-        .thenReturn(List.of());
-    when(entityVersionService.diffConfigVersions(
-        EntityVersionService.RESOURCE_TYPE_CONFIG, "ydsz.test.key", "1", "2"))
-        .thenReturn(null);
   }
 
   @Nested
@@ -56,6 +52,10 @@ class ConfigVersionControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list succeeds")
     void should_return_200_when_list_succeeds() throws Exception {
+      when(entityVersionService.listByResourceTypeAndKey(
+              EntityVersionService.RESOURCE_TYPE_CONFIG, "ydsz.test.key"))
+          .thenReturn(List.of());
+
       mockMvc.perform(get("/config/version/{resourceKey}", "ydsz.test.key"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -69,6 +69,10 @@ class ConfigVersionControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when diff succeeds")
     void should_return_200_when_diff_succeeds() throws Exception {
+      when(entityVersionService.diffConfigVersions(
+              EntityVersionService.RESOURCE_TYPE_CONFIG, "ydsz.test.key", "1", "2"))
+          .thenReturn(null);
+
       mockMvc.perform(get("/config/version/{resourceKey}/diff", "ydsz.test.key")
               .param("fromVersion", "1")
               .param("toVersion", "2"))

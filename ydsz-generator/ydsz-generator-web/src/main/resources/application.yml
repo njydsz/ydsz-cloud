@@ -9,7 +9,7 @@ server:
 
 spring:
   application:
-    name: ydzs-generator
+    name: ydsz-generator
   config:
     import:
       - "optional:file:${YDSZ_NACOS_CONFIG_DIR:../../docs/nacos-config}/ydsz-common.yml"
@@ -100,7 +100,7 @@ ydsz:
   doc:
     enabled: true
     title: 云顶代码生成器 API
-    description: ydzs-generator 代码生成器模块 REST API 文档
+    description: ydsz-generator 代码生成器模块 REST API 文档
     version: 26.10.12
     api-docs-path: /v3/api-docs
     swagger-ui-path: /swagger-ui/index.html

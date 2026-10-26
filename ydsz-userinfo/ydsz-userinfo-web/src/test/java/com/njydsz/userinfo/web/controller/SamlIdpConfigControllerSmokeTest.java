@@ -12,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -30,17 +32,15 @@ class SamlIdpConfigControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private SamlIdpConfigService configService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private SamlIdpConfigController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(configService.findByPage(any(SamlIdpPageQuery.class))).thenReturn(List.of());
-    when(configService.findEnabled()).thenReturn(List.of());
   }
 
   @Nested
@@ -50,6 +50,8 @@ class SamlIdpConfigControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when page query succeeds")
     void should_return_200_when_page_query_succeeds() throws Exception {
+      when(configService.findByPage(any(SamlIdpPageQuery.class))).thenReturn(List.of());
+
       mockMvc.perform(get("/saml-idp-config/page").param("pageNum", "1").param("pageSize", "20"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -63,6 +65,8 @@ class SamlIdpConfigControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list enabled succeeds")
     void should_return_200_when_list_enabled_succeeds() throws Exception {
+      when(configService.findEnabled()).thenReturn(List.of());
+
       mockMvc.perform(get("/saml-idp-config/enabled"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

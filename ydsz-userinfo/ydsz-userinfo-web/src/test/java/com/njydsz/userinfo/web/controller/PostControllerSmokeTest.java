@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -28,17 +30,15 @@ class PostControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private PostService postService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private PostController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(postService.list()).thenReturn(List.of());
-    when(postService.getById("post-001")).thenReturn(null);
   }
 
   @Nested
@@ -48,6 +48,8 @@ class PostControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list succeeds")
     void should_return_200_when_list_succeeds() throws Exception {
+      when(postService.list()).thenReturn(List.of());
+
       mockMvc.perform(get("/post/list"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -61,6 +63,8 @@ class PostControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when get by id succeeds")
     void should_return_200_when_get_by_id_succeeds() throws Exception {
+      when(postService.getById("post-001")).thenReturn(null);
+
       mockMvc.perform(get("/post/{id}", "post-001"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

@@ -45,7 +45,9 @@
         <maven.compiler.target>21</maven.compiler.target>
         <!--mvn-->
         <maven.version>3.6.3</maven.version>
-        <!-- Checkstyle 全局开关：false = 构建时强制执行 checkstyle 校验（云顶规范红线）；临时跳过需显式 -Dcheckstyle.skip=true -->
+        <!-- Checkstyle 全局开关：本插件只挂在 pluginManagement、没有 phase 绑定，
+             mvn compile|package|verify 从不执行它；此属性仅决定"手动调用 checkstyle goal 时是否跳过"。
+             构建期强制是过去的误述，现在由 CI 执行 checkstyle:checkstyle + check-checkstyle-delta.py 判定。 -->
         <checkstyle.skip>false</checkstyle.skip>
         <!--Spring-->
         <spring-boot.version>4.1.0</spring-boot.version>
@@ -93,12 +95,17 @@
         <sentinel.version>1.8.8</sentinel.version>
         <!-- JaCoCo + 测试基础设施（§14 测试管理规范 v1.0.8 落地，2026-09-16） -->
         <jacoco.version>0.8.12</jacoco.version>
-        <!-- JaCoCo 渐进式覆盖率门禁阈值（26.10-08 上调基线：行覆盖 10%、分支 5%。后续路线：Q4 2026 ≥ 30%/20%，Q1 2027 ≥ 50%/35%） -->
-        <jacoco.line.threshold>0.10</jacoco.line.threshold>
-        <jacoco.branch.threshold>0.05</jacoco.branch.threshold>
+        <!-- JaCoCo 覆盖率门禁阈值。
+             0.01/0.005 只是"新模块起步线"，真正的每模块下限由 21 个叶子模块 pom 的
+             jacoco.*.threshold 属性各自锁定（值 = 2026-10-26 实测 BUNDLE 覆盖率向下取整到 0.1%）。
+             历史问题：原先此处硬编码全局 0.10/0.05，实测 21 个模块中 20 个达不到，
+             导致 mvn verify 的 jacoco:check 恒为红灯 → CI 里等价于没有门禁。
+             PR 级阻断规则改由 data/scripts/check-diff-coverage.py 承担（增量行覆盖率 ≥ 40%，
+             对齐《云顶编码规范》§14.7）。棘轮只可下调不可上调，上调需先补测试。 -->
+        <jacoco.line.threshold>0.01</jacoco.line.threshold>
+        <jacoco.branch.threshold>0.005</jacoco.branch.threshold>
         <jacoco.check.skip>false</jacoco.check.skip>
         <skipITs>false</skipITs>
-        <junit-jupiter.version>5.10.3</junit-jupiter.version>
         <assertj.version>3.26.3</assertj.version>
         <mockito.version>5.12.0</mockito.version>
         <testcontainers.version>1.20.1</testcontainers.version>
@@ -1065,50 +1072,14 @@
             <!-- ============================================ -->
             <!-- 测试基础设施（§14 测试管理规范 v1.0.8 落地，YDIZ-TEST-003 统一版本管控） -->
             <!-- ============================================ -->
-            <!-- JUnit Jupiter 5：单元/集成测试运行平台（Spring Boot BOM 未覆盖精确版本，独立管控） -->
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter</artifactId>
-                <version>${junit-jupiter.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-api</artifactId>
-                <version>${junit-jupiter.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-engine</artifactId>
-                <version>${junit-jupiter.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-params</artifactId>
-                <version>${junit-jupiter.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-launcher</artifactId>
-                <version>1.10.3</version>
-                <scope>test</scope>
-            </dependency>
-            <!-- JUnit Platform Commons / Engine：显式锁定 1.10.3 防止旧版本覆盖（修复 ReflectionUtils.returnsVoid NoSuchMethodError） -->
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-commons</artifactId>
-                <version>1.10.3</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-engine</artifactId>
-                <version>1.10.3</version>
-                <scope>test</scope>
-            </dependency>
+            <!-- JUnit：版本由上方 import 的 spring-boot-dependencies → junit-bom 统一管理，此处不再覆盖。
+                 历史教训（2026-10-26 实测）：原先在此把 jupiter 锁 5.10.3 / platform 锁 1.10.3，注释写的是
+                 "Spring Boot BOM 未覆盖精确版本"，该前提不成立——Boot 4.1.0 BOM 管理 junit-jupiter 6.0.3。
+                 本地 DM 优先于 import 的 BOM，于是 spring-test 7.x（按 JUnit 6 编译，调用
+                 ExtensionContext$Store.computeIfAbsent(Object, Function, Class)）在 5.10.3 运行时里
+                 找不到该方法 → 任何 @ExtendWith(SpringExtension.class) 的测试直接
+                 java.lang.NoSuchMethodError（实测 ydsz-system-server DictServiceIntegrationTest、
+                 ydsz-userinfo-server RoleServiceIntegrationTest 两例）。 -->
             <!-- AssertJ：流式断言 API，提升测试可读性 -->
             <dependency>
                 <groupId>org.assertj</groupId>
@@ -1387,11 +1358,9 @@
                     <exclude>**/*IT.java</exclude>
                 </excludes>
                 <!-- 单元测试使用 JUnit 5 Platform（不启动 Spring ApplicationContext） -->
-                <properties>
-                    <configurationParameters>
-                        junit.jupiter.conditions.deactivate = org.junit.jupiter.engine.extension.DisabledCondition
-                    </configurationParameters>
-                </properties>
+                <!-- B1-2：移除 junit.jupiter.conditions.deactivate = ...DisabledCondition。
+                     该配置会让 @Disabled 完全失效（被禁用的测试照常执行），与直觉相反且无人使用：
+                     实测全仓 @Disabled 出现 0 次（按 java 源文件全文检索），属纯风险无收益配置。 -->
                 <!-- 并行执行：测试类级别并行（加速 CI 反馈） -->
                 <parallel>classes</parallel>
                 <threadCount>4</threadCount>
@@ -1443,10 +1412,12 @@
                         </excludes>
                     </configuration>
                 </execution>
-                <!-- check：覆盖率门禁（渐进式基线 — 26.10-08 当前值：行覆盖 ≥ 10%，分支 ≥ 5%；
-                     后续路线：Q4 2026 上调至行覆盖 ≥ 30% / 分支 ≥ 20%，Q1 2027 ≥ 50% / 35%，
-                     与《云顶编码规范》§14.7 测试门禁路线图对齐）。
-                     紧急跳过：-Djacoco.check.skip=true -->
+                <!-- check：覆盖率门禁（每模块棘轮）。
+                     阈值取自 ${jacoco.line.threshold} / ${jacoco.branch.threshold}，
+                     由各叶子模块 pom 的 <properties> 覆盖为"本模块实测值向下取整"，
+                     因此本步骤应当恒绿：任何一次转红 = 本次改动降低了该模块覆盖率。
+                     根 pom 的 0.01/0.005 仅供尚无实测值的新模块起步使用。
+                     紧急跳过：-Djacoco.check.skip=true（需在 PR 说明中写明原因） -->
                 <execution>
                     <id>check</id>
                     <phase>verify</phase>
@@ -1472,12 +1443,13 @@
                                 </limits>
                             </rule>
                         </rules>
-                        <!-- 排除 auto-generated 代码（gen-contract.py 生成的纯 API 封装不参与覆盖率计算）；
-                             排除契约层（api 模块仅含 Feign 接口签名与 Assembler，无业务逻辑）。 -->
-                        <excludes>
-                            <exclude>**/api/**/*</exclude>
-                            <exclude>**/WebMvcTestApplication.*</exclude>
-                        </excludes>
+                        <!-- 事实校正（2026-10-26）：此处原本排除 api 包与 WebMvcTestApplication，
+                             而 report 执行没有排除 —— 同一个"覆盖率"在测量与门禁两处口径不同：
+                             棘轮地板按 report（全量 bundle）实测钉死，check 却按"去掉 api 包"的 bundle 判定。
+                             后果实测过一次：ydsz-common-search 唯一被测试覆盖的类正好落在
+                             com.njydsz.common.search.api 包内，check 视角覆盖率 0.000 低于 report 视角 0.00238，
+                             门禁直接判红；且该排除连手写的 SPI DTO 一起去掉，属于口径漏洞。
+                             现统一为全量 bundle：测量、棘轮判定、增量门禁三者同一分母。 -->
                     </configuration>
                 </execution>
             </executions>
@@ -1496,7 +1468,9 @@
                 </execution>
             </executions>
             <configuration>
-                <skipITs>false</skipITs>
+                <!-- 不写死 skipITs：写死后 -DskipITs=true 会被 XML 配置覆盖，
+                     本地无法跳过需要外部数据库的 *IT（实测 2 个真 IT：JobRepositoryIT / MsgTemplateRepositoryIT）。
+                     failsafe 的 skipITs 默认值本就是 false，去掉后行为不变但仍可覆盖。 -->
                 <includes>
                     <include>**/*IT.java</include>
                 </includes>

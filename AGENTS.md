@@ -16,7 +16,10 @@
 | `CLAUDE.md` | 核心编码红线规则（always 规则）| 所有编码任务 |
 | `docs/ai-rules/shared-rules.yaml` | 140 条红线规则完整定义（单一权威源）| 违规判定时 |
 | `docs/云顶编码规范.md` | 完整编码规范文档（v1.0.12）| CLAUDE.md 未覆盖的场景 |
-| `docs/checkstyle.xml` | Checkstyle 自动检查配置 | checkstyle 相关查询 |
+| `docs/checkstyle.xml` | Checkstyle 规则配置（注意：无 phase 绑定，构建期不执行）| checkstyle 相关查询 |
+| `data/checkstyle-baseline.json` | error 级违规存量棘轮基线 | 门禁报"存量上涨"时 |
+| `data/scripts/check-checkstyle-delta.py` | 改动文件 0 违规 + 每模块存量只减不增 | 提交前自查 |
+| `data/scripts/check-diff-coverage.py` | 增量行覆盖率 ≥ 40%（云顶规范 §14.7）| 提交前自查 |
 | `pom.xml` | 父 POM 依赖版本参考 | 新增依赖前 |
 | `README.md` | 项目概览 + 模块说明 | 理解项目全局 |
 | `data/scripts/sync-ai-rules.py` | shared-rules.yaml → catpaw-always.md 同步脚本 | 规则更新后 |
@@ -236,6 +239,7 @@ server 不依赖 infra（P1-2 整改后）
 ## 6. AI 必做清单
 
 - [ ] 每次修改的模块必须 `mvn compile` 零错误
+- [ ] 每次改动跑两条 CI 增量门禁：`mvn -o checkstyle:checkstyle` → `python3 data/scripts/check-checkstyle-delta.py --base <ref>`（改动文件 0 违规）；`mvn -o verify` → `python3 data/scripts/check-diff-coverage.py --base <ref>`（增量行覆盖率 ≥ 40%）
 - [ ] 新文件确认 UTF-8 无 BOM
 - [ ] import 语句必须完整（禁止 FQN 和通配符）
 - [ ] 日志使用 `{}` 占位符，禁止 `+` 拼接
@@ -264,3 +268,4 @@ server 不依赖 infra（P1-2 整改后）
 10. **不要** 手动设置 `tenantId`（走 TenantContextHolder）
 11. **不要** 跳过 `mvn compile` 验证就声称修改完成
 12. **不要** 跨 web 层直接调用 infra 的 Repository（应经 server 层编排）
+13. **不要** 因为"`checkstyle.skip=false`"就以为构建期做了静态检查——插件只在 pluginManagement、无 phase 绑定，`mvn verify` 从不跑 checkstyle；要么显式 `mvn -o checkstyle:checkstyle` 出报告，要么承认没跑

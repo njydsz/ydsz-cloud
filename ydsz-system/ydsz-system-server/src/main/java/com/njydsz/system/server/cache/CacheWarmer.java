@@ -1,4 +1,5 @@
 package com.njydsz.system.server.cache;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -13,14 +14,12 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.locales.util.I18n;
-import com.njydsz.system.server.constant.SystemCacheConstants;
+import com.njydsz.common.tenant.SystemTenantContextRunner;
 import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.DictItemVO;
-
-
-
+import com.njydsz.system.server.constant.SystemCacheConstants;
 
 /**
  * 缓存预热器 — 应用启动后异步预热高频访问的缓存数据。
@@ -73,8 +72,12 @@ public class CacheWarmer {
     log.info(I18n.message("system.cache.warm.start"));
     long start = System.currentTimeMillis();
     try {
-      warmConfigCache();
-      warmDictCache();
+      // 事件监听线程无请求租户上下文，需显式注入系统租户，否则租户隔离拦截器会拒绝预热 SQL
+      SystemTenantContextRunner.run(
+          () -> {
+            warmConfigCache();
+            warmDictCache();
+          });
       log.info(I18n.message("system.cache.warm.done", new Object[]{System.currentTimeMillis() - start}));
     } catch (Exception e) {
       log.warn(I18n.message("system.cache.warm.fail", new Object[]{e.getMessage()}), e);
@@ -91,11 +94,14 @@ public class CacheWarmer {
     log.info(I18n.message("system.cache.refresh.db.start"));
     // Step1: 清除全部缓存（确保不残留过期数据）
     clearAllCaches();
-    // Step2: 重新从 DB 加载
-    warmConfigCache();
-    warmDictCache();
-    // 刷新配置分组缓存
-    warmConfigGroupCache();
+    // Step2: 重新从 DB 加载（定时线程无租户上下文，注入系统租户）
+    SystemTenantContextRunner.run(
+        () -> {
+          warmConfigCache();
+          warmDictCache();
+          // 刷新配置分组缓存
+          warmConfigGroupCache();
+        });
   }
 
   /**

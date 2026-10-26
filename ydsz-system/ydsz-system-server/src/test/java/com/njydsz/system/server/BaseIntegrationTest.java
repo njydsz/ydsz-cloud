@@ -23,7 +23,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * @since 26.10.01
  */
 @SpringBootTest(classes = TestSystemApplication.class)
-@Testcontainers
+// disabledWithoutDocker：无 Docker 的开发机上让本类以"可见跳过"结束，而不是抛
+// Could not find a valid Docker environment 变成红灯；CI 镜像内 Docker 可用时照常执行。
+@Testcontainers(disabledWithoutDocker = true)
 @ActiveProfiles("test")
 public abstract class BaseIntegrationTest {
 

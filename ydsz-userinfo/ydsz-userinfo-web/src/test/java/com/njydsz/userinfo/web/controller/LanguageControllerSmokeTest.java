@@ -12,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -31,19 +33,15 @@ class LanguageControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private LanguageService languageService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private LanguageController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(languageService.page(any(LanguagePageQuery.class)))
-        .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
-    when(languageService.getById("lang-001")).thenReturn(null);
-    when(languageService.list()).thenReturn(List.of());
   }
 
   @Nested
@@ -53,6 +51,9 @@ class LanguageControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when page query succeeds")
     void should_return_200_when_page_query_succeeds() throws Exception {
+      when(languageService.page(any(LanguagePageQuery.class)))
+          .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
+
       mockMvc.perform(get("/language/page").param("pageNum", "1").param("pageSize", "20"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -66,6 +67,8 @@ class LanguageControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list succeeds")
     void should_return_200_when_list_succeeds() throws Exception {
+      when(languageService.list()).thenReturn(List.of());
+
       mockMvc.perform(get("/language/list"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -79,6 +82,8 @@ class LanguageControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when get by id succeeds")
     void should_return_200_when_get_by_id_succeeds() throws Exception {
+      when(languageService.getById("lang-001")).thenReturn(null);
+
       mockMvc.perform(get("/language/{id}", "lang-001"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

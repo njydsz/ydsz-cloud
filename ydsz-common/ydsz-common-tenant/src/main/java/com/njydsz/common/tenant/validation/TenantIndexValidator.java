@@ -71,8 +71,10 @@ public class TenantIndexValidator {
     if (!properties.isEnabled()) {
       return;
     }
-    // 优先使用业务配置的线程池，否则使用临时守护线程
-    ThreadPoolTaskExecutor executor = taskExecutorProvider.getIfAvailable();
+    // 优先使用业务配置的线程池，否则使用临时守护线程。
+    // 必须用 getIfUnique：模块内存在多个 ThreadPoolTaskExecutor（如 searchExecutor + 业务线程池）时，
+    // getIfAvailable 会抛 NoUniqueBeanDefinitionException，导致 ApplicationReadyEvent 监听器使应用启动失败。
+    ThreadPoolTaskExecutor executor = taskExecutorProvider.getIfUnique();
     if (executor != null) {
       executor.submit(this::doValidateIndexes);
     } else {

@@ -39,8 +39,8 @@ class LockAdminRestControllerSmokeTest extends BaseControllerMockTest {
   @BeforeEach
   void setUp() {
     LockStrategy lockStrategy = org.mockito.Mockito.mock(LockStrategy.class);
+    // getLockAdmin() 在 Controller 构造函数中被调用，两个端点都需要 → 属于共享前置，保留在 setUp
     when(lockStrategy.getLockAdmin()).thenReturn(lockAdmin);
-    when(lockAdmin.scanKeys("lock:*", 50)).thenReturn(new ArrayList<>());
     LockAdminRestController controller = new LockAdminRestController(lockStrategy, lockMetrics);
     mockMvc = standaloneSetup(controller);
   }
@@ -52,6 +52,9 @@ class LockAdminRestControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when page query succeeds")
     void should_return_200_when_page_query_succeeds() throws Exception {
+      // 分页端点按 SCAN_BATCH_SIZE(50) 逐批扫描
+      when(lockAdmin.scanKeys("lock:*", 50)).thenReturn(new ArrayList<>());
+
       mockMvc.perform(get("/system/lock/page").param("pageNum", "1").param("pageSize", "20"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -65,6 +68,9 @@ class LockAdminRestControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when stats query succeeds")
     void should_return_200_when_stats_query_succeeds() throws Exception {
+      // 统计端点一次性扫描 SCAN_BATCH_SIZE * 2(100)，与分页扫描批量不同
+      when(lockAdmin.scanKeys("lock:*", 100)).thenReturn(new ArrayList<>());
+
       mockMvc.perform(get("/system/lock/stats"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

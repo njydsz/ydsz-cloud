@@ -6,6 +6,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.tenant.SystemTenantContextRunner;
 import com.njydsz.system.server.service.ApiPermissionService;
 
 
@@ -50,7 +51,9 @@ public class AppPermissionScanRunner implements CommandLineRunner {
   public void run(String... args) {
     log.info(I18n.message("system.api.scan.start"));
     try {
-      int registered = apiPermissionService.scanAndRegister();
+      // CommandLineRunner 线程无请求租户上下文，需注入系统租户，否则权限表写入被租户隔离拦截器拒绝
+      int registered =
+          SystemTenantContextRunner.call(() -> apiPermissionService.scanAndRegister());
       log.info(I18n.message("system.api.scan.done", new Object[]{registered}));
     } catch (Exception e) {
       // 扫描注册失败不应阻止应用启动

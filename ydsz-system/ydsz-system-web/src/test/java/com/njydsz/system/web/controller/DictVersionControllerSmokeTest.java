@@ -1,5 +1,6 @@
 package com.njydsz.system.web.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -31,23 +34,18 @@ class DictVersionControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private EntityVersionService entityVersionService;
 
-  @org.mockito.Mock
+  @Mock
   private DictItemService dictItemService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private DictVersionController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(entityVersionService.listByResourceTypeAndKey(
-        EntityVersionService.RESOURCE_TYPE_DICT, "order_status"))
-        .thenReturn(List.of());
-    when(entityVersionService.pageByResourceTypeAndKey(any(EntityVersionPageQuery.class)))
-        .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
   }
 
   @Nested
@@ -57,6 +55,10 @@ class DictVersionControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list succeeds")
     void should_return_200_when_list_succeeds() throws Exception {
+      when(entityVersionService.listByResourceTypeAndKey(
+              EntityVersionService.RESOURCE_TYPE_DICT, "order_status"))
+          .thenReturn(List.of());
+
       mockMvc.perform(get("/dict/version/{typeCode}", "order_status"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -70,6 +72,9 @@ class DictVersionControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when page query succeeds")
     void should_return_200_when_page_query_succeeds() throws Exception {
+      when(entityVersionService.pageByResourceTypeAndKey(any(EntityVersionPageQuery.class)))
+          .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
+
       mockMvc.perform(get("/dict/version/page")
               .param("resourceType", "DICT")
               .param("resourceKey", "order_status")
@@ -78,10 +83,5 @@ class DictVersionControllerSmokeTest extends BaseControllerMockTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T> T any(Class<T> clazz) {
-    return org.mockito.ArgumentMatchers.any(clazz);
   }
 }

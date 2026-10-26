@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -29,17 +31,15 @@ class DashboardControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private DashboardService dashboardService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private DashboardController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(dashboardService.overview()).thenReturn(List.of());
-    when(dashboardService.workspace()).thenReturn(new DashboardWorkspaceVO());
   }
 
   @Nested
@@ -49,6 +49,8 @@ class DashboardControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when overview query succeeds")
     void should_return_200_when_overview_query_succeeds() throws Exception {
+      when(dashboardService.overview()).thenReturn(List.of());
+
       mockMvc.perform(get("/dashboard/overview"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -62,6 +64,8 @@ class DashboardControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when workspace query succeeds")
     void should_return_200_when_workspace_query_succeeds() throws Exception {
+      when(dashboardService.workspace()).thenReturn(new DashboardWorkspaceVO());
+
       mockMvc.perform(get("/dashboard/workspace"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

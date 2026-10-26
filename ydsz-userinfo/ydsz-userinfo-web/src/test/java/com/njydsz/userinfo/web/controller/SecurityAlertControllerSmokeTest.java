@@ -1,7 +1,6 @@
 package com.njydsz.userinfo.web.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -13,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -33,18 +34,15 @@ class SecurityAlertControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private SecurityAlertService alertService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private SecurityAlertController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(alertService.pageAlerts(any(SecurityAlertPageQuery.class)))
-        .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
-    when(alertService.findPendingAlerts(any(), anyInt())).thenReturn(List.of());
   }
 
   @Nested
@@ -54,6 +52,9 @@ class SecurityAlertControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when page query succeeds")
     void should_return_200_when_page_query_succeeds() throws Exception {
+      when(alertService.pageAlerts(any(SecurityAlertPageQuery.class)))
+          .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
+
       mockMvc.perform(get("/admin/security/alerts").param("pageNum", "1").param("pageSize", "20"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -67,6 +68,9 @@ class SecurityAlertControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when pending query succeeds")
     void should_return_200_when_pending_query_succeeds() throws Exception {
+      // riskLevel 未传时 Controller 传入 null，limit 走 @RequestParam 默认值 50
+      when(alertService.findPendingAlerts(null, 50)).thenReturn(List.of());
+
       mockMvc.perform(get("/admin/security/alerts/pending").param("limit", "50"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

@@ -12,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -31,19 +33,15 @@ class VariableControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private VariableService variableService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private VariableController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(variableService.page(any(VariablePageQuery.class)))
-        .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
-    when(variableService.getById("var-001")).thenReturn(null);
-    when(variableService.getVariableValue("finance.current_fiscal_year")).thenReturn(null);
   }
 
   @Nested
@@ -53,7 +51,25 @@ class VariableControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when page query succeeds")
     void should_return_200_when_page_query_succeeds() throws Exception {
+      when(variableService.page(any(VariablePageQuery.class)))
+          .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
+
       mockMvc.perform(get("/variable/page").param("pageNum", "1").param("pageSize", "20"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /variable/{id}")
+  class GetById {
+
+    @Test
+    @DisplayName("should return 200 when get by id succeeds")
+    void should_return_200_when_get_by_id_succeeds() throws Exception {
+      when(variableService.getById("var-001")).thenReturn(null);
+
+      mockMvc.perform(get("/variable/{id}", "var-001"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
     }
@@ -66,6 +82,8 @@ class VariableControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when get by key succeeds")
     void should_return_200_when_get_by_key_succeeds() throws Exception {
+      when(variableService.getVariableValue("finance.current_fiscal_year")).thenReturn(null);
+
       mockMvc.perform(get("/variable/key/{variableKey}", "finance.current_fiscal_year"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

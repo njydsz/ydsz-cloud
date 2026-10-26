@@ -1,5 +1,6 @@
 package com.njydsz.gateway.config;
 
+import java.util.Arrays;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +12,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
-import com.njydsz.gateway.exception.GatewayExceptionHandler;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.gateway.exception.GatewayExceptionHandler;
 
 /**
  * 网关 Web 层过滤器配置（CORS + 全局异常处理 + 安全响应头）。
@@ -44,12 +45,12 @@ public class GatewayFilterConfig {
   /**
    * 注册响应式 CORS 过滤器。
    *
-   * <p>当 {@code ydsz.gateway.cors.enabled=false} 时跳过。启动时校验凭据模式与通配符互斥，
+   * <p>当 {@code ydsz.gateway.cors.enabled=false} 时跳过。启动时校验来源非空与凭据模式通配符互斥，
    * 校验失败立即抛出异常阻止启动。
    *
    * @param corsProperties CORS 配置属性
    * @return CorsWebFilter Bean
-   * @throws IllegalStateException 凭据模式下配置了 {@code *} 来源
+   * @throws IllegalStateException 未配置来源，或凭据模式下配置了 {@code *} 来源
    */
   @Bean
   @ConditionalOnProperty(
@@ -58,10 +59,11 @@ public class GatewayFilterConfig {
       havingValue = "true",
       matchIfMissing = true)
   public CorsWebFilter corsWebFilter(CorsProperties corsProperties) {
-    validateCredentialsWithWildcard(corsProperties);
+    List<String> originPatterns = parseOriginPatterns(corsProperties.getAllowedOrigin());
+    validateOrigins(corsProperties, originPatterns);
 
     CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOriginPatterns(List.of(corsProperties.getAllowedOrigin()));
+    config.setAllowedOriginPatterns(originPatterns);
     config.setAllowedMethods(corsProperties.getAllowedMethods());
     config.setAllowedHeaders(corsProperties.getAllowedHeaders());
     config.setExposedHeaders(corsProperties.getExposedHeaders());
@@ -71,36 +73,58 @@ public class GatewayFilterConfig {
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", config);
     log.info(
-        "[Cors] 网关 CORS 已启用: origin={}, credentials={}, maxAge={}s",
-        corsProperties.getAllowedOrigin(),
+        "[Cors] 网关 CORS 已启用: origins={}, credentials={}, maxAge={}s",
+        originPatterns,
         corsProperties.isAllowCredentials(),
         corsProperties.getMaxAgeSeconds());
     return new CorsWebFilter(source);
   }
 
   /**
-   * 校验凭据模式下是否配置了通配符来源。
+   * 把 {@code ydsz.gateway.cors.allowed-origin} 解析为 Origin 模式列表。
    *
-   * <p>浏览器 Fetch Standard 规定：当 {@code Access-Control-Allow-Credentials: true} 时，
-   * {@code Access-Control-Allow-Origin} 不得使用通配符 {@code *}。
-   * Spring 的 CorsConfiguration 虽不会直接抛异常，但浏览器会拒绝该响应，
-   * 故在启动时主动校验并抛出异常，避免运行时不一致行为。
+   * <p>该配置项是字符串，约定支持逗号分隔多值（环境变量注入时的常见写法，如
+   * {@code http://localhost:5600,https://ydsz.example.com}）。整串直交给 Spring 时，
+   * 多值配置不会报错却永远匹配不上任何 Origin，表现为"CORS 配了但全线失败"。
+   *
+   * @param rawAllowedOrigin 原始配置值
+   * @return 去空白、去空项后的模式列表（可能为空，由 {@link #validateOrigins} 判失败）
+   */
+  private List<String> parseOriginPatterns(String rawAllowedOrigin) {
+    if (rawAllowedOrigin == null || rawAllowedOrigin.isBlank()) {
+      return List.of();
+    }
+    return Arrays.stream(rawAllowedOrigin.split(","))
+        .map(String::trim)
+        .filter(origin -> !origin.isEmpty())
+        .toList();
+  }
+
+  /**
+   * 校验 CORS 来源配置是否可用。
+   *
+   * <p>两条红线：
+   *
+   * <ol>
+   *   <li>来源不得为空：空列表会让 CorsWebFilter 静默拒绝所有跨域请求，与"忘记配置 CORS"
+   *       难以区分，故按启动失败处理而非静默放行。
+   *   <li>凭据模式下不得使用裸通配符 {@code *}：Fetch Standard 规定
+   *       {@code Access-Control-Allow-Credentials: true} 时响应头不能是 {@code *}，
+   *       Spring 不报错但浏览器会拒绝响应。
+   *       {@code http://localhost:*} 这类"带 scheme 的端口通配"不在禁止范围。
+   * </ol>
    *
    * @param corsProperties CORS 配置属性
-   * @throws IllegalStateException 凭据模式下配置了 {@code *} 来源
+   * @param originPatterns 已解析的来源列表
+   * @throws IllegalStateException 来源为空，或凭据模式下含 {@code *}
    */
-  private void validateCredentialsWithWildcard(CorsProperties corsProperties) {
-    if (!corsProperties.isAllowCredentials()) {
-      return;
+  private void validateOrigins(CorsProperties corsProperties, List<String> originPatterns) {
+    if (originPatterns.isEmpty()) {
+      throw new IllegalStateException(I18n.message("gateway.cors.origin_required"));
     }
-    String origin = corsProperties.getAllowedOrigin();
-    if (WILDCARD_ORIGIN.equals(origin)) {
+    if (corsProperties.isAllowCredentials() && originPatterns.contains(WILDCARD_ORIGIN)) {
       throw new IllegalStateException(
           I18n.message("gateway.cors.wildcard_origin_blocked"));
-    }
-    if (origin == null || origin.isBlank()) {
-      throw new IllegalStateException(
-          I18n.message("gateway.cors.origin_required"));
     }
   }
 

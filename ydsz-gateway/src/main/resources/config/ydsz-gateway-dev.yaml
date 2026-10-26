@@ -7,10 +7,15 @@
 #  端口:      9000
 #  说明:      跨环境共享配置见 ydsz-gateway-common.yaml（shared-configs 引入），
 #              本文件仅保留环境特有配置。
+#
+#  ⚠ 加载前提：仅当 spring.cloud.nacos.config.enabled=true（bootstrap.yml 当前为
+#     false）时本文件才会被加载；本地开发实际生效配置见 application.yml。
+#  端口固定 9000：与 docs/nacos-config/ydsz-gateway.yml、前端 nginx/vite 代理目标一致，
+#     由 data/scripts/check-gateway-routes.py R7 阻断再次漂移。
 # =====================================================================
 
 server:
-  port: 9010
+  port: 9000
   max-http-request-header-size: 16KB
   # P1-10: 响应压缩（节省 60-80% 带宽）
   compression:
@@ -29,6 +34,42 @@ spring:
   # P0-阶段二-8: 优雅停机超时（30s 内未完成则强制关闭）
   lifecycle:
     timeout-per-shutdown-phase: 30s
+  # Sentinel 集成（dev 环境配置，生产环境通过 Nacos 覆盖）
+  cloud:
+    sentinel:
+      enabled: true
+      # 饥饿加载（启动时即连接 Sentinel Dashboard，避免首请求漏控）
+      eager: true
+      # Sentinel Dashboard 地址
+      transport:
+        port: 8719
+        dashboard: ${SENTINEL_DASHBOARD_ADDR:127.0.0.1:8858}
+      # 规则持久化：从 Nacos 加载流控/熔断/系统规则
+      datasource:
+        ds-flow:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+            namespace: ${NACOS_NAMESPACE:ydsz}
+            data-id: ${spring.application.name}-sentinel-flow-rules
+            group-id: SENTINEL_GROUP
+            data-type: json
+            rule-type: flow
+        ds-degrade:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+            namespace: ${NACOS_NAMESPACE:ydsz}
+            data-id: ${spring.application.name}-sentinel-degrade-rules
+            group-id: SENTINEL_GROUP
+            data-type: json
+            rule-type: degrade
+      # 日志配置
+      log:
+        dir: ${LOG_PATH:./logs}/sentinel
+        switch-pid: true
+      # 指标配置（与 Prometheus 集成）
+      metric:
+        file-single-size: 52428800
+        file-total-count: 6
 
 # =====================================================================
 # YDSZ · Gateway · DEV 环境特有配置
@@ -58,7 +99,7 @@ ydsz:
     internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:}
     # P2-1: CORS 单一可信来源（dev 环境允许本地开发服务器）
     cors:
-      allowed-origin: ${YDSZ_GATEWAY_CORS_ALLOWED_ORIGIN:http://localhost:5173}
+      allowed-origin: ${YDSZ_GATEWAY_CORS_ALLOWED_ORIGIN:http://localhost:*}
       allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
       allowed-headers: "*"
       exposed-headers: X-Trace-Id,X-Request-Id,X-RateLimit-Limit,X-RateLimit-Remaining,X-RateLimit-Reset,X-RateLimit-Reset-Time,Retry-After,X-Gray-Hit,X-API-Version
@@ -75,45 +116,7 @@ ydsz:
     httpclient:
       pool:
         max-connections: 500
-
-# Sentinel 集成（dev 环境配置，生产环境通过 Nacos 覆盖）
-spring.cloud.sentinel:
-  enabled: true
-  # 饥饿加载（启动时即连接 Sentinel Dashboard，避免首请求漏控）
-  eager: true
-  # Sentinel Dashboard 地址
-  transport:
-    port: 8719
-    dashboard: ${SENTINEL_DASHBOARD_ADDR:127.0.0.1:8858}
-  # 规则持久化：从 Nacos 加载流控/熔断/系统规则
-  datasource:
-    ds-flow:
-      nacos:
-        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:ydsz}
-        data-id: ${spring.application.name}-sentinel-flow-rules
-        group-id: SENTINEL_GROUP
-        data-type: json
-        rule-type: flow
-    ds-degrade:
-      nacos:
-        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:ydsz}
-        data-id: ${spring.application.name}-sentinel-degrade-rules
-        group-id: SENTINEL_GROUP
-        data-type: json
-        rule-type: degrade
-  # 日志配置
-  log:
-    dir: ${LOG_PATH:./logs}/sentinel
-    switch-pid: true
-  # 指标配置（与 Prometheus 集成）
-  metric:
-    file-single-size: 52428800
-    file-total-count: 6
-
-# Sentinel 流控网关参数（自定义扩展，非 Spring Cloud Alibaba 标准配置）
-ydsz:
+  # Sentinel 流控网关参数（自定义扩展，非 Spring Cloud Alibaba 标准配置）
   sentinel:
     gateway:
       enabled: true

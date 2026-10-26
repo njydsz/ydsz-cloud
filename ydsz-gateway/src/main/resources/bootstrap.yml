@@ -1,7 +1,8 @@
 # =====================================================================
 #  YDSZ API 网关服务 bootstrap 配置
 #  --------------------------------------------------------------------
-#  端口：9010
+#  端口：9000（与 docs/nacos-config/ydsz-gateway.yml、前端 nginx/vite 代理目标一致；
+#        服务模块占 9001–9009，网关占 9000，见 check-gateway-routes.py R7）
 #  职责：统一入口、路由分发、限流熔断、CORS、认证、日志
 #  依赖：Nacos 服务发现 / 配置中心
 #  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
@@ -9,7 +10,7 @@
 
 server:
   # 网关监听端口（按构建顺序 1/10）
-  port: 9010
+  port: 9000
   # P1-3: 请求头大小限制（防止大请求攻击）
   max-http-request-header-size: 16KB
 
@@ -38,7 +39,7 @@ spring:
         # 服务实例元数据（供其他服务做灰度路由、版本标识等使用）
         metadata:
           version: 26.10.01
-          port: 9010
+          port: 9000
         # 心跳/IP 类型
         ip-type: IPv4
       # ---------- 配置中心 ----------
@@ -55,14 +56,28 @@ spring:
         refresh-enabled: true
         # 引入共享配置：datasource / redis / mybatis-plus / springdoc / logging
         # 所有服务共享一份配置，修改一次全集群生效
+        #
+        # 注意：以上 shared-configs 仅当 config.enabled=true 时才会被拉取。
+        # 本地开发默认 enabled=false（无 Nacos），此时本文件与
+        # src/main/resources/config/ydsz-gateway-*.yaml 均不生效，
+        # 实际生效配置来自 application.yml 与 spring.config.import。
         shared-configs:
           - data-id: ydsz-common.yml
             group: ${spring.profiles.active}
             refresh: true
           # P1-3: 网关跨环境共享配置（过滤器开关 / 限流 / IP 控制 / 连接池 / 健康探针等）
-          - data-id: ydzs-gateway.yml
+          - data-id: ydsz-gateway.yml
             group: ${spring.profiles.active}
             refresh: true
-          # P0-A1: 网关路由不再通过 shared-configs 引入 yaml 路由文件，
-          #        统一由 NacosRouteDefinitionRepository 从 gateway-routes.json（JSON 数组格式）加载，
-          #        避免双路由源竞争。路由模板见 src/main/resources/routes-nacos.yaml。
+          # P0-A1: 路由定义的唯一人工维护源是
+          #        src/main/resources/routes-nacos.yaml（JSON 数组清单）：
+          #          - 静态路由：由 data/scripts/gen-gateway-routes.py 从清单生成
+          #            application.yml 的 GENERATED ROUTES 区块（默认生效）
+          #          - 动态路由：显式开启 ydsz.gateway.dynamic-routes.enabled=true 且
+          #            spring.cloud.nacos.config.enabled=true 时，由
+          #            NacosRouteDefinitionRepository 从 DataId gateway-routes.json 加载，
+          #            并覆盖同 id 的静态路由
+          #        两条链路同源，禁止再引入第二份手工路由清单；
+          #        spring.cloud.gateway.server.webflux.discovery.locator.enabled 必须保持 false，
+          #        否则服务名会自动生成路由，等于第三个路由来源。
+          #        一致性由 data/scripts/check-gateway-routes.py 在 CI 阻断。

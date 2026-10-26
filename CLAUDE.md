@@ -24,7 +24,7 @@
 | 服务注册 | Nacos（注册中心 + 配置中心）|
 | API 文档 | SpringDoc OpenAPI 3 + Knife4j 4.5 |
 | 对象映射 | MapStruct 1.6.3 |
-| 构建 | Maven 3.9+，checkstyle 强制（`checkstyle.skip=false`）|
+| 构建 | Maven 3.9+；checkstyle 不在构建期执行，CI 用 `mvn checkstyle:checkstyle` 出报告 + `data/scripts/check-checkstyle-delta.py` 判定 |
 | 部署 | Docker + Docker Compose |
 
 ---
@@ -369,20 +369,35 @@ DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");  // 必须走
 ## 编译与验证
 
 ```bash
-# 全量构建（跳过测试，checkstyle 强制）
+# 全量构建（跳过测试）
 mvn clean package -DskipTests
 
 # 单模块编译验证（推荐）
 mvn compile -pl ydsz-system/ydsz-system-server -am
 
-# checkstyle 检查（不可跳过，checkstyle.skip=false）
-mvn checkstyle:check
+# checkstyle 全仓红线（存量未清零，仅适合本地单模块自查）
+mvn checkstyle:check -pl ydsz-gateway
+
+# CI 用的增量门禁：先出报告，再按"改动文件 0 违规 + 每模块存量只减不增"判定
+mvn checkstyle:checkstyle
+python3 data/scripts/check-checkstyle-delta.py --base origin/main
+
+# 增量行覆盖率门禁（只看本次 diff 新增的可执行行，≥40%）
+mvn verify -B
+python3 data/scripts/check-diff-coverage.py --base origin/main
 
 # 全模块编译
 mvn compile
 ```
 
-> **AI 修改代码后的必做验证**：修改文件所属模块必须 `mvn compile` 零错误通过。
+> **AI 修改代码后的必做验证**：修改文件所属模块必须 `mvn compile` 零错误通过，且
+> `python3 data/scripts/check-checkstyle-delta.py --base <ref>` 对本次改动的 .java 文件报 0 违规。
+>
+> **事实校正（2026-10-26 实测）**：`docs/checkstyle.xml` 只挂在 `pluginManagement`，没有任何
+> `<executions>`/phase 绑定 —— `mvn compile|package|verify` 从不执行 checkstyle，
+> `checkstyle.skip=false` 只影响"你手动调用该 goal 时是否被跳过"，不等于构建期强制。
+> 同理，`mvn checkstyle:check` 在全仓有 4155 条 error 级存量违规（见
+> `data/checkstyle-baseline.json`），直接作为 CI 步骤会恒红并遮断下游，故 CI 改用上面的增量门禁。
 
 ---
 

@@ -122,11 +122,10 @@
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
 
-        <!-- JUnit 5 (test scope) -->
+        <!-- JUnit 5 (test scope)，版本由根 POM / Spring Boot BOM 统一管控 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
 

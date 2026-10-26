@@ -9,6 +9,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -26,16 +28,15 @@ class SsoMetricsControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private RedisStringOps redisStringOps;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private SsoMetricsController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(redisStringOps.get(org.mockito.ArgumentMatchers.anyString(), Class.class)).thenReturn(null);
   }
 
   @Nested
@@ -45,9 +46,16 @@ class SsoMetricsControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when overview query succeeds")
     void should_return_200_when_overview_query_succeeds() throws Exception {
+      when(redisStringOps.get("userinfo:cas:tgt:active:count", String.class)).thenReturn("7");
+      when(redisStringOps.get("userinfo:cas:st:active:count", String.class)).thenReturn("3");
+      when(redisStringOps.get("userinfo:oauth2:token:active:count", String.class)).thenReturn("5");
+
       mockMvc.perform(get("/sso/metrics/overview"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE))
+          .andExpect(jsonPath("$.data.casActiveTgt").value(7))
+          .andExpect(jsonPath("$.data.casActiveSt").value(3))
+          .andExpect(jsonPath("$.data.oauth2ActiveTokens").value(5));
     }
   }
 }

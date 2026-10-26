@@ -7,12 +7,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.userinfo.server.device.DeviceSessionService;
 
@@ -21,6 +24,8 @@ import com.njydsz.userinfo.server.device.DeviceSessionService;
  *
  * <p>验证设备会话查询端点可正确返回 HTTP 200 + YdszResponse 信封结构。
  *
+ * <p>端点通过 {@code RequestContext.getUserId()} 取当前用户，故测试需先写入请求上下文。
+ *
  * @author ydsz-smoke-test
  * @since 26.10.09
  */
@@ -28,13 +33,17 @@ class DeviceSessionControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
+  @Mock
+  private DeviceSessionService deviceSessionService;
+
   @BeforeEach
   void setUp() {
-    DeviceSessionService deviceSessionService = org.mockito.Mockito.mock(DeviceSessionService.class);
-    when(deviceSessionService.listMyDevices(org.mockito.ArgumentMatchers.anyString()))
-        .thenReturn(List.of());
-    DeviceSessionController controller = new DeviceSessionController(deviceSessionService);
-    mockMvc = standaloneSetup(controller);
+    mockMvc = standaloneSetup(new DeviceSessionController(deviceSessionService));
+  }
+
+  @AfterEach
+  void tearDown() {
+    RequestContext.clear();
   }
 
   @Nested
@@ -44,6 +53,10 @@ class DeviceSessionControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list devices succeeds")
     void should_return_200_when_list_devices_succeeds() throws Exception {
+      RequestContext.setUserId("user-001");
+
+      when(deviceSessionService.listMyDevices("user-001")).thenReturn(List.of());
+
       mockMvc.perform(get("/devices"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

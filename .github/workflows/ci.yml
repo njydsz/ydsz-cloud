@@ -24,18 +24,38 @@ jobs:
 
     steps:
       # Step 1: 检出源码（前端 + 后端仓库并排）
+      # fetch-depth: 0 是 B1-2 两个增量门禁（checkstyle 增量红线、增量覆盖率）的前提：
+      # 浅克隆（默认 depth 1）里没有 base 提交，git merge-base 直接失败，
+      # 门禁会退化成"无从判定"，而不是"判定通过"。
       - name: Checkout backend repository
         uses: actions/checkout@v4
         with:
           path: ydsz-cloud
+          fetch-depth: 0
 
+      # 前端仓库：origin 实际在自建 Gitea（192.168.31.88:6080）的 ydszopen 组下，
+      # 此前写的 njydsz/ydsz-micro 在任何一侧都不存在 → 交叉检出恒失败，
+      # 而 continue-on-error 把失败吞成"跳过"，R9/R10 前端规则从此从未执行。
       - name: Checkout frontend repository
         uses: actions/checkout@v4
         with:
-          repository: njydsz/ydsz-micro
+          repository: ydszopen/ydsz-micro
           path: ydsz-micro
         continue-on-error: true
-        # 前端仓库为 private 或路径不同时允许跳过；前端检查步骤以继续观察模式运行
+        # 私有交叉仓库需要为 checkout 配只读 token（secrets 未 provision 时本步会失败并跳过）；
+        # 跳过时下游路由门禁会显式打印"未检出前端仓库"，不再静默放行 R9/R10
+
+      # Step 1a: 解析增量比较基线（PR → 目标分支；push → 上一个提交），供 Step 4 / Step 5a 共用
+      - name: 解析增量基线 BASE_REF
+        working-directory: ydsz-cloud
+        run: |
+          if [ -n "$GITHUB_BASE_REF" ]; then
+            echo "BASE_REF=origin/$GITHUB_BASE_REF" >> "$GITHUB_ENV"
+            echo "增量基线：PR 目标分支 origin/$GITHUB_BASE_REF" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "BASE_REF=HEAD~1" >> "$GITHUB_ENV"
+            echo "增量基线：HEAD~1（push 事件，只审本次推送引入的改动）" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       # Step 2: 设置 Java 21 并缓存 Maven 本地仓库
       - name: Set up Java 21 (Temurin) & Maven cache
@@ -47,33 +67,48 @@ jobs:
           cache-dependency-path: |
             ydsz-cloud/**/pom.xml
 
-      # Step 3: 编码规范前置校验
-      - name: 编码规范前置校验（BOM / CRLF / 末尾换行）
-        working-directory: ydsz-cloud
-        run: python3 data/scripts/fix-file-encoding.py
-
-      # Step 4: Checkstyle 验证
-      - name: Run Checkstyle
-        working-directory: ydsz-cloud
-        run: mvn checkstyle:check -B
-
-      # Step 4a: 错误码 i18n 覆盖度检查（观察模式）
-      - name: 错误码 i18n 覆盖度检查
+      # Step 3: 编码规范前置校验（UTF-8 无 BOM / 非法编码 / 入库换行符）
+      # 此前该步骤调用 data/scripts/fix-file-encoding.py —— 脚本从未存在，CI 从此处起恒为红，
+      # 下游所有门禁（含路由门禁、SpringDoc 门禁）根本没有执行过。
+      - name: 编码规范前置校验（CODE-001 BOM / UTF-8 / LF）
         working-directory: ydsz-cloud
         run: |
-          python data/scripts/check-error-code-i18n.py \
-            --backend-root ./ydsz-cloud \
-            --frontend-root ./ydsz-micro \
-            --verbose || echo "[CONTINUE] i18n check finished (observe mode)"
+          python3 data/scripts/check-file-encoding.py --self-test
+          python3 data/scripts/check-file-encoding.py
 
-      # Step 4b: SpringDoc @Operation 覆盖率硬门禁（threshold=15 阻止退化，目标 80%）
-      - name: SpringDoc @Operation 覆盖率硬门禁
+      # Step 3a: 网关路由一致性门禁（B0-9）
+      # 放在 Checkstyle/Maven 之前：这两步历史上会失败，路由缺陷不能被它们的红遮挡。
+      # R1–R10 断言「路由清单 ↔ application.yml 生成块 ↔ Controller 实际路径 ↔ 服务名/端口 ↔ nginx/vite 代理」互相咬合。
+      - name: 网关路由一致性门禁（R1–R10）
         working-directory: ydsz-cloud
         run: |
-          python data/scripts/check-springdoc-coverage.py \
-            --backend-root . \
-            --min-coverage 15 \
-            --verbose
+          python3 data/scripts/gen-gateway-routes.py --check
+          python3 data/scripts/check-gateway-routes.py --self-test
+          if [ -d ../ydsz-micro ]; then
+            python3 data/scripts/check-gateway-routes.py --frontend-root ../ydsz-micro
+          else
+            echo "::warning::前端仓库未检出 —— R9（/api/v1 残留）与 R10（代理前缀认领）本次未执行"
+            python3 data/scripts/check-gateway-routes.py
+          fi
+
+      # Step 4: Checkstyle 增量红线 + 存量棘轮（B1-2）
+      # 原步骤 `mvn checkstyle:check -B` 断言"全仓 0 违规"，实测存量 4155 条 error → 该步恒红，
+      # 把后面的 mvn verify（单测 + 覆盖率）整段遮断，等于全仓从未有过任何静态检查。
+      # 现改为：Maven 只出报告（checkstyle:checkstyle 不判失败），由脚本按两条可执行判据判定：
+      #   C1 本次改动涉及的 .java 文件 0 违规（新代码当场拦住，含 AI 生成代码）
+      #   C2 每模块存量只减不增（data/checkstyle-baseline.json 棘轮，下降会提示下调基线）
+      - name: Checkstyle 增量红线 + 存量棘轮
+        working-directory: ydsz-cloud
+        run: |
+          mvn -B checkstyle:checkstyle
+          python3 data/scripts/check-checkstyle-delta.py --self-test
+          python3 data/scripts/check-checkstyle-delta.py --base "$BASE_REF" --list-top 5
+
+      # 原 Step 4a/4b/4d（错误码 i18n 覆盖度、SpringDoc @Operation 覆盖率、DDL 三方言同步）
+      # 引用的 check-error-code-i18n.py / check-springdoc-coverage.py / check-ddl-dialect-sync.py
+      # 三个脚本在两个仓库中均不存在，属伪门禁，已从 CI 移除。
+      # 待补脚本后重新接入：i18n 与错误码命名空间见报告 B1-12，DDL 方言见 B1-10，@Operation 覆盖率见 B1-9。
+
       # Step 4c: Performance Budget Gate（性能预算存在性检查 — baseline 模式）
       - name: Performance Budget Gate
         working-directory: ydsz-cloud
@@ -121,19 +156,29 @@ jobs:
 
           echo "[BUDGET-PASS] Performance budget baseline validated successfully"
 
-      # Step 4d: DDL 三方言同步检查（观察模式，门禁逐步推进）
-      - name: DDL 三方言同步检查
-        working-directory: ydsz-cloud
-        run: |
-          python data/scripts/check-ddl-dialect-sync.py \
-            --sqls-root ./sqls 2>&1 || echo "[CONTINUE] DDL check finished (observe mode)"
-
       # Step 5: Maven verify
+      # 注意：本步骤当前预期为红 —— 存量 132 个失败测试（见报告 B1-2 遗留清单：
+      # 66 UnnecessaryStubbing / 32 ServletException 冒烟 / 20 AssertionError（含 4 ArchUnit）/ 2 ExtensionContext）。
+      # 覆盖率阈值已改为每模块棘轮（只减不增），因此 jacoco:check 不会再因"历史欠账"误红，
+      # 一旦转红即说明本次改动真的降低了该模块覆盖率。
       - name: Maven verify (Compile + Unit Test + Integration Test)
         working-directory: ydsz-cloud
         run: mvn verify -B
         # 26.09-29: 移除 -fae 参数，改为 fail-fast 模式，确保每个模块的测试失败都能立即阻断
         # （此前 -fae 导致中间失败被遮断，问题容易累积；覆盖率门禁上调后需更严格）
+
+      # Step 5a: 增量行覆盖率门禁（云顶编码规范 §14.7：增量 ≥ 40% 阻断 PR）
+      # 全量阈值防的是"覆盖率倒退"，防不住"新增代码 0 测试"；本步骤只看本次 diff 的
+      # src/main/java 新增可执行行。fail-closed：改动模块缺 jacoco.xml 直接判错，
+      # "没跑测试"不会被读成"覆盖率 100%"。
+      # if: always() —— Step 5 因存量测试失败而红时，本步骤仍给出覆盖率结论（可能附带
+      # "缺报告模块"列表），让两个信号各自可见，而不是被 fail-fast 完全遮断。
+      - name: 增量行覆盖率门禁（≥40%）
+        if: always()
+        working-directory: ydsz-cloud
+        run: |
+          python3 data/scripts/check-diff-coverage.py --self-test
+          python3 data/scripts/check-diff-coverage.py --base "$BASE_REF" --fail-under 40 --show-files
 
       # Step 6: 测试报告归档（surefire-reports / failsafe-reports 产物收集 — 云顶编码规范 §14.4）
       # 由 Maven Surefire 与 Failsafe 插件在 target/surefire-reports 与 target/failsafe-reports 生成的 XML 报告
@@ -149,6 +194,8 @@ jobs:
           retention-days: 30
 
       # Step 7: JUnit 测试趋势与报告（Test Reporter — 提供可视化测试报告与失败标注）
+      # fail-on-error 原为 false：报告解析失败（XML 缺失/损坏/路径写错）会被吞成"绿"，
+      # 与 Step 6 的 if-no-files-found: warn 叠加后，"测试报告为空"永远不像事故 → 改 fail-closed。
       - name: 测试报告注解（Test Report Annotation）
         if: always()
         uses: dorny/test-reporter@v1
@@ -158,7 +205,7 @@ jobs:
             **/target/surefire-reports/*.xml
             **/target/failsafe-reports/*.xml
           reporter: java-junit
-          fail-on-error: false
+          fail-on-error: true
 
       # Step 8: JaCoCo 覆盖率报告归档
       - name: 归档 JaCoCo 覆盖率报告

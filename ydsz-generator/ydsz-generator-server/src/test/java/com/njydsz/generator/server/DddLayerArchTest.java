@@ -22,8 +22,9 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 @AnalyzeClasses(
     packages = "com.njydsz.generator",
     importOptions = {
-        ImportOption.DoNotIncludeTests.class,
-        ImportOption.DoNotIncludeJars.class
+        ImportOption.DoNotIncludeTests.class
+        // 不能用 DoNotIncludeJars：..domain.. 类在本模块的 -domain 依赖 jar 里，排除 jar 即扫不到
+        // domain 类 = 三条 domain 守护退化成 "failed to check any classes"，分层守护从未真正生效。
     }
 )
 @DisplayName("DDD 分层守护 — generator 模块")

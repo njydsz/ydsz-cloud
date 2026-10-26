@@ -19,9 +19,9 @@ import java.util.zip.ZipInputStream;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -46,7 +46,6 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class BatchImportApplicationService {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
@@ -65,6 +64,19 @@ public class BatchImportApplicationService {
    * <p>使用 ObjectProvider 延迟获取，Bean 不存在时降级为当前线程串行执行，避免启动失败。
    */
   private final ObjectProvider<Executor> batchImportExecutorProvider;
+
+  /**
+   * 批量导入应用服务。
+   *
+   * @param fileApplicationServiceProvider 单文件服务（不可用时降级为错误结果）
+   * @param batchImportExecutorProvider 并发上传线程池（缺失时降级为串行执行）
+   */
+  public BatchImportApplicationService(
+      ObjectProvider<FileApplicationService> fileApplicationServiceProvider,
+      @Qualifier("nextwikiBatchImportExecutor") ObjectProvider<Executor> batchImportExecutorProvider) {
+    this.fileApplicationServiceProvider = fileApplicationServiceProvider;
+    this.batchImportExecutorProvider = batchImportExecutorProvider;
+  }
 
   /**
    * 获取批量导入线程池，Bean 不存在时返回 null。

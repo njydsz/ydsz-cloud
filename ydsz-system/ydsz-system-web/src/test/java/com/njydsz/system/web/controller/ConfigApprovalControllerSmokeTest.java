@@ -1,5 +1,6 @@
 package com.njydsz.system.web.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -30,20 +33,18 @@ class ConfigApprovalControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private ConfigApprovalService approvalService;
 
-  @org.mockito.Mock
+  @Mock
   private ConfigApprovalConverter approvalConverter;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private ConfigApprovalController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(approvalService.findAll(any(ConfigApprovalQuery.class))).thenReturn(List.of());
-    when(approvalService.findById("approval-001")).thenReturn(null);
   }
 
   @Nested
@@ -53,6 +54,8 @@ class ConfigApprovalControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list all succeeds")
     void should_return_200_when_list_all_succeeds() throws Exception {
+      when(approvalService.findAll(any(ConfigApprovalQuery.class))).thenReturn(List.of());
+
       mockMvc.perform(get("/config/approval/list").param("pageNum", "1").param("pageSize", "20"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -66,14 +69,11 @@ class ConfigApprovalControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when detail query succeeds")
     void should_return_200_when_detail_query_succeeds() throws Exception {
+      when(approvalService.findById("approval-001")).thenReturn(null);
+
       mockMvc.perform(get("/config/approval/{id}", "approval-001"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T> T any(Class<T> clazz) {
-    return org.mockito.ArgumentMatchers.any(clazz);
   }
 }

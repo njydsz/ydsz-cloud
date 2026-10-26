@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -29,14 +30,18 @@ class ScimControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
+  @Mock
+  private UserAccountService userAccountService;
+
+  @Mock
+  private ScimPatchHandler scimPatchHandler;
+
   @BeforeEach
   void setUp() {
-    UserAccountService userAccountService = org.mockito.Mockito.mock(UserAccountService.class);
     ScimProperties scimProperties = new ScimProperties();
     scimProperties.setAllowCreate(true);
-    ScimPatchHandler scimPatchHandler = org.mockito.Mockito.mock(ScimPatchHandler.class);
-    when(userAccountService.list()).thenReturn(List.of());
-    ScimController controller = new ScimController(userAccountService, scimProperties, scimPatchHandler);
+    ScimController controller =
+        new ScimController(userAccountService, scimProperties, scimPatchHandler);
     mockMvc = standaloneSetup(controller);
   }
 
@@ -47,6 +52,8 @@ class ScimControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list users succeeds")
     void should_return_200_when_list_users_succeeds() throws Exception {
+      when(userAccountService.list()).thenReturn(List.of());
+
       mockMvc.perform(get("/scim/v2/Users").param("startIndex", "1").param("count", "20"))
           .andExpect(status().isOk());
     }

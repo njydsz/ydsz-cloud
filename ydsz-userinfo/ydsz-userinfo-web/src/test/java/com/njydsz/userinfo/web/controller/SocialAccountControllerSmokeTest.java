@@ -1,19 +1,22 @@
 package com.njydsz.userinfo.web.controller;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.server.auth.SocialAuthService;
@@ -23,6 +26,8 @@ import com.njydsz.userinfo.server.auth.SocialAuthService;
  *
  * <p>验证第三方账号绑定查询端点可正确返回 HTTP 200 + YdszResponse 信封结构。
  *
+ * <p>端点通过 {@code RequestContext.getUserId()} 取当前用户，故测试需先写入请求上下文。
+ *
  * @author ydsz-smoke-test
  * @since 26.10.09
  */
@@ -30,14 +35,19 @@ class SocialAccountControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
+  @Mock
+  private SocialAuthService socialAuthService;
+
   @BeforeEach
   void setUp() {
-    SocialAuthService socialAuthService = org.mockito.Mockito.mock(SocialAuthService.class);
     SocialAuthProperties socialAuthProperties = new SocialAuthProperties();
-    socialAuthProperties.setProviders(java.util.Map.of());
-    when(socialAuthService.listBindings(anyString())).thenReturn(List.of());
-    SocialAccountController controller = new SocialAccountController(socialAuthService, socialAuthProperties);
-    mockMvc = standaloneSetup(controller);
+    socialAuthProperties.setProviders(Map.of());
+    mockMvc = standaloneSetup(new SocialAccountController(socialAuthService, socialAuthProperties));
+  }
+
+  @AfterEach
+  void tearDown() {
+    RequestContext.clear();
   }
 
   @Nested
@@ -47,6 +57,10 @@ class SocialAccountControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when bindings query succeeds")
     void should_return_200_when_bindings_query_succeeds() throws Exception {
+      RequestContext.setUserId("user-001");
+
+      when(socialAuthService.listBindings("user-001")).thenReturn(List.of());
+
       mockMvc.perform(get("/profile/social/bindings"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -60,6 +74,10 @@ class SocialAccountControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when platforms query succeeds")
     void should_return_200_when_platforms_query_succeeds() throws Exception {
+      RequestContext.setUserId("user-001");
+
+      when(socialAuthService.listBindings("user-001")).thenReturn(List.of());
+
       mockMvc.perform(get("/profile/social/platforms"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

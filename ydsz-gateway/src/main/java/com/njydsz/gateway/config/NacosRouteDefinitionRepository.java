@@ -1,5 +1,6 @@
 package com.njydsz.gateway.config;
 
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,12 +15,12 @@ import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionRepository;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.io.ClassPathResource;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.JsonType;
-import org.springframework.core.io.ClassPathResource;
 
 /**
  * Nacos 动态路由仓库。
@@ -29,9 +30,7 @@ import org.springframework.core.io.ClassPathResource;
  * <h3>Nacos 配置格式</h3>
  *
  * <p>DataId: {@code gateway-routes.json}（可通过 {@code ydsz.gateway.dynamic-routes.data-id} 配置） <br>
- * Group: 当前环境对应的 group（dev/sit/uat/prod）
- *
- * <p>JSON 数组格式，每项为一个 {@link RouteDefinition}：
+ * Group: 当前环境对应的 group（dev/sit/uat/prod） * <p>JSON 数组格式，每项为一个 {@link RouteDefinition}：
  *
  * <pre>
  * [
@@ -47,9 +46,12 @@ import org.springframework.core.io.ClassPathResource;
  * ]
  * </pre>
  *
- * <h3>与 Java 路由配置的关系</h3>
+ * <h3>与静态路由的关系</h3>
  *
- * <p>Nacos 路由优先于 {@link GatewayRouteConfig} 中的 Java 路由。 若 Nacos 中无路由配置（空或解析失败），则回退到 Java 路由。
+ * <p>本仓库由 {@link NacosRouteAutoConfiguration} 在 {@code ydsz.gateway.dynamic-routes.enabled=true}
+ * 时装配。它提供的是<b>整份路由定义</b>：与 application.yml 的静态生成块同 id 时覆盖静态定义，
+ * 因此两份清单必须逐条等价（由 data/scripts/gen-gateway-routes.py 生成、check-gateway-routes.py 校验）。
+ * Nacos 中无配置或解析失败时本仓库返回空，请求继续按静态清单转发。
  *
  * <h3>设计说明</h3>
  *
@@ -233,7 +235,9 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
         return false;
       }
       // 从 YAML 注释中抽取 JSON 数组部分（routes-nacos.yaml 同时含注释说明和 JSON）
-      String yamlContent = new String(resource.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+      String yamlContent =
+          new String(
+              resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
       String jsonContent = extractJsonFromYamlDoc(yamlContent);
       if (jsonContent == null || jsonContent.isBlank()) {
         log.warn("[NacosRoutes] 本地兜底文件未找到有效 JSON 路由定义");

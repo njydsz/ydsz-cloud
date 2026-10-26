@@ -37,10 +37,14 @@ spring:
     timeout-per-shutdown-phase: 30s
   cloud:
     gateway:
-      # PROD 关闭自动服务发现路由（仅使用 Nacos 显式路由）
-      discovery:
-        locator:
-          enabled: false
+      server:
+        webflux:
+          # PROD 关闭自动服务发现路由（路由只来自 routes-nacos.yaml 清单）
+          # 前缀必须是 spring.cloud.gateway.server.webflux.*：5.0.2 已删除旧前缀，
+          # 写旧前缀不会报错只会静默失效（历史上此处正是如此）。
+          discovery:
+            locator:
+              enabled: false
 
 # =====================================================================
 # YDSZ · Gateway · PROD 环境特有配置

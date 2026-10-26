@@ -116,7 +116,9 @@ class FlowInstanceStateMachineTest {
         // RUNNING 不能回到 DRAFT
         "RUNNING, DRAFT",
         // SUSPENDED 非法目标
-        "SUSPENDED, SUSPENDED",
+        // 注：原此处有 "SUSPENDED, SUSPENDED" 断言为非法，与同文件自反性用例（任意状态 → 自身 = 合法）、
+        // FlowInstanceStatus.canTransitTo 的 `this == target -> true`、以及 changeStatus 幂等重放语义直接矛盾，
+        // 属重复且相反的行，已移除（不是放宽：自反性在本类另有两个用例覆盖全部 8 个状态）。
         "SUSPENDED, COMPLETED",
         "SUSPENDED, ROLLED_BACK",
         "SUSPENDED, DRAFT",

@@ -6,38 +6,54 @@
 #  说明:      通过 bootstrap.yml shared-configs 引入，所有环境共享。
 #              环境特有配置（CORS Origin / 日志级别 / 连接池大小等）
 #              仍在各环境 ydsz-gateway-{profile}.yaml 中覆盖。
+#
+#  ⚠ 加载前提：bootstrap.yml 里 spring.cloud.nacos.config.enabled=false 时，
+#     本文件（及全部 config/ydsz-gateway-*.yaml）不会被加载，属于「待生效配置」。
+#     本地开发实际生效的是 src/main/resources/application.yml +
+#     spring.config.import 的 docs/nacos-config/*.yml。
+#     生产/联调必须先开 Nacos 配置中心，否则下列所有策略（请求体上限、重试、
+#     超时、灰度负载均衡）都等于没配。
+#
+#  ⚠ 前缀：Spring Cloud Gateway 5.0.2 的 174 个网关属性全部位于
+#     spring.cloud.gateway.server.webflux.*，旧 spring.cloud.gateway.* 前缀已不存在。
+#     写错前缀不会报错、只会静默忽略，历史上 default-filters / httpclient 因此全量失效。
 # =====================================================================
 
 spring:
   cloud:
     gateway:
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
-      # P2-1 安全修复：globalcors 已移除，CORS 改由 ydsz.gateway.cors.allowed-origin 单一可信来源控制
-      # 避免 CorsWebFilter 与 globalcors 双重注册导致行为不确定
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
-        # P0-4: 请求体大小限制 10MB（防 DoS）
-        - RequestSize=10485760
-        # P0-阶段二-5: 网关层重试（仅对 GET 幂等请求重试，避免非幂等请求重复执行）
-        - name: Retry
-          args:
-            retries: 3
-            statuses: BAD_GATEWAY,GATEWAY_TIMEOUT,SERVICE_UNAVAILABLE
-            methods: GET,OPTIONS
-            backoff:
-              firstBackoff: 100ms
-              maxBackoff: 500ms
-              factor: 2
-              basedOnPreviousValue: true
-      # P0-3: 连接超时 + 响应超时（防雪崩）
-      httpclient:
-        connect-timeout: 3000
-        response-timeout: 30s
-        websocket:
-          max-frame-payload-length: 65536
+      server:
+        webflux:
+          discovery:
+            locator:
+              # 必须保持 false：开启后 SCG 按服务名自动追加 /{serviceId}/** 路由，
+              # 绕过路由清单的 StripPrefix 与鉴权前缀约定，等于第三个路由来源。
+              # （历史值 true 写在已失效的旧前缀下，从未真正生效过。）
+              enabled: false
+              lower-case-service-id: true
+          # P2-1 安全修复：globalcors 已移除，CORS 改由 ydsz.gateway.cors.allowed-origin 单一可信来源控制
+          # 避免 CorsWebFilter 与 globalcors 双重注册导致行为不确定
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+            # P0-4: 请求体大小限制 10MB（防 DoS）
+            - RequestSize=10485760
+            # P0-阶段二-5: 网关层重试（仅对 GET 幂等请求重试，避免非幂等请求重复执行）
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,GATEWAY_TIMEOUT,SERVICE_UNAVAILABLE
+                methods: GET,OPTIONS
+                backoff:
+                  firstBackoff: 100ms
+                  maxBackoff: 500ms
+                  factor: 2
+                  basedOnPreviousValue: true
+          # P0-3: 连接超时 + 响应超时（防雪崩）
+          httpclient:
+            connect-timeout: 3000
+            response-timeout: 30s
+            websocket:
+              max-frame-payload-length: 65536
     loadbalancer:
       configurations: gray
       nacos:
@@ -48,7 +64,15 @@ spring:
 # =====================================================================
 ydsz:
   gateway:
-    # P0-A1: Nacos 动态路由（唯一路由入口）
+    # P0-A1 + B0-9：动态路由是「可选覆盖层」，不是唯一入口。
+    #   生效条件（两条都要满足）：
+    #     1) 本文件被加载（即 spring.cloud.nacos.config.enabled=true）
+    #     2) ydsz.gateway.dynamic-routes.enabled=true
+    #   满足后由 NacosRouteAutoConfiguration 装配 NacosRouteDefinitionRepository，
+    #   从 DataId gateway-routes.json 读取并覆盖同 id 的静态路由；
+    #   不满足时生效的是 application.yml 中由 routes-nacos.yaml 生成的静态路由。
+    #   两条链路的唯一人工维护源都是 ydsz-gateway/src/main/resources/routes-nacos.yaml，
+    #   data/scripts/check-gateway-routes.py 在 CI 校验二者逐条等价。
     dynamic-routes:
       enabled: true
       data-id: gateway-routes.json

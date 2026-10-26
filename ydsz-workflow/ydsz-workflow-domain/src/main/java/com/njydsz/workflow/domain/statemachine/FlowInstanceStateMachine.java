@@ -146,16 +146,18 @@ public class FlowInstanceStateMachine {
    *
    * <p>适用于前端展示可用操作按钮、或业务层需要动态判断可用操作的场景。
    *
+   * <p>集合内容与 {@link FlowInstanceStatus#canTransitTo} 严格同源：规则表按状态穷举，终态里没有
+   * 出边的状态返回空集合。<b>COMPLETED 是"终态但有出边"的例外</b>（撤销已完成实例 → ROLLED_BACK），
+   * 因此不能用 {@code isTerminal()} 提前短路——曾经这样做，导致 COMPLETED_TRANSITIONS 表不可达、
+   * 前端拿到的可用操作集永远不含"撤销"，而 {@code requireTransition(COMPLETED, ROLLED_BACK)} 却放行。
+   *
    * @param current 当前状态（不可为 null）
-   * @return 可流转的目标状态集合（不可变集合，终态返回空集合）
-   * @throws IllegalArgumentException 当 current 为 null 时
+   * @return 可流转的目标状态集合（不可变集合，无出边的状态返回空集合）
+   * @throws WorkflowException 当 current 为 null 时
    */
   public Set<FlowInstanceStatus> getAvailableTransitions(FlowInstanceStatus current) {
     if (current == null) {
       throw new WorkflowException("workflow.validation.current_status_required", I18n.message("workflow.validation.current_status_required"));
-    }
-    if (current.isTerminal()) {
-      return Set.of();
     }
     Set<FlowInstanceStatus> transitions = RUNNING_TRANSITIONS.get(current);
     if (transitions != null) {

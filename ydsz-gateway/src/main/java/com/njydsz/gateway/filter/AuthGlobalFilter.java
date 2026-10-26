@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -58,7 +59,7 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  */
 @Slf4j
 @Component
-@lombok.RequiredArgsConstructor
+@RequiredArgsConstructor
 @ConditionalOnProperty(
     prefix = "ydsz.gateway.filter",
     name = "auth",

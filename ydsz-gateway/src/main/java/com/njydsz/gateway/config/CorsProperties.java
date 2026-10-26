@@ -27,8 +27,14 @@ import com.njydsz.common.core.constant.HeaderConstants;
  *       max-age-seconds: 3600
  * }</pre>
  *
- * <p><b>凭据模式与通配符互斥校验：</b> 当 {@code allow-credentials=true} 时，{@code allowed-origin} 不得为 {@code *}，
- * 必须在 {@link GatewayFilterConfig#corsWebFilter(CorsProperties)} 中校验。
+ * <p><b>多来源写法：</b>{@code allowed-origin} 是字符串但按逗号切分，
+ * {@code http://localhost:5600,https://ydsz.example.com} 会被解析为两个 Origin 模式；
+ * 环境变量注入多值时依赖该行为。
+ *
+ * <p><b>凭据模式与通配符互斥校验：</b> 当 {@code allow-credentials=true} 时，
+ * {@code allowed-origin} 不得包含裸通配符 {@code *}（{@code http://localhost:*} 这类
+ * 带 scheme 的端口通配不在禁止范围），校验在
+ * {@link GatewayFilterConfig#corsWebFilter(CorsProperties)} 启动时执行，失败即阻止启动。
  *
  * @author ydsz-team
  * @since 26.10.01
@@ -37,12 +43,14 @@ import com.njydsz.common.core.constant.HeaderConstants;
 public class CorsProperties {
 
   /**
-   * 允许的单一可信来源（精确 Origin，不含路径）。
+   * 允许的 Origin 模式，逗号分隔（精确 Origin 或带 scheme 的端口通配，不含路径）。
    *
-   * <p>示例：{@code https://ydsz.example.com}。 默认值 {@code https://ydsz.example.com} 仅作为占位，生产环境必须通过
-   * Nacos 配置替换。
+   * <p>示例：{@code https://ydsz.example.com}、
+   * {@code http://localhost:5600,http://localhost:5601}。 默认值
+   * {@code https://ydsz.example.com} 仅作为占位，生产环境必须通过 Nacos 或环境变量替换。
    *
-   * <p>凭据模式下不得为 {@code *}，由 {@link com.njydsz.gateway.config.GatewayFilterConfig} 启动时校验。
+   * <p>凭据模式下不得含裸 {@code *}，且不得解析为空，由
+   * {@link com.njydsz.gateway.config.GatewayFilterConfig} 启动时校验。
    */
   private String allowedOrigin = "https://ydsz.example.com";
 

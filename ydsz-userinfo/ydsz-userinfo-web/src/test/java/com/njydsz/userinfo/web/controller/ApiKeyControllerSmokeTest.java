@@ -12,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -31,18 +33,15 @@ class ApiKeyControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private ApiKeyService apiKeyService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private ApiKeyController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(apiKeyService.pageKeys(any(ApiKeyPageQuery.class)))
-        .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
-    when(apiKeyService.listMyKeys()).thenReturn(List.of());
   }
 
   @Nested
@@ -52,6 +51,9 @@ class ApiKeyControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when page query succeeds")
     void should_return_200_when_page_query_succeeds() throws Exception {
+      when(apiKeyService.pageKeys(any(ApiKeyPageQuery.class)))
+          .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
+
       mockMvc.perform(get("/apikey").param("pageNum", "1").param("pageSize", "20"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -65,6 +67,8 @@ class ApiKeyControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list succeeds")
     void should_return_200_when_list_succeeds() throws Exception {
+      when(apiKeyService.listMyKeys()).thenReturn(List.of());
+
       mockMvc.perform(get("/apikey/all"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

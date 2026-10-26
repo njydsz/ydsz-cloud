@@ -10,6 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -28,17 +30,15 @@ class FrontendInitControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private FrontendInitService frontendInitService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private FrontendInitController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(frontendInitService.getInitData()).thenReturn(FrontendInitVO.builder().build());
-    when(frontendInitService.getInitDataWithDicts(anyList())).thenReturn(FrontendInitVO.builder().build());
   }
 
   @Nested
@@ -48,6 +48,8 @@ class FrontendInitControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when init succeeds")
     void should_return_200_when_init_succeeds() throws Exception {
+      when(frontendInitService.getInitData()).thenReturn(FrontendInitVO.builder().build());
+
       mockMvc.perform(get("/system/init"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -61,6 +63,9 @@ class FrontendInitControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when init with dicts succeeds")
     void should_return_200_when_init_with_dicts_succeeds() throws Exception {
+      when(frontendInitService.getInitDataWithDicts(anyList()))
+          .thenReturn(FrontendInitVO.builder().build());
+
       mockMvc.perform(get("/system/init/dicts").param("dictTypes", "user_status,gender"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

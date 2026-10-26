@@ -145,6 +145,12 @@ public class FlowTaskStateMachine {
    *
    * <p>适用于前端展示可用操作按钮、或业务层需要动态判断可用操作的场景。
    *
+   * <p>与 {@link FlowInstanceStateMachine#getAvailableTransitions} 的差异：本方法可以安全地用
+   * {@code isTerminal()} 提前短路，因为 {@link FlowTaskStatus} 的 5 个终态在
+   * {@link FlowTaskStatus#canTransitTo} 里一律返回 false，规则表也不含任何终态 key；而实例状态机的
+   * COMPLETED 是"终态但有出边"（→ ROLLED_BACK），短路会让那条出边不可达。改本方法前请先确认
+   * 枚举侧不存在"终态出边"，否则此处必须与规则表同源。
+   *
    * @param current 当前状态（不可为 null）
    * @return 可流转的目标状态集合（不可变集合，终态返回空集合）
    * @throws IllegalArgumentException 当 current 为 null 时

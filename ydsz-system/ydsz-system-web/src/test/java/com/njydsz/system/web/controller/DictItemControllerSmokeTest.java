@@ -12,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -33,27 +35,21 @@ class DictItemControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private DictItemService dictItemService;
 
-  @org.mockito.Mock
+  @Mock
   private DictItemBatchService dictItemBatchService;
 
-  @org.mockito.Mock
+  @Mock
   private DictItemImportService dictItemImportService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private DictItemController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(dictItemService.page(any(DictItemPageQuery.class)))
-        .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
-    when(dictItemService.getById("item-001")).thenReturn(null);
-    when(dictItemService.listEnabledByTypeCode("order_status")).thenReturn(List.of());
-    when(dictItemService.listChildren("0")).thenReturn(List.of());
-    when(dictItemService.buildTree("region")).thenReturn(List.of());
   }
 
   @Nested
@@ -63,7 +59,40 @@ class DictItemControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when page query succeeds")
     void should_return_200_when_page_query_succeeds() throws Exception {
+      when(dictItemService.page(any(DictItemPageQuery.class)))
+          .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
+
       mockMvc.perform(get("/dict/item/page").param("pageNum", "1").param("pageSize", "20"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /dict/item/{id}")
+  class GetById {
+
+    @Test
+    @DisplayName("should return 200 when get by id succeeds")
+    void should_return_200_when_get_by_id_succeeds() throws Exception {
+      when(dictItemService.getById("item-001")).thenReturn(null);
+
+      mockMvc.perform(get("/dict/item/{id}", "item-001"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /dict/item/children/{parentId}")
+  class ListChildren {
+
+    @Test
+    @DisplayName("should return 200 when list children succeeds")
+    void should_return_200_when_list_children_succeeds() throws Exception {
+      when(dictItemService.listChildren("0")).thenReturn(List.of());
+
+      mockMvc.perform(get("/dict/item/children/{parentId}", "0"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
     }
@@ -76,6 +105,8 @@ class DictItemControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list by type succeeds")
     void should_return_200_when_list_by_type_succeeds() throws Exception {
+      when(dictItemService.listEnabledByTypeCode("order_status")).thenReturn(List.of());
+
       mockMvc.perform(get("/dict/item/type/{typeCode}", "order_status"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -106,6 +137,8 @@ class DictItemControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when build tree succeeds")
     void should_return_200_when_build_tree_succeeds() throws Exception {
+      when(dictItemService.buildTree("region")).thenReturn(List.of());
+
       mockMvc.perform(get("/dict/item/tree/{typeCode}", "region"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

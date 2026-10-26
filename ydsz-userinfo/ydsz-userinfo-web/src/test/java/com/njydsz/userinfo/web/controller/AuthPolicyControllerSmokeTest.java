@@ -12,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -30,17 +32,15 @@ class AuthPolicyControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private AuthPolicyService authPolicyService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private AuthPolicyController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(authPolicyService.findByPage(any(AuthPolicyPageQuery.class))).thenReturn(List.of());
-    when(authPolicyService.findByTenantId("tenant-001")).thenReturn(null);
   }
 
   @Nested
@@ -50,6 +50,8 @@ class AuthPolicyControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when page query succeeds")
     void should_return_200_when_page_query_succeeds() throws Exception {
+      when(authPolicyService.findByPage(any(AuthPolicyPageQuery.class))).thenReturn(List.of());
+
       mockMvc.perform(get("/auth-policy/page").param("pageNum", "1").param("pageSize", "20"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -63,6 +65,8 @@ class AuthPolicyControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when get by tenant id succeeds")
     void should_return_200_when_get_by_tenant_id_succeeds() throws Exception {
+      when(authPolicyService.findByTenantId("tenant-001")).thenReturn(null);
+
       mockMvc.perform(get("/auth-policy/{tenantId}", "tenant-001"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

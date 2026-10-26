@@ -1,8 +1,5 @@
 package com.njydsz.userinfo.web.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -14,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -33,18 +32,15 @@ class OAuth2ApplicationControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private OAuth2ApplicationService applicationService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private OAuth2ApplicationController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(applicationService.page(any(), any(), anyInt(), anyInt()))
-        .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
-    when(applicationService.getById(anyString())).thenReturn(null);
   }
 
   @Nested
@@ -54,6 +50,10 @@ class OAuth2ApplicationControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when page query succeeds")
     void should_return_200_when_page_query_succeeds() throws Exception {
+      // status/keyword 未传时 Controller 传入 null；pageNum/pageSize 走 @RequestParam 默认值
+      when(applicationService.page(null, null, 1, 20))
+          .thenReturn(PageResponse.success(0L, 1L, 20L, List.of()));
+
       mockMvc.perform(get("/admin/oauth2/applications").param("pageNum", "1").param("pageSize", "20"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -67,6 +67,8 @@ class OAuth2ApplicationControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when get by id succeeds")
     void should_return_200_when_get_by_id_succeeds() throws Exception {
+      when(applicationService.getById("app-001")).thenReturn(null);
+
       mockMvc.perform(get("/admin/oauth2/applications/{id}", "app-001"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

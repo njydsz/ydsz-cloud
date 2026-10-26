@@ -123,7 +123,7 @@ public class SemanticLlmCache {
     // L1: 本地 Caffeine 缓存查询（无网络开销）
     CachedLlmResponse l1Result = l1Cache.getIfPresent(key);
     if (l1Result != null) {
-      log.debug("[SemanticCache] L1 命中: key={}", key.substring(0, LOG_KEY_TRUNCATE_LENGTH) + "...");
+      log.debug("[SemanticCache] L1 命中: key={}", truncateKeyForLog(key));
       return l1Result;
     }
     // L2: Redis 分布式缓存查询
@@ -137,7 +137,7 @@ public class SemanticLlmCache {
         if (result != null) {
           l1Cache.put(key, result);
         }
-        log.debug("[SemanticCache] L2 命中: key={}", key.substring(0, LOG_KEY_TRUNCATE_LENGTH) + "...");
+        log.debug("[SemanticCache] L2 命中: key={}", truncateKeyForLog(key));
         return result;
       }
     } catch (Exception e) {
@@ -172,7 +172,7 @@ public class SemanticLlmCache {
       redisCollectionOps.zAdd(cacheKeyBuilder.semanticLruIndex(), key, BigDecimal.valueOf(Instant.now().toEpochMilli()));
       evictIfOverCapacity();
       log.debug(
-          "[SemanticCache] 缓存写入: key={}, ttl={}min", key.substring(0, LOG_KEY_TRUNCATE_LENGTH) + "...", ttl.toMinutes());
+          "[SemanticCache] 缓存写入: key={}, ttl={}min", truncateKeyForLog(key), ttl.toMinutes());
     } catch (Exception e) {
       log.warn("[SemanticCache] L2 缓存写入失败", e);
     }
@@ -213,6 +213,23 @@ public class SemanticLlmCache {
             + (userMessage != null ? userMessage : "");
     // P1-1 整改：通过 CacheKeyBuilder 生成租户隔离的缓存键，替代硬编码 "agent:llm:cache:" 前缀
     return cacheKeyBuilder.semanticLlm(DigestUtils.sha256Hex(raw));
+  }
+
+  /**
+   * 日志用短键名。
+   *
+   * <p>不能用 {@code key.substring(0, LOG_KEY_TRUNCATE_LENGTH)}：日志实参在调用点即求值，与日志级别无关，
+   * 键长不足时会抛 StringIndexOutOfBoundsException；而 {@link #get} 的 L2 分支被 {@code catch (Exception)}
+   * 包住，异常会被读成"L2 缓存读取失败"并返回 null —— 一次已经命中的缓存被报告成未命中。
+   *
+   * @param key 完整缓存键，可为 null
+   * @return 至多 {@link #LOG_KEY_TRUNCATE_LENGTH} 个字符 + 省略号
+   */
+  private static String truncateKeyForLog(String key) {
+    if (key == null) {
+      return "null";
+    }
+    return key.length() <= LOG_KEY_TRUNCATE_LENGTH ? key : key.substring(0, LOG_KEY_TRUNCATE_LENGTH) + "...";
   }
 
   /**

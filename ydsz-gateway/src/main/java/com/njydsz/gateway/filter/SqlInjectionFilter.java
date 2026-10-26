@@ -47,9 +47,10 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  *   <li>经典注入：' OR '1'='1、' OR 1=1、' OR ''='
  *   <li>堆叠查询：; DROP TABLE、; DELETE FROM、; UPDATE ... SET
  *   <li>联合查询：UNION SELECT、UNION ALL SELECT
- *   <li>执行函数：EXEC(、EXECUTE(、sp_executesql
+ *   <li>执行函数：EXEC(、EXECUTE(、EXEC xp_cmdshell、sp_executesql
  *   <li>注释符：--、/* ... *&#47;
  *   <li>编码绕过：CHAR()、CONCAT()、0x 十六进制
+ *   <li>时间盲注：SLEEP()、BENCHMARK()
  * </ul>
  *
  * <h3>配置方式</h3>
@@ -99,12 +100,15 @@ public class SqlInjectionFilter implements GlobalFilter, Ordered {
   private static final List<Pattern> STRICT_PATTERNS = new ArrayList<>(16);
 
   // ---- 经典注入模式 ----
-  /** 经典恒真注入：' OR '1'='1、' OR 1=1、' OR ''=' */
+  /** 经典恒真注入：' OR '1'='1、' OR 1=1、" OR 1=1、' Or 1=1 */
   private static final Pattern P_CLASSIC_OR =
-      Pattern.compile("('|\")\\s*[OoRr]\\s*('|\")?\\s*\\d+\\s*=\\s*\\d+\\s*('|\")?",
+      Pattern.compile(
+          "('|\")\\s*[Oo][Rr]\\s*('|\")?\\s*\\d+\\s*'?\\s*=\\s*'?\\s*\\d+\\s*('|\")?",
           Pattern.CASE_INSENSITIVE);
+  /** 空串恒真注入：'' OR ''=''、'' OR ''=' （仅 STRICT 模式启用） */
   private static final Pattern P_CLASSIC_OR_EMPTY =
-      Pattern.compile("('|\")\\s*[OoRr]\\s*('|\")?\\s*('|\")\\s*=\\s*('|\")",
+      Pattern.compile(
+          "('|\")\\s*('|\"|`)?\\s*[Oo][Rr]\\s*('|\"|`)?\\s*('|\"|`)?\\s*=\\s*('|\"|`)?",
           Pattern.CASE_INSENSITIVE);
 
   // ---- 堆叠查询模式 ----
@@ -124,11 +128,17 @@ public class SqlInjectionFilter implements GlobalFilter, Ordered {
       Pattern.compile("[Uu][Nn][Ii][Oo][Nn]\\s+[Ss][Ee][Ll][Ee][Cc][Tt]");
 
   // ---- 执行函数模式 ----
-  /** 执行函数：EXEC(、EXECUTE(、sp_executesql */
+  /** 执行函数：EXEC(、EXECUTE(、EXEC xp_cmdshell（可后接括号或对象名） */
   private static final Pattern P_EXEC =
-      Pattern.compile("[Ee][Xx][Ee][Cc][Uu][Tt][Ee]?\\s*\\(");
+      Pattern.compile("\\bEXEC(UTE)?\\b(\\s*\\(|\\s+\\w)", Pattern.CASE_INSENSITIVE);
+  /** MSSQL 动态执行：sp_executesql（原写法 s_p_executesql 多了一个下划线，恒不命中） */
   private static final Pattern P_SP_EXEC =
-      Pattern.compile("[Ss]_[Pp]_[Ee][Xx][Ee][Cc][Uu][Tt][Ee][Ss][Qq][Ll]");
+      Pattern.compile("\\bsp_executesql\\b", Pattern.CASE_INSENSITIVE);
+
+  // ---- 时间盲注模式 ----
+  /** 时间盲注：SLEEP(、BENCHMARK( */
+  private static final Pattern P_TIME_BLIND =
+      Pattern.compile("\\b(SLEEP|BENCHMARK)\\s*\\(", Pattern.CASE_INSENSITIVE);
 
   // ---- 注释符模式 ----
   /** SQL 行注释：-- */
@@ -153,6 +163,7 @@ public class SqlInjectionFilter implements GlobalFilter, Ordered {
     STANDARD_PATTERNS.add(P_UNION_SELECT_SIMPLE);
     STANDARD_PATTERNS.add(P_EXEC);
     STANDARD_PATTERNS.add(P_SP_EXEC);
+    STANDARD_PATTERNS.add(P_TIME_BLIND);
     STANDARD_PATTERNS.add(P_LINE_COMMENT);
     STANDARD_PATTERNS.add(P_BLOCK_COMMENT);
     STANDARD_PATTERNS.add(P_ENCODING_FUNC);

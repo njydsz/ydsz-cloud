@@ -1,7 +1,5 @@
 package com.njydsz.userinfo.web.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -13,9 +11,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
+import com.njydsz.userinfo.domain.vo.UserSessionVO;
 import com.njydsz.userinfo.server.auth.UserBanService;
 import com.njydsz.userinfo.server.auth.UserSessionAdminService;
 
@@ -31,23 +32,18 @@ class AdminSessionControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private UserBanService userBanService;
 
-  @org.mockito.Mock
+  @Mock
   private UserSessionAdminService userSessionAdminService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private AdminSessionController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(userBanService.getBanInfo(anyString())).thenReturn(null);
-    when(userSessionAdminService.listUserSessions(anyString())).thenReturn(List.of());
-    when(userSessionAdminService.listAllActiveSessions(any(Integer.class), any(Integer.class)))
-        .thenReturn(List.of());
-    when(userSessionAdminService.getSessionStatistics()).thenReturn(null);
   }
 
   @Nested
@@ -57,9 +53,48 @@ class AdminSessionControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when ban info query succeeds")
     void should_return_200_when_ban_info_query_succeeds() throws Exception {
+      when(userBanService.getBanInfo("user-001")).thenReturn(null);
+
       mockMvc.perform(get("/admin/users/{userId}/ban-info", "user-001"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /admin/users/{userId}/sessions")
+  class GetUserSessions {
+
+    @Test
+    @DisplayName("should return 200 when user sessions query succeeds")
+    void should_return_200_when_user_sessions_query_succeeds() throws Exception {
+      UserSessionVO session = new UserSessionVO();
+      session.setUsername("admin");
+      session.setLoginIp("10.0.0.1");
+      when(userSessionAdminService.listUserSessions("user-001")).thenReturn(List.of(session));
+
+      mockMvc.perform(get("/admin/users/{userId}/sessions", "user-001"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE))
+          .andExpect(jsonPath("$.data[0].username").value("admin"));
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /admin/sessions")
+  class GetAllActiveSessions {
+
+    @Test
+    @DisplayName("should return 200 when all active sessions query succeeds")
+    void should_return_200_when_all_active_sessions_query_succeeds() throws Exception {
+      UserSessionVO session = new UserSessionVO();
+      session.setUsername("admin");
+      when(userSessionAdminService.listAllActiveSessions(1, 20)).thenReturn(List.of(session));
+
+      mockMvc.perform(get("/admin/sessions").param("page", "1").param("size", "20"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE))
+          .andExpect(jsonPath("$.data[0].username").value("admin"));
     }
   }
 
@@ -70,14 +105,11 @@ class AdminSessionControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when session statistics query succeeds")
     void should_return_200_when_session_statistics_query_succeeds() throws Exception {
+      when(userSessionAdminService.getSessionStatistics()).thenReturn(null);
+
       mockMvc.perform(get("/admin/sessions/statistics"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
     }
-  }
-
-  @SuppressWarnings("all")
-  private static <T> T any(Class<T> clazz) {
-    return org.mockito.ArgumentMatchers.any(clazz);
   }
 }

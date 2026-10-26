@@ -32,74 +32,156 @@ spring:
       # Spring Cloud Gateway 5.x（WebFlux）生效前缀为 spring.cloud.gateway.server.webflux
       server:
         webflux:
-          # 本地开发环境静态路由定义（无 Nacos 动态路由时的替代方案）
+          # 本地/单机静态路由：无 Nacos 时的路由来源。内容由 routes-nacos.yaml（唯一手工维护
+          # 的路由清单）生成，CI 执行 gen-gateway-routes.py --check 拦截漂移，请勿在此新增前缀。
           discovery:
             locator:
+              # 必须保持 false：开启后 SCG 会按服务名自动追加 /{serviceId}/** 路由，
+              # 绕过路由清单的 StripPrefix 与鉴权前缀约定，等于第三个路由来源。
               enabled: false
+          # BEGIN GENERATED ROUTES —— 由 data/scripts/gen-gateway-routes.py 生成，禁止手工编辑
           routes:
-            # System 模块 - 系统引擎（含审计、字典、配置、租户、内部 API）
-            - id: ydsz-system
+            - id: ydsz-system-audit
               uri: http://localhost:9001
+              order: -4
               predicates:
-                - Path=/api/system/**,/api/admin/audit/**,/api/app/**,/api/config/**,/api/dict/**,/api/dashboard/**,/api/feature-flag/**,/api/error-codes/**,/api/repeat-submit/**,/api/search/**,/api/tenant/**,/api/tenant-plan/**,/api/variable/**,/api/permission/api/**,/api/file/**,/api/monitor/**,/api/internal/config/**,/api/internal/dict/**,/api/internal/app/**
+                - Path=/api/admin/audit/**
               filters:
                 - StripPrefix=1
-            # Userinfo 模块 - RBAC 身份认证与组织架构
+            - id: ydsz-system-secondary-auth
+              uri: http://localhost:9001
+              order: -4
+              predicates:
+                - Path=/api/auth/secondary-auth/**
+              filters:
+                - StripPrefix=1
+            - id: ydsz-system-internal
+              uri: http://localhost:9001
+              order: -3
+              predicates:
+                - Path=/api/internal/config/**,/api/internal/dict/**,/api/internal/app/**
+              filters:
+                - StripPrefix=1
+            - id: ydsz-userinfo-internal
+              uri: http://localhost:9002
+              order: -3
+              predicates:
+                - Path=/api/internal/user/**,/api/internal/role/**,/api/internal/dept/**,/api/internal/company/**,/api/internal/post/**
+              filters:
+                - StripPrefix=1
+            - id: ydsz-message-internal
+              uri: http://localhost:9004
+              order: -3
+              predicates:
+                - Path=/api/internal/message/**
+              filters:
+                - StripPrefix=1
+            - id: ydsz-cronjob-internal
+              uri: http://localhost:9006
+              order: -3
+              predicates:
+                - Path=/api/internal/cronjob/**
+              filters:
+                - StripPrefix=1
+            - id: ydsz-workflow-internal
+              uri: http://localhost:9005
+              order: -3
+              predicates:
+                - Path=/api/internal/engine/**
+              filters:
+                - StripPrefix=1
+            - id: ydsz-literule-internal
+              uri: http://localhost:9007
+              order: -3
+              predicates:
+                - Path=/api/internal/literule/**
+              filters:
+                - StripPrefix=1
+            - id: ydsz-nextwiki-internal
+              uri: http://localhost:9003
+              order: -3
+              predicates:
+                - Path=/api/internal/space/**,/api/internal/quota/**
+              filters:
+                - StripPrefix=1
+            - id: ydsz-userinfo-direct
+              uri: http://localhost:9002
+              order: -2
+              predicates:
+                - Path=/saml/**,/cas/**,/scim/**,/.well-known/**
+            - id: ydsz-cronjob-console
+              uri: http://localhost:9006
+              order: 1
+              predicates:
+                - Path=/cronjob/*.html
             - id: ydsz-userinfo
               uri: http://localhost:9002
+              order: 0
               predicates:
-                - Path=/api/auth/**,/api/auth-policy/**,/api/role/**,/api/permission/**,/api/menu/**,/api/user/**,/api/userinfo/**,/api/dept/**,/api/company/**,/api/post/**,/api/captcha/**,/api/apikey/**,/api/cas/**,/api/sso/**,/api/saml/**,/api/saml-idp-config/**,/api/oauth2/**,/api/webauthn/**,/api/language/**,/api/profile/**,/api/scim/**,/api/self-service/**,/api/social-client-config/**,/api/devices/**,/api/admin/ldap/**,/api/admin/oauth2/**,/api/admin/security/**,/api/admin/sessions/**,/api/admin/users/**
+                - Path=/api/auth/**,/api/auth-policy/**,/api/user/**,/api/userinfo/**,/api/company/**,/api/dept/**,/api/menu/**,/api/post/**,/api/role/**,/api/language/**,/api/oauth2/**,/api/profile/**,/api/captcha/**,/api/self-service/**,/api/webauthn/**,/api/sso/**,/api/devices/**,/api/apikey/**,/api/social-client-config/**,/api/saml-idp-config/**,/api/admin/**,/api/cas/**,/api/saml/**,/api/scim/**,/api/.well-known/**
               filters:
                 - StripPrefix=1
-            # Message 模块 - 消息引擎
-            - id: ydsz-message
-              uri: http://localhost:9004
+            - id: ydsz-system
+              uri: http://localhost:9001
+              order: 0
               predicates:
-                - Path=/api/message/**,/api/notify/**,/api/internal/message/**
+                - Path=/api/config/**,/api/dict/**,/api/app/**,/api/variable/**,/api/system/**,/api/tenant/**,/api/tenant-plan/**,/api/permission/**,/api/dashboard/**,/api/feature-flag/**,/api/feature-flags/**,/api/search/**,/api/file/**,/api/error-codes/**,/api/repeat-submit/**,/api/monitor/**
               filters:
                 - StripPrefix=1
-            # CronJob 模块 - 任务引擎
-            - id: ydsz-cronjob
-              uri: http://localhost:9006
-              predicates:
-                - Path=/api/cronjob/**,/api/job/**,/api/internal/cronjob/**
-              filters:
-                - StripPrefix=1
-            # Workflow 模块 - 流程引擎
             - id: ydsz-workflow
               uri: http://localhost:9005
+              order: 0
               predicates:
-                - Path=/api/workflow/**,/api/process/**,/api/internal/engine/**
+                - Path=/api/workflow/**
               filters:
                 - StripPrefix=1
-            # Agent 模块 - 智能引擎
-            - id: ydsz-agent
-              uri: http://localhost:9008
+            - id: ydsz-message
+              uri: http://localhost:9004
+              order: 0
               predicates:
-                - Path=/api/agent/**
+                - Path=/api/message/**
               filters:
                 - StripPrefix=1
-            # NextWiki 模块 - 文件/知识库引擎
+              metadata:
+                response-timeout: 300000
+            - id: ydsz-cronjob
+              uri: http://localhost:9006
+              order: 0
+              predicates:
+                - Path=/api/cronjob/**
+              filters:
+                - StripPrefix=1
             - id: ydsz-nextwiki
               uri: http://localhost:9003
+              order: 0
               predicates:
-                - Path=/api/wiki/**,/api/nextwiki/**,/api/internal/space/**,/api/internal/quota/**
+                - Path=/api/nextwiki/**
               filters:
                 - StripPrefix=1
-            # Literule 模块 - 规则引擎
             - id: ydsz-literule
               uri: http://localhost:9007
+              order: 0
               predicates:
-                - Path=/api/literule/**,/api/rule/**,/api/internal/literule/**
+                - Path=/api/literule/**
               filters:
                 - StripPrefix=1
-            # Generator 模块 - 代码生成引擎
+            - id: ydsz-agent
+              uri: http://localhost:9008
+              order: 0
+              predicates:
+                - Path=/api/agent/**,/api/mcp/**
+              filters:
+                - StripPrefix=1
+              metadata:
+                response-timeout: 120000
             - id: ydsz-generator
               uri: http://localhost:9009
+              order: 0
               predicates:
                 - Path=/api/generator/**
               filters:
                 - StripPrefix=1
+          # END GENERATED ROUTES
   autoconfigure:
     exclude:
       # 线程池 / 文档 / Sentry / WebMVC 自动配置（网关为 WebFlux reactive 栈）

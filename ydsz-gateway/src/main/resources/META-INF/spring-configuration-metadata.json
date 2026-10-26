@@ -1,36 +1,65 @@
 {
-  "groups": [
-    {
-      "name": "spring.cloud.gateway",
-      "type": "org.springframework.cloud.gateway.config.GatewayProperties",
-      "sourceType": "org.springframework.cloud.gateway.config.GatewayProperties"
-    }
-  ],
+  "groups": [],
   "properties": [
     {
-      "name": "spring.cloud.gateway.discovery.locator.enabled",
-      "type": "java.lang.Boolean",
-      "description": "Enable discovery locator"
-    },
-    {
-      "name": "spring.cloud.gateway.discovery.locator.lower-case-service-id",
-      "type": "java.lang.Boolean",
-      "description": "Lower case service id"
-    },
-    {
-      "name": "spring.cloud.gateway.globalcors.cors-configurations",
-      "type": "java.util.Map<java.lang.String, org.springframework.cloud.gateway.config.GlobalCorsProperties>",
-      "description": "Global CORS configurations"
+      "name": "spring.cloud.gateway.routes",
+      "type": "java.util.List<org.springframework.cloud.gateway.route.RouteDefinition>",
+      "description": "Spring Cloud Gateway 5.x 已删除该前缀；本模块路由唯一来源是 routes-nacos.yaml 生成的 spring.cloud.gateway.server.webflux.routes。",
+      "deprecation": {
+        "level": "error",
+        "reason": "Spring Cloud Gateway 5.0.2 起 spring.cloud.gateway.* 前缀不再绑定，写在该前缀下的路由会被静默忽略，等于凭空少一个路由来源（历史故障：网关 5.x 前缀漂移导致生产 404）。",
+        "replacement": "spring.cloud.gateway.server.webflux.routes"
+      }
     },
     {
       "name": "spring.cloud.gateway.default-filters",
       "type": "java.util.List<org.springframework.cloud.gateway.filter.FilterDefinition>",
-      "description": "Default filters"
+      "description": "全局默认过滤器。",
+      "deprecation": {
+        "level": "error",
+        "reason": "5.x 已迁移前缀，旧前缀不绑定。",
+        "replacement": "spring.cloud.gateway.server.webflux.default-filters"
+      }
+    },
+    {
+      "name": "spring.cloud.gateway.discovery.locator.enabled",
+      "type": "java.lang.Boolean",
+      "description": "服务发现自动路由。必须保持 false：开启后 SCG 会按服务名追加 /{serviceId}/** 路由，绕过路由清单的 StripPrefix 与 /api 鉴权前缀约定。",
+      "deprecation": {
+        "level": "error",
+        "reason": "5.x 已迁移前缀，旧前缀不绑定。",
+        "replacement": "spring.cloud.gateway.server.webflux.discovery.locator.enabled"
+      }
+    },
+    {
+      "name": "spring.cloud.gateway.discovery.locator.lower-case-service-id",
+      "type": "java.lang.Boolean",
+      "description": "自动路由服务名小写。",
+      "deprecation": {
+        "level": "error",
+        "reason": "5.x 已迁移前缀，旧前缀不绑定。",
+        "replacement": "spring.cloud.gateway.server.webflux.discovery.locator.lower-case-service-id"
+      }
+    },
+    {
+      "name": "spring.cloud.gateway.globalcors.cors-configurations",
+      "type": "java.util.Map<java.lang.String,org.springframework.web.cors.CorsConfiguration>",
+      "description": "SCG 内置全局 CORS；本项目跨域由 ydsz.gateway.cors（CorsProperties）承担。",
+      "deprecation": {
+        "level": "error",
+        "reason": "5.x 已迁移前缀，旧前缀不绑定。",
+        "replacement": "spring.cloud.gateway.server.webflux.globalcors.cors-configurations"
+      }
     },
     {
       "name": "spring.cloud.gateway.httpclient.websocket.max-frame-payload-length",
       "type": "java.lang.Integer",
-      "description": "WebSocket max frame payload length"
+      "description": "WebSocket 帧上限。",
+      "deprecation": {
+        "level": "error",
+        "reason": "5.x 已迁移前缀，旧前缀不绑定。",
+        "replacement": "spring.cloud.gateway.server.webflux.httpclient.websocket.max-frame-payload-length"
+      }
     }
   ],
   "hints": []

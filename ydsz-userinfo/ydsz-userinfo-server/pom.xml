@@ -11,6 +11,14 @@
     <artifactId>ydsz-userinfo-server</artifactId>
     <name>ydsz-userinfo-server</name>
     <description>Application Layer - Service + AuthService + OAuth2</description>
+    <!-- B1-2 覆盖率棘轮（2026-10-26 实测：mvn -o test jacoco:report）。
+         值 = 本模块 BUNDLE 实测覆盖率向下取整到 0.1%，只可下调不可上调；
+         根 pom 默认 0.01/0.005 是新模块起步线，真正的 PR 门禁是
+         data/scripts/check-diff-coverage.py（增量行覆盖率 >= 40%，云顶编码规范 14.7）。 -->
+    <properties>
+        <jacoco.line.threshold>0.011</jacoco.line.threshold>
+        <jacoco.branch.threshold>0.009</jacoco.branch.threshold>
+    </properties>
     <dependencies>
     <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
     <dependency>

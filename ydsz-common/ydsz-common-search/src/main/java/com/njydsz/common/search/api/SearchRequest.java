@@ -6,6 +6,7 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,6 +27,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
 @Schema(description = "统一搜索请求")
 public class SearchRequest implements Serializable {
 
@@ -129,4 +131,20 @@ public class SearchRequest implements Serializable {
   /** 游标（用于 keyset 分页） */
   @Schema(description = "游标（用于 keyset 分页）")
   private String cursor;
+
+  /**
+   * Spring MVC 查询对象绑定与 Jackson 反序列化要求公共无参构造。
+   *
+   * <p>{@code @Builder.Default} 会把字段初始化器搬进静态方法，因此这里必须显式恢复与 builder
+   * 相同的默认值：否则 {@code GET /search} 绑定出的对象 types/filters/aggregations/roles 为
+   * null（下游遍历直接 NPE），isHighlight / isFuzzy 为 false（高亮与模糊匹配静默失效）。
+   */
+  public SearchRequest() {
+    this.types = new ArrayList<>(4);
+    this.filters = new ArrayList<>(4);
+    this.aggregations = new ArrayList<>(2);
+    this.roles = new ArrayList<>(4);
+    this.isHighlight = true;
+    this.isFuzzy = true;
+  }
 }

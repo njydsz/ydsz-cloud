@@ -1,10 +1,33 @@
 # =====================================================================
 #  YDSZ 网关 — 微服务端配置（Nacos 数据中心）
-#  通过 bootstrap.yml shared-configs 引入
+#  通过 bootstrap.yml shared-configs 引入；本地开发由
+#  ydsz-gateway/src/main/resources/application.yml 的 spring.config.import 直接加载。
 #  依赖 common: tenant, cache, redis, sentry, json, i18n, thread
+#
+#  B0-9 修正记录（原配置在本文件被加载时全部静默失效）：
+#    1) server.port 9010 → 9000：与 bootstrap.yml / 前端 nginx / vite 代理目标统一，
+#       由 check-gateway-routes.py R7 阻断再次漂移。
+#    2) cors.allowed-origins → allowed-origin：CorsProperties 只有 allowedOrigin 字段，
+#       旧键名不会报错也不会生效，CORS 实际一直是 Java 默认值 https://ydsz.example.com。
+#    3) httpclient.connect-timeout / response-timeout / response-timeout-millis：
+#       ydsz.gateway.* 下没有这些键的读取方，超时属于 SCG 原生配置，已移到
+#       spring.cloud.gateway.server.webflux.httpclient.*（5.0.2 生效前缀）。
+#    4) pool.acquire-timeout → pending-acquire-timeout-ms（GatewayHttpClientConfig 字段名）。
+#    5) skywalking.agent.service_name ydzsz-gateway → ydsz-gateway（拼写）。
 # =====================================================================
 server:
-  port: 9010
+  port: 9000
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          httpclient:
+            # P0-3: 连接超时 + 全局响应超时（防雪崩）；单路由可用 metadata response-timeout 覆盖
+            connect-timeout: 2000
+            response-timeout: 30000
+
 ydsz:
   core:
     feature-flags:
@@ -52,19 +75,23 @@ ydsz:
       enabled: true
       apis: []
     cors:
-      allowed-origins: ${GATEWAY_CORS_ORIGINS:http://localhost:3000,http://localhost:8080}
-    response-timeout-millis: 30000
+      # CorsProperties.allowedOrigin：字符串键，按逗号切分多值；旧键名 allowed-origins 无人读取
+      allowed-origin: ${YDSZ_GATEWAY_CORS_ALLOWED_ORIGIN:http://localhost:*}
+    # 响应超时见上方 spring.cloud.gateway.server.webflux.httpclient.response-timeout，
+    # ydsz.gateway.response-timeout-millis 没有读取方，已删除。
     httpclient:
-      connect-timeout: 2000
-      response-timeout: 30000
+      # GatewayHttpClientConfig.PoolProperties 的真实字段名
       pool:
         max-connections: 500
-        acquire-timeout: 5000
-    ip-access:
-      enabled: true
-      static-whitelist:
-        - 10.0.0.0/8
-        - 172.16.0.0/12
+        pending-acquire-timeout-ms: 5000
+        max-idle-time-seconds: 30
+        max-life-time-seconds: 60
+        eviction-interval-seconds: 60
+    # IP 白名单：IpAccessControlProperties（前缀 ydsz.gateway.ip-control，
+    # 旧键 ydsz.gateway.ip-access.* 无任何绑定方，白名单等于未配置）
+    ip-control:
+      whitelist-enabled: true
+      whitelist: ${YDSZ_GATEWAY_IP_WHITELIST:10.0.0.0/8,172.16.0.0/12}
 
 logging:
   pattern:
@@ -85,5 +112,5 @@ management:
 
 skywalking:
   agent:
-    service_name: ydzsz-gateway
+    service_name: ydsz-gateway
     collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}

@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -28,18 +30,15 @@ class DepartmentControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private DepartmentService departmentService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private DepartmentController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(departmentService.list()).thenReturn(List.of());
-    when(departmentService.tree()).thenReturn(List.of());
-    when(departmentService.getById("dept-001")).thenReturn(null);
   }
 
   @Nested
@@ -49,6 +48,8 @@ class DepartmentControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list succeeds")
     void should_return_200_when_list_succeeds() throws Exception {
+      when(departmentService.list()).thenReturn(List.of());
+
       mockMvc.perform(get("/dept/list"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -62,6 +63,8 @@ class DepartmentControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when tree query succeeds")
     void should_return_200_when_tree_query_succeeds() throws Exception {
+      when(departmentService.tree()).thenReturn(List.of());
+
       mockMvc.perform(get("/dept/tree"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -75,6 +78,8 @@ class DepartmentControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when get by id succeeds")
     void should_return_200_when_get_by_id_succeeds() throws Exception {
+      when(departmentService.getById("dept-001")).thenReturn(null);
+
       mockMvc.perform(get("/dept/{id}", "dept-001"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

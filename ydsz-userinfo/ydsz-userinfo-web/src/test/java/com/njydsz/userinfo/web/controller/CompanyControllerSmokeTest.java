@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -28,18 +30,15 @@ class CompanyControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private CompanyService companyService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private CompanyController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
-    when(companyService.list()).thenReturn(List.of());
-    when(companyService.tree()).thenReturn(List.of());
-    when(companyService.getById("company-001")).thenReturn(null);
   }
 
   @Nested
@@ -49,6 +48,8 @@ class CompanyControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list succeeds")
     void should_return_200_when_list_succeeds() throws Exception {
+      when(companyService.list()).thenReturn(List.of());
+
       mockMvc.perform(get("/company/list"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -62,6 +63,8 @@ class CompanyControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when tree query succeeds")
     void should_return_200_when_tree_query_succeeds() throws Exception {
+      when(companyService.tree()).thenReturn(List.of());
+
       mockMvc.perform(get("/company/tree"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
@@ -75,6 +78,8 @@ class CompanyControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when get by id succeeds")
     void should_return_200_when_get_by_id_succeeds() throws Exception {
+      when(companyService.getById("company-001")).thenReturn(null);
+
       mockMvc.perform(get("/company/{id}", "company-001"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));

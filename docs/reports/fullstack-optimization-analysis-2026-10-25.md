@@ -27,6 +27,7 @@
 | S6 | ✅ **nginx 静态缓存两层皆错 + 安全头静默丢失（实施中把根因从"snippet 一行"升级为"结构缺陷"）** | ① `bash/deploy/nginx-sub-apps.conf` 对整段 location 下 `immutable 1y`，而该 location 的 `try_files` 兜底正是 `index.html`；② 主应用 `location /` 反过来对**一切**（含 hash JS）下 `no-store`；③ `nginx.conf:165` 两条 **server 级扩展名正则**——nginx 在"最佳前缀匹配块不含嵌套 location"时让正则胜出，故它们同时劫持主应用与 9 个子应用的静态请求，块内既无 `root` 也无 `=404`，缺文件即由兜底返回 HTML；④ 同一块声明自有 `add_header`，按**不跨层继承**规则使 http 层 CSP/XFO/nosniff/Referrer/Permissions/HSTS 全部静默失效；⑤ 硬编码 `X-CDN-Cache "HIT"` 与真实命中无关 | 发布需强刷/清 CDN；主应用长期缓存反向劣化；静态响应裸奔（无 CSP）；`jse/index-*.js` 缺失时**HTML 当 JS 执行**白屏；观测数据误导排障 | 三层缓存（HTML `no-store` / hash 资源 `immutable`+`=404` / 图片字体 30d / `.map` 404）；`alias`→`root`；安全头单一来源 `security-headers.conf` 并在每个声明 `add_header` 的块重新 include；删除 server 级正则；新增 `pnpm check:nginx`（7 项不变量 + `--self-test` 用修复前反例证伪，8/8 命中）——详见 §十一 B0-5 |
 | S7 | ✅ **设计令牌管线断裂：146 个 `--ydsz-*` 定义从未被应用加载** | 定义在 `comm/@core/ui-kit/design-tokens/src/styles/variables.css`（**146 个变量**，无业务入口 import）；应用实际 import 的 `@ydsz/styles` → `base/design/src/design-tokens/default.css` / `dark.css` 各自 `--ydsz-` 计数为 **0**；消费侧 **29 个** `ydsz-ui` 组件文件用 `var(--ydsz-*)` 且**无 fallback** | kit 组件渲染在**未定义自定义属性**上（取初值），kit 暗色模式失效；且暗色选择器两套机制冲突（`.dark` vs `[data-theme='dark']`） | 把 `variables.css` 接入 `comm/styles` 入口（或生成进 default.css），统一暗色选择器，验收：10/10 构建产物 CSSOM 无未解析 `--ydsz-*` |
 | S8 | ✅ **契约/错误码 CI 门禁指向不存在的文件，恒失败** | `.github/workflows/ci.yml:184` `node bash/gen-error-codes.mjs --check`、`:237` `node bash/contract-notify.mjs`，而 commit `b67c45e67` 已把两者重命名为 `.mts`（磁盘仅 `gen-error-codes.mts`/`contract-notify.mts`）；CI 锁 Node 22，`.mts` 需 `--experimental-strip-types` | 前后端契约漂移检测**事实上从未运行**；`notify` 作业（`needs: contract`）连带失效 | 改文件名 + 加 `--experimental-strip-types`（或 Node 24）；把 `pnpm gen:api:check` 一并纳入门禁 |
+| S9 | ✅ **网关路由双源漂移 + 前端"双剥 `/api`"→ 生产全量 404**（新发现，非原 S 系列） | `git show HEAD` 实测两份路由表已各自漂移：`routes-nacos.yaml` 53 个 pattern vs `application.yml` 66 个 `Path=`，**只在 manifest 15 条、只在 application.yml 28 条**；`/api/notify/**`→9004、`/api/job/**`→9006、`/api/wiki/**`→9003 三条只存在于 application.yml 且后端 `@RequestMapping("/(notify\|job\|wiki)")` 命中 **0**；`bash/deploy/nginx.conf` 的 `location /api/ { rewrite … }` + **10 个** `vite.config.mts` 的 `rewrite(/^\/api/,'')` + 网关 `StripPrefix=1` = 剥两次；`META-INF/spring-configuration-metadata.json` 仍声明 5 个 5.0.2 已删除的 `spring.cloud.gateway.*` 旧键（jar 自带 metadata 里旧键数为 0，即 IDE 会补全**不绑定**的键）；后端 `.github/workflows/ci.yml` Step 3 调 `data/scripts/fix-file-encoding.py`——脚本不存在，job 自该步恒红，**任何后置门禁都不会执行**；同 job 的 Step 4a/4b/4d 另引用 3 个不存在的脚本；前端交叉检出写成 `njydsz/ydsz-micro`（origin 实为自建 Gitea `…/ydszopen/ydsz-micro`）+ `continue-on-error` → R9/R10 从未在前端跑过 | 死路由与错前缀在运行期一律表现为 404，服务侧日志无异常，排障指向错误方向；写错前缀的网关配置静默失效；"门禁已接"是错觉——接在一个必然提前失败的 job 里等于没接 | 路由清单单一来源 + `gen-gateway-routes.py --check` 生成块 + `check-gateway-routes.py` R1–R10（57/57 反例自检，实测 20 路由/1056 路径/9 服务红 0）；nginx 与 10 个 vite 停止剥 `/api`；`/api/v1` 238 行清理并修掉 `gen-contract.py:1205` 的模板再生源；metadata 改为 6 条 error 级 deprecation；新写 `check-file-encoding.py`（28/28 自检，实测 5928 文件红 0）并把两道新门禁排在 Checkstyle/Maven 之前、移除 3 个伪门禁步骤（详见 §十一 B0-9） |
 
 ---
 
@@ -55,10 +56,12 @@
 ## 三、接口单元测试
 
 ✅ 亲自复核的硬事实：全仓 **0 个 `assertThrows`**；**163 个 `*SmokeTest.java`**；`*IT.java` 仅 3 个；根 `pom.xml:97-98` 覆盖率门禁 `line=0.10 / branch=0.05`；`pom.xml:1392` 反常识地**禁用 `@Disabled` 处理**（`junit.jupiter.conditions.deactivate = …DisabledCondition`）。
+> **状态（2026-10-26）**：后两条已由 **B1-2** 修掉 —— 全局阈值换成 21 个模块各自的实测棘轮（根默认 0.01/0.005）+ 新 `check-diff-coverage.py` 增量 ≥40%；`DisabledCondition` 禁用与 `<skipITs>` 硬编码均已移除。`assertThrows`/smoke 结构问题属 B1-3~B1-5。
 
 ◇ 结构画像（子体审计）：201 个真实测试文件 / 573 个 `@Test`（另有 25 个测试文件位于被提交的 `data/scripts/backup_logs/` 源码副本内）；81% 测试文件是 smoke（平均每控制器 1.5 个用例）；纯 Mockito 单测 12 个；`@SpringBootTest` 6 个；Testcontainers 实际使用 2 个文件；真实"业务行为"服务单测约 **18 个**。比例失衡点：`ydsz-common` 1,589 文件 / **4** 测试；`ydsz-workflow` **41 个 SvcImpl / 4 个测试**；`ydsz-gateway` 19 个 filter / 1 个测试。
 
 **与自有规范的对账（这是最刺眼的差距）**：`docs/云顶编码规范.md:2304-2328` 已强制五层金字塔（70/15/5/5/5）与**分模块门禁**（userinfo 增量≥60%、workflow≥55%、literule≥50%、message/cronjob≥45%…），`:2568-2586` 要求增量行覆盖≥40% 阻断 PR、全量≥60%、Pitest≥60%。**实际 CI 只执行了那个 10% 全局 BUNDLE 门禁**；增量门禁、per-module 门禁、Pitest 在 pom 与 workflow 中**均不存在**。此外 ADR-005（前端）仍写着"全仓禁止测试代码（含 `@playwright/test`、`@axe-core/playwright`）"—— 该禁令已在规范 v1.0.8 被反转，ADR 过期未修订。
+> **修正（B1-2 实测，2026-10-26）**：比原判断更糟——那 10% 全局门禁**也从没执行过**。CI Step 4 的 `mvn checkstyle:check` 面对 4155 条存量 error 恒红，而 Actions 在首个失败步骤即停止，`mvn verify`（含 `jacoco:check`）从未运行；该 10%/5% 阈值本身有 20/21 个模块达不到，属"恒红的假门禁"。现已换成三条可证伪门禁：每模块覆盖率棘轮（只减不增）、checkstyle 增量红线 + 存量棘轮、增量行覆盖率 ≥40%。详见 §十一「B1-2」小节。
 
 **测试价值缺陷（不是数量问题）**：
 - **反例覆盖为 0**：163 个 smoke 只断言 `status().isOk()` + `$.code`，无 4xx/5xx、无权限（`@PreAuthorize`）、无租户隔离、无错误码断言 —— 等于只验证"路由存在"。
@@ -119,9 +122,9 @@
 **前端架构债**：
 - 血缘：确认 **vue-vben-admin 派生**且深度定制（`main/` 作宿主、`@ydsz/*` 作用域、wujie/micro-app 换成自研 kernel、Ant/Element 换成自研 kit）。✅ README 仍写"Vue 3 + Element Plus"（`README.md:21`），而 `element-plus` 在 **0 个 package.json** 中出现 —— ADR-008 已宣布 2026-09-19 收官，文档未跟。
 - 自研 `@ydsz/micro-kernel` 67 文件 / 15,452 行；importmap 外置仅 9 个包（`micro-shared-deps.ts:34-56`）—— 注意 ✅ `importmap.lock.json` 记 **vue-router 5.3.0 / pinia 4.0.3 / echarts 6.1.0 / vue 3.5.42**，而 catalog 是 `^4.5.1 / ^3.0.3 / ^5.6.0 / ^3.5.17`，**锁与目录版本不一致**，运行时共享版本不可控。
-- ◇ **turbo 缓存键失效**：27 个 workspace 包**没有 build 脚本**并直接导出 `./src/index.ts`（`ydsz-ui/package.json` 的 `dist` 入口被注释掉），`globalDependencies` 覆盖 `conf/vite-config/src`、`bash/*/src`、`**/tsconfig*.json` 但**不含 `comm/**`** → 改共享源码不会使 app 构建缓存失效（陈旧产物）。且 10 个入口各自重复转译 744 个 SFC（ydsz-ui 413 + ydsz-vue 331），`main/vite.config.mts:29-70` 甚至手写了个 `resolveId` 插件补 `ydsz-vue` 的内部 `@/` 引用。
+- ~~◇ **turbo 缓存键失效**：27 个 workspace 包**没有 build 脚本**并直接导出 `./src/index.ts`（`ydsz-ui/package.json` 的 `dist` 入口被注释掉），`globalDependencies` 覆盖 `conf/vite-config/src`、`bash/*/src`、`**/tsconfig*.json` 但**不含 `comm/**`** → 改共享源码不会使 app 构建缓存失效（陈旧产物）。~~ **已证伪**（见 §十一 B1-7；条数实测为 44 个 `comm` 包中 34 个无 build 脚本，非 27）：Turbo 2.10.8 给无 build 脚本的工作区依赖仍生成 `<NONEXISTENT>` 任务节点并按**整包目录**计入 `inputs`，`^build` 已覆盖——实测改 `comm/effects/mock-service` 一行，只有 3 个真实依赖方 app 的缓存失效（正是声明它的 3 个）；把 `comm/**` 加进 `globalDependencies` 反而变成 10/10 无差别失效，属命中率倒退。本仓真实缺陷是另一半：10 个入口各自重复转译 744 个 SFC（ydsz-ui 413 + ydsz-vue 331），`main/vite.config.mts:29-70` 甚至手写了个 `resolveId` 插件补 `ydsz-vue` 的内部 `@/` 引用——这是构建耗时问题，不是缓存正确性问题。
 - ◇ **type-check 是空壳**：`turbo type-check` 只有 4 个包声明（全是纯 TS 包 `tsc --noEmit`）；**main 与 9 个 app 一个都没有**，`vue-tsc` 只作为根 devDep 存在**从未被调用** → ~146k LOC 的 `.vue` **零类型覆盖**，CI"类型检查"步骤证明不了任何事。
-- ◇ **体积预算路径对不上产物**：`conf/budget.config.json` 检查 `main/dist/assets`、`apps/*/dist/assets`，但构建输出目录是 `js/`、`jse/`、`css/`（`application.ts:129-135`，未设 `assetsDir`）→ `pnpm check:size` **匹配不到任何文件**。
+- ◇ **体积预算路径对不上产物**：`conf/budget.config.json` 检查 `main/dist/assets`、`apps/*/dist/assets`，但构建输出目录是 `js/`、`jse/`、`css/`（`application.ts:129-135`，未设 `assetsDir`）→ `pnpm check:size` **匹配不到任何文件**。**已修**：目录口径与判据收进 `budget-config.ts` 单一来源，预算改棘轮，CI 缺产物即红，另查出真正的性能根因是 `manualChunks` 的 catch-all 单 vendor chunk（详见 B1-8 体积轨小节）。
 - ◇ 测试金字塔倒挂：137 个 `.test.ts` 中 **132 个在 comm/（kit 原语），业务侧仅 5 个**（agent 2、system 3，**cronjob/generator/literule/message/nextwiki/userinfo/workflow = 0**）；根 `vitest.config.ts:52` 只把 `#` 别名指到 `main/src`，导致 `apps/system-web/src/views/config/index.test.ts:19` 的 `#/adapter/vxe-table` **解析到错误包**；覆盖率阈值 25/15/20；12 个 e2e spec **从未进 CI**，且 `pnpm test:e2e` 未指定 config 会解析到根 `playwright.config.ts`（`testDir: ./tests/a11y`）跑错套件；`playwright.visual.config.ts` 声称门禁，但 ✅ `git ls-files tests/visual` 显示**零张基线 PNG 被提交**，CI 的 visual 作业断言基线存在 → 该门禁不可能有意义地通过。
 - ◇ 工程卫生：23 个文件在 9/9 应用里各存一份（多为薄 shim，代价是**漂移**而非 LOC —— `adapter/form.ts` 166 行 vs 378 行不一致）；`: any` 196、`as any` 83、`as unknown as` 118、`@ts-ignore` 8、TODO/FIXME 122（89 在生成的 `models.ts`）；god 组件 `cron-builder/index.vue` 995、`system-web/views/preference/index.vue` 918、`search-panel.vue` 869、`IconPicker.vue` 806、`rule-pack/index.vue` 801；`hmr-guard.ts:1-90` 用 monkey-patch **吞掉** `unregisterHMR` TypeError（掩盖而非修复）；CSP `script-src 'self' 'strict-dynamic'`（`nginx.conf:71`）**没有 nonce 变量**而 `main/index.html` 有内联脚本与注入式 loading → 生产被拦；`.dev-logs/`（202 文件 / 2MB）、根 `junit.xml`、`batch-write.cjs`、`gen-final.js`、`data_part1.json`、`comm/effects/micro-kernel/.write_test` 等垃圾入库。三套表格体系（vxe + `@tanstack/vue-table` + ydsz-ui primitives）。
 
@@ -206,7 +209,7 @@ S1 凭据轮换与出库 · S2 JWT 密钥占位符化 + fail-fast · S3 Actuator
 *验收*：`mvn -o verify` 与 `pnpm build && pnpm check:size` 在 Linux runner 上通过；`curl -I` 证明 `index.html` 为 `no-store`、hash 资源为 `immutable`；10/10 产物无未解析 `--ydsz-*`；首屏 0 CSP 违规。
 
 **批次 1（2–6 周，让"红线"变成"门禁"）**
-接入 Flyway（含 `noTransaction=true` 处理 11 处 CONCURRENTLY + 版本空洞）· 覆盖率改分模块棘轮 + `diff-cover` 增量 40% · 补反例断言（userinfo RBAC 15 端点 × ≥3）· 契约测试真正生成并执行 · 生成器输出测试模板 · 前端 `vue-tsc` 进 main+9 app · turbo `globalDependencies` 加 `comm/**` · 体积预算路径修正 · 视觉基线提交 + e2e 进 CI · `gen:nginx:check`。
+接入 Flyway（含 `noTransaction=true` 处理 11 处 CONCURRENTLY + 版本空洞）· ~~覆盖率改分模块棘轮 + `diff-cover` 增量 40%~~（**已完成**：21 模块实测棘轮 + 自研 `check-diff-coverage.py` 16/16 自检 + checkstyle 增量门禁 19/19 自检，见 §十一 B1-2；顺带发现 CI Step 4 `mvn checkstyle:check` 恒红遮断下游全部检查，已换口径）· 补反例断言（userinfo RBAC 15 端点 × ≥3）· 契约测试真正生成并执行 · 生成器输出测试模板 · 前端 `vue-tsc` 进 main+9 app · ~~turbo `globalDependencies` 加 `comm/**`~~（**已实测证伪并从本批次移除**，见 §十一 B1-7）· 体积预算路径修正 · 视觉基线提交 + e2e 进 CI · `gen:nginx:check`。
 *验收*：故意改一个 DTO 字段 / 漏一个 i18n key / 引入一次 N+1，CI 必须有作业变红 —— 这是"门禁有效"的唯一判据。
 
 **批次 2（6–10 周，贯通链路与数据治理）**
@@ -284,7 +287,7 @@ NextWiki 搜索 trigram 化并去 `content` · DEBUG 日志降级 · 规则引�
 | 新增门禁 `bash/check-subapp-base.mts`（`pnpm check:base`） | — | 断言 canonical 前缀、6 个回退点无大写 `/YDSZ-`、`VITE_BASE`、Dockerfile COPY、nginx location、（若已构建）`dist/index.html` 资源前缀 |
 
 验证：`node bash/check-subapp-base.mts` 修复前报 **10 项失败**（9 个 VITE_BASE + 1 个 Dockerfile 缺 COPY），修复后 ✅；`gen-nginx-conf.mts --check` ✅（此前生成器出大写、已提交片段是小写，检查必然红）；`tsc --noEmit` 对改动文件除既有 `@ydsz/micro-kernel` 类型解析报错外无新增错误；顺带修掉 `application.ts` 里 `getAvailableStrategies` 未导入（一旦某 app 声明非法 `shareStrategy` 就 ReferenceError 的潜伏 Bug）。
-**未完成部分（诚实标注）**：子应用生产构建在 HEAD 即失败（`lucide-vue-next` 未被子应用声明，Rollup 解析期报错，先于产物生成，与本次 base 改动无关）→ 门禁第 6 项"产物 index.html 前缀"目前只能等构建恢复后生效；已建任务 **B0-10** 跟踪。
+**未完成部分（诚实标注）**：子应用生产构建在 HEAD 即失败（`lucide-vue-next` 未被子应用声明，Rollup 解析期报错，先于产物生成，与本次 base 改动无关）→ 门禁第 6 项"产物 index.html 前缀"当时无法生效；**已在 B0-10 修复后补齐**——`check:base` 现实测覆盖 9 个子应用的已构建产物。
 
 ### B0-5 nginx 静态缓存与安全头分层（S6）— 已完成（语法验证受限于本地无 nginx）
 
@@ -419,11 +422,204 @@ NextWiki 搜索 trigram 化并去 `content` · DEBUG 日志降级 · 规则引�
 
 **诚实清单（本项未修 / 未验证）**：未启动 dev server 做视觉复核（删掉 Google Fonts 后 dev 端字形回退到 system-ui，行高/字宽会微变，视觉基线属 B1-8）；百度统计"是否要恢复"未替使用方决定，只留下 CSP 兼容的恢复路径；`user-scalable` 修复只证明到"文本层写法正确 + 门禁会拦"这一层，真机上双指缩放是否可用需人工确认。
 
+### B0-9 网关路由双源漂移（prod 404 / 错路由）— 已完成（5 项需使用方决策）
+
+**问题不是"两份路由表不一致"，而是"没有任何东西能证明路由是通的"**：清单、生成块、Controller、注册名、端口、nginx/vite 代理六者各自可以改，改错了也一律显示 404，而 404 又被归因为"前端调错路径"或"服务没起"。
+
+**改前状态（`git show HEAD`，即 89c79acc6e，可逐条复核）**：
+
+| 层 | 证据 | 后果 |
+|----|------|------|
+| L1 双源漂移 | `routes-nacos.yaml` 53 个 pattern vs `application.yml` 66 个 `Path=` 断言：**只在 manifest 15 条、只在 application.yml 28 条** | 两条加载链路（静态路由 vs `NacosRouteDefinitionRepository`）各自生效，改一处等于没改 |
+| L2 死路由 | `Path=/api/notify/**`→`http://localhost:9004`、`/api/job/**`→`9006`、`/api/wiki/**`→`9003` 只存在于 application.yml；后端 `@RequestMapping("/(notify\|job\|wiki)` grep 命中 **0** | 前端按这三条前缀调用永远 404，且服务是"活着"的，日志看不出问题在网关 |
+| L3 危险的 manifest 条目 | 只在 manifest 侧有 `/api/v1/monitor/**`（P0-A2 已改 `X-Api-Version` 头协商，网关不该再路由版本段）、`/api/internal/**`（一把抓，抹掉按服务的 StripPrefix 粒度）、`/api/admin/**`（与 userinfo 侧 `/api/admin/{ldap,oauth2,security,sessions,users}/**` 抢注） | 一旦动态路由链路被打开，旧别名与过宽前缀立刻复活并覆盖细粒度路由 |
+| L4 网关 5.x 前缀 | `spring-cloud-starter-gateway-server-webflux:5.0.2` 生效前缀是 `spring.cloud.gateway.server.webflux.*`，旧 `spring.cloud.gateway.*` **不再绑定**（yaml 已在 044d2c5fa8 修正）；但 `ydsz-gateway/src/main/resources/META-INF/spring-configuration-metadata.json` 仍声明 5 个旧前缀键，且 jar 自带 metadata 里旧前缀条目数为 0 | 写错前缀的 yaml **静默不生效**，而 IDE 会替这个错误前缀做补全——等于第三个漂移入口 |
+| L5 前端双剥 | `bash/deploy/nginx.conf` 的 `location /api/` 内 `rewrite ^/api/(.*)$ /$1`，加上 10 个 `vite.config.mts` 的 `rewrite: (p) => p.replace(/^\/api/, '')`，网关再 `StripPrefix=1` | 后端收到的路径永远没有 `/api`，与 `Path=/api/**` 断言永不匹配 → 全量 404；dev（vite）与 prod（nginx）错得一模一样，所以"本地能复现"反而排除了网关嫌疑 |
+| L6 `/api/v1` 残留 | 前端 diff 中 **238 行**含 `api/v1` 被删除：196 处是文件头"路径规范"注释，其余是真实调用字面量与生成器模板 | 注释是 AI 与新人批量产出错误路径的直接原因；本轮实测 196 处注释的再生源头是 `bash/gen-contract.py:1205` 的 SDK 文件头模板（改前写死 `/api/v1/{svc}/**`），已改为 Controller 相对路径 + 说明 `/api` 由 `requestClient` baseURL 注入、版本走 `X-Api-Version` |
+
+**收敛后的单一来源与双向可证**：
+
+| 机制 | 位置 | 断言什么 |
+|------|------|---------|
+| 唯一手维护清单 | `ydsz-gateway/src/main/resources/routes-nacos.yaml`（20 条 JSON `RouteDefinition`） | 只有这里可以新增/改前缀 |
+| 生成块 | `application.yml:42-184` 的 `BEGIN/END GENERATED ROUTES` | `gen-gateway-routes.py --check` 阻断漂移（实测"20 条一致"） |
+| 一致性门禁 | `data/scripts/check-gateway-routes.py` R1–R10 | R1 生成块=清单；R2 每个后端路径都有路由认领或登记豁免；R3 无死路由（反向：路由指向的 Controller 必须存在）；R4 `StripPrefix` 只给 `/api/**`；R5 Controller 里不得出现 `/api`；R6 服务注册名；R7 端口；R8 `NacosRouteDefinitionRepository` 真的被装配；R9 前端代理不剥 `/api`、端口与网关一致、全仓（含 `bash/`、`.github/`、`.py`）不得出现 `/api/v1`；R10 nginx 透传给网关的每个前缀都必须被路由认领 |
+| Java 解析可信度 | 同一脚本的 `mask_comments` + `parse_controller` + `_split_attributes` | 注释/Javadoc/文本块里的 `@RequestMapping` 不参与判定；只取 `value`/`path`（`params="holdLock"` 不再被当成路径）；`${scim.base-path:/scim/v2}` 占位符默认值保留 |
+| 反证历史 | 首版解析器把 Javadoc 当类级映射，产出 **35 条假 `/api/26.10.01/**`** 缺陷；`params` 属性被当路径产出假 `/api/internal/holdLock` | 两类假阳性各由一条 `--self-test` 反例钉住，现 **57/57** 通过 |
+| 实测结果 | 20 路由 / 1056 后端路径 / 9 服务（网关 9000），退出码 0，**红 0、⚠️ 3** | 三条告警全部是"需要人决策"而非"待修"，见下方未决项 |
+
+**配置面收口**：`META-INF/spring-configuration-metadata.json` 重写为 6 条 `level=error` 的 deprecation（`spring.cloud.gateway.routes` 等 → `…server.webflux.routes`），把"IDE 会补全一个不绑定的键"换成"IDE 直接报错并给出新键"；`bootstrap.yml:81` 的注释键名由通配写法 `spring.cloud.gateway.*.discovery.locator.enabled` 改为真实键名（通配写法正是错误前缀的来源）；全仓 yaml 复核：live 配置项已无旧前缀，余下 7 处 `spring.cloud.gateway` 命中均为注释文本。
+
+**CI 接线（本项真正的"生效"环节，也是新发现的第 6 层缺陷）**：
+
+| 发现 | 证据 | 处理 |
+|------|------|------|
+| 后端 `ci.yml` 自 Step 3 起**恒红** | Step 3 调 `data/scripts/fix-file-encoding.py`，Step 4a/4b/4d 调 `check-error-code-i18n.py` / `check-springdoc-coverage.py` / `check-ddl-dialect-sync.py`——四个脚本在两个仓库 `find` 命中 **0**（AGENTS.md 里的 `sync-ai-rules.py` 同样不存在） | 新写 `data/scripts/check-file-encoding.py`（E1 BOM / E2 非 UTF-8 / E3 **入库 blob** 非 LF，W1 文件末尾缺换行只告警；判断依据取 `git ls-files --eol` 的 index 字段，避免把本机 CRLF 当仓库缺陷）；三个伪门禁步骤移除并在原位写明归属（B1-9/B1-10/B1-12） |
+| 门禁顺序会让新门禁失去执行机会 | Actions 默认首个失败步骤即终止 job，Step 3 恒红意味着路由门禁写在第 5 步等于没写 | 编码校验与路由门禁排为 Step 3 / 3a，置于 Checkstyle（Step 4）与 `mvn verify`（Step 5）之前 |
+| 前端交叉检出的是不存在的仓库 | `repository: njydsz/ydsz-micro`，而 origin 实为自建 Gitea `http://192.168.31.88:6080/ydszopen/ydsz-micro`；`continue-on-error: true` 把恒失败吞成"跳过" → **R9/R10 从未在前端仓库上执行过** | 仓库名改 `ydszopen/ydsz-micro`，注释写明私有交叉仓库需配只读 token（不擅自引用未 provision 的 secret）；未检出时用 `::warning::` 显式打印，且 R9/R10 跳过时结论行不再谎称"通过（R1–R10）"而是"通过（R1–R8；R9/R10 未执行）" |
+| 门禁自己的成功文案会撒谎 | `check-gateway-routes.py` 不传 `--frontend-root` 时也打印"✅ 通过（R1–R10）"；`--frontend-root` 指向不存在目录时只打一条 "R9 跳过"（R10 同样没跑） | 改为按实际执行范围输出结论 + 两条独立告警；`bash/deploy/nginx.conf` 缺失时由未捕获 `FileNotFoundError` 改为可读的 R10 判红 |
+
+**实测（本轮全部重跑）**：`gen-gateway-routes.py --check` ✅ 20 条一致 · `check-gateway-routes.py --self-test` ✅ **57/57** · `check-gateway-routes.py --frontend-root ../ydsz-micro` ✅ 退出码 0（红 0 / ⚠️ 3）· 不带前端参数 ✅ 退出码 0 且明确标注 R9/R10 未执行 · `check-file-encoding.py --self-test` ✅ **28/28** · `check-file-encoding.py` ✅ 5928 个跟踪文件，**红 0 / 告警 18**（BOM 与非法 UTF-8 均为 0，index 换行符 5925 条 `i/lf`）· `mvn -o -q -pl ydsz-gateway compile` ✅ 退出码 0 · `python3 -m py_compile bash/gen-contract.py` ✅。
+
+**未决项（需要决策，不由门禁替使用方拍板）**：
+
+1. **`/ws/**` 无人认领**：nginx 把 `/ws/` 原样透传给网关，但清单里没有 WS 路由；6 个服务（agent/cronjob/message/nextwiki/userinfo/workflow-server）经 `ydsz-common-socket` 把 STOMP 端点**全部注册在同一个 `/ws`**（`WebSocketProperties.endpoint` 默认值，前缀 `ydsz.websocket`），按路径无法判定归属；且这些服务的 dev 配置 `ydsz.websocket.enabled: false`，实时链路本就未启用。可选口径：各服务改 `/ws/{service}` 端点后按服务加路由（推荐，能复用 R10 自动核对），或明确"WS 不经网关"并从 nginx 撤掉该 location。
+2. **secondary-auth 抢注**：`ydsz-system` 的 `SecondaryAuthController(@RequestMapping("/auth/secondary-auth"))` 与 `ydsz-userinfo` 的 `AuthController(@PostMapping("/secondary-auth")` 等 3 个端点）同名，路由现归 system → userinfo 侧 `secondary-auth`、`secondary-auth/webauthn[/challenge]` 经网关不可达。必须由一侧改名（如 `/auth/2fa/**`），改路由解决不了。
+3. **本地文件公网 URL 指向已废弃端口**：`docs/nacos-config/ydsz-common.yml:485` `ydsz.file.domain: http://localhost:9010/files`，而 9010 是网关旧端口（`docs/nacos-config/ydsz-gateway.yml:8` 记有 9010→9000 的统一），`bash/deploy/nginx.conf` 也没有 `location /files`。该值确有读取方（`AbstractFileStorage.java:168` 的 `domain`、`LocalStorage.java:82` 的 `nginxUrl`）→ `type: local` 部署下文件预览/下载链接必失效。两种口径：由 nginx `alias` 到 `YDSZ_LOCAL_FILE_DIR` 并给出公网前缀，或改走网关路由到某个文件读取端点（当前后端只有 `FileMultipartController(/file/multipart)`，**没有任何文件下载 Controller**）。
+4. **前端调用而后端不存在的 4 条路径**（R2 抓不到，因为它们是"前端发起、无 Controller"方向）：`comm/effects/request/src/request-client/modules/uploader.ts:26` 秒传检查 `/api/storage/check`；`comm/effects/micro-kernel/src/preload-metrics.ts:22` 指标上报 `/api/monitor/preload-metrics`（`sendBeacon` 静默失败，"有指标"是错觉）；`main/src/api/search.ts:151` 的 `/search/history`（`GlobalSearchController` 只有 `/search` 与 `/search/analytics/hot`，全仓 `@*Mapping("/history")` 命中 agent/generator/nextwiki 三家，均不在 `/search` 下；该函数 `catch` 后返回 `[]`，且在 `main/src` 内**无任何调用方** → 死代码）；`comm/@core/ui-kit/form-designer/src/palette/component-palette.ts:95` 表单上传组件默认 `action: '/api/upload'`（无此路由，属"新表单默认就坏"）。要么补后端端点，要么把这些调用点显式关掉。
+5. **`bash/gen-crud-skeleton.mts` 是死生成器**：产物 `import { xClient } from '../client'`，而全仓没有 `client.ts`（B1-5 生成器测试模板轨一并处理）。另 `Gitea 是否启用 Actions`、以及自建 runner 能否拉取 `actions/checkout@v4` / `dorny/test-reporter@v1` 无法匿名核实（该实例 API 需登录）→ 本轮只做到"接进 workflow 文件并按本地实测可跑"。
+
+**诚实清单（本项未修 / 未验证）**：① R1–R10 是**静态接线证明**，没有起网关发真实 HTTP 请求做端到端验证（需 `mvn spring-boot:run` + Nacos 或 `docker compose` 环境）；② `nginx -t` 未在镜像内执行（本机无 nginx），`/api/` 剥层删除后的转发正确性靠 R9/R10 的路径断言与 `check:nginx` 的 8 条反例；③ 前端功能路径字面量改动（search/audit/web-vitals/notification-sse/dict-sse/分片上传 4 处/生成器与脚本模板）未经浏览器复核——本轮改动是 URL 字面量，`pnpm build` 与 R9 能证明"写对了"，不能证明"页面真的通"；④ `/api/v1` 残留仍有 2 处**有意保留**：`bash/gen-contract.py` 已清零，`bash/deploy/nginx.conf:125` 是说明"网关不路由版本段"的注释（`.conf` 不在 R9 的源码后缀集内），`docs/`、历史报告里的引用属历史事实，不清扫。
+
+### B0-10 子应用生产构建失败 — 已完成（`pnpm build --force` 25/25 绿）
+
+**三个独立成因，前两个都被"dev 全绿"掩盖**（dev 走 `development`/`types` 条件，prod 走 `default` 条件；这就是为什么本地一路正常、CI 从未构建子应用也没人发现）：
+
+| 成因 | 证据 | 修法 |
+|------|------|------|
+| ① 未声明依赖（原判据） | `lucide-vue-next` 等只被 4 个库包声明，`apps/**` 15 个文件直接 import；pnpm 隔离 node_modules 下 Rollup 解析期即报错 | 按包补声明，错误 12 → 0 |
+| ② 入口指向"永远不会存在的产物" | `comm/@core/ui-kit/{advanced-table,ai-builder,dashboard,form-designer,mobile-bridge,design-tokens}` 的 `main`/`module`/`exports.*.default` 写 `./dist/*.mjs`，但**包内没有任何 build/stub 脚本** → 实测报 `Failed to resolve entry for package "@ydsz-core/design-tokens"` | 6 包入口改指 `./src/*.ts`（与本仓 `@ydsz-core/ui`、`editor-ui` 的源码直发形态一致）；`files:["dist"]`+`publishConfig` 暂留为警告级债务（发布轨未接通） |
+| ③ 库未先构建就跑 app 构建 | 手工单包构建时 `conf/vite-config/dist/**` 是 unbuild `--stub` 的 jiti 代理，jiti + `node:module`/`createRequire` 被打进浏览器包 → `… is not exported by __vite-browser-external` | 统一用 turbo `build`（`dependsOn:["^build"]`）作为 CI/验证入口，不再手跑单包 |
+
+**一并修掉的构建红点**：`apps/agent-web/src/views/memory/index.vue:27` 同一标识符重复 import；`apps/system-web` 三处引用的 `#/composables/use-i18n` 别名文件根本不存在（新增 `src/composables/use-i18n.ts` 转发 `vue-i18n`）；`apps/userinfo-web` 的 `IconPicker.vue` 与 `defineOptions({name:'YdIconPicker'})`/`@path` 头/引用方三方不一致（`git mv` 归一）；`apps/workflow-web` 引了两条**不存在的** `bpmn-js-properties-panel/dist/assets/*.css`（v5 起样式由 `@bpmn-io/properties-panel` 提供，已改指并提为直接 devDep），且 `import bpmnPropertiesPanelModule from 'bpmn-js-properties-panel'` 在 v5 无 default 导出（改具名 `BpmnPropertiesPanelModule`，并把 camunda provider 显式注册进 `getPropertiesProvider()`，否则属性面板按旧注释假设的"已涵盖 camunda 字段"其实不再成立）。
+
+**顺带发现的静默失效**：`conf/vite-config` 的 manifest 注入是 `try { await import('@ydsz/micro-kernel') } catch {}`（`config/application.ts:108-116`），但 `@ydsz/micro-kernel` 根本没在它依赖里 → 这段永远走 catch，子应用 manifest 插件从不注入；已补声明（micro-kernel 无反向依赖，不成环）。同类还有 prettier/stylelint config 的 `build.mts` 用 `typescript`、`ydsz-vue` 故事用 `@iconify/vue` 而未声明。
+
+**新门禁 `bash/check-declared-deps.mts`**（规则 A 依赖声明 + 规则 B 入口可达性，`--self-test` 命中 8/8 错误分级 + 10/10 警告分级 + 4 条正向断言）：规则 B 断言"生产期会被选中的入口必须存在"，同时避开三个冤枉点——本仓 parked-key 约定（`#build`/`//default` 是显式停用，不是缺陷）、通配导出只校验 `*` 前的目录前缀、`types`/`development` 条件缺失降级为警告（不进产物）。已接线 `check:deps` / `check:deps:self-test` 进 `wiring` job。
+
+**实测**：`pnpm build --force --output-logs=new-only` → 25/25 successful、EXIT=0，10 个应用逐个打印 `Bundle Budget 通过`；`pnpm install --frozen-lockfile` ✅（依赖改动已同步进 lockfile）；`check:deps` ✅ 0 错误 / 76 警告；`check:deps:self-test` ✅。
+
+**诚实清单**：① 76 项警告是存量债（测试/故事文件的未声明依赖、`import type` 跨层、`files:["dist"]` 空包形态），已可用 `--strict` 收紧但尚未清零；② `micro-kernel` 的 `viteManifestPlugin` 补依赖后是否真注入，只在源码层确认了调用条件（`readSubAppName()` 认 `@ydsz/*-web`），日志级复核待做；③ CI 侧此前**从不构建子应用**（`bundle` job 只 `build:main`），本轮把该 job 改为构建全部 10 个应用——GHA runner 上的堆上限（4096）与耗时（timeout 已提到 30 分钟）尚未经一次真实 CI 运行验证。
+
+### B1-8（体积轨）预算路径修正 + manualChunks 根因 + 棘轮化 — 已完成（预算与视觉/e2e 两子项除外）
+
+**改前是"双向失灵"，不是"阈值太严"**：构建期 `YDSZ:bundle-budget` 按 scope（main/apps）匹配，把 10/10 应用全判红（预算总产出 512/384KB，实测 792–1858KB），于是所有人绕开它；CI 期 `bash/check-size.mts` 扫 `main/dist/assets` 与 `apps/*/dist/assets`——本仓产物实际在 `dist/js`、`dist/css`、`dist/jse`（`application.ts:124-126` 未设 `assetsDir`），且"目录不存在就 `continue`"，所以它永远扫到 0 个目标却报通过。**一条拦所有人，一条谁也不拦。**
+
+**根因不在阈值数字，在分包策略**：`createManualChunks()` 的 `default` 分支把**所有**未外部化 node_modules 压进单个 `vendor` chunk → workflow-web 首屏必下 chunk gzip **1374KB**（bpmn-js、echarts、编辑器全在一块，且入口静态依赖它，路由级懒加载完全失效）。改为只保留 `@vueuse`/`echarts`/`lodash`/`async-validator`/`@ctrl|@popperjs` 几组"跨路由稳定共享"显式分组，其余交回 Rollup 默认分组（`conf/vite-config/src/config/application.ts:305-310`）。
+
+**实测（gzip KB，同一份产物目录口径）**：
+
+| 应用 | 最大 chunk 改前 → 改后 | 总产出 | JS 文件数 |
+|------|----------------------|--------|-----------|
+| workflow-web | 1377.3 → **427.6** | 1857.9 | 106 |
+| message-web | 794.3 → **349.9** | 1204.0 | 106 |
+| literule-web | 666.7 → **350.4** | 1088.5 | 91 |
+| main-web | 556.7 → **308.2**（CSS 69.2 → 10.3） | 1053.9 | 144 |
+| agent-web | → **400.1** | 1289.7 | 105 |
+| cronjob / userinfo / system / nextwiki / generator | 350.7 / 349.9 / 356.0 / 348.9 / 254.1 | 909.6 / 906.5 / 870.4 / 866.8 / 792.7 | 101 / 104 / 85 / 83 / 80 |
+
+拆分不减总量（各应用总产出与改前基本持平），减的是**首屏阻塞体积**：workflow-web 的 bpmn 设计器现在落在独立 chunk `js/bpmn-designer-*.js`，只有进设计器路由才下载。
+
+**预算改棘轮并保持"新应用仍被理想值卡住"**：`conf/budget.config.json` 由 2 条 scope 目标改为 10 条精确 `appDir` 目标 + 1 条 `apps/*` 兜底（兜底沿用原理想值 384/256/96/60，新增应用未显式评审预算即红）；每条留 `baseline`（实测日期 + 四项实测值）证明阈值是棘轮不是拍脑袋，`aspirationGzipKB` 保留理想目标只在日志里提示。阈值 = 实测 + 头寸（总 +8% / chunk +10% / CSS +25% / 文件数 +15%），由 `pnpm size:report` 生成，不手改数字。
+
+**判据单一来源**：阈值读取、目录口径、超限判据全部收进 `conf/vite-config/src/plugins/budget-config.ts`（新增 `expandBudgetTargets` / `measureDistDir` / `budgetViolations` / `suggestRatchet` / 严格 `isBudgetConfig`），构建期插件与 CI 脚本共用——`check:size` 现在直接 import 这份 `.ts`（Node 类型擦除，实测可跑），"两侧不一致"在结构上不可能再发生。插件另加两条：产物有但配置里没这个目录 → **红**（门禁逃逸）；JS 文件数纳入判定（此前只有 CI 侧看得到，两侧判据其实不同）。
+
+**CI 脚本 fail-closed**：`bash/check-size.mts` 重写，CI 下"声明了应用但无产物"和"有目录但零 JS/CSS"都判红（正是旧实现 `continue` 掉的那条路径），本地只告警；`--list` 不断言、`--report` 出重新基线片段、`--self-test` 8 项反例断言。
+
+**证伪证据**：`--self-test` 夹具里 `over-web` 的 chunk 预算 4KB、实际 30KB → 判红；把 `apps/cronjob-web/dist` 移走后 `CI=true pnpm check:size` 退出码 **1** 并点名该目录，恢复后 0；用旧 schema（无 `appDir`）构造的配置被 `isBudgetConfig` 拒绝。**夹具本身也返工过一次**：初版用 `'x'.repeat(9000)` 造"超预算"反例，gzip 后只剩几十字节，断言静默永不触发——现在用 xorshift 高位字节的不可压缩内容，并把"夹具内容确实不可压缩"作为第 8 条断言钉住。
+
+**实测**：`check:size --list` ✅ 10/10 在预算内 · `check:size:self-test` ✅ 8/8 · 构建期 10 个应用逐个 `Bundle Budget 通过` · `check:ci` ✅（9 job / 79 条 run 命令）· `check:base`/`check:head`/`check:tokens`/`check:nginx`/`gen:nginx:check` 全绿。
+
+**诚实清单（本项未修 / 未验证）**：① 理想值（main 512KB / 子应用 384KB 总产出）**尚未达成**，棘轮只是把"永远红"换成"回退即红"，继续瘦身要靠 echarts/monaco/vxe-table 按需与 workflow-web 设计器二次拆分；② B1-8 的另外两个子项——**视觉基线未提交**（`tests/visual/__screenshots__` 缺基线，CI 视觉 job 空跑）与 **e2e 门禁接线**——本轮未动；③ ~~`comm/**` 源码直发包的变更不会使 app 缓存失效，属 B1-7~~ **该前提已被 B1-7 小节实测证伪**：`^build` 的 `<NONEXISTENT>` 节点已按整包目录哈希覆盖，无需 `globalDependencies`；④ 单 chunk 最大 428KB（workflow）仍超理想红线，`maxChunkGzipKB=471` 是"实测+10%"而非目标值。
+
+### B1-7（缓存轨）turbo `globalDependencies` 加 `comm/**` —— 实测证伪，改动已撤回
+
+**原判据（§五 架构债第 3 条、§九 批次 1）**："`comm` 下大量包没有 build 脚本且直接导出 `./src/index.ts`，而 `globalDependencies` 不含 `comm/**` → 改共享源码不会使 app 构建缓存失效（陈旧产物）。" 我按此口径先改了 `turbo.json`（移除只命中 `bash/turbo-run/src`、`bash/vsh/src` 的 `bash/*/src/**` 两条，加入 `comm/**` 的 5 条扩展名），**随后用 A/B 哈希对照把它证伪，改动已全部撤回**。
+
+**证伪机制**：Turbo 2.10.8 会为任务图里"没有该脚本"的工作区依赖照样生成任务节点，`command` 记为 `<NONEXISTENT>`，且该节点的 `inputs` 是**整包目录快照**（不限扩展名）。`build` 的 `dependsOn: ["^build"]` 因此把依赖包的目录哈希带进 app 任务哈希——与 `globalDependencies` 无关。`turbo build --dry-run=json` 实测：
+
+| 节点 | package.json scripts | `command` | `inputs` 实际包含 |
+|------|----------------------|-----------|-------------------|
+| `@ydsz/request#build` | `null`（无 build） | `<NONEXISTENT>` | `src/index.ts`、`src/cache-adapter.ts`、`src/.error-codes.lock` … 整包 |
+| `@ydsz/icons#build` | 无 build | `<NONEXISTENT>` | `src/index.ts`、`src/icons/empty-icon.vue`、`src/svg/*.svg`、`README.md` |
+| `@ydsz/locales#build` | 无 build | `<NONEXISTENT>` | 整包，`dependents` 含 main-web 及 6 个 comm 包 |
+
+44 个 `comm` 包中 **34 个无 build 脚本**（源码直发）、10 个有——按原口径这 34 个正是"缓存盲区"，但上表说明它们全部在图中且整目录参与哈希。
+
+**A/B 实测**（同一命令 `npx turbo build --dry-run=json`，只换 `turbo.json`，探针为在 `comm/effects/mock-service/src/index.ts` 末尾追加一行注释；`mock-service` 仅被 generator-web / message-web / system-web 三个应用声明为依赖）：
+
+| 配置 | 被改动的 app 任务哈希 | 结论 |
+|------|----------------------|------|
+| 现状（`globalDependencies` 不含 `comm/**`） | **3 / 10**（generator-web、message-web、system-web），另 7 个 app 哈希不变 | 精准失效，行为正确 |
+| 我的改动（加 `comm/**` 5 条） | **10 / 10** 全部变化 | 全局键无差别命中所有任务 |
+
+`globalDependencies` 命中的文件进入**全局缓存键**，对每个包 × 每个任务生效。因此加入 `comm/**` 不是补漏，而是把"依赖闭包精准失效"换成"任一 comm 文件改动 → 10 个应用的 build/type-check/test 缓存一起作废"，属缓存命中率倒退。**已撤回**：`turbo.json` 与探针文件均回到 HEAD（`git diff --stat -- turbo.json` 为空）。
+
+**顺带排掉该假设唯一可能为真的分支**——若 app 以别名方式引用未声明的工作区包，图边缺失才会真漏。实测 main + 10 apps 源码内 `@ydsz/*` / `@ydsz-core/*` 的 import 包根，与各包 `package.json` 声明比对：**11 / 11 包 UNDECLARED=0**，任务图与真实 import 一致。
+
+**复现命令**：`npx turbo build --dry-run=json` 后读 `tasks[]` 里 `package == "@ydsz/request"` 的 `command`（`<NONEXISTENT>`）与 `inputs`（含 `src/index.ts`）；A/B 对照 = 在 `comm/effects/mock-service/src/index.ts` 末尾追加一行注释，再比较 10 个 `-web` 任务的 `hash` 变化个数（现状 3/10，加 `comm/**` 后 10/10）。
+
+**仍成立的次要点（未动，记录）**：`globalDependencies` 里的 `bash/*/src/**/*.ts`、`bash/*/src/**/*.json` 实际只命中 vendored 的 `bash/turbo-run/src`、`bash/vsh/src`——这两个是 CLI 工具包，其源码不进 app 构建产物，放进全局键同样是无差别失效；只是改动频率极低，本轮不为它产生 diff。
+
+### B1-2 覆盖率/静态检查门禁：把三条"恒红 = 无门禁"改成可证伪的增量门禁
+
+**原判据（§三 测试工程、§九 批次 1）**：CI 有覆盖率门禁与 checkstyle 门禁。实测两条都是**结构性恒红**，而 GitHub Actions 在第一个失败步骤即停止 → 它们不只是自己没用，还遮断了下游所有检查。
+
+**实测证据（2026-10-26）**
+
+| 门禁 | 声称 | 实测 | 后果 |
+|------|------|------|------|
+| `mvn checkstyle:check -B`（CI Step 4）| 全仓 0 违规 | error 级 **4155** 条 / 68 个模块有违规（85 份报告）| Step 4 恒红 → Step 5 `mvn verify`（单测 + 覆盖率）**从未执行** |
+| `jacoco:check` 全局 BUNDLE ≥ **0.10 行 / 0.05 分支** | §14.7 渐进基线 | 21 个可测模块里 **20 个达不到**（最低 workflow-server 行覆盖 0.3%）| 即便 Step 4 变绿，Step 5 也因覆盖率红灯恒红 |
+| `mvn verify` 单测 | 全绿 | **132 个失败**（下表）| 与上一条叠加，`verify` 无法作为信号使用 |
+| 根 POM `checkstyle.skip=false` | CLAUDE.md/规范 §23.2 称"构建期 validate 强制" | 插件只在 `pluginManagement`，**无 `<executions>`/phase 绑定** → `mvn compile|package|verify` 从不跑 checkstyle | 文档声称与流水线实际脱节（见下方"口径校正"）|
+| `<skipITs>false</skipITs>` 硬编码在 failsafe XML | 可用 `-DskipITs=true` 跳过 | CLI 参数被 POM 配置覆盖，**跳过开关失效** | 无 Docker 的环境被迫跑 Testcontainers IT |
+| `junit.jupiter.conditions.deactivate = …DisabledCondition` | — | 该配置使 `@Disabled` **完全失效**（禁用的测试照常执行）；全仓 `@Disabled` 出现 **0 次** | 纯风险、零收益 |
+
+**改法一：checkstyle 从"全仓断言"换成两条可证伪判据**（新 `data/scripts/check-checkstyle-delta.py`，纯标准库，`--self-test` **19/19** 绿）
+
+- **C1 增量红线**：本次改动涉及的 `.java` 文件 **0 违规**即红——新代码（含 AI 生成）当场拦住，与存量无关。
+- **C2 存量棘轮**：每模块 error 级数量**只减不增**（基线 `data/checkstyle-baseline.json`，total 4155）；下降时打印"可下调基线"建议值，上调必须是一次显式提交。
+- **C0 fail-closed**：基线模块本次没有报告 → 判红；全仓 0 报告 → `GateError` 退出码 2。**"扫不到"永远不被读成"没问题"**。
+- 口径：只计 `severity=error`（与 POM `violationSeverity` 一致）；`NewlineAtEndOfFile` 244 条作为本机 CRLF 噪声排除（入库换行符由 `check-file-encoding.py` E3 管），`data/scripts/backup_logs/`（整份源码副本，属 B1-9）不参与门禁。
+- Maven 侧改为 `mvn -B checkstyle:checkstyle`（只出报告不判失败），"量"归 Maven，"判"归脚本。
+- **过程中真实拦下 7 条**（首轮运行即命中我自己改过的文件）：import 分组顺序 ×5（`GatewayFilterConfig`、`NacosRouteDefinitionRepository`、`CacheWarmer` 等）、行内 FQN ×1（`java.nio.charset.StandardCharsets` 内联）、分组错位 ×1 → 全部在源码修正，未用豁免注释压制；`AuthGlobalFilter` 的 `@lombok.RequiredArgsConstructor` 行内 FQN 一并改为 import（规范 5.1）。基线随之 4162 → 4155。
+
+**改法二：覆盖率阈值改成"每模块棘轮 + 增量门禁"**
+
+- 21 个叶子 POM 各写入 `<properties>` 覆盖 = **本模块 BUNDLE 实测值向下取整到 0.1%**（只减不增）：`system-web .284/.114`、`message-web .171/.038`、`nextwiki-web .150/.055`、`workflow-web .121/.083`、`agent-web .108/.024`、`userinfo-web .091/.014`、`cronjob-web .091/.038`、`literule-web .068/.017`、`generator-web .031/.000`、`common-safe .035/.032`、`message-server .024/.020`、`generator-server .023/.011`、`agent-server .048/.023`、`gateway .018/.004`、`literule-server .017/.012`、`system-server .013/.024`、`userinfo-server .011/.009`、`cronjob-server .008/.002`、`nextwiki-server .005/.005`、`workflow-server .003/.001`、`common-base .000/.000`。根 POM 默认降为 **0.01 / 0.005**（新模块起步线）。
+- 语义变化：`jacoco:check` 从"永远红的理想值"变成"转红即说明本次改动真的降低了该模块覆盖率"。实测 `mvn -o verify -pl ydsz-gateway,ydsz-workflow/ydsz-workflow-server -DskipTests`（复用已有 exec 数据）**BUILD SUCCESS**，此前打印的 `Rule violated for bundle ydsz-gateway: 0.01 < 0.10` 消失。
+- 新 `data/scripts/check-diff-coverage.py`（纯标准库，`--self-test` **16/16** 绿）落实 §14.7「增量行覆盖率 ≥ 40% 阻断 PR」：只统计本次 diff 的 `src/main/java` 新增行，且只有 jacoco.xml 里出现 `<line nr>` 的行算可执行（注释/import/接口签名不进分母，避免一行注释稀释指标）；**D3 fail-closed**：改动模块缺 `jacoco.xml` 直接判错退出。
+- **该门禁第一次真实运行就抓到东西**：HEAD~1（`044d2c5fa8`）在 `AuthGlobalFilter` 新增 8 行可执行代码，覆盖 **0 行**。补 `AuthGlobalFilterSecretTest`（9 个用例：null/空串/纯空格拒绝、31 字节拒 / 32 字节放行、11 汉字 33 字节放行 / 10 汉字 30 字节拒绝、密钥与 JWT 同值只告警不阻断、JWT 密钥缺省空不短路校验）后，网关 42/42 绿，重跑门禁：**87.5%（7/8）**，通过 40% 阈值。
+  > 顺带暴露一个真实缺陷类型：旧实现按 `String.length()` 判 32，多字节密钥会被**误拒**（11 个汉字 = 33 字节本已达标），且 `isEmpty()` 放行纯空格。现已按 UTF-8 字节数判定 + `isBlank()`，两条都由测试锁住。
+
+**改法三：移除两个"负收益"配置** —— `<skipITs>false</skipITs>` 硬编码（改由根 POM 属性控制，`-DskipITs=true` 恢复可用）；`junit.jupiter.conditions.deactivate = …DisabledCondition`（会让 `@Disabled` 反向失效）。
+
+**CI 接线**（`.github/workflows/ci.yml`）：Step 1 后端检出加 `fetch-depth: 0`（浅克隆下 `git merge-base` 失败，增量门禁会退化为"无从判定"）；新增 Step 1a 解析 `BASE_REF`（PR → `origin/$GITHUB_BASE_REF`，push → `HEAD~1`）；Step 4 换成报告 + 增量门禁；Step 5a 加增量覆盖率（`if: always()`，让 Step 5 因存量失败而红时覆盖率结论仍可见）；Step 7 `dorny/test-reporter` 的 `fail-on-error: false` → `true`（配 `if-no-files-found: warn` 时"报告为空"与"测试全过"不可区分）。
+
+**口径校正（红线可执行化，同时是 B1-9 的一部分）**：`CLAUDE.md`（构建行 + "编译与验证"块）、`docs/云顶编码规范.md` §23.2 / 附录 B 前置条件 / 附录 D 说明与 D.1、`AGENTS.md`（关键文件索引 + §6 AI 必做清单 + §7 新增第 13 条）原称"构建期 validate 阶段默认强制执行 checkstyle（`checkstyle.skip=false`）"，实测**不成立**，已改为可复现表述：插件仅 `pluginManagement`、无 phase 绑定；CI 走 `checkstyle:checkstyle` + delta 门禁；并显式警告"存量 4155 条时不得把 `mvn checkstyle:check` 全仓结果当作合规证据"。
+
+**过程中真实拦下的两个安全缺陷（不是风格问题）**
+
+1. **`SqlInjectionFilter` 四条正则永不匹配**：跑 `mvn -o test -pl ydsz-gateway` 时 33 例中 7 例红，根因不是测试写错而是实现——`[OoRr]` 是**单字符**字符类（匹配一个 o/r，而不是 "OR"），故 `' OR 1=1` 系列靠它永不命中（此前那条用例之所以"绿"，是被无关的 `--` 注释规则顺手命中）；`s_p_executesql` 多了个下划线，永不匹配；`EXEC` 只匹配 `EXEC(`，漏掉 `EXEC xp_cmdshell`；且无任何时间盲注规则。已改为 `[Oo][Rr]`、`\bsp_executesql\b`、`\bEXEC(UTE)?\b(\s*\(|\s+\w)`，并新增 `\b(SLEEP|BENCHMARK)\s*\(` 时间盲注规则（STANDARD 档）→ **33/33 绿**，类 Javadoc 检测规则清单同步。
+2. **`AuthGlobalFilter` 内部头签名密钥按字符数判强度**：见上文"改法二"的补测发现（多字节密钥误拒、纯空格放行）。
+
+**未修清单（诚实边界）**
+
+| 项 | 状态 |
+|----|------|
+| 132 个存量失败测试 | **未修**，归 B1-3（#18）。按根因分类：UnnecessaryStubbing **66**（Mockito 严格桩，纯测试卫生，机械可清）/ Controller 冒烟 `Request processing failed` **≈32**（内含 NPE 6、Mockito 误用 13、SysException 10）/ `@InjectMocks` 无法实例化 **4** / ArchUnit `failed to check any classes` **4**（`DddLayerArchTest` 在该模块扫不到 domain 类，规则空跑）+ 状态机断言失败若干（`FlowInstanceStatus*`）/ JUnit `ExtensionContext` `NoSuchMethodError` **2**（依赖版本冲突）。聚合口径：195 份历史 surefire 报告 → 781 用例 / 19 failures / 109 errors |
+| `includeTestSourceDirectory=false` | **未改**。测试代码完全不参与 checkstyle——打开会把测试存量一次性引入棘轮，需先量再决定，暂记 |
+| `mvn verify` 在 CI 仍预期为红 | **事实**：Step 5 红 = 存量 132 失败的真实反映，已在 CI 注释与本报告显式声明，不做 `continue-on-error` 掩盖 |
+| 2 个 Testcontainers IT | 需要 Docker；`TestcontainersBase` 位于 `ydsz-common-core/src/main/java`（测试基类打进生产 jar，属 B1-11 分层问题） |
+| 覆盖率提升 | 本轮只做"把量尺修准"，未新增任何模块的全量覆盖（除网关 9 个用例）|
+
+**复现命令**
+
+```bash
+mvn -o -q checkstyle:checkstyle
+python3 data/scripts/check-checkstyle-delta.py --self-test          # 19/19
+python3 data/scripts/check-checkstyle-delta.py --base HEAD          # 实测：4155 条 / C1 12 文件 0 违规 → 绿
+python3 data/scripts/check-diff-coverage.py --self-test             # 16/16
+mvn -o verify -pl ydsz-gateway -DskipTests                          # jacoco:check 绿
+python3 data/scripts/check-diff-coverage.py --base HEAD~1 --show-files  # 网关 7/8=87.5%，另报 common-exception 缺 jacoco.xml（D3）
+```
+
 ### B0 进行中/待办
 
 | 项 | 状态 |
 |----|------|
-| B0-4 子应用 base 路径单一来源（S5） | ✅ 已完成（配置级 + 门禁；产物级验证待 B0-10） |
+| B0-4 子应用 base 路径单一来源（S5） | ✅ 已完成（配置级 + 门禁 + **产物级**：B0-10 解除后 `check:base` 已实测到 9 个应用的 dist 前缀） |
 | B0-5 nginx 缓存分层（S6） | ✅ 已完成（分层 + 安全头单一来源 + `check:nginx` 含 8/8 反例自检；`nginx -t` 待镜像内验证） |
 | B0-6 设计令牌 CSS 接入（S7） | ✅ 已完成（接线 + 构建外置根因修掉 + `check:tokens` 含 4/4 反例自检；顺带抓出 `easeIn`→`ease-in` 真实缺陷；浏览器渲染复核待做） |
 | B0-7 CI 契约/错误码门禁（S8） | ✅ 已完成（`.mjs`→`.mts` 修好 + 新 `wiring` job 8 门禁全绿 + `check:ci` 7/7 反例自检 + 补上缺失的性能退化门禁并证伪 8/8 + 生成器 8 类缺陷修掉含"空跑假绿"与"未知参数即写盘"）；**遗留**：一次性 `gen:contract` 全量再生成待人工复核；`pnpm lint` 仍不可用（eslint.config.mjs 加载报错）故 verify job 仍红 |
@@ -431,12 +627,14 @@ NextWiki 搜索 trigram 化并去 `content` · DEBUG 日志降级 · 规则引�
 | B0-12 i18n / format 存量债（S8 副产物） | 待办：`check:i18n` 5 个 locale 文件 82 条缺键（含 `cepPushTest`/`cepPushPush` 疑似拼写反了）；`format:check` 3309 文件不一致 + 6 文件解析失败 + `.dev-logs/` 203 个临时脚本已入库；两者暂列 `check-ci.mts` 的 MANUAL_ONLY 并附理由 → 归 B1-9 |
 | B0-8 viewport 禁缩放 + CSP 自堵 | ✅ 已完成（9 个入口 viewport 归一 + 死掉的第三方引用移除并留恢复路径；`check:head` 含 14/14 反例自检，另用 `git show HEAD` 还原改前文件实测报 14 条退出码 1；顺带核实"CSP 未拦掉自有资源"）；**遗留**：dev 端字形回退的视觉复核待做、百度统计是否恢复由使用方决策 |
 | B0-13 脚手架硬编码存储加密密钥（B0-8 副产物） | 待办：`bash/gen-app.mts:185` 把 `VITE_APP_STORE_SECURE_KEY=YDSZ-pmis-2026-secure-key` 硬编码进每个新应用 `.env`（`apps/generator-web/.env:4` 同值），经 `comm/stores/src/setup.ts:88` 作 secure-ls AES 密钥构建期注入 bundle；密钥随 bundle 公开已无秘密性，但**全应用共用同一字面量**使单点泄露变全域泄露 → 归凭据轨（B0-1 延续），口径需使用方拍板 |
-| B0-9 网关路由双源漂移 | 待办（新发现，非原 S 系列） |
-| B0-10 子应用生产构建失败：`lucide-vue-next` 只被 4 个库包声明，apps 下 15 个文件直接 import（agent5/userinfo6/generator2/cronjob1/system1），pnpm 隔离 node_modules 下解析失败 → 至少 5/9 子应用 `build` 红 | 新发现（阻断 S5 产物级验收，并反证 CI 从未跑子应用构建） |
+| B0-9 网关路由双源漂移 | ✅ 已完成（路由清单单一来源 + `gen-gateway-routes.py --check` + `check-gateway-routes.py` R1–R10（57/57 反例自检，实测 20 路由/1056 路径/9 服务，红 0 ⚠️3）+ 网关 5.x 前缀的 metadata 反漂移 + 前端 nginx/10 vite 双剥修复 + `/api/v1` 238 行清理含生成器模板再生源 + CI 接线（新写 `check-file-encoding.py` 28/28、移除 3 个引用不存在脚本的伪门禁、修好恒红的交叉检出仓库名））；**待决策 5 项**：`/ws/**` 归属、secondary-auth 改名、`ydsz.file.domain` 指向废弃端口 9010、4 条"前端调用无后端"路径、`gen-crud-skeleton.mts` 死生成器；详见上文 B0-9 小节 |
+| B0-10 子应用生产构建失败（三成因：未声明依赖 / 入口指向永不构建的 dist / 库未先构建） | ✅ 已完成（`pnpm build --force` 25/25 绿 + 新门禁 `check:deps` 双规则含 8/8+10/10 反例自检 + CI `bundle` job 改为构建全部 10 个应用）详见上文 B0-10 小节 |
+| B1-7 turbo `globalDependencies` 加 `comm/**` | ❌ **误报，改动已撤回**（实测 `<NONEXISTENT>` 节点已按整包目录哈希覆盖 `^build`；改一行 mock-service 源码：现状精准失效 3/10 app，加 `comm/**` 后无差别失效 10/10；另核 11 个入口包 import 的 `@ydsz*` 包根全部已声明，图边无缺）详见上文 B1-7 小节 |
+| B1-2 覆盖率/静态检查门禁 | ✅ 已完成（三条"恒红 = 无门禁"换成可证伪增量门禁：21 模块 jacoco 棘轮 + `check-diff-coverage.py`（16/16 自检）+ `check-checkstyle-delta.py`（19/19 自检）+ CI `fetch-depth: 0`/Step 4/5a 接线 + 移除 `DisabledCondition` 与 `<skipITs>` 硬编码；顺带把网关 SQL 注入过滤器 4 条永不匹配的正则修好（33/33 绿）并补 `AuthGlobalFilterSecretTest` 9 例，把增量覆盖率从 0% 拉到 87.5%）；**遗留**：132 个存量失败测试 → B1-3；`includeTestSourceDirectory=false` 使测试代码不受 checkstyle 约束（未改，需先量再定）详见上文 B1-2 小节 |
 | 网关内部头签名**下游从不验签**：仅网关生成签名，无服务设置 `ydsz.security.internal-sign.secret`，`InternalSignatureProperties.isEnabled` 默认 false | 新发现 → 归入 B1-11 |
 | `docs/nacos-config/ydsz-gateway.yml` 与 `application.yml` 的 include 曾不同（cache-metrics 有无） | 已随 B0-2 统一 |
 | `effective-excel-pom.xml`（含本机绝对路径）被提交入库 | 归入 B1-9 文档/仓库卫生 |
 
 ---
 
-*本报告基于 2026-10-25 两个仓库的工作树快照；所有 ✅ 结论均可按所列 `文件:行号` 直接复核，◇ 结论口径见证据列。当前 `mvn -o -T 1C compile` 为 BUILD SUCCESS（✅），工作树含 11 项未提交改动（网关 `AuthGlobalFilter`、3 份配置、6 个 SmokeTest），实施前请先确认这些在途变更。*
+*本报告基于 2026-10-25 两个仓库的工作树快照，§十一 随实施滚动更新到 2026-10-26；所有 ✅ 结论均可按所列 `文件:行号` 直接复核，◇ 结论口径见证据列。当前 `mvn -o -T 1C compile` 为 BUILD SUCCESS（✅，2026-10-26 复跑）。两仓工作树均有未提交改动：后端 30 项（网关路由单一来源改造与 R1–R10 门禁、`check-file-encoding.py`、CI 接线、P0 安全加固残留项），前端 513 项（B0-4/5/6/8/9/10 的门禁、生成器与 URL 接线）。提交与推送均未执行，实施前请先确认这些在途变更。*
