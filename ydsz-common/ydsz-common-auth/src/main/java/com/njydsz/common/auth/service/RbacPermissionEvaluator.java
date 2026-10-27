@@ -511,16 +511,6 @@ public class RbacPermissionEvaluator {
     return PermissionUtils.hasPermission(granted, required, properties.isWildcardEnabled());
   }
 
-  /**
-   * 解析当前租户 ID，如果无法解析则返回默认租户 ID。
-   *
-   * @return 租户 ID（不会返回 null）
-   */
-  private String resolveTenantIdOrDefault() {
-    String tenantId = resolveTenantId();
-    return tenantId != null ? tenantId : "__DEFAULT__";
-  }
-
   private Set<String> parseUserRoles(Map<String, Object> userInfo) {
     if (userInfo == null) {
       return Collections.emptySet();

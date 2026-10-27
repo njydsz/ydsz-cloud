@@ -10,6 +10,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -32,23 +35,25 @@ class RuleGraphControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private RuleChainGraphProvider ruleChainGraphProvider;
 
-  @org.mockito.Mock
+  @Mock
   private GraphExecutionProvider graphExecutionProvider;
 
-  @org.mockito.Mock
+  @Mock
   private ExpressionValidationService expressionValidationService;
 
-  @org.mockito.Mock
+  @Mock
   private LiteruleWebConverter literuleWebConverter;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private RuleGraphController controller;
 
   @BeforeEach
   void setUp() {
+    // @Resource 字段不参与 Mockito 构造器注入，需显式装配
+    ReflectionTestUtils.setField(controller, "literuleWebConverter", literuleWebConverter);
     mockMvc = standaloneSetup(controller);
   }
 
@@ -59,7 +64,7 @@ class RuleGraphControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when get graph succeeds")
     void should_return_200_when_get_graph_succeeds() throws Exception {
-      when(ruleChainGraphProvider.getByRuleCode("RULE-001")).thenReturn(null);
+      when(ruleChainGraphProvider.getByRuleCode("RULE-001")).thenReturn(new RuleChainGraph());
       when(literuleWebConverter.entityToVO(any(RuleChainGraph.class)))
           .thenReturn(new RuleChainGraphVO());
 

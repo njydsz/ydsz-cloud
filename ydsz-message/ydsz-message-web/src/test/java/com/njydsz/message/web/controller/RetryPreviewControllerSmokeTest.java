@@ -5,10 +5,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -26,10 +30,10 @@ class RetryPreviewControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private RetryPreviewService retryPreviewService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private RetryPreviewController controller;
 
   @BeforeEach
@@ -44,11 +48,29 @@ class RetryPreviewControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list presets succeeds")
     void should_return_200_when_list_presets_succeeds() throws Exception {
-      when(retryPreviewService.previewAllPresets()).thenReturn(java.util.Map.of());
-
+      // listPresets 直接由 RetryPreset 枚举构造响应，不经过 RetryPreviewService
       mockMvc.perform(get("/message/retry/presets"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE))
+          .andExpect(jsonPath("$.data.standard.code").value("standard"))
+          .andExpect(jsonPath("$.data.standard.maxRetryCount").value(3));
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /message/retry/preview/all")
+  class PreviewAll {
+
+    @Test
+    @DisplayName("should return 200 when preview all presets succeeds")
+    void should_return_200_when_preview_all_presets_succeeds() throws Exception {
+      when(retryPreviewService.previewAllPresets())
+          .thenReturn(Map.of("standard", Map.of("maxRetryCount", 3)));
+
+      mockMvc.perform(get("/message/retry/preview/all"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE))
+          .andExpect(jsonPath("$.data.standard.maxRetryCount").value(3));
     }
   }
 }

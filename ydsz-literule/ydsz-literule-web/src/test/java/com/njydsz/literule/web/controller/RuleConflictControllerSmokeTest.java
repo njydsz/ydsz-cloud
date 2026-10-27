@@ -12,6 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -32,17 +35,19 @@ class RuleConflictControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private RuleConflictDetectorProvider ruleConflictDetectorProvider;
 
-  @org.mockito.Mock
+  @Mock
   private LiteruleWebConverter literuleWebConverter;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private RuleConflictController controller;
 
   @BeforeEach
   void setUp() {
+    // @Resource 字段不参与 Mockito 构造器注入，需显式装配
+    ReflectionTestUtils.setField(controller, "literuleWebConverter", literuleWebConverter);
     mockMvc = standaloneSetup(controller);
   }
 
@@ -53,7 +58,9 @@ class RuleConflictControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when detect conflicts succeeds")
     void should_return_200_when_detect_conflicts_succeeds() throws Exception {
-      when(ruleConflictDetectorProvider.detectConflicts()).thenReturn(List.of());
+      // 返回非空冲突对，使 entityToVO 打桩被真实消费（空列表下 map 不会调用转换器）
+      when(ruleConflictDetectorProvider.detectConflicts())
+          .thenReturn(List.of(RuleConflictInfo.builder().build()));
       when(literuleWebConverter.entityToVO(any(RuleConflictInfo.class)))
           .thenReturn(new RuleConflictInfoVO());
 

@@ -1,5 +1,7 @@
 package com.njydsz.nextwiki.web.controller.activity;
 
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,6 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
@@ -29,10 +33,10 @@ class ActivityControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private ActivityQueryService activityQueryService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private ActivityController controller;
 
   @BeforeEach
@@ -47,7 +51,8 @@ class ActivityControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list activities succeeds")
     void should_return_200_when_list_activities_succeeds() throws Exception {
-      when(activityQueryService.listActivities("user-001", "1", 1, 20))
+      // Controller 透传 TenantContextHolder.getTenantId()；standalone MockMvc 无租户上下文，实参为 null
+      when(activityQueryService.listActivities(eq("user-001"), isNull(), eq(1), eq(20)))
           .thenReturn(List.of());
 
       mockMvc.perform(get("/nextwiki/activities")

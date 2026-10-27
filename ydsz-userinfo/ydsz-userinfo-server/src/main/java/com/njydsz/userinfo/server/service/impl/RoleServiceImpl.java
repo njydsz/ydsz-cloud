@@ -264,6 +264,9 @@ public class RoleServiceImpl implements RoleService {
 
         return true;
       });
+    } catch (BusinessException e) {
+      // 业务异常（角色不存在等）直接透传，避免被包装成 500 系统异常
+      throw e;
     } catch (Throwable t) {
       throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }

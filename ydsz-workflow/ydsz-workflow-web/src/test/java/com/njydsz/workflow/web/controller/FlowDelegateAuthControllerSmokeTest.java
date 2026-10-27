@@ -9,12 +9,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.auth.model.LoginUser;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
@@ -24,6 +30,9 @@ import com.njydsz.workflow.server.service.FlowDelegateAuthService;
  *
  * <p>验证委托授权核心端点可正确返回 HTTP 200 + YdszResponse 信封结构，防御接口签名变更。
  *
+ * <p>两个列表端点均通过 {@code AuthContextUtils.getUserId()} 读取登录态，未写入登录上下文时抛 401
+ * {@code SysException}，因此用例需先装配当前登录用户。
+ *
  * @author ydsz-smoke-test
  * @since 26.10.10
  */
@@ -31,15 +40,27 @@ class FlowDelegateAuthControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private FlowDelegateAuthService delegateAuthService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private FlowDelegateAuthController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
+  }
+
+  @AfterEach
+  void tearDown() {
+    RequestContext.clear();
+  }
+
+  /** 装配当前登录用户，供 Controller 的 AuthContextUtils.getUserId() 读取。 */
+  private void setCurrentUser() {
+    LoginUser loginUser = new LoginUser();
+    loginUser.setUserId("user-001");
+    AuthContextUtils.setCurrent(loginUser);
   }
 
   @Nested
@@ -49,6 +70,8 @@ class FlowDelegateAuthControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list my delegate auths succeeds")
     void should_return_200_when_list_my_delegate_auths_succeeds() throws Exception {
+      setCurrentUser();
+
       FlowDelegateAuthVO vo = new FlowDelegateAuthVO();
       vo.setId("da-001");
       when(delegateAuthService.listMine(anyString(), anyString(), any())).thenReturn(List.of(vo));
@@ -66,6 +89,8 @@ class FlowDelegateAuthControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when list as delegate succeeds")
     void should_return_200_when_list_as_delegate_succeeds() throws Exception {
+      setCurrentUser();
+
       when(delegateAuthService.listAsDelegate(anyString(), anyString(), any())).thenReturn(List.of());
 
       mockMvc.perform(get("/workflow/engine/delegateAuth/asDelegate"))

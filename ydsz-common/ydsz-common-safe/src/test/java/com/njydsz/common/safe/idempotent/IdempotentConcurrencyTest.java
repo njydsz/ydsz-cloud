@@ -31,7 +31,6 @@ import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -246,20 +245,12 @@ class IdempotentConcurrencyTest {
     void business_exception_releases_lock_allows_retry() throws Throwable {
       AtomicInteger acquireCount = new AtomicInteger(0);
       AtomicBoolean lockHeld = new AtomicBoolean(false);
-      AtomicInteger secondCallCount = new AtomicInteger(0);
 
+      // 模拟 SET NX 语义：锁被持有时 acquire 返回 null（幂等命中），仅在锁空闲时授予 token
       when(idempotentStrategy.acquire(anyString(), anyLong())).thenAnswer((Answer<String>) invocation -> {
-        int count = acquireCount.incrementAndGet();
-        if (count == 1) {
-          lockHeld.set(true);
-          return "first-token";
-        }
-        if (count == 2) {
-          return null;
-        }
-        if (count == 3) {
-          secondCallCount.incrementAndGet();
-          return "third-token";
+        if (lockHeld.compareAndSet(false, true)) {
+          acquireCount.incrementAndGet();
+          return "token-" + acquireCount.get();
         }
         return null;
       });
@@ -278,7 +269,9 @@ class IdempotentConcurrencyTest {
       assertThat(acquireCount.get()).isOne();
 
       // 第二次调用：正常返回（锁已释放后可重试）
-      when(joinPoint.proceed()).thenReturn("success");
+      // 必须用 doReturn 形式：when(joinPoint.proceed()) 会真实调用 mock，
+      // 触发上一次 thenThrow 存留的 BusinessException 而逸出到测试方法。
+      doReturn("success").when(joinPoint).proceed();
       Object result = aspect.around(joinPoint, idempotent);
       assertThat(result).isEqualTo("success");
     }

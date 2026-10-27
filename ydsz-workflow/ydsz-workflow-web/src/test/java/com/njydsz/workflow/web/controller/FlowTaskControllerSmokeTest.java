@@ -9,13 +9,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.auth.model.LoginUser;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.workflow.web.controller.instance.FlowTaskController;
@@ -29,6 +36,9 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
  *
  * <p>验证任务核心端点可正确返回 HTTP 200 + YdszResponse 信封结构，防御接口签名变更。
  *
+ * <p>待办端点通过 {@code AuthContextUtils.getUserId()} 读取登录态，未写入登录上下文时抛 401
+ * {@code SysException}，因此该用例需先装配当前登录用户。
+ *
  * @author ydsz-smoke-test
  * @since 26.10.10
  */
@@ -36,21 +46,26 @@ class FlowTaskControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private FlowTaskService taskService;
 
-  @org.mockito.Mock
+  @Mock
   private WorkflowFacade workflowFacade;
 
-  @org.mockito.Mock
+  @Mock
   private FlowTodoCountPushService todoCountPushService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private FlowTaskController controller;
 
   @BeforeEach
   void setUp() {
     mockMvc = standaloneSetup(controller);
+  }
+
+  @AfterEach
+  void tearDown() {
+    RequestContext.clear();
   }
 
   @Nested
@@ -60,6 +75,10 @@ class FlowTaskControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when todo task list query succeeds")
     void should_return_200_when_todo_task_list_succeeds() throws Exception {
+      LoginUser loginUser = new LoginUser();
+      loginUser.setUserId("user-001");
+      AuthContextUtils.setCurrent(loginUser);
+
       FlowRunTaskVO vo = new FlowRunTaskVO();
       vo.setId("task-001");
       PageResponse<List<FlowRunTaskVO>> pageResult = PageResponse.success(1L, 1L, 20L, List.of(vo));
@@ -81,7 +100,7 @@ class FlowTaskControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when task detail query succeeds")
     void should_return_200_when_task_detail_succeeds() throws Exception {
-      when(workflowFacade.getTaskDetail(anyString())).thenReturn(java.util.Map.of());
+      when(workflowFacade.getTaskDetail(anyString())).thenReturn(Map.of());
 
       mockMvc.perform(get("/workflow/engine/task/{taskId}", "task-001"))
           .andExpect(status().isOk())

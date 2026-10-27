@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
@@ -29,13 +31,13 @@ class AgentMetadataControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private LlmClient llmClient;
 
-  @org.mockito.Mock
+  @Mock
   private ToolRegistry toolRegistry;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private AgentMetadataController controller;
 
   @BeforeEach
@@ -50,11 +52,14 @@ class AgentMetadataControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when get models succeeds")
     void should_return_200_when_get_models_succeeds() throws Exception {
-      when(llmClient.getProvider()).thenReturn("openai");
+      // 端点消费 getAvailableProviders()（LlmClient 的 default 方法在 mock 上不会回落到 getProvider()）
+      when(llmClient.getAvailableProviders()).thenReturn(List.of("openai"));
 
       mockMvc.perform(get("/agent/models"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE))
+          .andExpect(jsonPath("$.data[0].provider").value("openai"))
+          .andExpect(jsonPath("$.data[0].available").value(true));
     }
   }
 

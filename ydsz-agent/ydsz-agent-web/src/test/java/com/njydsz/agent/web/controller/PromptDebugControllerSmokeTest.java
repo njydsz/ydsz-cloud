@@ -3,18 +3,22 @@ package com.njydsz.agent.web.controller;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.njydsz.agent.server.prompt.PromptPlaygroundService;
 import com.njydsz.agent.server.prompt.PromptPlaygroundService.PromptInvokeResult;
@@ -34,19 +38,17 @@ class PromptDebugControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private SsePushChannelFactory ssePushChannelFactory;
 
-  @org.mockito.Mock
+  @Mock
   private PromptPlaygroundService playgroundService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private PromptDebugController controller;
 
   @BeforeEach
   void setUp() {
-    SsePushChannel channel = mock(SsePushChannel.class);
-    when(ssePushChannelFactory.create()).thenReturn(channel);
     mockMvc = standaloneSetup(controller);
   }
 
@@ -67,6 +69,25 @@ class PromptDebugControllerSmokeTest extends BaseControllerMockTest {
               .content("{\"prompt\":\"test-prompt\",\"userMessage\":\"hello\"}"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+    }
+  }
+
+  @Nested
+  @DisplayName("POST /agent/prompt/playground/stream")
+  class Stream {
+
+    @Test
+    @DisplayName("should return 200 SSE channel when stream starts")
+    void should_return_200_when_stream_starts() throws Exception {
+      SsePushChannel channel = mock(SsePushChannel.class);
+      when(channel.getEmitter()).thenReturn(new SseEmitter());
+      when(ssePushChannelFactory.create()).thenReturn(channel);
+
+      mockMvc.perform(post("/agent/prompt/playground/stream")
+              .contentType("application/json")
+              .content("{\"prompt\":\"test-prompt\",\"userMessage\":\"hello\"}"))
+          .andExpect(status().isOk())
+          .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM));
     }
   }
 }

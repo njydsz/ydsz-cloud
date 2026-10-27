@@ -1,5 +1,8 @@
 package com.njydsz.nextwiki.web.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -51,7 +54,8 @@ class BatchImportControllerSmokeTest extends BaseControllerMockTest {
       MockMultipartFile file = new MockMultipartFile("files", "test.txt",
           "text/plain", "hello world".getBytes());
 
-      when(batchImportService.batchUpload(null, null, "user-001"))
+      // files 为 MockMvc 解析出的 MultipartFile[]，parentId 未传（可选参数为 null）
+      when(batchImportService.batchUpload(any(), isNull(), eq("user-001")))
           .thenReturn(BatchImportApplicationService.BatchImportResult.empty());
 
       mockMvc.perform(multipart("/nextwiki/import/batch-upload")
@@ -72,7 +76,8 @@ class BatchImportControllerSmokeTest extends BaseControllerMockTest {
       MockMultipartFile zipFile = new MockMultipartFile("file", "archive.zip",
           "application/zip", "zip-content".getBytes());
 
-      when(batchImportService.importFromZip(null, null, "user-001"))
+      // file 为 MockMvc 解析出的 MultipartFile 实例，parentId 未传（可选参数为 null）
+      when(batchImportService.importFromZip(any(), isNull(), eq("user-001")))
           .thenReturn(BatchImportApplicationService.BatchImportResult.empty());
 
       mockMvc.perform(multipart("/nextwiki/import/zip")

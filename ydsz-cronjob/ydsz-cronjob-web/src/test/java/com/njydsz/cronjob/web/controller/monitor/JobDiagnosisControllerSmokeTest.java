@@ -12,12 +12,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.cronjob.domain.service.JobDiagnosisService;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.ExecutorConfig;
+import com.njydsz.cronjob.server.config.LeaderConfig;
 import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
 import com.njydsz.cronjob.server.core.redis.CronjobRedisOps;
 
@@ -33,19 +37,19 @@ class JobDiagnosisControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private JobDiagnosisService jobDiagnosisService;
 
-  @org.mockito.Mock
+  @Mock
   private CronjobProperties cronjobProperties;
 
-  @org.mockito.Mock
+  @Mock
   private CronjobRedisOps cronjobRedisOps;
 
-  @org.mockito.Mock
+  @Mock
   private ObjectProvider<RunningTaskCounter> runningTaskCounterProvider;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private JobDiagnosisController controller;
 
   @BeforeEach
@@ -62,10 +66,16 @@ class JobDiagnosisControllerSmokeTest extends BaseControllerMockTest {
     void should_return_200_when_diagnose_succeeds() throws Exception {
       when(jobDiagnosisService.findLatestByJobKey("job-key-001")).thenReturn(Optional.empty());
       when(jobDiagnosisService.findByJobKey("job-key-001", 5)).thenReturn(List.of());
+      // 配置摘要读取 getExecutor()/getLeader()，Mock 默认返回 null 会触发 NPE，故给出真实默认配置
+      when(cronjobProperties.getExecutor()).thenReturn(new ExecutorConfig());
+      when(cronjobProperties.getLeader()).thenReturn(new LeaderConfig());
 
       mockMvc.perform(get("/cronjob/monitor/diagnosis/{jobKey}", "job-key-001"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE))
+          .andExpect(jsonPath("$.data.jobKey").value("job-key-001"))
+          .andExpect(jsonPath("$.data.config.maxConcurrent").value(16))
+          .andExpect(jsonPath("$.data.config.leaderEnabled").value(true));
     }
   }
 }

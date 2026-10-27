@@ -4,7 +4,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -50,8 +49,14 @@ public class AuthPermissionAspect {
   /** 可选的指标采集器；为 null 时跳过指标采集（保持向后兼容）。 */
   private AuthMetricsCollector metricsCollector;
 
-  /** 缓存 Method -> [classAnnotation, methodAnnotation] 避免每次请求做反射查找 */
-  private final ConcurrentHashMap<Method, CachedApiAnnotation> apiAnnotationCache =
+  /**
+   * 缓存 {@code (宿主类, 方法)} -> [类级注解, 方法级注解]，避免每次请求做反射查找。
+   *
+   * <p>键必须含宿主类：方法继承自基类时，{@code MethodSignature.getMethod()} 返回的是基类声明的同一个 {@code Method}
+   * 对象，而类级 {@link AuthApiPermission} 声明在各子类上。若只按 {@code Method} 取键，第一个被调用的子类会把它的类级注解
+   * 缓存住，后续所有子类兄弟都按这份权限码校验（实测串号：SubAudit 被按 SubTenant 的 {@code sys:tenant:read} 校验）。
+   */
+  private final ConcurrentHashMap<AnnotationCacheKey, CachedApiAnnotation> apiAnnotationCache =
       new ConcurrentHashMap<>(256);
 
   public AuthPermissionAspect(RbacPermissionEvaluator evaluator) {
@@ -94,12 +99,12 @@ public class AuthPermissionAspect {
 
     CachedApiAnnotation cached =
         apiAnnotationCache.computeIfAbsent(
-            method,
-            m -> {
+            new AnnotationCacheKey(targetClass, method),
+            k -> {
               AuthApiPermission classAnn =
-                  AnnotationUtils.findAnnotation(targetClass, AuthApiPermission.class);
+                  AnnotationUtils.findAnnotation(k.targetClass(), AuthApiPermission.class);
               AuthApiPermission methodAnn =
-                  AnnotationUtils.findAnnotation(m, AuthApiPermission.class);
+                  AnnotationUtils.findAnnotation(k.method(), AuthApiPermission.class);
               return new CachedApiAnnotation(classAnn, methodAnn);
             });
 
@@ -137,6 +142,13 @@ public class AuthPermissionAspect {
       metricsCollector.recordCheckTime(nanos);
     }
   }
+
+  /**
+   * 注解解析缓存的键：宿主类 + 方法。
+   *
+   * <p>见 {@link #apiAnnotationCache} 的说明——仅用 {@code Method} 作键会让继承方法在兄弟子类间串权限码。
+   */
+  private record AnnotationCacheKey(Class<?> targetClass, Method method) {}
 
   /**
    * 接口权限注解的缓存条目。

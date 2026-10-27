@@ -1,5 +1,7 @@
 package com.njydsz.literule.web.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,6 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -29,17 +33,21 @@ class RuleVariableAdminControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private VariableRegistry variableRegistry;
 
-  @org.mockito.Mock
+  @Mock
   private ExpressionValidationService expressionValidationService;
 
-  @org.mockito.InjectMocks
   private RuleVariableAdminController controller;
 
   @BeforeEach
   void setUp() {
+    // 构造器签名注入 ObjectProvider<VariableRegistry>（缺失时回退 EmptyVariableRegistry）→ 手工构造
+    ObjectProvider<VariableRegistry> variableRegistryProvider = mock(ObjectProvider.class);
+    when(variableRegistryProvider.getIfAvailable(any())).thenReturn(variableRegistry);
+    controller =
+        new RuleVariableAdminController(variableRegistryProvider, expressionValidationService);
     mockMvc = standaloneSetup(controller);
   }
 

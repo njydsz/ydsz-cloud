@@ -137,14 +137,13 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ArchUnit 架构守护测试（scope: test，禁止业务模块直接 new ThreadPoolExecutor） -->
-        <dependency>
-            <groupId>com.tngtech.archunit</groupId>
-            <artifactId>archunit-junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
+        <!-- ArchUnit 依赖已移除（2026-10-27）：本模块原有的 com.njydsz.common.arch.DddLayerArchTest 是空转守护——
+             common-base 的测试类路径上没有任何业务模块类，ClassFileImporter 按 com.njydsz 全量导入后
+             4 条规则的 that() 侧均匹配 0 个类，ArchUnit 以 "failed to check any classes" 直接判红。
+             分层守护改由各业务模块 -server 的 DddLayerArchTest 就近承担（共 9 个模块，见报告 B1-3）。
+             若将来需要跨模块总闸，应在聚合 reactor 末端单独建 guard 模块，不能放在 common-base（会形成构建环）。 -->
 
-        <!-- JUnit 5（ArchUnit 依赖） -->
+        <!-- JUnit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

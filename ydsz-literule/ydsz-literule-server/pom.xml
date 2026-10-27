@@ -37,14 +37,11 @@
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-json</artifactId>
     </dependency>
-        <!-- DDD-P2 违例（已标注）：为打破 LiteRuleAutoConfiguration 中 @ConditionalOnBean 循环依赖，
-             需要直接注入 infra 层 Mapper。正常应通过 domain 接口访问 DB，当前方案为权宜之计。
-             修复后可移除此依赖。-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-literule-infra</artifactId>
-        </dependency>
-        <!-- P1-2: 移除 server 对 infra 的直接依赖，符合 DDD 分层（server 仅依赖 domain，infra 由 web 层引入并通过 Spring 自动装配注入 Repository 实现） -->
+        <!-- DDD-P2 违例已修复（2026-10-27）：DirectDbRuleConfigProvider 原先直接注入 infra 层 RuleDefinitionMapper
+             以打破 @ConditionalOnBean 循环依赖，现改为依赖 domain 端口 RuleDefinitionConfigRepository，
+             Mapper 调用收口到 infra.repository.impl.RuleDefinitionConfigRepositoryImpl。
+             server 对 ydsz-literule-infra 的编译期依赖随之移除（infra 由 web/app 组合根引入，Spring 运行时装配）。
+             守护：DddLayerArchTest#should_not_skip_layers_to_infra -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-literule-domain</artifactId>

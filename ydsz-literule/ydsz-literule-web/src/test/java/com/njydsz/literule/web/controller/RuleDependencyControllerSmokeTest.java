@@ -1,5 +1,6 @@
 package com.njydsz.literule.web.controller;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -28,14 +31,17 @@ class RuleDependencyControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private RuleDependencyProvider ruleDependencyProvider;
 
-  @org.mockito.InjectMocks
   private RuleDependencyController controller;
 
   @BeforeEach
   void setUp() {
+    // 构造器签名注入 ObjectProvider<RuleDependencyProvider>（可选 SPI），@InjectMocks 无法解析 → 手工构造
+    ObjectProvider<RuleDependencyProvider> providerProvider = mock(ObjectProvider.class);
+    when(providerProvider.getIfAvailable()).thenReturn(ruleDependencyProvider);
+    controller = new RuleDependencyController(providerProvider);
     mockMvc = standaloneSetup(controller);
   }
 

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -57,6 +58,8 @@ class RuleAdminControllerSmokeTest extends BaseControllerMockTest {
 
   @BeforeEach
   void setUp() {
+    // @Resource 字段不参与 Mockito 构造器注入，需显式装配（list/stats 端点直接引用转换器）
+    ReflectionTestUtils.setField(controller, "literuleWebConverter", literuleWebConverter);
     mockMvc = standaloneSetup(controller);
   }
 

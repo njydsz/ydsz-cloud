@@ -6,11 +6,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -28,15 +31,18 @@ import com.njydsz.nextwiki.server.service.WopiFileService;
  */
 class WopiControllerSmokeTest extends BaseControllerMockTest {
 
+  /** WOPI 回调访问令牌（与 X-WOPI-Authorization 请求头比对）。 */
+  private static final String WOPI_ACCESS_TOKEN = "wopi-token-001";
+
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private WopiFileService wopiFileService;
 
-  @org.mockito.Mock
+  @Mock
   private NextwikiProperties properties;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private WopiController controller;
 
   @BeforeEach
@@ -57,11 +63,17 @@ class WopiControllerSmokeTest extends BaseControllerMockTest {
           .size(1024L)
           .updatedAt(LocalDateTime.now())
           .build();
-      when(wopiFileService.findFileOptional("file-001"))
-          .thenReturn(java.util.Optional.of(node));
+      // validateWopiToken 读取 properties.getWopi().getAccessToken()，未 stub 时返回 null 触发 NPE
+      NextwikiProperties.WopiConfig wopiConfig = new NextwikiProperties.WopiConfig();
+      wopiConfig.setAccessToken(WOPI_ACCESS_TOKEN);
+      when(properties.getWopi()).thenReturn(wopiConfig);
+      when(wopiFileService.findFileOptional("file-001")).thenReturn(Optional.of(node));
 
-      mockMvc.perform(get("/nextwiki/wopi/files/file-001"))
-          .andExpect(status().isOk());
+      mockMvc.perform(get("/nextwiki/wopi/files/file-001")
+              .header("X-WOPI-Authorization", WOPI_ACCESS_TOKEN))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.error").value(false))
+          .andExpect(jsonPath("$.baseFileName").value("test.docx"));
     }
   }
 }

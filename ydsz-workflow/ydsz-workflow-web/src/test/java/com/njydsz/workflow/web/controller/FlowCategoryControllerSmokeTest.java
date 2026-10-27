@@ -1,6 +1,6 @@
 package com.njydsz.workflow.web.controller;
 
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -12,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.test.BaseControllerMockTest;
@@ -31,10 +33,10 @@ class FlowCategoryControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private FlowCategoryServiceImpl categoryService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private FlowCategoryController controller;
 
   @BeforeEach
@@ -53,7 +55,8 @@ class FlowCategoryControllerSmokeTest extends BaseControllerMockTest {
       vo.setId("cat-001");
       vo.setCategoryCode("HR");
       vo.setCategoryName("人事流程");
-      when(categoryService.listAllVO(anyString())).thenReturn(List.of(vo));
+      // Controller 透传 TenantContextHolder.getTenantId()；standalone MockMvc 无租户上下文，实参为 null
+      when(categoryService.listAllVO(isNull())).thenReturn(List.of(vo));
 
       mockMvc.perform(get("/workflow/categories"))
           .andExpect(status().isOk())
@@ -68,7 +71,7 @@ class FlowCategoryControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when category tree query succeeds")
     void should_return_200_when_category_tree_succeeds() throws Exception {
-      when(categoryService.tree(anyString())).thenReturn(List.of());
+      when(categoryService.tree(isNull())).thenReturn(List.of());
 
       mockMvc.perform(get("/workflow/categories/tree"))
           .andExpect(status().isOk())

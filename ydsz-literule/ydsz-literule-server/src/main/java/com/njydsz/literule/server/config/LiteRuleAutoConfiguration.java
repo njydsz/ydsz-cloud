@@ -9,6 +9,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -42,6 +43,7 @@ import com.njydsz.literule.domain.model.ModelInputProvider;
 import com.njydsz.literule.domain.repository.ABTestRepository;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.domain.repository.DecisionTableRepository;
+import com.njydsz.literule.domain.repository.RuleDefinitionConfigRepository;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.domain.repository.RuleExecutionTraceRepository;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
@@ -119,6 +121,13 @@ import com.njydsz.common.locales.util.I18n;
 @EnableConfigurationProperties(LiteRuleProperties.class)
 @EnableScheduling
 @EnableAsync
+// 显式声明自动装配顺序：directDbRuleConfigProvider 用 @ConditionalOnBean 判定 domain 端口是否就绪，
+// 而端口实现由 infra 的 LiteruleInfraAutoConfiguration 以 @Bean 注册。未声明先后时，
+// 判定结果取决于两个自动配置类的排序（当前靠包名 infra < server 的字母序碰巧成立）；
+// 一旦排序变化，DB 规则源会被静默判定为"不可用"并回落到 NO-OP（空规则），线上表现为规则全部失效。
+// 用 name 形式引用是为了不引入 server → infra 的编译期依赖（YDIZ-DDD-005）。
+@AutoConfigureAfter(
+    name = "com.njydsz.literule.infra.config.LiteruleInfraAutoConfiguration")
 @ConditionalOnProperty(
     prefix = "ydsz.literule",
     name = "enabled",
@@ -1092,25 +1101,29 @@ public class LiteRuleAutoConfiguration {
  * <p>解决 LiteRuleAutoConfiguration 中 @ConditionalOnBean(RuleConfigProvider.class) 导致 Bean 链断裂问题：
  * 原设计中 Provider 相互包装（鸡生蛋蛋生鸡），移除循环条件后由此基础 DB 源提供数据。
    *
-   * <p>此 Bean 直接注入 {@link com.njydsz.literule.infra.mapper.RuleDefinitionMapper}
-   * （DDD 分层违例，参见 ydsz-literule-server/pom.xml），无需其他 Provider 前置条件。
+   * <p>此 Bean 通过 domain 端口 {@link RuleDefinitionConfigRepository} 访问数据库
+   * （infra 层实现由组件扫描注册），不再直接依赖 infra Mapper（YDIZ-DDD-005 违例已于 26.10.27 修复）。
    *
-   * @param ruleDefinitionMapper MyBatis Mapper（由 ydsz-literule-infra @MapperScan 注册）
+   * <p><b>条件装配</b>：仅当容器中存在 {@link RuleDefinitionConfigRepository} 实现时才注册本 Bean；
+   * 缺失时 {@link #cachingRuleConfigProvider} 依次回落 Nacos / Apollo / Zookeeper / NO-OP，
+   * 与修复前"无 Mapper 即不注册"的行为保持一致。
+   *
+   * @param ruleDefinitionConfigRepository 规则定义配置源端口（由 ydsz-literule-infra 提供实现）
    * @return DirectDbRuleConfigProvider 实例
    * @since 26.10.01
    */
   @Bean(name = "directDbRuleConfigProvider")
   @ConditionalOnMissingBean(name = "directDbRuleConfigProvider")
-  @ConditionalOnBean(com.njydsz.literule.infra.mapper.RuleDefinitionMapper.class)
+  @ConditionalOnBean(RuleDefinitionConfigRepository.class)
   @ConditionalOnProperty(
       prefix = "ydsz.literule.rule-source",
       name = "type",
       havingValue = "db",
       matchIfMissing = true)
   public DirectDbRuleConfigProvider directDbRuleConfigProvider(
-      com.njydsz.literule.infra.mapper.RuleDefinitionMapper ruleDefinitionMapper) {
+      RuleDefinitionConfigRepository ruleDefinitionConfigRepository) {
     log.info("[LiteRule-Source] 直接数据库 RuleConfigProvider 已初始化");
-    return new DirectDbRuleConfigProvider(ruleDefinitionMapper);
+    return new DirectDbRuleConfigProvider(ruleDefinitionConfigRepository);
   }
 
   /**

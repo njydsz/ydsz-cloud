@@ -12,11 +12,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.audit.core.AuditQueryService;
+import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.test.BaseControllerMockTest;
 
 /**
@@ -31,10 +33,10 @@ class AuditLogControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private AuditQueryService auditQueryService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private AuditLogController controller;
 
   @BeforeEach
@@ -49,12 +51,21 @@ class AuditLogControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when page succeeds")
     void should_return_200_when_page_succeeds() throws Exception {
+      AuditLog auditLog = new AuditLog();
+      auditLog.setId("audit-001");
+      auditLog.setModule("cronjob");
+      auditLog.setOperatorName("admin");
+      auditLog.setAction(1);
+      // Controller 把返回值向下转型为 PageResponse；生产实现（DefaultAuditQueryService）
+      // 固定返回 PageResponse.success(...) / PageResponse.empty(...)，故 stub 必须给 PageResponse
       when(auditQueryService.queryByTimeRange(any(), any(), any(int.class), any(int.class)))
-          .thenReturn(YdszResponse.success(new java.util.ArrayList<>()));
+          .thenReturn(PageResponse.success(1L, 1L, 20L, List.of(auditLog)));
 
       mockMvc.perform(get("/cronjob/audit/page").param("pageNum", "1").param("pageSize", "20"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE))
+          .andExpect(jsonPath("$.data.total").value(1))
+          .andExpect(jsonPath("$.data.data[0].operatorName").value("admin"));
     }
   }
 }

@@ -1,19 +1,20 @@
 package com.njydsz.workflow.web.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.HashMap;
-import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -36,19 +37,19 @@ class FlowAnalyticsControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private FlowAnalyticsService analyticsService;
 
-  @org.mockito.Mock
+  @Mock
   private ApplicationEventPublisher eventPublisher;
 
-  @org.mockito.Mock
+  @Mock
   private FlowHistoryArchiveService archiveService;
 
-  @org.mockito.Mock
+  @Mock
   private FlowI18nService i18nService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private FlowAnalyticsController controller;
 
   @BeforeEach
@@ -63,7 +64,8 @@ class FlowAnalyticsControllerSmokeTest extends BaseControllerMockTest {
     @Test
     @DisplayName("should return 200 when analytics overview query succeeds")
     void should_return_200_when_overview_succeeds() throws Exception {
-      when(analyticsService.overview(any(), any(), anyString()))
+      // Controller 透传 TenantContextHolder.getTenantId()；standalone MockMvc 无租户上下文，实参为 null
+      when(analyticsService.overview(any(), any(), isNull()))
           .thenReturn(new FlowAnalyticsOverviewVO());
 
       mockMvc.perform(get("/workflow/analytics/overview"))

@@ -9,6 +9,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.agent.server.rag.DocumentIngestionService;
@@ -21,6 +24,10 @@ import com.njydsz.common.test.BaseControllerMockTest;
  *
  * <p>Verify RAG endpoints return HTTP 200 + YdszResponse envelope.
  *
+ * <p>Note: RagController 使用手写构造器，第三个入参是 {@link ObjectProvider}（HybridSearchService 可选注入），
+ * 因此这里 mock 的是 Provider 本身而非 HybridSearchService，否则 {@code @InjectMocks} 只能做构造器注入，
+ * 会把 {@code null} 传给该入参并在构造器内 {@code getIfAvailable()} 处抛 NPE。
+ *
  * @author ydsz-smoke-test
  * @since 26.10.09
  */
@@ -28,16 +35,16 @@ class RagControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private RagService ragService;
 
-  @org.mockito.Mock
+  @Mock
   private DocumentIngestionService ingestionService;
 
-  @org.mockito.Mock
-  private HybridSearchService hybridSearchService;
+  @Mock
+  private ObjectProvider<HybridSearchService> hybridSearchServiceProvider;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private RagController controller;
 
   @BeforeEach

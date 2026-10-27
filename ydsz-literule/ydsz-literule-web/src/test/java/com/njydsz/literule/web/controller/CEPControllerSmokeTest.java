@@ -1,5 +1,6 @@
 package com.njydsz.literule.web.controller;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.Mock;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -31,20 +32,18 @@ class CEPControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private CEPEngine cepEngine;
-
-  @org.mockito.Mock
-  private RuleEngine ruleEngine;
 
   private CEPController controller;
 
   @BeforeEach
   void setUp() {
-    ObjectProvider<CEPEngine> cepEngineProvider = Mockito.mock(ObjectProvider.class);
-    Mockito.when(cepEngineProvider.getIfAvailable()).thenReturn(cepEngine);
-    ObjectProvider<RuleEngine> ruleEngineProvider = Mockito.mock(ObjectProvider.class);
-    Mockito.when(ruleEngineProvider.getIfAvailable()).thenReturn(ruleEngine);
+    ObjectProvider<CEPEngine> cepEngineProvider = mock(ObjectProvider.class);
+    when(cepEngineProvider.getIfAvailable()).thenReturn(cepEngine);
+    // CEPController 仅在 @PostConstruct 注册的命中回调里解析 ruleEngineProvider，
+    // standaloneSetup 不触发该回调 → 此处不打桩 getIfAvailable()，否则 STRICT_STUBS 判为 UnnecessaryStubbing
+    ObjectProvider<RuleEngine> ruleEngineProvider = mock(ObjectProvider.class);
     controller = new CEPController(cepEngineProvider, ruleEngineProvider);
     mockMvc = standaloneSetup(controller);
   }

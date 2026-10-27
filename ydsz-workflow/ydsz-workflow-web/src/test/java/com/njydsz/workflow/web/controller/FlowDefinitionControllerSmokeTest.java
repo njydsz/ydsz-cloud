@@ -2,7 +2,7 @@ package com.njydsz.workflow.web.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -16,6 +16,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -43,20 +45,20 @@ class FlowDefinitionControllerSmokeTest extends BaseControllerMockTest {
 
   private MockMvc mockMvc;
 
-  @org.mockito.Mock
+  @Mock
   private FlowDefinitionService definitionService;
-  @org.mockito.Mock
+  @Mock
   private FlowEventSubscriptionService eventSubscriptionService;
-  @org.mockito.Mock
+  @Mock
   private FlowSlaService slaService;
-  @org.mockito.Mock
+  @Mock
   private FlowConditionExprService conditionExprService;
-  @org.mockito.Mock
+  @Mock
   private FlowCustomButtonService customButtonService;
-  @org.mockito.Mock
+  @Mock
   private FlowTaskService taskService;
 
-  @org.mockito.InjectMocks
+  @InjectMocks
   private FlowDefinitionController controller;
 
   @BeforeEach
@@ -111,7 +113,8 @@ class FlowDefinitionControllerSmokeTest extends BaseControllerMockTest {
       vo.setFlowCode("LEAVE_APPLY");
       vo.setFlowName("请假流程");
       PageResponse<List<FlowDefinitionVO>> pageResult = PageResponse.success(1L, 1L, 20L, List.of(vo));
-      when(definitionService.page(anyInt(), anyInt(), anyString(), anyString())).thenReturn(pageResult);
+      // category / flowCode 为可选过滤参数，请求未携带时 Controller 透传 null
+      when(definitionService.page(anyInt(), anyInt(), isNull(), isNull())).thenReturn(pageResult);
 
       mockMvc.perform(get("/workflow/engine/definition/page")
               .param("pageNum", "1")

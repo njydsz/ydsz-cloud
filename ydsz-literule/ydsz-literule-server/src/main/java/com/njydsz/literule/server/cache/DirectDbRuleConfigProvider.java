@@ -7,19 +7,20 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.entity.RuleDefinition;
+import com.njydsz.literule.domain.repository.RuleDefinitionConfigRepository;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**
  * 直接数据库访问规则配置提供者（无装饰依赖）。
  *
- * <p>直接通过 {@link
- * com.njydsz.literule.infra.mapper.RuleDefinitionMapper} 操作数据库，不包装其他 {@link
+ * <p>通过 domain 端口 {@link RuleDefinitionConfigRepository} 读写数据库，不包装其他 {@link
  * RuleConfigProvider}，解决启动时多个 Provider 相互依赖导致的循环依赖（鸡生蛋蛋生鸡）问题。
  *
  * <p>作为 {@link CachingRuleConfigProvider} 的 delegate 被注入（@Primary），提供最终 DB 数据源。
  *
- * <p><b>注意</b>：server 模块依赖 infra 层 Mapper，属于 DDD 分层违例（参见 ydsz-literule-server/pom.xml）。
- * 正常应通过 domain Repository 接口访问 DB；当前方案为权宜之计，修复循环依赖架构问题后应移除此类。
+ * <p><b>分层说明</b>：本类原先直接持有 infra 层 {@code RuleDefinitionMapper}，属 YDIZ-DDD-005 违例（pom 中标注为"权宜之计"）。
+ * 26.10.27 起改为依赖 domain 端口，Mapper 调用收口到 {@code infra.repository.impl.RuleDefinitionConfigRepositoryImpl}，
+ * server 对 literule-infra 的编译期依赖已同步移除。
  *
  * @since 26.10.01
  * @author ydsz-team
@@ -28,11 +29,11 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
 @RequiredArgsConstructor
 public class DirectDbRuleConfigProvider implements RuleConfigProvider {
 
-  private final com.njydsz.literule.infra.mapper.RuleDefinitionMapper ruleDefinitionMapper;
+  private final RuleDefinitionConfigRepository ruleDefinitionConfigRepository;
 
   @Override
   public List<RuleDefinitionDTO> loadEnabledRules() {
-    List<RuleDefinition> entities = ruleDefinitionMapper.selectList(null);
+    List<RuleDefinition> entities = ruleDefinitionConfigRepository.listAll();
     return entities.stream()
         .filter(e -> "PUBLISHED".equals(e.getStatus()) && Boolean.TRUE.equals(e.getIsEnabled()))
         .map(this::entityToDto)
@@ -41,42 +42,42 @@ public class DirectDbRuleConfigProvider implements RuleConfigProvider {
 
   @Override
   public List<RuleDefinitionDTO> loadAllRules() {
-    List<RuleDefinition> entities = ruleDefinitionMapper.selectList(null);
+    List<RuleDefinition> entities = ruleDefinitionConfigRepository.listAll();
     return entities.stream().map(this::entityToDto).toList();
   }
 
   @Override
   public RuleDefinitionDTO save(RuleDefinitionDTO definition, String operator) {
-    RuleDefinition existing = ruleDefinitionMapper.selectByCode(definition.getCode());
+    RuleDefinition existing = ruleDefinitionConfigRepository.findByCode(definition.getCode());
     RuleDefinition entity = dtoToEntity(definition);
     if (existing == null) {
       if (entity.getVersion() == null) {
         entity.setVersion(1);
       }
-      ruleDefinitionMapper.insert(entity);
+      ruleDefinitionConfigRepository.insert(entity);
     } else {
       entity.setId(existing.getId());
-      ruleDefinitionMapper.updateById(entity);
+      ruleDefinitionConfigRepository.updateById(entity);
     }
     log.info("[LiteRule-DirectDb] 规则已保存: code={}, operator={}", definition.getCode(), operator);
-    return entityToDto(ruleDefinitionMapper.selectByCode(definition.getCode()));
+    return entityToDto(ruleDefinitionConfigRepository.findByCode(definition.getCode()));
   }
 
   @Override
   public void toggleEnabled(String ruleCode, boolean enabled, String operator) {
-    RuleDefinition existing = ruleDefinitionMapper.selectByCode(ruleCode);
+    RuleDefinition existing = ruleDefinitionConfigRepository.findByCode(ruleCode);
     if (existing == null) {
       log.warn("[LiteRule-DirectDb] 规则不存在，无法切换启停状态: ruleCode={}", ruleCode);
       return;
     }
     existing.setIsEnabled(enabled);
-    ruleDefinitionMapper.updateById(existing);
+    ruleDefinitionConfigRepository.updateById(existing);
     log.info("[LiteRule-DirectDb] 规则启停切换: ruleCode={}, enabled={}", ruleCode, enabled);
   }
 
   @Override
   public RuleDefinitionDTO findByCode(String ruleCode) {
-    return entityToDto(ruleDefinitionMapper.selectByCode(ruleCode));
+    return entityToDto(ruleDefinitionConfigRepository.findByCode(ruleCode));
   }
 
   @Override
@@ -91,7 +92,7 @@ public class DirectDbRuleConfigProvider implements RuleConfigProvider {
 
   @Override
   public boolean isAvailable() {
-    return ruleDefinitionMapper != null;
+    return ruleDefinitionConfigRepository != null;
   }
 
   // ==================== 内部方法 ====================

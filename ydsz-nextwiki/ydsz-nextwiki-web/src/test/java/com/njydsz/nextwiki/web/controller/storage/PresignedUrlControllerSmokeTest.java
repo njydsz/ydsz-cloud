@@ -1,6 +1,8 @@
 package com.njydsz.nextwiki.web.controller.storage;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -77,7 +79,8 @@ class PresignedUrlControllerSmokeTest extends BaseControllerMockTest {
     void should_return_200_when_generate_download_url_succeeds() throws Exception {
       String presignedUrl = "https://storage.example.com/bucket/" + OBJECT_KEY + "?token=yyy";
 
-      when(fileStorage.generatePresignedUrl(any(), any())).thenReturn(presignedUrl);
+      // IFileStorage#generatePresignedUrl 的过期秒数是原始类型 int，必须用 anyInt() 匹配器
+      when(fileStorage.generatePresignedUrl(anyString(), anyInt())).thenReturn(presignedUrl);
 
       String requestBody = "{\"objectKey\":\"" + OBJECT_KEY + "\",\"expireSeconds\":3600}";
 
