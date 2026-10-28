@@ -10,11 +10,11 @@
 
 package ${package}.domain.query;
 
-import com.njydsz.common.core.page.PageQuery;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * ${table.comment}查询对象。
@@ -24,17 +24,17 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ApiModel("${table.comment}查询对象")
+@Schema(description = "${table.comment}查询对象")
 public class ${entityName}Query extends PageQuery {
 
-#foreach($col in $ table.columns)
+#foreach($col in $table.columns)
 #if(!$col.isQuerySkipped)
 #if($col.comment)
   /** ${col.comment} */
 #else
   /** ${col.javaFieldName} */
 #end
-  @ApiModelProperty("${col.comment}")
+  @Schema(description = "${col.comment}")
   private ${col.javaType} ${col.javaFieldName};
 #end
 #end

@@ -16,7 +16,7 @@
          （${fastjson2.version}=2.0.62，解决 rocketmq 传递依赖的版本收敛），子模块无需重复声明 -->
 
     <!-- B1-2 覆盖率棘轮（2026-10-26 实测：mvn -o test jacoco:report）。
-         值 = 本模块 BUNDLE 实测覆盖率向下取整到 0.1%，只可下调不可上调；
+         值 = 本模块 BUNDLE 实测覆盖率向下取整到 0.1%，只可上调不可下调（覆盖率上升后应同步上调锁定，下调即放行倒退）；
          根 pom 默认 0.01/0.005 是新模块起步线，真正的 PR 门禁是
          data/scripts/check-diff-coverage.py（增量行覆盖率 >= 40%，云顶编码规范 14.7）。 -->
     <properties>

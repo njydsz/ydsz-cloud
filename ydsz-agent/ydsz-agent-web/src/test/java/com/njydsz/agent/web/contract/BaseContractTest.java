@@ -1,53 +1,85 @@
 package com.njydsz.agent.web.contract;
 
-import com.njydsz.agent.web.AgentApplication;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import com.njydsz.agent.domain.model.ChatMessage;
+import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.server.agent.AgentFacade;
+import com.njydsz.agent.server.chat.AgentRequestGuard;
+import com.njydsz.agent.web.controller.AgentController;
+import com.njydsz.common.json.spring.JsonHttpMessageConverter;
+import com.njydsz.common.socket.push.SsePushChannelFactory;
 
 /**
- * Spring Cloud Contract 基类。
+ * Spring Cloud Contract 生成测试的基类（`src/test/resources/contracts/*.yml` → 生成测试 → 继承本类）。
  *
- * <p>所有自动生成的 Contract 测试类应继承本类，以获得统一的 Spring Context 装配和 RestAssured MockMvc 初始化。
+ * <p><b>为什么不用 {@code @SpringBootTest}：</b>agent-web 的启动链需要 Nacos 配置/服务发现与数据库，
+ * 在单测环境里起不来（仓库里也没有 {@code application-contract.yml}）；即便能起来，契约测试要断言的也只是
+ * "HTTP 契约 + 序列化形状"，不该被中间件可用性绑架。故改用 {@code standaloneSetup} + 受控协作者。
  *
- * <p>使用 {@code @SpringBootTest} + {@code WebAppConfiguration} 加载完整的应用上下文，确保 Controller、Service、Repository
- * 全链路可测。Contract 文件位于 {@code src/test/resources/contracts/} 目录。
+ * <p><b>为什么必须显式设置 {@link JsonHttpMessageConverter}：</b>生产链路里 MVC 序列化走 YdszJson
+ * （见 {@code JsonAutoConfiguration}），它对未标注 {@code @JsonView} 的字段按 Jackson
+ * {@code DEFAULT_VIEW_INCLUSION=true} 语义输出 —— 这决定了 {@code code}/{@code msg}/{@code data} 这层信封
+ * 是否会出现。而 {@code MockMvcBuilders.standaloneSetup()} 默认装配的是 Jackson 转换器（该特性为 false），
+ * 若不显式替换，测试断言的就不是线上真实形状。
  *
- * <p>使用方式：在子模块的 pom.xml 中添加 {@code spring-cloud-starter-contract-verifier} 依赖，
- * Maven Plugin 会自动从 contracts 目录生成继承本基类的测试类。
- *
- * <h3>约定</h3>
- *
- * <ul>
- *   <li>Contract 文件命名：{@code {业务场景}.{yml|groovy}}</li>
- *   <li>请求路径与实际 {@code @PostMapping} / {@code @GetMapping} 保持一致</li>
- *   <li>响应 status/body.code 与 {@code YdszResponse} 结构保持一致</li>
- * </ul>
+ * <p><b>协作者是 mock：</b>本测试钉住的是 Controller ↔ HTTP 报文这一层（路径、方法、信封、字段名、视图裁剪）；
+ * Service 内部行为由 `ydsz-agent-server` 的单测覆盖。mock 的返回值是契约里约定的响应内容，不是"实现照抄期望"——
+ * 一旦 Controller 改名/改包/改视图，生成测试会立刻红。
  *
  * @author ydsz-team
  * @since 26.10.14
  */
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = AgentApplication.class, webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@ActiveProfiles("contract")
 public abstract class BaseContractTest {
 
-  @Autowired
-  private WebApplicationContext context;
+  /** 与 {@code agent-chat.yml} 中 {@code data.content} 的期望值保持一致 */
+  protected static final String CONTRACT_REPLY = "你好！有什么可以帮你的？";
+
+  /** 契约里约定的模型名，用来证明 model 字段确实透传 */
+  protected static final String CONTRACT_MODEL = "contract-model";
 
   /**
-   * 在每个测试方法执行前初始化 RestAssured MockMvc。
-   *
-   * <p>自动扫描 Spring Context 中的所有 {@code @Controller} 和 {@code @RestController} Bean，
-   * 构建模拟的 Servlet 环境用于 Contract 验证。
+   * 为每个生成测试准备 MockMvc：真实 Controller + 平台 JSON 转换器 + 受控协作者。
    */
   @BeforeEach
-  public void setUp() {
-    RestAssuredMockMvc.webAppContextSetup(context);
+  void setUpContractContext() {
+    AgentFacade agentFacade = mock(AgentFacade.class);
+    when(agentFacade.chat(anyString(), nullable(String.class), nullable(String.class)))
+        .thenReturn(
+            new ChatResponse(
+                "contract-response",
+                CONTRACT_MODEL,
+                ChatMessage.assistant(CONTRACT_REPLY, "conv-001", null),
+                null,
+                "stop",
+                List.of()));
+
+    AgentController controller =
+        new AgentController(
+            mock(SsePushChannelFactory.class), agentFacade, guardProvider(mock(AgentRequestGuard.class)));
+
+    MockMvc mockMvc =
+        MockMvcBuilders.standaloneSetup(controller)
+            .setMessageConverters(new JsonHttpMessageConverter())
+            .build();
+    RestAssuredMockMvc.mockMvc(mockMvc);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static ObjectProvider<AgentRequestGuard> guardProvider(AgentRequestGuard guard) {
+    ObjectProvider<AgentRequestGuard> provider = mock(ObjectProvider.class);
+    when(provider.getIfAvailable()).thenReturn(guard);
+    return provider;
   }
 }

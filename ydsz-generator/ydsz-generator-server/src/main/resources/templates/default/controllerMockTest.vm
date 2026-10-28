@@ -1,0 +1,60 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+package ${package}.web.controller;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.test.BaseControllerMockTest;
+import ${package}.domain.query.${entityName}Query;
+import ${package}.domain.service.${entityName}Service;
+
+/**
+ * ${table.comment} Controller 冒烟测试。
+ *
+ * <p>由生成器自带，保证新模块从第一天就有测试基线（报告 B1-5：此前生成的模块一律零测试，
+ * 缺口靠下游补，实际从未补上）。基类 {@link BaseControllerMockTest} 提供
+ * {@code standaloneSetup} 与统一信封常量，无需启动 Spring 容器或中间件。
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+class ${entityName}ControllerMockTest extends BaseControllerMockTest {
+
+  private MockMvc mockMvc;
+
+  @BeforeEach
+  void setUp() {
+    ${entityName}Service ${lowerName}Service = mock(${entityName}Service.class);
+    mockMvc = standaloneSetup(new ${entityName}Controller(${lowerName}Service));
+  }
+
+  @Test
+  @DisplayName("POST /${lowerName}/page 返回 200 + 统一信封")
+  void should_return_200_on_page() throws Exception {
+    when(${lowerName}Service.page(any(${entityName}Query.class)))
+        .thenReturn(PageResponse.<${entityName}>success(0L, 1L, 10L, List.of()));
+
+    mockMvc
+        .perform(
+            post("/${lowerName}/page")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+  }
+}

@@ -3,42 +3,38 @@
 #set($lowerName = $text.textFirstLower($entityName))
 #set($pkCol = null)
 #set($hasSizeImport = false)
-#set($hasMinImport = false)
+#set($hasNotNullImport = false)
 #set($hasDecimalImport = false)
 #foreach($col in $table.columns)
 #if($col.isPk)
 #set($pkCol = $col)
 #end
 #if($col.javaType == "String" && $col.isNullable == false)
-#if($hasSizeImport == false)
 #set($hasSizeImport = true)
-#end
 #elseif($col.javaType == "Integer" || $col.javaType == "Long" || $col.javaType == "BigDecimal")
-#if($hasMinImport == false)
-#set($hasMinImport = true)
+#set($hasNotNullImport = true)
 #end
-#elseif($col.javaType == "BigDecimal")
-#if($hasDecimalImport == false)
+#if($col.javaType == "BigDecimal")
 #set($hasDecimalImport = true)
-#end
 #end
 #end
 
 package ${package}.domain.dto;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+#if($hasNotNullImport)
+import jakarta.validation.constraints.NotNull;
+#end
+#if($hasSizeImport)
+import jakarta.validation.constraints.Size;
+#end
+import jakarta.validation.groups.Default;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import javax.validation.constraints.NotBlank;
-#if($hasSizeImport)
-import javax.validation.constraints.Size;
-#end
-#if($hasMinImport)
-import javax.validation.constraints.NotNull;
-#end
 #if($hasDecimalImport)
 import java.math.BigDecimal;
 #end
@@ -46,13 +42,17 @@ import java.math.BigDecimal;
 /**
  * ${table.comment}传输对象（DTO）。
  *
+ * <p>{@code @SuperBuilder} 必须与 {@code @AllArgsConstructor} 同时出现：Lombok 的 builder 依赖全参构造，
+ * 而 {@code @NoArgsConstructor} 会让它不再自动生成（两者同时缺失时生成代码编译不过）。
+ *
  * @author ${author}
  * @since ${date}
  */
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@ApiModel("${table.comment}传输对象")
+@AllArgsConstructor
+@Schema(description = "${table.comment}传输对象")
 public class ${entityName}Dto {
 
 #foreach($col in $table.columns)
@@ -61,17 +61,18 @@ public class ${entityName}Dto {
 #else
   /** ${col.javaFieldName} */
 #end
-  @ApiModelProperty("${col.comment}")
+  @Schema(description = "${col.comment}")
 #if($col.isPk)
-  @NotBlank(groups = javax.validation.groups.Default.class, message = "${col.comment}不能为空")
+  @NotBlank(groups = Default.class, message = "${col.comment}不能为空")
 #elseif($col.javaType == "String" && $col.isNullable == false)
   @NotBlank(message = "${col.comment}不能为空")
 #if($col.columnSize && $col.columnSize > 0)
   @Size(max = ${col.columnSize}, message = "${col.comment}长度不能超过${col.columnSize}")
 #end
-#elseif($col.isNullable == false && ($col.javaType == "Integer" || $col.javaType == "Long"))
+#elseif($col.javaType == "Integer" || $col.javaType == "Long" || $col.javaType == "BigDecimal")
   @NotNull(message = "${col.comment}不能为空")
 #end
   private ${col.javaType} ${col.javaFieldName};
+
 #end
 }

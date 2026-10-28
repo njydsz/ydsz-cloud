@@ -12,7 +12,7 @@
     <name>ydsz-agent-server</name>
     <description>Application Layer - Agent 执行引擎、对话服务、工具服务、RAG 服务</description>
     <!-- B1-2 覆盖率棘轮（2026-10-26 实测：mvn -o test jacoco:report）。
-         值 = 本模块 BUNDLE 实测覆盖率向下取整到 0.1%，只可下调不可上调；
+         值 = 本模块 BUNDLE 实测覆盖率向下取整到 0.1%，只可上调不可下调（覆盖率上升后应同步上调锁定，下调即放行倒退）；
          根 pom 默认 0.01/0.005 是新模块起步线，真正的 PR 门禁是
          data/scripts/check-diff-coverage.py（增量行覆盖率 >= 40%，云顶编码规范 14.7）。 -->
     <properties>
@@ -182,11 +182,8 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Spring Cloud Contract Verifier（API 契约测试骨架，需配合 spring-cloud-contract-maven-plugin 自动生成测试） -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-contract-verifier</artifactId>
-            <scope>test</scope>
-        </dependency>
+        <!-- 契约测试（verifier 依赖 + 生成插件）已随 contracts DSL 一起迁到 ydsz-agent-web：
+             Controller 在那里，DSL 必须和它同模块才能被插件生成为测试。
+             原此处只声明了 starter（无插件、无基类），DSL 放在 server 时永远不会执行 → 已移除。 -->
     </dependencies>
 </project>

@@ -14,6 +14,15 @@
   <name>ydsz-generator-infra</name>
   <description>代码生成器基础设施层 — Repository 实现、Mapper</description>
 
+  <!-- B1-5 覆盖率棘轮（2026-10-28 实测：mvn -o verify -pl ydsz-generator/ydsz-generator-infra →
+       jacoco.xml BUNDLE LINE 56/258 = 0.2171，BRANCH 10/42 = 0.2381）。
+       本模块此前零测试，jacoco:check 因缺 exec 数据整体空转。
+       覆盖率上升后应同步上调锁定成果，只可上调不可下调。 -->
+  <properties>
+    <jacoco.line.threshold>0.217</jacoco.line.threshold>
+    <jacoco.branch.threshold>0.238</jacoco.branch.threshold>
+  </properties>
+
   <dependencies>
   <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
   <dependency>

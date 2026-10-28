@@ -13,6 +13,7 @@
 2. **风险不在"缺能力"，而在"能力与门禁没有闭环"**：覆盖率门禁卡在 10%（规范写 40–60%）、契约测试插件只存在于注释里、CI 指向已被重命名的脚本、前端 type-check 不覆盖任何 `.vue`、体积预算路径对不上产物目录。**六条自建的"质量红线"当前都是空转状态。**
 3. **上一版报告的"全部完成"存在系统性失真**：49 项中至少 4 项交付的是**零接线骨架**（`ElasticsearchSearchStrategy`、`CollaborationService`、`ProcessMiningService`、`SpeechService` 引用数分别为 0/0/仅自引用/仅自引用），以及若干**"文件存在≠生效"** 的判定。本报告按"可被调用 / 可被观测 / 可被门禁阻断"三条件重判。
 4. **落地过程中的最重要单条发现（B1-13，已修）**：`ydsz-common-json` —— 全平台唯一 JSON 出入口 —— **此前一个测试都没有**，其解析器复用线程级 `char[]` 却不清尾部、且扫描以池容量而非报文长度为边界，导致**截断/较短报文会读出同一线程上一条报文的字段值**；Web 线程池复用下属跨用户/跨租户数据泄露级。它不是被审出来的，而是补测试时第一批用例就跑红的产物 —— 这也反过来证明结论 2 的修法方向：先让门禁能判红，缺陷才会现形。详见 §十一「B1-3（infra 轨）」。
+5. **"红线本身"也是缺陷源（B1-9，已修）**：补测时又撞到第二类同性质问题 —— 被文档强制要求的入口 `FileOps.sanitizeFileName` 遇到超长后缀会抛 `StringIndexOutOfBoundsException`（上传/重命名稳定 500），而 **AGENTS.md 里被点名的 6 个符号在仓库里根本不存在**（`JsonUtils`、`ExceptionCodeEnum`、`@RequiresPermission`、`ExcelFacade.export`、两参 `getWithProtection`、`FileTypeValidator.validate(InputStream,String)`）。一个 AI 严格照手册写，得到的不是"符合规范"而是编译不过或凭空造类。结论：**规范的可执行性必须像代码一样被验证**（逐条 grep + 门禁），否则它会稳定地把执行者带向错误。详见 §十一「B1-3（common-file 轨）」「B1-9」。
 
 ---
 
@@ -524,6 +525,12 @@ NextWiki 搜索 trigram 化并去 `content` · DEBUG 日志降级 · 规则引�
 
 **诚实清单（本项未修 / 未验证）**：① 理想值（main 512KB / 子应用 384KB 总产出）**尚未达成**，棘轮只是把"永远红"换成"回退即红"，继续瘦身要靠 echarts/monaco/vxe-table 按需与 workflow-web 设计器二次拆分；② B1-8 的另外两个子项——**视觉基线未提交**（`tests/visual/__screenshots__` 缺基线，CI 视觉 job 空跑）与 **e2e 门禁接线**——本轮未动；③ ~~`comm/**` 源码直发包的变更不会使 app 缓存失效，属 B1-7~~ **该前提已被 B1-7 小节实测证伪**：`^build` 的 `<NONEXISTENT>` 节点已按整包目录哈希覆盖，无需 `globalDependencies`；④ 单 chunk 最大 428KB（workflow）仍超理想红线，`maxChunkGzipKB=471` 是"实测+10%"而非目标值。
 
+**2026-10-28 复核（视觉/e2e 子项）**：
+
+- **体积轨确认健康**：`node ./bash/check-size.mts` 读到 10 个应用的真实 `dist`（main-web 1054.1KB/1139KB … workflow-web 1857.3KB/2007KB）全部在预算内，`--self-test` **8/8** 通过 —— 报告归档里"预算路径对不上产物"的结论已是历史。
+- **视觉轨不是"空跑"，而是必然红**：`ci.yml` 的 `visual` job（ubuntu-latest，无 `if` 条件）跑 `pnpm test:visual` → `tests/visual/smoke.spec.ts` 对 6 个组件调 `toHaveScreenshot()`，但 `tests/visual/__screenshots__/` **在仓库里不存在**（`git ls-files` 与全盘 `find` 均为 0）。Playwright 在基线缺失时会**写入实际截图并判定该测试失败**，因此这个 job 目前结构性红。
+- **为什么我没有在本机补生成**：基线是像素级断言，`maxDiffPixelRatio=0.01` 只容忍抗锯齿差异；Windows + Segoe UI 的字体栈与 `ubuntu-latest` 的 fontconfig 渲染不同，本机生成的 PNG 提交后会让 CI 以另一种方式红。**基线必须由 CI 平台（ubuntu + chromium）生成** → 建议加一个仅 `workflow_dispatch` 的"更新视觉基线"job（`pnpm test:visual:update` + 上传 `__screenshots__` 产物），由人一次性提交。这属于改 CI 工作流 + 需要一次人工确认的动作，**未擅自执行，列为需决策**。
+
 ### B1-7（缓存轨）turbo `globalDependencies` 加 `comm/**` —— 实测证伪，改动已撤回
 
 **原判据（§五 架构债第 3 条、§九 批次 1）**："`comm` 下大量包没有 build 脚本且直接导出 `./src/index.ts`，而 `globalDependencies` 不含 `comm/**` → 改共享源码不会使 app 构建缓存失效（陈旧产物）。" 我按此口径先改了 `turbo.json`（移除只命中 `bash/turbo-run/src`、`bash/vsh/src` 的 `bash/*/src/**` 两条，加入 `comm/**` 的 5 条扩展名），**随后用 A/B 哈希对照把它证伪，改动已全部撤回**。
@@ -768,6 +775,139 @@ python3 data/scripts/check-diff-coverage.py --base HEAD --show-files            
 | `JsonParserUtil` 线程级缓冲区的**重入风险未修** | `getCharBuffer()` 只有 `parseObject`/`parseArray` 两个入口，递归解析共用同一数组、不再重取缓冲区，故引擎自身不会重入；但**自定义 `JsonDeserializer`/`@JsonCreator` 内部再调一次 `YdszJson.fromJson`** 就会在外层解析未完成时覆写同一缓冲区，外层随后读到被改写的内容。本次只消除了"残留读旧数据"，没消除"覆写打断外层"。彻底修法是给缓冲区加深度栈或改回每调用一个数组（分配代价）→ **需决策**（性能热点，涉及全平台吞吐口径） |
 | 畸形 JSON **不判错**的统一策略缺失 | 截断输入现在不再串到别人数据，但仍返回"字段全空"的对象而不是抛错（`JsonParserUtil` 有 `Unmatched bracket` 判错分支，`BeanReader` 路径则在 EOF 处直接 `return`）。要不要让 `YdszJson.fromJson` 默认拒绝不完整报文，是"宽容解析 vs 快速失败"的平台级取舍 → **需决策** |
 
+### B1-3（common-file 轨）`FileOps.sanitizeFileName` 补测：12 例拦下 1 个 P1 崩溃 + 1 处尾点畸变
+
+`ydsz-common-file` 此前**零测试**，而其中的 `FileOps` 正是 AGENTS.md SOP-6 规定的**全平台上传净化入口**（"禁止业务侧自实现 `replace("/", "_")`"）。它的安全属性从未被验证过，实测有两处缺陷：
+
+| # | 缺陷 | 证据 | 影响 |
+|---|------|------|------|
+| F1 | **超长后缀直接抛 `StringIndexOutOfBoundsException`** | [FileOps.java:104-112](file:///D:/Code/open/ydsz-cloud/ydsz-common/ydsz-common-file/src/main/java/com/njydsz/common/file/util/FileOps.java#L104) 旧实现按 `255 - suffix.length() - 1` 算基名预算；后缀 ≥255 字符时预算为负 → `baseName.substring(0, -46)`。实测报文 `Range [0, -46) out of bounds for length 1` | 入参 100% 来自 `MultipartFile#getOriginalFilename()`，攻击者 `curl -F "file=@x;filename=a.<300 个字符>"` 即可稳定触发。生产调用点 4 处：`FileApplicationService:256/489/606/1163`、`ChunkUploadApplicationService:604`（:1163 直接取原始文件名，:606 取用户输入的**重命名**值）→ 上传/重命名 500 |
+| F2 | **无后缀超长名凭空多出尾点** | 旧实现把空后缀也送进 `baseName + "." + suffix` 拼接：`"a".repeat(256)` → 254 个 `a` + `"."` | NTFS 会剥掉尾点，净化前后名不等价；依赖"净化后名字"做去重/重命名的链路会误判 |
+
+- **修法**（[FileOps.java:110-121](file:///D:/Code/open/ydsz-cloud/ydsz-common/ydsz-common-file/src/main/java/com/njydsz/common/file/util/FileOps.java#L110)）：预算 `<= 0` 或后缀为空时放弃"优先保留后缀"、整体截断 255；Javadoc 补上三条恒等式（长度 ≤255 / 不含 `/ \ ..` / **任何入参都不抛异常**）。
+- **可证伪性**：先写 `FileOpsSanitizeTest`（12 例）→ 实测红（`Tests run: 11, Errors: 1`，栈正是 `Range [0, -46)`）→ 修 → **12/12 绿** → 变异探针（删掉 `|| baseBudget <= 0` 分支）→ 同一用例再次转红，证明用例有牙。
+- **棘轮**：实测 BUNDLE LINE 34/4719 = **0.0072**、BRANCH 19/1536 = **0.0124** → 钉 `0.007/0.012`。顺带证实了一件更要紧的事：该模块加测试**之前**，`mvn -o verify` 直接判红 `lines covered ratio is 0.00, but expected minimum is 0.01` —— **地板此前靠"没有测量"而非"达标"维持**。
+- **未修（诚实边界）**：① `generateStorageKey` 的 `namespace` 原样拼进 key、不做净化（用例已把这一事实钉住，AGENTS.md 已写明"只能传内部标识"）；② 非 CJK/拉丁字符（`é`、`あ`）会被逐字符替换成 `_`，属 i18n 口径 → **需决策**；③ 模块内 58 个类只有 `FileOps` 被测，存储 SDK 适配层仍裸露。
+
+**全仓测试盘点（2026-10-27，`mvn -o -T 1C verify -Dmaven.test.failure.ignore=true -fae`）**：BUILD SUCCESS / 07:53，26 个模块级 surefire 汇总合计 **900 例，0 失败 0 错误**（20 skipped），`Rule violated for` **0 次** —— 此前"存量 132 失败测试"已清零，且这次是**一次跑完全仓**而非分模块抽查。按文件系统实证（不靠日志）：85 个叶子模块中 **24 个有测试、61 个零测试**；且"有测试但无 jacoco.xml"的模块为 **0 个**，说明 D3 不会漏掉"跑了测试却没出报告"的情况。零测试名单里包括 `ydsz-common-core`（测试基类 `BaseControllerMockTest` 的宿主）、`ydsz-common-util`（`DateUtils`/`MaskUtils`）、`ydsz-common-redis`、`ydsz-common-cache` 与全部 `*-domain`/`*-infra` —— 这是下一批补测的排序依据，而非"已完成"的注脚。
+
+### B1-4 契约测试真正生成并执行：从"三件套互不相连"到 1 条契约进 `mvn verify`
+
+修复前的事实（逐项核过）：① DSL 在 `ydsz-agent-server/src/test/resources/contracts/`，而 `/agent/chat` 的 Controller 在 `ydsz-agent-web` —— **跨模块**；② `spring-cloud-starter-contract-verifier` 只在两个 pom 里声明了依赖；③ 基类 `BaseContractTest` 用 `@SpringBootTest(classes = AgentApplication.class)` + `@ActiveProfiles("contract")`，但仓库里**没有** `application-contract.yml`，启动链要 Nacos/DB，等于永远起不来；④ `spring-cloud-contract-maven-plugin` **全仓未声明** → `target/generated-test-sources/` 从未产生过任何测试。四件东西各在各处，唯一共同点是都没生效。
+
+更能说明问题的是：把插件接上、跑出第一条生成测试后，它立刻**红**了 —— 旧 DSL 断言 `data.reply`，而 `ChatResponseDTO` 的字段是 `content`（`toDTO` 也只设 content/model/respondedAt/usage）。也就是说这份"契约"描述的是一个**从未存在过**的响应体，正因为从没执行，才一直"正确"。
+
+改法：
+
+1. **插件接线**（`ydsz-agent-web/pom.xml`）：`spring-cloud-contract-maven-plugin:5.0.3`（与本仓 `spring-cloud-dependencies 2025.1.2` 对齐，私服与本地仓库均已有），`testFramework=JUNIT5`、`testMode=MOCKMVC`、`baseClassForTests=…BaseContractTest`。
+2. **DSL 归位**：`agent-chat.yml` 迁到 Controller 所在模块（`ydsz-agent-web/src/test/resources/contracts/`）；`agent-chat-stream.yml` **删除** —— 它期望 `Content-Type: text/event-stream` + 一帧 `event: chunk`，而 spring-cloud-contract 无法表达帧序列，留着必然是一条永不可能通过的假契约；SSE 的"能开流"由已有 smoke test 断言。
+3. **基类重写**：`standaloneSetup` + 显式 `setMessageConverters(new JsonHttpMessageConverter())` + `RestAssuredMockMvc.mockMvc(...)`，协作者用 mock。两处非显然的设计：不用 `@SpringBootTest`（起不来）；**必须**换掉默认 Jackson 转换器 —— 生产链路走 YdszJson（对未标注 `@JsonView` 的信封字段按"始终输出"语义），而 `standaloneSetup` 默认的 Jackson 会把 `code/msg/data` 整层裁掉，测试就会断言一个线上不存在的形状。
+4. **删掉 `ydsz-agent-server` 里那条悬空 verifier 依赖**（DSL 已迁走，它只剩污染）。
+
+**红→绿的完整轨迹（每步都是实测，不是推理）**：第 1 次生成后 error（`agentFacade.chat` 的第三参 `systemPrompt` 为 null，`anyString()` 不匹配 null → NPE）→ 改 `nullable(String.class)`；第 2 次 failure（实际 `Content-Type: application/json;charset=UTF-8`，DSL 写的是 `application/json`）→ 按事实改正；第 3 次 failure（DSL 断言 `data.conversationId` 为 null，而实际响应里该字段**根本不存在**）→ 删掉该断言；第 4 次 `mvn -o clean test -pl ydsz-agent/ydsz-agent-web` → **29/29 绿**，其中 `ContractVerifierTest.validate_agent_chat` 真实执行。**变异探针**：把 `@PostMapping("/chat")` 改成 `"/chat-mutated"` → 生成测试转红（1 failure），改回 → 绿 —— 证明这条契约确实在守着代码，而不是在守自己。
+
+**顺带暴露的两个问题**：
+
+- **`/agent/chat` 的响应里没有 `conversationId`**：`toDTO` 只设 content/model/respondedAt/usage。旧 DSL 假设它存在，恰好说明"契约"与实现各说各话。多轮对话（尤其服务端新建会话时）是否需要回传 conversationId，是 API 设计口径 → **需决策**，本次只把 DSL 改成事实。
+- **一次增量构建的"假绿"**：修完 stub 后的一次 `mvn -o test`（不带 clean）里，生成测试既没被编译也没被执行，构建却是 BUILD SUCCESS；`clean` 后立即恢复。CI 是全新检出不受影响，但本地门禁命令应统一加 `clean`（已写进 AGENTS.md 的门禁示例口径）。
+
+**门禁**：`mvn -o verify -pl ydsz-agent/ydsz-agent-server,ydsz-agent/ydsz-agent-web` → 38 + 28 例全绿、stubs jar 正常产出、两模块覆盖率检查均通过。契约测试自此随 `mvn verify` 执行，CI 无需新增步骤。
+
+### B1-5 生成器：从"产出必然不可编译的代码 + 零测试"到"带测试模板 + 合规门禁"
+
+先量了 `templates/default` 的 18 个模板，问题比"缺测试模板"严重得多 —— **生成出来的代码在原地就编译不过**：
+
+| 类别 | 实测 | 后果 |
+|---|---|---|
+| Swagger 2 注解 | `controller/dto/query/vo/feign` 5 个模板用 `io.swagger.annotations.*`（`@Api`/`@ApiModel`/`@ApiOperation`）| 平台已换 springdoc（`io.swagger.v3.oas.annotations`），生成代码缺依赖解析不了 |
+| `javax.validation` | 同上 5 个模板 | Boot 4 早已是 `jakarta.validation`，import 不存在 |
+| 引用不存在的类 | `controller`/`serviceImpl` 引 `com.njydsz.common.core.page.TableDataInfo`；`query` 引同包 `PageQuery` | 该包在仓库里**根本不存在**（真实 `PageQuery` 在 `com.njydsz.common.domain.query`）—— 统一分页是 `PageResponse` |
+| 未声明的依赖 | `serviceImpl`/`service` 用 `com.github.pagehelper.*`（`PageInfo`/`PageHelper`）| 父 pom 从未声明 PageHelper |
+| 语法错 | `query.vm` 写的是 `#foreach($col in $ table.columns)`（`$` 与变量名之间有空格）| Velocity 渲染直接报错 |
+| Lombok 组合错 | `dto.vm` `@SuperBuilder` + `@NoArgsConstructor` 无 `@AllArgsConstructor`；`vo.vm` `@Builder` + `@NoArgsConstructor` 同理 | @Builder 依赖全参构造，两者同时缺失 → 生成代码编译不过 |
+| 零测试模板 | 无 | 新模块从第一天起零测试，正是 61/85 模块零测试的来源 |
+
+改法（全部落成可证伪断言）：
+
+1. **新增 `controllerMockTest.vm`**：生成 `{Entity}ControllerMockTest`，继承平台 `BaseControllerMockTest`、`standaloneSetup` + mock service、断言 `POST /{entity}/page` 返回 200 且 `$.code == SUCCESS_CODE`。从此新模块**自带**测试基线。
+2. **修 6 个模板**：springdoc/jakarta 替换、`PageResponse` 替换 `PageInfo`/`TableDataInfo`、`PageQuery` 指向真实包、修 Velocity 语法、修 Lombok 组合、Controller 从 `${package}.domain` 挪到 `${package}.web.controller` 并去掉 `/api` 前缀（与平台既有 Controller 一致，见 `AgentController` 映射 `/agent/chat`）。
+3. **新增合规门禁 `GeneratorTemplateComplianceTest`（6 例）**：① 禁用符号扫描（`javax.`/`io.swagger.annotations`/`TableDataInfo`/`@Api(`…）；② 模板里 **每一个 `import com.njydsz.*` 都必须能在 classpath 上加载成功**（把"引用已更名/不存在的类"变成红灯，TableDataInfo 就是被这条抓出来的）；③ 禁 PageHelper；④ dto 必须用 jakarta + springdoc `@Schema`；⑤ 必须存在测试模板；⑥ 测试模板必须继承平台基类并对信封断言。
+4. **修初始化器的"整组跳过"**：`TemplateDataInitializer` 原来"分组里只要有一条模板就 `return`"，意味着**新增/修复的内置模板永远进不了存量环境**（只有全新建库才生效）。改为逐文件补齐：缺哪个补哪个、同名一律保留不覆盖（不破坏人工修改的模板）。新增 `TemplateDataInitializerTest`（3 例）钉住该语义，棘轮 0.217/0.238。
+
+**证据链**：合规测试先跑 **4/4 红**（缺模板、dto 违规、禁用符号、无测试模板）→ 修模板 → **6/6 绿**；变异探针（往 `vo.vm` 追加一行 `javax.` import）→ 立即红（`["vo.vm → javax."]`），移除后恢复；`mvn -o verify -pl ydsz-generator/ydsz-generator-infra` 3 例绿 + 覆盖率达标；`mvn -o verify -pl ydsz-generator/ydsz-generator-server` 23 例绿（含既有 ArchUnit）；全仓 checkstyle 棘轮随本次修复 **4132 → 4131**（顺手把该文件里一处 `@org.springframework...Profile` 的行内 FQN 改成 import，违反 NO-FQN 红线）。
+
+**未修（诚实边界）**：① 模板未做"渲染后编译"端到端校验 —— 合规门禁是文本级 + import 可加载性，真实渲染需要 DB 里的模板行与完整上下文；② **生成物本身的分层仍是非 DDD**（`Service extends IService`、`Repository extends ServiceImpl`、`domain` 依赖 MyBatis-Plus），要改就是改生成器的输出契约 → **需决策**；③ 生成的前端三件（`vue/api|index|types`）未审。
+
+### B1-6 前端类型门禁：`pnpm type-check` 从"什么都不检查"到覆盖 10 个应用 + 棘轮
+
+**事实**：根 `type-check` = `turbo type-check`，而 turbo 只调度"**定义了该任务**"的包。实测全仓只有 4 个 `comm/*` 包写了 `tsc --noEmit`，而 **10 个 `apps/*` 应用的 package.json 一个都没有 `type-check` 脚本** —— 也就是说 **`.vue` 文件从未被类型检查过**（`tsc --noEmit` 本身也不看 .vue）。CI 第 51 行的 `pnpm type-check` 常年是绿的，因为它跑的是一组**不含应用的包**。
+
+**实测存量**：门禁最终覆盖 **14 个目标**（10 个应用 + 4 个自带 `type-check` 的 `comm` 包），合计 **7,425 条**：agent-web 844、cronjob-web 759、docs-site 5、generator-web 645、literule-web 855、message-web 788、nextwiki-web 731、system-web 766、userinfo-web 773、workflow-web 829，以及 `comm/constants` 216、`comm/effects/micro-kernel` 214、`micro-runtime` 0、`monitor` 0。
+
+**顺带证实一件更糟的事：这一步原本就是红的**。`turbo type-check` 实测在 `@ydsz/constants` 上失败：`src/core.ts:8 Cannot find module '@ydsz/locales'` —— 三个包以**只导入类型**的方式引用了未声明的 workspace 依赖（`@ydsz/constants`→`@ydsz/locales`、`@ydsz-core/preferences`→`@ydsz/locales`、`@ydsz/locales`→`@ydsz/request`），而各包 tsconfig 不含根 `tsconfig.paths.json` 的 paths，只能靠 pnpm 的 node_modules 软链解析。补上三条 `"workspace:*"` 并 `pnpm install --offline` 后，`TS2307` 消失、暴露出下面这批真实类型错误（各应用计数因此还降了 2 条）。同时发现 **`pnpm check:deps` 能检出这 4 条但退出码是 0** —— 又一条"只报告不阻断"的门禁，归入 B1-6/B0-7 同族问题。
+
+接线时先撞出两个**把真实错误藏起来的配置缺陷**（都在 generator-web，其余 8 个应用没有）：
+
+| 缺陷 | 现象 | 修法 |
+|---|---|---|
+| 应用 tsconfig 里 `composite: true` | `--noEmit` 下直接 `TS6304: Composite projects may not disable declaration emit`，编译在**配置阶段**就中止，真实错误一条都不报（先前只看到 2 条配置错，真实是 647 条） | 去掉 `composite`，与其余 8 个应用对齐（仓库里没有任何 `tsc -b` / `vue-tsc -b` 用法，不依赖 build 模式） |
+| `tsconfig.node.json` 缺 `noEmit: false` | `TS6310: Referenced project … may not disable emit` | 补齐 `noEmit: false` + `tsBuildInfoFile`（照抄 system-web 的既有写法，不新造约定） |
+
+**门禁**：新增 `bash/check-app-typecheck.mts`（纯 Node 标准库，无新依赖），一次度量"应用（`vue-tsc`，看 `.vue`）+ 自带 type-check 的 comm 包（`tsc`）"，沿用本仓 checkstyle 的棘轮口径：
+
+- **T1** 每个目标的错误数不得高于 `conf/typecheck-baseline.json`（新增类型错误立即判红）；
+- **T2** 错误数下降时打印"可下调基线"建议，`--update-baseline` 由人复核后下调（只可下调）；
+- **T3** fail-closed：基线里没有的新目标、或基线里有却**没扫到**的目标，一律判错（"扫不到"不等于"没问题"）；`--only=app/system-web` 局部复跑时豁免"漏扫"这一条，避免人工排查被误伤；
+- `--self-test` 8 条反例（计数 3 条、上涨、下降、持平、新目标未登记、基线内目标漏扫）。
+
+接线：`package.json` 的 `type-check` 指向该脚本；原 turbo 口径保留为 `type-check:strict`（**当前仍红**，见"未修"）。**CI 无需改动** —— 它第 51 行本来就跑 `pnpm type-check`，此前空转，现在真正生效。
+
+**可证伪性**：`--self-test` 8/8 通过；基线生成后全量复跑**逐目标计数与基线完全一致**（7,425 条，确定性）；变异探针 —— 在 `apps/system-web/src/` 放一个 `const probe: number = "not-a-number"` → 该应用 767 > 766 → **exit 1**；删除探针 → 766 → **exit 0**。
+
+**未修（诚实边界）**：7,425 条存量仍未清零，主题集中在 TS6133（未使用变量，system-web 单应用 126 条）、TS2532/TS18048（可能为 undefined，~62 条）、TS2769（重载不匹配）；热点文件是共享代码（`comm/effects/plugins/src/vxe-table/composables/use-vxe-grid-logic.ts` 27 条、`comm/@core/ui-kit/ydsz-vue/src/shared/useGraceArea.ts` 26 条、`YdOrgChart.vue` 20 条），修一处能同时降低多个应用 —— 但这属于独立的质量攻坚，本次只保证**不再增长**。另两点：① `type-check:strict`（turbo 原始口径）**当前仍红**（`comm/constants` 216 条起），要变绿必须清完 `comm/**` 的存量；② 门禁全量跑约 6 分钟（并发 4，`TYPECHECK_CONCURRENCY` 可调），是否在 CI 里按"改动应用"裁剪需结合 CI 预算决定 → **需决策**。
+
+### B1-9 红线可执行化：AGENTS.md/CLAUDE.md 里 6 个不存在的符号 + 23 份 pom 的棘轮口径写反了
+
+对 `AGENTS.md` 里点名的每一个类/注解/方法/路径逐条 grep 校验后，发现**照做会编译不过**的条目如下（已全部替换为真实符号并加"事实核验（2026-10-27）"抬头）：
+
+| 文档写的 | 实测 | 真实符号 |
+|---|---|---|
+| `JsonUtils`（§2.1/§4/§6/CLAUDE.md IMPORT-004）| **不存在** | `com.njydsz.common.json.YdszJson` |
+| `ExceptionCodeEnum`（SOP-1、CLAUDE.md:325）| 不存在 | `com.njydsz.common.exception.enums.ExceptionCode` |
+| `@RequiresPermission`（§2.3）| 不存在 | `com.njydsz.common.auth.annotation.AuthApiPermission` |
+| `ExcelFacade.export(...)`（SOP-3）| 不存在 | `ExcelFacade.write(fileName \| OutputStream, clazz)` |
+| `FileTypeValidator.validate(InputStream, String)`（SOP-6）| 签名错 | `validate(MultipartFile)` |
+| `YdszCache#getWithProtection(key, loader)`（SOP-4）| 两参重载不存在 | `Cache#getWithProtection(K, Function, long minExpireMs, long maxExpireMs)` |
+| `StringOps` / `HashOps` / `ListOps` / `RedisOps`（§3.4/§4/§5）| 短名全不存在 | `RedisStringOps` / `RedisHashOps` / `RedisCollectionOps`（包 `...redis.service.ops`）|
+| `data/scripts/sync-ai-rules.py`（§1.1）| 不存在 | 无（规则同步目前靠人工，已删行）|
+| `sqls/`、`docs/report/`、`docs/analysis/`（§1.2）| 路径不存在 | `data/sqls/`、`docs/reports/`（无 analysis 目录）|
+| `ydzs-common/`、`ydzs-{module}/`、`ydzz-common-feign`（4 处）| 前缀拼错 | `ydsz-*` |
+| "140 条红线规则"（§1.1/§1.2）| 计数不符 | `shared-rules.yaml:20 total_rules: 190`（`- id:` 实测 189，`meta`/`stats` 又各是 177/155 —— 文件自身不自洽，已注明待规则维护者定口径）|
+| §2.2"使用 Flyway 管理数据库版本变更" | 与 §4 自相矛盾 | `pom.xml:61` 明文"项目规范禁止 Flyway / Liquibase"；脚本目录 `data/sqls/flyway/` 人工执行 |
+
+另修两处**反向**红线口径：
+
+1. **棘轮语义写反**：23 份 pom（根 + 21 个叶子 + common-search）原文写"只可下调不可上调"——那是允许把地板调低、等于放行覆盖率倒退。统一改为"只可上调不可下调（覆盖率上升后应同步上调锁定，下调即放行倒退）"；改完 23 份全部通过 XML parse，`mvn -o -q validate` exit 0。**注意**：checkstyle 侧的"存量只减不增"说的是**违规数**，语义正确，未动。
+2. **门禁自述补全**：`check-diff-coverage.py` 的 docstring 增加 R1/R2/R3（区间 = `merge-base → 工作区`、未跟踪 `src/main/java` 判红、纯 import/注释免核验）与"退出码别隔管道读"提示，`check-checkstyle-delta.py` 同步该提示；两份脚本 `--self-test` 复跑 **23/23** 与 **20/20**。
+
+**本段复跑的门禁（2026-10-27，退出码一律用 `${PIPESTATUS[0]}` 读）**
+
+```bash
+mvn -o -T 1C verify -Dmaven.test.failure.ignore=true -fae   # BUILD SUCCESS 07:53；900 例 0 失败 0 错误；Rule violated 0 次
+mvn -o verify -pl ydsz-common/ydsz-common-file               # 12/12 绿；All coverage checks have been met（0.007/0.012）
+mvn -o -q validate                                          # 23 份 pom 改注后 exit 0
+mvn -o -T 1C compile                                        # BUILD SUCCESS 00:50
+mvn -o -q checkstyle:checkstyle && python3 data/scripts/check-checkstyle-delta.py --base HEAD~1   # 回溯校验已提交内容：17 文件 0 违规
+python3 data/scripts/check-diff-coverage.py --base HEAD~1 --show-files    # 69.6%（16/23）；FileOps.java 新增可执行 5 行全被覆盖
+python3 data/scripts/check-checkstyle-delta.py --base HEAD  # 工作区无 Java 改动：0 文件，棘轮 4132 未回退
+mvn -o clean test -pl ydsz-agent/ydsz-agent-web      # 29/29 绿（含生成的 ContractVerifierTest）；变异探针改 endpoint 路径 → 1 failure
+mvn -o verify -pl ydsz-agent/ydsz-agent-server,ydsz-agent/ydsz-agent-web   # 38 + 28 例全绿，stubs jar 产出，覆盖率检查通过
+python3 data/scripts/check-file-encoding.py           # exit 0：无 BOM / 无非法 UTF-8 / 入库换行符全 LF（W1 告警 16 条为存量）
+mvn -o verify -pl ydsz-generator/ydsz-generator-infra,ydsz-generator/ydsz-generator-server  # 3 + 23 例绿，两模块覆盖率达标
+node ./bash/check-app-typecheck.mts --self-test       # 前端类型门禁自检 8/8（ydsz-micro）
+node ./bash/check-app-typecheck.mts                  # 14 目标合计 7425 条，未上涨；探针 +1 → exit 1
+```
+
 ### B0 进行中/待办
 
 | 项 | 状态 |
@@ -783,19 +923,24 @@ python3 data/scripts/check-diff-coverage.py --base HEAD --show-files            
 | B0-9 网关路由双源漂移 | ✅ 已完成（路由清单单一来源 + `gen-gateway-routes.py --check` + `check-gateway-routes.py` R1–R10（57/57 反例自检，实测 20 路由/1056 路径/9 服务，红 0 ⚠️3）+ 网关 5.x 前缀的 metadata 反漂移 + 前端 nginx/10 vite 双剥修复 + `/api/v1` 238 行清理含生成器模板再生源 + CI 接线（新写 `check-file-encoding.py` 28/28、移除 3 个引用不存在脚本的伪门禁、修好恒红的交叉检出仓库名））；**待决策 5 项**：`/ws/**` 归属、secondary-auth 改名、`ydsz.file.domain` 指向废弃端口 9010、4 条"前端调用无后端"路径、`gen-crud-skeleton.mts` 死生成器；详见上文 B0-9 小节 |
 | B0-10 子应用生产构建失败（三成因：未声明依赖 / 入口指向永不构建的 dist / 库未先构建） | ✅ 已完成（`pnpm build --force` 25/25 绿 + 新门禁 `check:deps` 双规则含 8/8+10/10 反例自检 + CI `bundle` job 改为构建全部 10 个应用）详见上文 B0-10 小节 |
 | B1-7 turbo `globalDependencies` 加 `comm/**` | ❌ **误报，改动已撤回**（实测 `<NONEXISTENT>` 节点已按整包目录哈希覆盖 `^build`；改一行 mock-service 源码：现状精准失效 3/10 app，加 `comm/**` 后无差别失效 10/10；另核 11 个入口包 import 的 `@ydsz*` 包根全部已声明，图边无缺）详见上文 B1-7 小节 |
-| B1-2 覆盖率/静态检查门禁 | ✅ 已完成（三条"恒红 = 无门禁"换成可证伪增量门禁：21 模块 jacoco 棘轮 + `check-diff-coverage.py`（16/16 自检）+ `check-checkstyle-delta.py`（19/19 自检）+ CI `fetch-depth: 0`/Step 4/5a 接线 + 移除 `DisabledCondition` 与 `<skipITs>` 硬编码；顺带把网关 SQL 注入过滤器 4 条永不匹配的正则修好（33/33 绿）并补 `AuthGlobalFilterSecretTest` 9 例，把增量覆盖率从 0% 拉到 87.5%）；**遗留**：~~132 个存量失败测试~~ 已由 B1-3 清零；`includeTestSourceDirectory=false` 使测试代码不受 checkstyle 约束（未改，需先量再定）详见上文 B1-2 小节 |
+| B1-2 覆盖率/静态检查门禁 | ✅ 已完成（三条"恒红 = 无门禁"换成可证伪增量门禁：21 模块 jacoco 棘轮 + `check-diff-coverage.py` + `check-checkstyle-delta.py`（自检现为 23/23、20/20）+ CI `fetch-depth: 0`/Step 4/5a 接线 + 移除 `DisabledCondition` 与 `<skipITs>` 硬编码；顺带把网关 SQL 注入过滤器 4 条永不匹配的正则修好（33/33 绿）并补 `AuthGlobalFilterSecretTest` 9 例，把增量覆盖率从 0% 拉到 87.5%）；**遗留**：~~132 个存量失败测试~~ 已由 B1-3 清零（全仓一次跑完 900 例 0 失败）；`includeTestSourceDirectory=false` 使测试代码不受 checkstyle 约束（未改，需先量再定）详见上文 B1-2 小节 |
 | B1-3 存量失败测试清零 + 反例断言基座 | ✅ 已完成（132 红 → 全仓 `mvn -o test` 全绿；4 个 ArchUnit 空跑守护改可证伪 + 补齐第 9 个模块；literule DDD-005 的 13 处跨层引用经 domain 端口消除，违规回退降级为**编译错误**；common-auth 0 → 31 例并拦下 `AuthPermissionAspect` 注解缓存串号这一真实鉴权缺陷；`BaseControllerMockTest` 补 `standaloneSetupWithAdvice` 错误信封基座）；**2026-10-27 续**：`ydsz-literule-infra` 零测试 → 37 例并拦下 2 个生产缺陷（决策表"编辑退化为插入"、版本分页 `PageResponse.success` 形参顺序错），棘轮 0.86/0.80；**未补**：162/163 冒烟测试仍只断言 2xx，其余见上文 B1-3 小节两批"未修清单" |
 | B1-13 JSON 解析器跨请求数据串扰（B1-3 续段新发现，P0） | ✅ 已修（`JsonParserUtil.getCharBuffer` 复用线程级 `char[]` 却不清尾部，扫描例程又以池容量为边界 → 截断/短报文会读出**同线程上一条报文**的字符；`YdszJson.fromJson` 是唯一出入口，Web 线程池复用下等于跨用户/跨租户泄露）。修法：线程级 `WRITTEN_LENGTH` + 只填 `[本次长度, 上次长度)`；证据：`ydsz-common-json` 首个测试根 5 例（红 → 修 → 绿）+ 变异探针复现（禁用填充后 1 failure + 1 error）；该模块棘轮从起步线收紧到 0.08/0.04。**遗留**：损坏快照仍静默降级为"字段全空"定义（需产品口径）；`JsonParserUtil` 整体行覆盖 8.7%，解析器仍无"畸形输入应判错"的统一策略 → 见 B1-3 续段未修清单 |
 | B1-2 增补：增量覆盖率门禁量不到未提交改动（本段实测） | ✅ 已修（区间 `merge-base → HEAD` 改为 `merge-base → 工作区`：AGENTS.md 把该脚本列为"提交前自查"，而带 `HEAD` 时未提交改动恒不可见，`--base HEAD` 实测打印"无新增行，门禁不适用"并退出 0；未跟踪的 `src/main/java` 改为判红；纯 import/注释改动按源码文本免核验，避免逼出空跑测试；自检 16 → 23 条含 2 条反例）。**遗留**：`ydsz-common-core`（测试基类宿主模块）自身零测试、无 jacoco 阈值块，`jacoco:check` 恒空转 |
+| B1-3 续（common-file 轨）`FileOps.sanitizeFileName` 崩在超长后缀 | ✅ 已修（后缀 ≥255 字符时基名预算为负 → `substring(0, -46)` 抛 `StringIndexOutOfBoundsException`，而该方法是 SOP-6 强制全平台使用的上传净化入口，生产调用点 4 处、入参来自 `MultipartFile#getOriginalFilename()`/重命名输入 → 稳定 500；另修"无后缀超长名凭空多出尾点"。证据：新 `FileOpsSanitizeTest` 12 例，先红（1 error，栈为 `Range [0, -46)`）→ 修 → 12/12 绿 → 变异探针转红；模块棘轮 0.007/0.012，并记录"加测试前根默认 0.01 直接判红 = 地板此前靠没测量维持"）。**遗留**：`generateStorageKey` 的 `namespace` 不净化（已钉事实 + 文档写死"只传内部标识"）；非 CJK 字符被逐字符替换 → 需决策 |
+| B1-4 契约测试真正生成并执行 | ✅ 已完成（框架接通 + 1 条契约进 `mvn verify`）：插件 `spring-cloud-contract-maven-plugin:5.0.3` 接入 `ydsz-agent-web`，DSL 从 server 迁到 Controller 同模块，基类由"起不来的 `@SpringBootTest`"改为 standalone + **平台 `JsonHttpMessageConverter`**（默认 Jackson 会裁掉整个信封），SSE 契约删除（SCC 无法表达帧序列）。生成测试**当场抓出**旧 DSL 描述的 `data.reply` 实际是 `data.content`（该契约从未执行过才一直"正确"）。证据：红→绿四次迭代 + 变异探针（改 endpoint 路径即红）；`mvn -o verify` 下 38 + 28 例全绿、stubs jar 产出。**遗留**：仅 1 条契约，覆盖哪些端点是策略问题 → 需决策；`/agent/chat` 不回传 `conversationId`（多轮会话是否需要 → 需决策）|
+| B1-5 生成器输出测试模板 | ✅ 已完成（新增 `controllerMockTest.vm`，生成模块自带 `BaseControllerMockTest` 冒烟测试；顺带修掉 6 个模板的硬伤：`io.swagger.annotations`→springdoc、`javax.`→jakarta、不存在的 `TableDataInfo`/`core.page.PageQuery`→`PageResponse`/`domain.query.PageQuery`、`#foreach($col in $ table…)` 语法错、Lombok `@Builder` 缺全参构造、Controller 落在 `domain` 包且带 `/api` 前缀；新增 6 例合规门禁（含"模板 import 的 com.njydsz 类必须可加载"）；`TemplateDataInitializer` 由"整组跳过"改逐文件补齐，新增 3 例测试，棘轮 0.217/0.238；检查风格棘轮 4132→4131）。**遗留**：未做渲染后编译的端到端校验；生成物分层仍非 DDD（`Service extends IService`）→ 需决策；前端三模板未审 |
+| B1-6 vue-tsc 覆盖 main + 9 app | ✅ 已完成（根 `type-check` 原为 `turbo type-check`，10 个应用一个都没定义该任务 → `.vue` 从未被检查）。新增 `bash/check-app-typecheck.mts`（14 目标 = 10 应用 + 4 comm 包，8 条自检，棘轮基线 `conf/typecheck-baseline.json`，`--only` 局部复跑，漏扫 fail-closed），`pnpm type-check` 直连该脚本、CI 无需改；修 generator-web 的 `composite`/`noEmit` 配置缺陷（原来配置阶段就中止，把 645 条真实错误藏住）；补 3 处未声明的 workspace 类型依赖（`turbo type-check` 此前因此是**红**的，且 `pnpm check:deps` 检出却不阻断）。证据：基线 7,425 条确定性复现；探针 +1 条 → exit 1，移除 → exit 0。**遗留**：存量未清、`type-check:strict` 仍红；CI 是否按改动应用裁剪 → 需决策）|
+| B1-9 红线失真（文档事实核验 + 棘轮口径） | ✅ 已完成（AGENTS.md 6 个不存在的符号全部替换：`JsonUtils`→`YdszJson`、`ExceptionCodeEnum`→`ExceptionCode`、`@RequiresPermission`→`@AuthApiPermission`、`ExcelFacade.export`→`write`、`FileTypeValidator.validate(InputStream,String)`→`validate(MultipartFile)`、两参 `getWithProtection`→四参；短名 `StringOps/HashOps/ListOps/RedisOps`→`Redis*Ops`；路径 `sqls/`/`docs/report/`/`sync-ai-rules.py` 修正或删除；4 处 `ydzs-`/`ydzz-` 前缀；"140 条"→`total_rules: 190`（实测 `- id:` 189）；§2.2 Flyway 与 §4 自相矛盾 → 按 `pom.xml:61`"禁止 Flyway/Liquibase"改正。CLAUDE.md 同批修 3 处，其中 IMPORT-004 红线原来指向不存在的 `com.njydsz.common.json.JsonUtils`。另把 23 份 pom 写反的棘轮口径"只可下调不可上调"改为"只可上调不可下调"，`mvn -o -q validate` exit 0）。**遗留**：`shared-rules.yaml` 自身计数不自洽（190/177/155/189）→ 需规则维护者定口径 |
 | 网关内部头签名**下游从不验签**：仅网关生成签名，无服务设置 `ydsz.security.internal-sign.secret`，`InternalSignatureProperties.isEnabled` 默认 false | 新发现 → 归入 B1-11 |
 | `docs/nacos-config/ydsz-gateway.yml` 与 `application.yml` 的 include 曾不同（cache-metrics 有无） | 已随 B0-2 统一 |
-| `effective-excel-pom.xml`（含本机绝对路径）被提交入库 | 归入 B1-9 文档/仓库卫生 |
+| `effective-excel-pom.xml`（14,069 行 Maven 生成物，含本机绝对路径）被提交入库 | ✅ 已删并防复发：`.gitignore:15` 原规则 `effective-pom*` 匹配不到 `effective-excel-pom.xml`（名字中间多了 `excel-`），已改为 `effective*pom*`；`git` 历史中仍可追溯 |
 
 ---
 
-*本报告基于 2026-10-25 两个仓库的工作树快照，§十一 随实施滚动更新到 2026-10-27；所有 ✅ 结论均可按所列 `文件:行号` 直接复核，◇ 结论口径见证据列。当前 `mvn -o -T 1C compile` 为 BUILD SUCCESS（✅，2026-10-27 15:36 复跑，Wall Clock 01:01）。*
+*本报告基于 2026-10-25 两个仓库的工作树快照，§十一 随实施滚动更新到 2026-10-27；所有 ✅ 结论均可按所列 `文件:行号` 直接复核，◇ 结论口径见证据列。当前 `mvn -o -T 1C compile` 为 BUILD SUCCESS（✅，2026-10-27 复跑，Wall Clock 00:50），全仓 `mvn -o -T 1C verify` 亦为 BUILD SUCCESS（900 例 0 失败 0 错误，07:53）。*
 
-*提交状态已变化（此前本节写"提交与推送均未执行"，已过期）：`2ddc8c2efd` **已由使用方自行提交并推送**，`origin/dev` 与 HEAD 同点（`git rev-list --left-right --count` = `0 0`）。本段全部改动仍**留在工作树未提交**（14 个已跟踪文件修改 + 3 个未跟踪路径：`ydsz-common-json/src/test/`、`ydsz-literule-infra/src/test/`、`start-all-services.ps1`——最后一条不是本任务产物，未动）。两点必须随提交一起解决：*
-- *`2ddc8c2efd` 里带着 `VariableControllerSmokeTest` 的 `ObjectProvider.empty()` 破损版 → **dev 分支尖端的 `ydsz-system-web` 测试目前编译不过**；工作区的 `absentProvider()` 修复已复测 56/56 绿，等一次提交。*
-- *`data/checkstyle-baseline.json` 已按实测下调（4134 → 4132）；若与上面的 Java 改动分开提交，`check-checkstyle-delta.py` 会在中间态判红（棘轮只减不增）。建议**同一提交**内带上代码与基线。*
+*提交状态（2026-10-27 更新）：上一段工作已由使用方提交并推送为 `8940c2dde1`（`fix(file,json,thread): 文件名净化越界 + JSON 缓冲区跨请求串扰 + PageResponse 参数顺序`，24 文件 +1877/−119），`origin/dev` 与 HEAD 同点（`git rev-list --left-right --count` = `0 0`）；该提交同时带上了 `data/checkstyle-baseline.json`（4134 → 4132）与三个新测试根，两个"必须同提交"的约束均已满足，`VariableControllerSmokeTest` 的 `absentProvider()` 也已入库 —— dev 尖端的 `ydsz-system-web` 测试编译**已恢复**。*
+
+*当前工作树（B1-4 / B1-5 / B1-6 / B1-9，均未提交）：后端 —— `AGENTS.md`、`CLAUDE.md`、`.gitignore`、本报告、26 份 pom、`BaseContractTest.java`（重写）、契约 DSL 迁移（server → web，SSE 契约删除）、`effective-excel-pom.xml` 删除、6 个生成器模板重写 + 新增 `controllerMockTest.vm`、`TemplateDataInitializer`（逐文件补齐）、新增 2 个测试类；前端（`ydsz-micro`）—— `bash/check-app-typecheck.mts`、`conf/typecheck-baseline.json`、`package.json`（type-check 重接线 + 4 个脚本）、`apps/generator-web` 两个 tsconfig、3 个 `comm` 包的 `workspace:*` 依赖、`pnpm-lock.yaml`。另有一个 `start-all-services.ps1` 未跟踪文件**不是本次任务产物，未动**。提交前复跑（`--base HEAD`）：C1 exit 0（4 个 .java 文件，棘轮 4132 → **4131** 已随修复下调）、C2 exit 0（`TemplateDataInitializer` 新增可执行 10 行 **100%** 覆盖）、C1/C2 自检 20/20 与 23/23、`check-file-encoding.py` exit 0；前端 `check-app-typecheck` 自检 8/8 + 全量 7425 条未上涨。*
 

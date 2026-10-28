@@ -101,7 +101,7 @@
              历史问题：原先此处硬编码全局 0.10/0.05，实测 21 个模块中 20 个达不到，
              导致 mvn verify 的 jacoco:check 恒为红灯 → CI 里等价于没有门禁。
              PR 级阻断规则改由 data/scripts/check-diff-coverage.py 承担（增量行覆盖率 ≥ 40%，
-             对齐《云顶编码规范》§14.7）。棘轮只可下调不可上调，上调需先补测试。 -->
+             对齐《云顶编码规范》§14.7）。棘轮地板只可上调不可下调：覆盖率上升后应同步上调锁定成果，下调等于放行倒退、须显式评审。 -->
         <jacoco.line.threshold>0.01</jacoco.line.threshold>
         <jacoco.branch.threshold>0.005</jacoco.branch.threshold>
         <jacoco.check.skip>false</jacoco.check.skip>

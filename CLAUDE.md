@@ -43,7 +43,7 @@ ydsz-cloud/
 ├── ydsz-literule/        # 规则引擎（DMN/决策表，端口 9007）
 ├── ydsz-nextwiki/        # 文件引擎（网盘知识库，端口 9003）
 ├── ydsz-agent/           # 智能引擎（AI 智能体，端口 9008）
-└── ydzs-generator/       # 代码生成器（端口 9090）
+└── ydsz-generator/       # 代码生成器（端口 9090）
 ```
 
 > **DDD 分层（业务模块）**：`api` / `domain` / `infra` / `server` / `app` / `web`
@@ -81,7 +81,7 @@ ydsz-cloud/
 | IMPORT-001 | **禁止行内 FQN**，所有类型通过 import 声明 |
 | IMPORT-002 | **禁止通配符 import**（`import xxx.*`）|
 | IMPORT-003 | **禁止未使用的 import** |
-| IMPORT-004 | 业务代码禁止直接 import Jackson/Fastjson/Gson，必须用 `com.njydsz.common.json.JsonUtils` |
+| IMPORT-004 | 业务代码禁止直接 import Jackson/Fastjson/Gson，必须用 `com.njydsz.common.json.YdszJson` |
 | IMPORT-005 | 禁止直接 import Netty，必须通过 ydsz-common-netty 封装 |
 
 ### 命名
@@ -155,7 +155,7 @@ ydsz-cloud/
 
 | 能力 | 必须使用 | 禁止 |
 |------|---------|------|
-| JSON 序列化 | `JsonUtils`（ydsz-common-json）| 直接 import Jackson/Fastjson |
+| JSON 序列化 | `YdszJson`（ydsz-common-json）| 直接 import Jackson/Fastjson |
 | Excel 处理 | `ExcelFacade`（ydsz-common-excel）| 直接 import Apache POI |
 | 日期格式化 | `DateUtils`（ydsz-common-util）| 直接使用 DateTimeFormatter |
 | 敏感信息脱敏 | `MaskUtils`（ydsz-common-util）| 自行 substring + `*` |
@@ -322,7 +322,7 @@ System.out.println("debug");                       // LOG-003 违规
 ### 异常规范
 ```java
 // 正例
-throw new BusinessException(ExceptionCodeEnum.TENANT_NOT_FOUND, tenantId);
+throw new BusinessException(ExceptionCode.TENANT_NOT_FOUND, tenantId);
 
 // 反例
 throw new RuntimeException("租户不存在");           // 硬编码中文

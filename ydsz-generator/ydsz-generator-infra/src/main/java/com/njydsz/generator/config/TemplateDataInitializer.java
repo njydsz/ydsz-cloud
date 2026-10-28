@@ -5,10 +5,13 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -26,8 +29,9 @@ import com.njydsz.generator.repository.GenTemplateRepository;
 /**
  * 模板数据初始化器。
  *
- * <p>应用启动时自动将 classpath:/templates/{groupName}/* 下的 .vm 文件
- * 同步到数据库 gen_template 表中（仅当分组无模板时触发，不覆盖人工修改内容）。
+ * <p>应用启动时（{@code template-init} profile）把 classpath 下 templates/{groupName} 目录里的 .vm
+ * 同步到数据库 gen_template 表中：**缺哪个补哪个**，已存在的文件名一律保留（不覆盖人工修改）。
+ * 原实现"分组只要有一条模板就整组跳过"，导致新增/修复的内置模板永远进不了存量环境。
  *
  * @author ydsz-team
  * @since 26.09.05
@@ -35,7 +39,7 @@ import com.njydsz.generator.repository.GenTemplateRepository;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@org.springframework.context.annotation.Profile("template-init")
+@Profile("template-init")
 public class TemplateDataInitializer {
 
   /** 模板文件后缀。 */
@@ -62,20 +66,25 @@ public class TemplateDataInitializer {
   }
 
   private void syncGroupTemplates(GenTemplateGroup group) {
-    long existingCount = templateRepository.countByGroupId(group.getId());
-    if (existingCount > 0) {
-      log.info("[TemplateDataInitializer] 分组 {} 已有 {} 条模板，跳过初始化",
-          group.getName(), existingCount);
-      return;
-    }
+    // 逐文件补齐（而不是"分组有任意模板就整组跳过"）：
+    // 整组跳过会让新增的内置模板（如 controllerMockTest.vm）在存量环境里永远装不进去，
+    // 也让模板修复只对全新安装生效。已存在的文件名一律保留，不覆盖人工修改内容。
+    Set<String> existingFileNames =
+        templateRepository.findByGroupIdOrderByFileNameAsc(group.getId()).stream()
+            .map(GenTemplate::getFileName)
+            .collect(Collectors.toSet());
     try {
       String pattern = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX
           + "/templates/" + group.getName() + "/**/*" + TEMPLATE_SUFFIX;
       PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
       Resource[] resources = resolver.getResources(pattern);
 
+      int added = 0;
       for (Resource resource : resources) {
         String fileName = extractFileName(resource, group.getName());
+        if (existingFileNames.contains(fileName)) {
+          continue;
+        }
         TemplateFileTypeEnum fileType = fileName.startsWith(FRONTEND_PATH_PREFIX)
             ? TemplateFileTypeEnum.FRONTEND : TemplateFileTypeEnum.BACKEND;
 
@@ -95,9 +104,10 @@ public class TemplateDataInitializer {
             .updatedAt(LocalDateTime.now())
             .build();
         templateRepository.save(template);
+        added++;
       }
-      log.info("[TemplateDataInitializer] 分组 {} 同步 {} 条模板成功",
-          group.getName(), resources.length);
+      log.info("[TemplateDataInitializer] 分组 {} 新增 {} 条内置模板（已存在 {} 条保留不覆盖）",
+          group.getName(), added, existingFileNames.size());
     } catch (Exception e) {
       log.error("[TemplateDataInitializer] 分组 {} 模板同步失败: {}",
           group.getName(), e.getMessage(), e);

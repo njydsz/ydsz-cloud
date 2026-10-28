@@ -1,0 +1,38 @@
+description: "同步对话 - 请求成功"
+request:
+  method: POST
+  url: /agent/chat
+  headers:
+    Content-Type: application/json
+  body:
+    conversationId: "conv-001"
+    message: "你好"
+  matchers:
+    body:
+      - path: $.message
+        type: by_regex
+        value: ".+"
+response:
+  status: 200
+  headers:
+    Content-Type: "application/json;charset=UTF-8"
+  body:
+    code: "A00000"
+    msg: "操作成功"
+    data:
+      content: "你好！有什么可以帮你的？"
+      model: "contract-model"
+      usage:
+        promptTokens: 0
+        completionTokens: 0
+        totalTokens: 0
+      respondedAt: "2026-10-27T00:00:00"
+    timestamp: 1761550000000
+  matchers:
+    body:
+      - path: $.timestamp
+        type: by_regex
+        value: "\\d+"
+      - path: $.data.respondedAt
+        type: by_regex
+        value: ".+"

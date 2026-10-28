@@ -3,11 +3,9 @@
 #set($lowerName = $text.textFirstLower($entityName))
 package ${package}.domain.vo;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Builder;
 
 import java.time.LocalDateTime;
 
@@ -18,15 +16,14 @@ import java.time.LocalDateTime;
  * @since ${date}
  */
 @Data
-@Builder
 @NoArgsConstructor
-@ApiModel("${table.comment}视图对象")
+@Schema(description = "${table.comment}视图对象")
 public class ${entityName}Vo {
 
 #foreach($col in $table.columns)
 #if(!$col.auditField)
   /** ${col.comment} */
-  @ApiModelProperty("${col.comment}")
+  @Schema(description = "${col.comment}")
   private ${col.javaType} ${col.javaFieldName};
 #end
 #end

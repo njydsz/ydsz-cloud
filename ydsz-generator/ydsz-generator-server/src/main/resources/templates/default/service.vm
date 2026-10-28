@@ -4,7 +4,8 @@
 package ${package}.domain.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.github.pagehelper.PageInfo;
+
+import com.njydsz.common.core.response.PageResponse;
 import ${package}.domain.entity.${entityName};
 import ${package}.domain.query.${entityName}Query;
 
@@ -20,9 +21,9 @@ public interface ${entityName}Service extends IService<${entityName}> {
    * 按查询条件分页。
    *
    * @param query 查询条件
-   * @return 分页结果
+   * @return 分页结果（统一使用 {@code PageResponse}，不使用 PageHelper 的 PageInfo）
    */
-  PageInfo<${entityName}> page(${entityName}Query query);
+  PageResponse<${entityName}> page(${entityName}Query query);
 
   /**
    * 创建实体。

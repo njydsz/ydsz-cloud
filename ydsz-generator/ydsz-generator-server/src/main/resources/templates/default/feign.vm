@@ -10,35 +10,43 @@
 
 package ${package}.api;
 
-import com.njydsz.common.core.response.YdszResponse;
-import ${package}.domain.vo.${entityName}Vo;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
+import ${package}.domain.query.${entityName}Query;
+import ${package}.domain.vo.${entityName}Vo;
 
 /**
  * ${table.comment} Feign 远程调用接口（API 契约）。
+ *
+ * <p>路径不带 {@code /api} 前缀：前缀剥离由网关负责，与服务端 Controller 的映射保持一致。
  *
  * @author ${author}
  * @since ${date}
  */
 @FeignClient(name = "${module}-service", contextId = "${entityName}ApiClient",
-    path = "/api/${lowerName}", fallbackFactory = ${entityName}ClientFallbackFactory.class)
-@Api(tags = "${table.comment}远程调用接口")
+    path = "/${lowerName}", fallbackFactory = ${entityName}ClientFallbackFactory.class)
+@Tag(name = "${table.comment}远程调用接口")
 public interface ${entityName}ApiClient {
 
   /**
    * 分页查询。
    */
-  @ApiOperation("分页查询")
+  @Operation(summary = "分页查询")
   @PostMapping("/page")
-  YdszResponse<${entityName}Vo> page(@RequestBody ${entityName}Query query);
+  YdszResponse<PageResponse<${entityName}Vo>> page(@RequestBody ${entityName}Query query);
 
   /**
    * 根据 ID 查找。
    */
-  @ApiOperation("根据 ID 查找")
+  @Operation(summary = "根据 ID 查找")
   @GetMapping("/{id}")
   YdszResponse<${entityName}Vo> getById(@PathVariable("${pkCol.javaFieldName}") ${pkType} id);
 }

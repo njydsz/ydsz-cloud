@@ -12,7 +12,7 @@
     <name>ydsz-agent-web</name>
     <description>Web Layer - REST API、SSE 流式输出、启动入口</description>
     <!-- B1-2 覆盖率棘轮（2026-10-26 实测：mvn -o test jacoco:report）。
-         值 = 本模块 BUNDLE 实测覆盖率向下取整到 0.1%，只可下调不可上调；
+         值 = 本模块 BUNDLE 实测覆盖率向下取整到 0.1%，只可上调不可下调（覆盖率上升后应同步上调锁定，下调即放行倒退）；
          根 pom 默认 0.01/0.005 是新模块起步线，真正的 PR 门禁是
          data/scripts/check-diff-coverage.py（增量行覆盖率 >= 40%，云顶编码规范 14.7）。 -->
     <properties>
@@ -137,6 +137,21 @@
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
+            <!-- B1-4 契约测试：把 src/test/resources/contracts/*.yml 生成成真正会跑的测试。
+                 修复前只有 spring-cloud-starter-contract-verifier 依赖 + 一个从未被继承过的基类，
+                 缺这个插件 → DSL 永远不会变成测试（"文件存在≠生效"）。
+                 版本与本仓库 spring-cloud-dependencies 2025.1.2 对齐（私服/本地仓库均为 5.0.3）。 -->
+            <plugin>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-contract-maven-plugin</artifactId>
+                <version>5.0.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <baseClassForTests>com.njydsz.agent.web.contract.BaseContractTest</baseClassForTests>
+                    <testFramework>JUNIT5</testFramework>
+                    <testMode>MOCKMVC</testMode>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

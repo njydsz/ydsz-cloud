@@ -1,77 +1,81 @@
 #parse("velocity_implicit.vm")
 #set($entityName = $text.textFirstUpper($table.aliasName))
 #set($lowerName = $text.textFirstLower($entityName))
-#set($hasDto = false)
-#set($hasVo = false)
-#foreach($col in $table.columns)
-#if($col.javaType == "LocalDateTime" || $col.javaType == "LocalDate" || $col.javaType == "Date")
-#import("java.time.LocalDateTime")
-#import("java.time.LocalDate")
-#elseif($col.javaType == "BigDecimal")
-#import("java.math.BigDecimal")
-#end
-#end
-package ${package}.domain;
+package ${package}.web.controller;
 
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.core.page.TableDataInfo;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
-import java.util.List;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
+import ${package}.domain.dto.${entityName}Dto;
+import ${package}.domain.entity.${entityName};
+import ${package}.domain.query.${entityName}Query;
+import ${package}.domain.service.${entityName}Service;
 
 /**
  * ${table.comment} REST 控制器。
  *
+ * <p>映射路径**不带** {@code /api} 前缀：前缀剥离由网关负责（与平台既有 Controller 一致，如
+ * {@code AgentController#chat} 映射 {@code /agent/chat}）。
+ *
  * @author ${author}
  * @since ${date}
  */
-@Api(tags = "${table.comment}接口")
+@Tag(name = "${table.comment}接口")
 @RestController
-@RequestMapping("/api/${lowerName}")
+@RequestMapping("/${lowerName}")
 @RequiredArgsConstructor
 public class ${entityName}Controller {
 
-  // TODO: 注入领域服务
-  // private final ${entityName}Service ${lowerName}Service;
+  private final ${entityName}Service ${lowerName}Service;
 
   /**
    * 分页查询。
    */
-  @ApiOperation("分页查询")
+  @Operation(summary = "分页查询")
   @PostMapping("/page")
-  public YdszResponse<TableDataInfo<${entityName}>> page(
-      @RequestBody ${entityName}Query query) {
-    return YdszResponse.success(null);
+  public YdszResponse<PageResponse<${entityName}>> page(
+      @Valid @RequestBody ${entityName}Query query) {
+    // TODO: 对外展示需要裁剪字段时，把 ${entityName} 映射为 ${entityName}Vo
+    return YdszResponse.success(${lowerName}Service.page(query));
   }
 
   /**
    * 新增。
    */
-  @ApiOperation("新增")
+  @Operation(summary = "新增")
   @PostMapping
   public YdszResponse<Boolean> create(@Valid @RequestBody ${entityName}Dto dto) {
+    // TODO: DTO → Entity 映射后调用 ${lowerName}Service.create(entity)
     return YdszResponse.success(true);
   }
 
   /**
    * 修改。
    */
-  @ApiOperation("修改")
+  @Operation(summary = "修改")
   @PutMapping
   public YdszResponse<Boolean> update(@Valid @RequestBody ${entityName}Dto dto) {
+    // TODO: DTO → Entity 映射后调用 ${lowerName}Service.update(entity)
     return YdszResponse.success(true);
   }
 
   /**
    * 删除。
    */
-  @ApiOperation("删除")
+  @Operation(summary = "删除")
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> delete(@PathVariable("id") String id) {
-    return YdszResponse.success(true);
+    return YdszResponse.success(${lowerName}Service.removeById(id));
   }
 }

@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-10-27",
+  "generated_at": "2026-10-28",
   "tool": "mvn -o checkstyle:checkstyle + data/scripts/check-checkstyle-delta.py",
   "note": "error 级违规存量基线；口径=只计 pom violationSeverity=error 且排除 ['NewlineAtEndOfFile'] 中消息含 ['CRLF'] 的本机检出噪声（入库 blob 均为 LF，由 check-file-encoding.py E3 管入库换行符）；同一规则报'文件未以空行结尾'属真实缺陷，照常计入。上调本文件必须随一次显式评审提交。",
   "excluded_checks": [
     "NewlineAtEndOfFile"
   ],
-  "total_errors": 4132,
+  "total_errors": 4131,
   "platform_noise_errors": 241,
   "modules": {
     "ydsz-agent/ydsz-agent-domain": {
@@ -357,12 +357,6 @@
       "by_rule": {
         "CustomImportOrder": 49,
         "UnusedImports": 3
-      }
-    },
-    "ydsz-generator/ydsz-generator-infra": {
-      "errors": 1,
-      "by_rule": {
-        "RegexpSinglelineJava": 1
       }
     },
     "ydsz-generator/ydsz-generator-server": {

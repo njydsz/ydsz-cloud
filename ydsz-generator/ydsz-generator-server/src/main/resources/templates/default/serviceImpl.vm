@@ -3,19 +3,18 @@
 #set($lowerName = $text.textFirstLower($entityName))
 package ${package}.server.service.impl;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
-import com.njydsz.common.core.page.TableDataInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.core.response.PageResponse;
 import ${package}.domain.entity.${entityName};
 import ${package}.domain.query.${entityName}Query;
 import ${package}.domain.service.${entityName}Service;
-import ${package}.infra.repository.${entityName}Repository;
 import ${package}.infra.mapper.${entityName}Mapper;
 
 /**
@@ -31,14 +30,12 @@ public class ${entityName}ServiceImpl
     extends ServiceImpl<${entityName}Mapper, ${entityName}>
     implements ${entityName}Service {
 
-  private final ${entityName}Repository ${lowerName}Repository;
-
   /** {@inheritDoc} */
   @Override
-  public PageInfo<${entityName}> page(${entityName}Query query) {
-    PageHelper.startPage(query.getPageNum(), query.getPageSize());
-    // TODO: 调用 repository 自定义分页
-    return new PageInfo<>(this.list());
+  public PageResponse<${entityName}> page(${entityName}Query query) {
+    // TODO: 用 lambdaQuery() 拼接查询条件 + 分页插件取 Page，再装配为 PageResponse
+    return PageResponse.success(
+        0L, Long.valueOf(query.getPageNum()), Long.valueOf(query.getPageSize()), List.of());
   }
 
   /** {@inheritDoc} */
