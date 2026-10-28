@@ -90,6 +90,10 @@ public final class FileOps {
    *
    * <p>归一化后缀保留，截断时优先保留后缀；是上传/重命名的安全入口。
    *
+   * <p>恒等式（由 {@code FileOpsSanitizeTest} 钉住）：返回值长度 ≤255、不含 {@code /} {@code \} {@code ..}、
+   * 且**任何**入参都不抛异常——入参来自 {@code MultipartFile#getOriginalFilename()}，属攻击者可控输入。
+   * 后缀长度吃掉全部预算时（如 {@code "a." + 300 字符}）放弃保留后缀、整体截断。
+   *
    * @param filename 原始文件名（可为 null）
    * @return 净化后的安全文件名；入参为空时原样返回
    */
@@ -103,12 +107,15 @@ public final class FileOps {
     name = name.replaceAll("[^\\u4e00-\\u9fa5a-zA-Z0-9._\\- ()（）]", "_");
     if (name.length() > 255) {
       String suffix = extractSuffix(name);
-      String baseName =
-          suffix.isEmpty() ? name : name.substring(0, name.length() - suffix.length() - 1);
-      name =
-          baseName.substring(0, Math.min(baseName.length(), 255 - suffix.length() - 1))
-              + "."
-              + suffix;
+      int baseBudget = 255 - suffix.length() - 1;
+      if (suffix.isEmpty() || baseBudget <= 0) {
+        // baseBudget 为负说明"后缀"长度已吃满 255 预算（文件名形如 "a.<300 个字符>"，
+        // 而 originalFilename 完全由上传方控制），此时保留后缀必然要 substring(0, 负数)。
+        // 取舍：放弃保留后缀、整体截断，也不再抛 StringIndexOutOfBoundsException。
+        return name.substring(0, 255);
+      }
+      String baseName = name.substring(0, name.length() - suffix.length() - 1);
+      name = baseName.substring(0, Math.min(baseName.length(), baseBudget)) + "." + suffix;
     }
     return name;
   }

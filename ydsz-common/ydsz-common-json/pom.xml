@@ -18,6 +18,13 @@
     <properties>
         <!-- L1 工具层模块标识：激活 purity 检查 -->
         <l1.module.skip>false</l1.module.skip>
+        <!-- B1-2 覆盖率棘轮（2026-10-27 实测：mvn -o verify -pl ydsz-common/ydsz-common-json）。
+             本模块此前零测试，jacoco:check 因无 exec 数据整体空转——"没跑测试"被读成"门禁通过"。
+             值 = BUNDLE 实测向下取整到 0.1%（LINE 725/8301=0.0873、BRANCH 254/5531=0.0459），
+             较根 pom 起步线（0.01/0.005）各收紧 8 倍；全平台唯一 JSON 出入口只有 8.7% 行覆盖，
+             这个低值是在记录现状而非认可现状，后续补测应继续上调。 -->
+        <jacoco.line.threshold>0.08</jacoco.line.threshold>
+        <jacoco.branch.threshold>0.04</jacoco.branch.threshold>
     </properties>
 
     <dependencies>
@@ -88,6 +95,19 @@
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <!-- 测试基座：本模块是平台唯一 JSON 出入口，此前零测试，解析器的 ThreadLocal
+             复用缺陷只能靠单元测试在同一线程内复现（版本由父 pom dependencyManagement 管理） -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

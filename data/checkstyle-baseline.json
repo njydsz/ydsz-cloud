@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-10-26",
+  "generated_at": "2026-10-27",
   "tool": "mvn -o checkstyle:checkstyle + data/scripts/check-checkstyle-delta.py",
-  "note": "error 级违规存量基线；口径=只计 pom violationSeverity=error 且排除 ['NewlineAtEndOfFile']（本机 CRLF 噪声，由 check-file-encoding.py E3 管入库换行符）。上调本文件必须随一次显式评审提交。",
+  "note": "error 级违规存量基线；口径=只计 pom violationSeverity=error 且排除 ['NewlineAtEndOfFile'] 中消息含 ['CRLF'] 的本机检出噪声（入库 blob 均为 LF，由 check-file-encoding.py E3 管入库换行符）；同一规则报'文件未以空行结尾'属真实缺陷，照常计入。上调本文件必须随一次显式评审提交。",
   "excluded_checks": [
     "NewlineAtEndOfFile"
   ],
-  "total_errors": 4155,
-  "platform_noise_errors": 244,
+  "total_errors": 4132,
+  "platform_noise_errors": 241,
   "modules": {
     "ydsz-agent/ydsz-agent-domain": {
       "errors": 81,
@@ -57,13 +57,13 @@
       }
     },
     "ydsz-common/ydsz-common-auth": {
-      "errors": 14,
+      "errors": 13,
       "by_rule": {
         "JavadocType": 1,
-        "CustomImportOrder": 4,
         "UnusedImports": 5,
         "IllegalImport": 1,
         "JavadocMethod": 2,
+        "CustomImportOrder": 3,
         "LineLength": 1
       }
     },
@@ -91,12 +91,6 @@
       "by_rule": {
         "UnusedImports": 3,
         "CustomImportOrder": 15
-      }
-    },
-    "ydsz-common/ydsz-common-core": {
-      "errors": 4,
-      "by_rule": {
-        "CustomImportOrder": 4
       }
     },
     "ydsz-common/ydsz-common-docs": {
@@ -401,18 +395,12 @@
         "UnusedImports": 2
       }
     },
-    "ydsz-literule/ydsz-literule-infra": {
-      "errors": 2,
-      "by_rule": {
-        "CustomImportOrder": 2
-      }
-    },
     "ydsz-literule/ydsz-literule-server": {
-      "errors": 92,
+      "errors": 79,
       "by_rule": {
-        "CustomImportOrder": 59,
+        "CustomImportOrder": 48,
         "UnusedImports": 1,
-        "JavadocMethod": 7,
+        "JavadocMethod": 5,
         "MagicNumber": 10,
         "JavadocStyle": 11,
         "RegexpSinglelineJava": 1,
@@ -523,10 +511,10 @@
       }
     },
     "ydsz-system/ydsz-system-server": {
-      "errors": 182,
+      "errors": 179,
       "by_rule": {
-        "CustomImportOrder": 170,
-        "RegexpSinglelineJava": 3,
+        "CustomImportOrder": 168,
+        "RegexpSinglelineJava": 2,
         "MagicNumber": 5,
         "CyclomaticComplexity": 1,
         "JavadocType": 2,

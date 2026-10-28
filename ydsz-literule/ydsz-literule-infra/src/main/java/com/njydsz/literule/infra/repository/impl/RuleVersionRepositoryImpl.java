@@ -12,7 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.literule.domain.converter.LiteruleConverter;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.dto.RuleVersionDTO;
@@ -24,8 +26,6 @@ import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 import com.njydsz.literule.infra.mapper.RuleVersionHistoryMapper;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 规则版本仓储实现（Infra 层）。
@@ -78,8 +78,10 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     wrapper.eq(RuleVersionHistory::getRuleCode, ruleCode)
            .orderByDesc(RuleVersionHistory::getVersion);
     IPage<RuleVersionHistory> entityPage = ruleVersionHistoryMapper.selectPage(page, wrapper);
+    // PageResponse.success 的形参顺序是 (total, pageNum, pageSize, data)：
+    // 原先按 (pageNum, pageSize, total) 传入会让版本历史分页把"第几页"当成"总条数"返回给前端。
     return PageResponse.success(
-        (long) pageNum, (long) pageSize, entityPage.getTotal(),
+        entityPage.getTotal(), (long) pageNum, (long) pageSize,
         converter.ruleVersionListToVO(entityPage.getRecords()));
   }
 

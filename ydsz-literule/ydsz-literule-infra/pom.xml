@@ -11,6 +11,14 @@
     <artifactId>ydsz-literule-infra</artifactId>
     <name>ydsz-literule-infra</name>
     <description>DDD Module</description>
+    <!-- B1-2 覆盖率棘轮（2026-10-27 实测：mvn -o verify -pl ydsz-literule/ydsz-literule-infra，
+         5 个仓储测试类 / 37 个用例）。此前本模块零测试，jacoco:check 因无 exec 数据整体空转。
+         值 = 本模块 BUNDLE 实测覆盖率向下取整到 0.1%（LINE 207/238=0.8697、BRANCH 34/42=0.8095）：
+         覆盖率下降即判红；上升后应把本值同步上调，锁定成果不让它回落。 -->
+    <properties>
+        <jacoco.line.threshold>0.86</jacoco.line.threshold>
+        <jacoco.branch.threshold>0.80</jacoco.branch.threshold>
+    </properties>
     <dependencies>
     <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
     <dependency>
@@ -32,6 +40,23 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-literule-domain</artifactId>
+        </dependency>
+        <!-- org.mapstruct（provided，与 ydsz-agent-infra / ydsz-cronjob-infra 同一口径）：
+             本层 RepositoryImpl 运行时调用 LiteruleConverter.INSTANCE，而 domain 的 mapstruct 是
+             provided 不传递（YDIZ-DDD-004 豁免情形）；缺少本声明时单测会 NoClassDefFound Mappers。 -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- org.springframework:spring-web（provided）：RuleVersionRepositoryImpl 回滚失败时抛
+             SysException，其静态字段 HttpStatus.INTERNAL_SERVER_ERROR 在类初始化即需要 spring-web；
+             ydsz-common-exception 把 spring-web 声明为 optional 不传递，缺本声明时单测会
+             NoClassDefFoundError: org/springframework/http/HttpStatus。 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -57,6 +82,27 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
+        <!-- 测试基础设施（JUnit 5 + Mockito + AssertJ），与 ydsz-literule-server 同一套 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

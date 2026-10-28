@@ -2,6 +2,7 @@ package com.njydsz.common.json.parser;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -97,6 +98,17 @@ public final class JsonParserUtil {
   private static final ThreadLocal<char[]> CHAR_BUFFER =
   // CHECKSTYLE.ON: RegexpSinglelineJava
       ThreadLocal.withInitial(() -> new char[CHAR_BUFFER_SIZE]);
+
+  /**
+   * {@link #CHAR_BUFFER} 中已写入的字符长度（ThreadLocal，随缓冲区一并清理）。
+   *
+   * <p>池化缓冲区比本次载荷长时，超出部分仍是上一次解析的内容；扫描例程又以池容量为边界，
+   * 必须靠本值确定要抹掉哪一段残留。详见 {@link #getCharBuffer(String)}。
+   */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
+  private static final ThreadLocal<Integer> WRITTEN_LENGTH =
+  // CHECKSTYLE.ON: RegexpSinglelineJava
+      ThreadLocal.withInitial(() -> 0);
 
   /**
    * StringBuilder 对象池（ThreadLocal 复用）
@@ -197,6 +209,7 @@ public final class JsonParserUtil {
   /** 清理所有 ThreadLocal 变量（防止线程池环境内存泄漏）。 */
   public static void clearThreadLocals() {
     CHAR_BUFFER.remove();
+    WRITTEN_LENGTH.remove();
     SB_POOL.remove();
     USE_BIG_DECIMAL.remove();
     CALL_PARSE_DEPTH.remove();
@@ -1056,14 +1069,36 @@ public final class JsonParserUtil {
     throw new JsonDeserializationException("Unmatched bracket: " + openChar, pos);
   }
 
-  /** 获取字符数组缓冲区（JIT 优化：final 方法） */
+  /**
+   * 获取字符数组缓冲区（JIT 优化：final 方法）。
+   *
+   * <p><b>必须清理尾部残留：</b>池化缓冲区只在 {@code [0, json.length())} 区间覆写，而下游扫描例程
+   * （{@code parseObjectRecursiveImpl} 等）以 {@code chars.length}——即池容量而非本次载荷长度——作边界。
+   * 不清理时"短载荷紧跟长载荷"会越过本次真实结尾、继续解析上一次残留字符：实测截断输入
+   * 紧跟一条更长的 JSON 后直接返回上一条的全部字段值，构成跨请求数据串扰
+   * （线程池复用下等于把他人/他租户的载荷交给了本次请求）。
+   *
+   * <p>填充范围限定在 {@code [json.length(), 上次写入长度)}，代价与"本次比上次短多少"成正比，
+   * 不随池容量放大；效果等同于新建缓冲区的全零初值（扫描例程把小于空格的字符视为空白）。
+   */
   private static char[] getCharBuffer(String json) {
     char[] buffer = CHAR_BUFFER.get();
-    if (buffer.length < json.length()) {
-      buffer = new char[json.length()];
+    int jsonLength = json.length();
+
+    if (buffer.length < jsonLength) {
+      buffer = new char[jsonLength];
       CHAR_BUFFER.set(buffer);
+      WRITTEN_LENGTH.set(jsonLength);
+      json.getChars(0, jsonLength, buffer, 0);
+      return buffer;
     }
-    json.getChars(0, json.length(), buffer, 0);
+
+    int writtenLength = WRITTEN_LENGTH.get();
+    if (writtenLength > jsonLength) {
+      Arrays.fill(buffer, jsonLength, writtenLength, ' ');
+    }
+    WRITTEN_LENGTH.set(jsonLength);
+    json.getChars(0, jsonLength, buffer, 0);
     return buffer;
   }
 

@@ -54,6 +54,10 @@ public class DecisionTableRepositoryImpl implements DecisionTableRepository {
   @Override
   public DecisionTableVO save(DecisionTableDTO dto) {
     DecisionTable entity = converter.postDtoToEntity(dto);
+    // 转换器刻意忽略主键（@Mapping(target="id", ignore=true)，主键由持久层生成），
+    // 这里必须回填 DTO 的 id，否则下面的更新分支恒不可达——"编辑决策表"会退化成
+    // 按 table_code 插入重复行。列类型为 varchar(36)，故 Long 主键转字符串写入。
+    entity.setId(dto.getId() == null ? null : String.valueOf(dto.getId()));
     if (entity.getId() != null) {
       decisionTableMapper.updateById(entity);
     } else {

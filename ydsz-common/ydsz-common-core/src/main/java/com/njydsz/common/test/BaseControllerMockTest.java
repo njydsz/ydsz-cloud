@@ -1,11 +1,12 @@
 package com.njydsz.common.test;
 
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.json.JsonMapper;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.json.JsonMapper;
 
 /**
  * Controller Smoke Test 基础类（独立 MockMvc 模式）。

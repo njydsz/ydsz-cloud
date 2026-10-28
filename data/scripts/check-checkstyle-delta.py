@@ -19,7 +19,7 @@
   python3 data/scripts/check-checkstyle-delta.py --self-test
   python3 data/scripts/check-checkstyle-delta.py --base origin/main
   python3 data/scripts/check-checkstyle-delta.py --update-baseline   # 人工复核后刷新基线
-退出码非 0 表示存在缺陷。
+退出码非 0 表示存在缺陷。读取退出码不要隔着管道（`… | tail` 拿到的是 tail 的状态），用 `${PIPESTATUS[0]}`。
 """
 
 from __future__ import annotations
@@ -37,10 +37,21 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BASELINE_FILE = REPO_ROOT / "data" / "checkstyle-baseline.json"
 
-# 本机换行符噪声：Windows 工作区在 core.autocrlf=true 下会把 LF 检出为 CRLF，
-# NewlineAtEndOfFile 因此报红，而入库 blob 是干净的 LF（由 check-file-encoding.py E3 负责判）。
-# 这两类规则不计入棘轮与增量，只在汇总里作为提示输出。
+# 本机换行符噪声：必须按**消息内容**判定，不能只看规则名。
+# 实测（2026-10-27，git ls-files --eol）：NewlineAtEndOfFile 共 243 条，其中 241 条是
+# "预期 LF、检测到 CRLF"，对应文件全部为 i/lf w/crlf —— 入库 blob 干净、只有本机检出被转成
+# CRLF，属平台噪声（入库换行符由 check-file-encoding.py E3 判）。
+# 另 2 条是"文件未以空行结尾"，其 blob 同样缺尾行 → 真实仓库缺陷，必须计入棘轮与增量。
 PLATFORM_NOISE_CHECKS = frozenset({"NewlineAtEndOfFile"})
+PLATFORM_NOISE_MARKERS = ("CRLF",)
+
+
+def is_platform_noise(rule: str, message: str) -> bool:
+    """仅"本机检出被转成 CRLF"算噪声；缺尾行等真实缺陷照常计违规。"""
+    return rule in PLATFORM_NOISE_CHECKS and any(
+        marker in (message or "") for marker in PLATFORM_NOISE_MARKERS
+    )
+
 
 # 排除目录：backup_logs/ 是整份源码副本（已入库，属 B1-9 仓库卫生项），不参与门禁
 EXCLUDED_DIR_PARTS = ("data/scripts/backup_logs",)
@@ -93,7 +104,7 @@ def collect_violations(root: Path, exclude_noise: bool = True) -> tuple[dict, in
                 if err.get("severity") != "error":
                     continue  # 与 pom 的 violationSeverity=error 口径一致
                 rule = check_name_of(err.get("source", ""))
-                if exclude_noise and rule in PLATFORM_NOISE_CHECKS:
+                if exclude_noise and is_platform_noise(rule, err.get("message", "")):
                     noise += 1
                     continue
                 stat["errors"] += 1
@@ -192,7 +203,9 @@ def write_baseline(path: Path, modules: dict, noise: int, total: int) -> None:
         "tool": "mvn -o checkstyle:checkstyle + data/scripts/check-checkstyle-delta.py",
         "note": (
             "error 级违规存量基线；口径=只计 pom violationSeverity=error 且排除 "
-            f"{sorted(PLATFORM_NOISE_CHECKS)}（本机 CRLF 噪声，由 check-file-encoding.py E3 管入库换行符）。"
+            f"{sorted(PLATFORM_NOISE_CHECKS)} 中消息含 {list(PLATFORM_NOISE_MARKERS)} 的本机检出噪声"
+            "（入库 blob 均为 LF，由 check-file-encoding.py E3 管入库换行符）；"
+            "同一规则报'文件未以空行结尾'属真实缺陷，照常计入。"
             "上调本文件必须随一次显式评审提交。"
         ),
         "excluded_checks": sorted(PLATFORM_NOISE_CHECKS),
@@ -211,28 +224,32 @@ def write_baseline(path: Path, modules: dict, noise: int, total: int) -> None:
     )
 
 
-def fixture_xml(cases: list[tuple[str, int, str, str]]) -> str:
-    """构造 checkstyle-result.xml 夹具：(文件名, 行号, severity, source)。"""
+def fixture_xml(cases: list[tuple[str, int, str, str, str]]) -> str:
+    """构造 checkstyle-result.xml 夹具：(文件名, 行号, severity, source, message)。"""
     parts = ["<?xml version='1.0' encoding='UTF-8'?>", "<checkstyle version='9.3'>"]
-    for name, line, severity, source in cases:
+    for name, line, severity, source, message in cases:
         parts.append(f"  <file name='{name}'>")
         parts.append(
-            f"    <error line='{line}' severity='{severity}' message='m' source='{source}'/>"
+            f"    <error line='{line}' severity='{severity}' "
+            f"message='{message}' source='{source}'/>"
         )
         parts.append("  </file>")
     parts.append("</checkstyle>")
     return "\n".join(parts)
 
 
-def make_module(root: Path, module: str, cases: list[tuple[str, int, str, str]]) -> None:
+def make_module(root: Path, module: str, cases: list[tuple]) -> None:
+    """cases 支持 4 元组（消息默认 'm'）或 5 元组（显式消息，用于区分换行符噪声与真实缺尾行）。"""
     target = root / module / "target"
     target.mkdir(parents=True, exist_ok=True)
     abs_names = []
-    for name, line, severity, source in cases:
+    for case in cases:
+        name, line, severity, source = case[:4]
+        message = case[4] if len(case) > 4 else "m"
         file_path = root / module / name
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_text("// fixture\n", encoding="utf-8")
-        abs_names.append((str(file_path), line, severity, source))
+        abs_names.append((str(file_path), line, severity, source, message))
     (target / "checkstyle-result.xml").write_text(fixture_xml(abs_names), encoding="utf-8")
 
 
@@ -251,6 +268,9 @@ def self_test() -> int:
     magic = "com.puppycrawl.tools.checkstyle.checks.sizes.MagicNumberCheck"
     eol = "com.puppycrawl.tools.checkstyle.checks.NewlineAtEndOfFileCheck"
     warn = "com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"
+    # 同一规则两种消息：本机检出被转 CRLF（噪声）vs 文件真缺尾行（缺陷）
+    eol_crlf_msg = r"文件末尾期望的行尾为LF（\n），但检测到CRLF（\r\n）。"
+    eol_missing_msg = "文件未以空行结尾。"
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -263,7 +283,12 @@ def self_test() -> int:
         make_module(
             root,
             "ydsz-noise/ydsz-noise-server",
-            [("src/main/java/D.java", 1, "error", eol)],
+            [("src/main/java/D.java", 1, "error", eol, eol_crlf_msg)],
+        )
+        make_module(
+            root,
+            "ydsz-noise/ydsz-noise-web",
+            [("src/main/java/F.java", 1, "error", eol, eol_missing_msg)],
         )
         make_module(
             root,
@@ -273,9 +298,13 @@ def self_test() -> int:
         make_module(root, "ydsz-clean/ydsz-clean-server", [])
 
         modules, noise, reports = collect_violations(root)
-        case("扫描到 5 份报告 + 1 条噪声", reports == 5 and noise == 1)
+        case("扫描到 6 份报告 + 1 条噪声", reports == 6 and noise == 1)
         case("换行符噪声不计入违规但单独计数",
              modules["ydsz-noise/ydsz-noise-server"]["errors"] == 0 and noise == 1)
+        case("同规则'缺尾行'属真实缺陷，不得当噪声放行",
+             modules["ydsz-noise/ydsz-noise-web"]["errors"] == 1
+             and modules["ydsz-noise/ydsz-noise-web"]["by_rule"]["NewlineAtEndOfFile"] == 1
+             and noise == 1)
         case("warning 级不计入", modules["ydsz-warn/ydsz-warn-server"]["errors"] == 0)
         case("按模块归集", modules["ydsz-demo/ydsz-demo-server"]["errors"] == 2)
         case("规则名去 Check 后缀", modules["ydsz-demo/ydsz-demo-server"]["by_rule"]["CustomImportOrder"] == 1)
@@ -285,6 +314,7 @@ def self_test() -> int:
                 "ydsz-demo/ydsz-demo-server": {"errors": 2},
                 "ydsz-demo/ydsz-demo-web": {"errors": 5},
                 "ydsz-noise/ydsz-noise-server": {"errors": 0},
+                "ydsz-noise/ydsz-noise-web": {"errors": 1},
             }
         }
 

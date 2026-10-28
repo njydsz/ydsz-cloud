@@ -30,9 +30,11 @@ import com.njydsz.common.audit.core.AuditRecorder;
 import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.repository.OutboxRepository;
 import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.lock.core.DistributedLocker;
-import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.tenant.config.TenantProperties;
@@ -90,12 +92,11 @@ import com.njydsz.literule.server.spi.FactProvider;
 import com.njydsz.literule.server.spi.FactProviderRegistry;
 import com.njydsz.literule.server.spi.FileRuleSource;
 import com.njydsz.literule.server.spi.NacosRuleSource;
+import com.njydsz.literule.server.spi.NoopRuleConfigProvider;
 import com.njydsz.literule.server.spi.RuleActionDispatcher;
 import com.njydsz.literule.server.spi.RuleActionHandler;
 import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
-import com.njydsz.literule.server.version.RuleVersionDiffService;
-import com.njydsz.literule.server.spi.NoopRuleConfigProvider;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.spi.RulePackProvider;
 import com.njydsz.literule.server.spi.RuleSourceManager;
@@ -103,8 +104,7 @@ import com.njydsz.literule.server.spi.ScorecardConfigProvider;
 import com.njydsz.literule.server.spi.ScriptConfigProvider;
 import com.njydsz.literule.server.spi.TraceRecorder;
 import com.njydsz.literule.server.spi.ZookeeperRuleSource;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.literule.server.version.RuleVersionDiffService;
 
 /**
  * LiteRule 规则引擎自动配置。
@@ -886,10 +886,11 @@ public class LiteRuleAutoConfiguration {
    * 提供持久化实现；权限校验可通过 {@link ApprovalPermissionChecker} SPI 委托给消费方。
    *
    * @param configProvider 规则配置提供者
-   * @param distributedLocker 分布式锁（来自 ydsz-common-lock，替代本地 synchronized）
+   * @param distributedLockerProvider 分布式锁提供者（来自 ydsz-common-lock，替代本地 synchronized；容器无该 Bean 时为 null）
    * @param recordRepoProvider 审批记录持久化仓库（可选）
    * @param permissionCheckerProvider 权限检查器（可选）
    * @param workflowBridgeProvider 工作流引擎桥接（可选）
+   * @param i18nMessages 审批流文案的国际化消息源
    * @return RuleApprovalService 实例
    * @since 26.10.01
    */
@@ -969,7 +970,10 @@ public class LiteRuleAutoConfiguration {
    * <p>使用 {@link Primary} 确保其他组件 （{@link RuleHotReloader} / {@link RuleAdminService}）注入的是缓存装饰器而非原始
    * Provider。
    *
-   * @param providers 所有 RuleConfigProvider Bean（过滤掉 CachingRuleConfigProvider 自身）
+   * @param directDbProviderProvider DB 规则源（优先级最高）
+   * @param nacosProviderProvider Nacos 规则源
+   * @param apolloProviderProvider Apollo 规则源
+   * @param zookeeperProviderProvider Zookeeper 规则源（优先级最低，四者皆缺时回落 NO-OP）
    * @param redisStringOpsProvider Redis String 操作组件（可选，不存在时降级为仅 L1）
    * @param properties 配置属性
    * @return CachingRuleConfigProvider 实例

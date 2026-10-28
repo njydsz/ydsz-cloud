@@ -13,6 +13,17 @@
         <version>26.10.01-SNAPSHOT</version>
     </parent>
 
+    <!-- B1-3 覆盖率棘轮（2026-10-27 实测：mvn -o verify -pl ydsz-common/ydsz-common-file →
+         jacoco.xml BUNDLE LINE 34/4719 = 0.0072，BRANCH 19/1536 = 0.0124，按实测向下取整钉死地板）。
+         本模块此前零测试：根默认 0.01 直接判红（"lines covered ratio is 0.00, expected 0.01"），
+         说明地板此前是靠"没有测量"而非"达标"维持的。0.7% 是在**记录债**而非认可债：
+         模块内 58 个类只有 FileOps 被测，存储 SDK 适配层仍未覆盖。
+         覆盖率上升后应同步上调本值锁定成果，只可升不可降。 -->
+    <properties>
+        <jacoco.line.threshold>0.007</jacoco.line.threshold>
+        <jacoco.branch.threshold>0.012</jacoco.branch.threshold>
+    </properties>
+
     <dependencies>
         <!-- spring -->
         <dependency>
@@ -156,6 +167,20 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-thread</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <!-- 单元测试（版本由父 pom dependencyManagement 管理）。
+             本模块的 FileOps.sanitizeFileName 是 AGENTS.md SOP-6 规定的全平台上传净化入口，
+             此前零测试：安全属性从未被验证，且实测超长后缀会抛 StringIndexOutOfBoundsException。 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

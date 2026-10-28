@@ -3,7 +3,6 @@ package com.njydsz.system.server.config;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +21,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import com.njydsz.system.server.service.event.DictChangeEvent;
 import com.njydsz.system.server.service.event.DictChangeEventConstants;
 
@@ -70,8 +69,10 @@ public class DictSseRedisListenerConfig implements DisposableBean {
     log.info("[DictSseRedisListener] Subscribed to channel: {}",
         DictChangeEventConstants.REDIS_CHANNEL);
 
-    ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(
-        1, ExecutorUtils.createDaemonThreadFactory("dict-sse-keepalive"));
+    // 经 ydsz-common-thread 统一创建（规范 15.4.1）：工厂线程同为 daemon，且登记进
+    // ThreadPoolRegistry，使该池可被 /actuator 线程池端点与告警评估看到。
+    ScheduledExecutorService scheduler =
+        InternalExecutorFactory.newSingleThreadScheduledPool("dict-sse-keepalive");
     scheduler.scheduleAtFixedRate(
         emitterRegistry::broadcastKeepalive,
         DictChangeEventConstants.SSE_KEEPALIVE_INTERVAL_SECONDS,

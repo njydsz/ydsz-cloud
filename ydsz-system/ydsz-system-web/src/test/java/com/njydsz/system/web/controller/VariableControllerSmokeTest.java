@@ -49,6 +49,30 @@ class VariableControllerSmokeTest extends BaseControllerMockTest {
     mockMvc = standaloneSetup(controller);
   }
 
+  /**
+   * "容器里没有这个 bean" 的 ObjectProvider，用于脱离 Spring 容器手工装配 advice。
+   *
+   * <p>spring-beans 7.0.8 的 {@code ObjectProvider} 已无静态 {@code empty()} 工厂方法，
+   * 且全部方法为 default（默认实现委托给会抛 UnsupportedOperation 的 {@code stream()}），
+   * 故只覆写 advice 构造期真正调用的 {@code getIfAvailable()}。
+   *
+   * @param <T> Provider 承载的 bean 类型
+   * @return 取不到任何 bean 的 provider
+   */
+  private static <T> ObjectProvider<T> absentProvider() {
+    return new ObjectProvider<>() {
+      @Override
+      public T getIfAvailable() {
+        return null;
+      }
+
+      @Override
+      public T getIfUnique() {
+        return null;
+      }
+    };
+  }
+
   @Nested
   @DisplayName("GET /variable/page")
   class Page {
@@ -115,9 +139,9 @@ class VariableControllerSmokeTest extends BaseControllerMockTest {
               new MvcExceptionHandler(
                   new MockEnvironment(),
                   null,
-                  ObjectProvider.empty(),
-                  ObjectProvider.empty(),
-                  ObjectProvider.empty()),
+                  absentProvider(),
+                  absentProvider(),
+                  absentProvider()),
               controller);
     }
 
