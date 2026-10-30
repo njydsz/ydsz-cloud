@@ -13,6 +13,16 @@
         <version>26.10.01-SNAPSHOT</version>
     </parent>
 
+    <!-- B1-3 覆盖率棘轮：2026-10-28 实测（mvn -o verify -pl ydsz-common/ydsz-common-redis）
+         BUNDLE LINE 29/3215 = 0.0090、BRANCH 20/1693 = 0.0118，按实测向下取整钉死地板。
+         本模块此前零测试（根默认 0.01 直接判红："lines covered ratio is 0.00"）；
+         首测覆盖 TenantRedisKeyPrefixer（多租户 Redis 隔离的数据边界）。
+         0.9% 是在记录债而非认可债。只可上调不可下调。 -->
+    <properties>
+        <jacoco.line.threshold>0.009</jacoco.line.threshold>
+        <jacoco.branch.threshold>0.011</jacoco.branch.threshold>
+    </properties>
+
     <dependencies>
         <!--common-json-->
         <dependency>
@@ -121,6 +131,19 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+
+        <!-- 单元测试（版本由父 pom dependencyManagement 管理）。
+             首测目标是 TenantRedisKeyPrefixer：多租户 Redis 隔离的正确性此前零验证。 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

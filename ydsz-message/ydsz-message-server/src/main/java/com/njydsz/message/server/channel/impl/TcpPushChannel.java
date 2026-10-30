@@ -56,6 +56,7 @@ import com.njydsz.message.server.channel.MessageChannel;
 @Component
 @ConditionalOnClass(AbstractNettyServer.class)
 @ConditionalOnProperty(prefix = "ydsz.message.tcp-push", name = "enabled", havingValue = "true")
+@SuppressWarnings("ydiz-import-005")
 public class TcpPushChannel extends AbstractNettyServer implements MessageChannel {
   /** Map 初始容量 */
   private static final int MAP_CAPACITY_8 = 8;

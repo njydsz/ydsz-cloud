@@ -328,12 +328,12 @@ public class DictItemController {
   public YdszResponse<Map<String, Object>> importFromExcel(
       @Parameter(description = "Excel 文件（.xlsx 格式）") @RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
-      return YdszResponse.error("导入文件不能为空");
+      return YdszResponse.error("Import file must not be empty");
     }
     try {
       return YdszResponse.success(importService.importFromExcel(file.getInputStream()));
     } catch (Exception e) {
-      return YdszResponse.error("导入失败: " + e.getMessage());
+      return YdszResponse.error("Import failed: " + e.getMessage());
     }
   }
 

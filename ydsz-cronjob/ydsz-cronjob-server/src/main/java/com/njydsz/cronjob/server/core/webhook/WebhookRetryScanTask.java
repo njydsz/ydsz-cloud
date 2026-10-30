@@ -8,7 +8,11 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -124,41 +128,54 @@ public class WebhookRetryScanTask implements ScanTask {
       }
       log.info("[WebhookRetry] 本次扫描到 {} 条待重试记录", pendingRetries.size());
 
-      int successCount = 0;
-      int deadCount = 0;
-      for (JobWebhookRetryVO retry : pendingRetries) {
-        boolean success;
-        try {
-          success = doSend(retry);
-        } catch (Exception e) {
-          log.warn(
-              "[WebhookRetry] 重试推送异常: retryId={} webhookId={} reason={}",
-              retry.getId(),
-              retry.getWebhookId(),
-              e.getMessage());
-          success = false;
+      // 使用虚拟线程并发推送 HTTP（JDK 21 virtual threads），避免串行阻塞
+      ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+      try {
+        List<Future<Boolean>> futures = new ArrayList<>();
+        for (JobWebhookRetryVO retry : pendingRetries) {
+          futures.add(executor.submit(() -> doSend(retry)));
         }
-        if (success) {
-          webhookRetryRepository.markSuccess(retry.getId(), LocalDateTime.now());
-          successCount++;
-        } else {
-          int newCount = retry.getRetryCount() + 1;
-          if (newCount >= retry.getMaxRetries()) {
-            webhookRetryRepository.markDead(retry.getId(), LocalDateTime.now(), "重试次数耗尽");
-            deadCount++;
+
+        int successCount = 0;
+        int deadCount = 0;
+        List<String> successIds = new ArrayList<>();
+        List<String> deadIds = new ArrayList<>();
+        List<Object[]> retryUpdates = new ArrayList<>();
+        for (int i = 0; i < pendingRetries.size(); i++) {
+          JobWebhookRetryVO retry = pendingRetries.get(i);
+          boolean success;
+          try {
+            success = futures.get(i).get();
+          } catch (Exception e) {
+            log.warn("[WebhookRetry] 重试推送异常: retryId={} reason={}", retry.getId(), e.getMessage());
+            success = false;
+          }
+          if (success) {
+            successIds.add(retry.getId());
+            successCount++;
           } else {
-            long backoffMs = calculateBackoffMs(newCount);
-            LocalDateTime nextRetry = LocalDateTime.now().plusNanos(backoffMs * NANOS_PER_MILLI);
-            webhookRetryRepository.updateForRetry(retry.getId(), newCount, nextRetry, null);
+            int newCount = retry.getRetryCount() + 1;
+            if (newCount >= retry.getMaxRetries()) {
+              deadIds.add(retry.getId());
+              deadCount++;
+            } else {
+              long backoffMs = calculateBackoffMs(newCount);
+              LocalDateTime nextRetry = LocalDateTime.now().plusNanos(backoffMs * NANOS_PER_MILLI);
+              retryUpdates.add(new Object[] {retry.getId(), newCount, nextRetry});
+            }
           }
         }
-      }
-      if (successCount > 0 || deadCount > 0) {
-        log.info(
-            "[WebhookRetry] 本轮处理完成: successCount={} deadCount={} totalProcessed={}",
-            successCount,
-            deadCount,
-            pendingRetries.size());
+        // 批量更新 DB：避免逐条 UPDATE
+        webhookRetryRepository.batchMarkSuccess(successIds, LocalDateTime.now());
+        webhookRetryRepository.batchMarkDead(deadIds, LocalDateTime.now(), "重试次数耗尽");
+        webhookRetryRepository.batchUpdateForRetry(retryUpdates);
+
+        if (successCount > 0 || deadCount > 0) {
+          log.info("[WebhookRetry] 本轮处理完成: successCount={} deadCount={} totalProcessed={}",
+              successCount, deadCount, pendingRetries.size());
+        }
+      } finally {
+        executor.shutdown();
       }
     });
   }

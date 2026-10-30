@@ -63,6 +63,7 @@ import com.njydsz.common.netty.server.AbstractNettyServer;
 @Component
 @ConditionalOnClass(AbstractNettyServer.class)
 @ConditionalOnProperty(prefix = "ydsz.nextwiki.tcp-push", name = "enabled", havingValue = "true")
+@SuppressWarnings("ydiz-import-005")
 public class NextwikiTcpPushChannel extends AbstractNettyServer {
 
   /** Map 初始容量 */

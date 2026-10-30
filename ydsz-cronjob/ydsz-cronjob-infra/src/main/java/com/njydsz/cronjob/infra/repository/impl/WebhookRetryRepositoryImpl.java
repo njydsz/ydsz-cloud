@@ -63,4 +63,28 @@ public class WebhookRetryRepositoryImpl implements WebhookRetryRepository {
   public long countDead() {
     return webhookRetryMapper.countDead();
   }
+
+  @Override
+  public void batchMarkSuccess(List<String> ids, LocalDateTime successTime) {
+    if (ids == null || ids.isEmpty()) {
+      return;
+    }
+    webhookRetryMapper.batchMarkSuccess(ids, successTime);
+  }
+
+  @Override
+  public void batchMarkDead(List<String> ids, LocalDateTime deadTime, String reason) {
+    if (ids == null || ids.isEmpty()) {
+      return;
+    }
+    webhookRetryMapper.batchMarkDead(ids, deadTime, reason != null ? reason : "");
+  }
+
+  @Override
+  public void batchUpdateForRetry(List<Object[]> updates) {
+    if (updates == null || updates.isEmpty()) {
+      return;
+    }
+    webhookRetryMapper.batchUpdateForRetry(updates);
+  }
 }

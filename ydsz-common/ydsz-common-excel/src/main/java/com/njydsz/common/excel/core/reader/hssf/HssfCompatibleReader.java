@@ -9,6 +9,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.excel.core.reader.hssf.Ole2CompoundDocument.StreamEntry;
 
 /**
@@ -48,6 +51,9 @@ import com.njydsz.common.excel.core.reader.hssf.Ole2CompoundDocument.StreamEntry
  * @since 26.09.25
  */
 public class HssfCompatibleReader implements AutoCloseable {
+
+  /** 日志记录器 */
+  private static final Logger LOG = LoggerFactory.getLogger(HssfCompatibleReader.class);
 
   /** Workbook 流字节内容 */
   private final byte[] workbookBytes;
@@ -273,7 +279,8 @@ public class HssfCompatibleReader implements AutoCloseable {
           }
           sheetDefs.add(new Biff8Records.SheetDefinition(offset, hidden, name));
         } catch (Exception e) {
-          // 跳过损坏条目
+          // 跳过损坏的 BOUNDSHEET 条目（文件格式异常时不中断整体解析）
+          LOG.warn("Skipping corrupted BOUNDSHEET entry at offset {}: {}", pos, e.getMessage());
         }
       }
       if (type == Biff8Records.SST) {
@@ -329,7 +336,8 @@ public class HssfCompatibleReader implements AutoCloseable {
                 strings.add(s);
               }
             } catch (Exception e) {
-              // 跳过损坏条目
+              // 跳过损坏的 SST 字符串条目（文件格式异常时不中断整体解析）
+              LOG.warn("Skipping corrupted SST string entry at offset {}: {}", pos, e.getMessage());
             }
           }
         }

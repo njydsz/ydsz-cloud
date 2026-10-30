@@ -163,7 +163,7 @@ public class AuditAdminController {
       @Parameter(description = "审计记录 ID") @PathVariable String id) {
     AuditLog log = auditQueryService.getById(id);
     if (log == null) {
-      return YdszResponse.error(YdszResultCode.NOT_FOUND.getCode(), "审计日志不存在");
+      return YdszResponse.error(YdszResultCode.NOT_FOUND.getCode(), "Audit log not found");
     }
     return YdszResponse.success(toVO(log));
   }

@@ -205,7 +205,7 @@ public class CacheMetricsEndpoint {
           }
         }
       } catch (Exception e) {
-        // policy 不支持时忽略
+        LOG.warn("读取缓存 policy 异常（可能不支持）: {}", name, e);
       }
     } catch (Exception e) {
       metrics.put("error", "Failed to collect metrics: " + e.getMessage());

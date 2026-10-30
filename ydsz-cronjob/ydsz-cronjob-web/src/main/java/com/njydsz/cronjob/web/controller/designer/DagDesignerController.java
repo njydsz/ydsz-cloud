@@ -114,7 +114,7 @@ public class DagDesignerController {
     DagDefinitionDTO dto = DAG_STORE.get(dagKey);
     if (dto == null) {
       log.warn("[DagDesigner] DAG not found: dagKey={}", dagKey);
-      return YdszResponse.error("B60001", "DAG 定义不存在: " + dagKey);
+      return YdszResponse.error("B60001", "DAG definition not found: " + dagKey);
     }
     log.info("[DagDesigner] loaded DAG: dagKey={}, nodes={}, edges={}",
         dagKey,

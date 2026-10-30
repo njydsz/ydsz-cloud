@@ -137,9 +137,9 @@ public class ReactiveNotificationController {
 
         Sinks.EmitResult result = reactiveSseRegistry.publish(event);
         if (result.isSuccess()) {
-            return YdszResponse.success("推送成功");
+            return YdszResponse.success("Push succeeded");
         } else {
-            return YdszResponse.error("推送失败: " + result);
+            return YdszResponse.error("Push failed: " + result);
         }
     }
 

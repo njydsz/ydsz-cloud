@@ -34,9 +34,7 @@ public class JobLogContentServiceImpl implements JobLogContentService {
     if (contents == null || contents.isEmpty()) {
       return;
     }
-    for (JobLogContentVO content : contents) {
-      jobLogContentRepository.insert(content);
-    }
+    jobLogContentRepository.batchInsert(contents);
   }
 
   @Override

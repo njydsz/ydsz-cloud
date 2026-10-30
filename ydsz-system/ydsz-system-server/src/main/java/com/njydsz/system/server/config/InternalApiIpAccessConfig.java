@@ -9,6 +9,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * 内部 API IP 访问控制配置。
@@ -44,7 +45,7 @@ public class InternalApiIpAccessConfig {
   public FilterRegistrationBean<IpAccessFilter> internalApiIpFilterRegistration() {
     IpAccessFilter filter = new IpAccessFilter(ipAccessService, null,
         new ArrayList<>(0),
-        java.util.Arrays.asList("/internal/*", "/api/internal/*"));
+        Arrays.asList("/internal/*", "/api/internal/*"));
     FilterRegistrationBean<IpAccessFilter> registration = new FilterRegistrationBean<>(filter);
     registration.setName("internalApiIpFilter");
     registration.addUrlPatterns("/*");

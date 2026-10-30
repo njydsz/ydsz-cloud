@@ -2,6 +2,7 @@ package com.njydsz.nextwiki.domain.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -317,5 +318,15 @@ public interface FileNodeRepository {
    * @return 受影响行数
    */
   int batchUpdateSort(List<FileNodeSortItemDTO> items);
+
+  /**
+   * 单次聚合文件数 + 文件夹数 + 总大小（替代三次独立查询）。
+   *
+   * <p>返回 Map with keys: fileCount, totalSize, folderCount（均为 {@link Long}）。
+   *
+   * @param userId 用户 ID
+   * @return 聚合结果 Map
+   */
+  Map<String, Object> aggregateOverview(String userId);
 
 }

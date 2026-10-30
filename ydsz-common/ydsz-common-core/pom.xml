@@ -13,6 +13,16 @@
     <name>ydsz-common-core</name>
     <description>minimal core — response model, request context, trace ID, constants, enums</description>
 
+    <!-- B1-3 覆盖率棘轮：2026-10-28 实测（mvn -o verify -pl ydsz-common/ydsz-common-core）
+         BUNDLE LINE 86/870 = 0.0989、BRANCH 13/352 = 0.0369，按实测向下取整钉死地板。
+         本模块是全平台响应信封与测试基类（BaseControllerMockTest / TestcontainersBase）的宿主，
+         此前零测试 —— "基座本身从未被验证"。首测覆盖 PageResponse/YdszResponse 的字段映射与游标语义
+         （分页形参错位在本仓真实发生过）。9.9% 是在记录债而非认可债。只可上调不可下调。 -->
+    <properties>
+        <jacoco.line.threshold>0.098</jacoco.line.threshold>
+        <jacoco.branch.threshold>0.036</jacoco.branch.threshold>
+    </properties>
+
     <dependencies>
         <!-- Lombok -->
         <dependency>

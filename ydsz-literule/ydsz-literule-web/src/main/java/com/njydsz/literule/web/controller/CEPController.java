@@ -165,7 +165,7 @@ public class CEPController {
   public YdszResponse<List<CEPPatternVO>> listPatterns() {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP engine is not enabled");
     }
     return YdszResponse.success(engine.listPatterns().stream().map(this::toPatternVO).toList());
   }
@@ -188,7 +188,7 @@ public class CEPController {
   public YdszResponse<Void> registerPattern(@Valid @RequestBody CEPPattern pattern) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP engine is not enabled");
     }
     engine.registerPattern(pattern);
     return YdszResponse.success();
@@ -212,7 +212,7 @@ public class CEPController {
   public YdszResponse<Void> unregisterPattern(@PathVariable String patternId) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP engine is not enabled");
     }
     engine.unregisterPattern(patternId);
     return YdszResponse.success();
@@ -247,7 +247,7 @@ public class CEPController {
   public YdszResponse<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP engine is not enabled");
     }
     // P0-X2：使用 long 避免高吞吐场景 long → int 溢出
     long hitsBefore = engine.totalHits();
@@ -279,7 +279,7 @@ public class CEPController {
       @RequestBody List<Map<String, Object>> events) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP engine is not enabled");
     }
     if (events == null || events.isEmpty()) {
       return YdszResponse.success(Map.of("fed", 0, "triggeredHits", 0L));
@@ -316,7 +316,7 @@ public class CEPController {
   public YdszResponse<Map<String, Object>> stats() {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP engine is not enabled");
     }
     return YdszResponse.success(
         Map.of(

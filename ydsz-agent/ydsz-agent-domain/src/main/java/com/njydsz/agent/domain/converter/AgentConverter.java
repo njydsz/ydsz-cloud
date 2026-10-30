@@ -244,8 +244,6 @@ public interface AgentConverter {
    * @param dto DAG 工作流 DTO（id 不传）
    * @return 数据库实体
    */
-  @Mapping(target = "name", source = "workflowName")
-  @Mapping(target = "dsl", source = "dslContent")
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "isPublished", ignore = true)
   @Mapping(target = "isDeleted", ignore = true)

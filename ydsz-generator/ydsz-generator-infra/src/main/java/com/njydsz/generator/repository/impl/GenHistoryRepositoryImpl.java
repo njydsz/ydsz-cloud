@@ -37,7 +37,7 @@ public class GenHistoryRepositoryImpl implements GenHistoryRepository {
     } else {
       mapper.updateById(history);
     }
-    log.info("保存生成任务 id={} status={}", history.getId(), history.getStatus());
+    log.info("保存生成任务 id={} status={}", history.getId(), history.getTaskStatus());
     return history;
   }
 
@@ -58,7 +58,7 @@ public class GenHistoryRepositoryImpl implements GenHistoryRepository {
   @Override
   public List<GenHistory> findByStatus(final String status) {
     LambdaQueryWrapper<GenHistory> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(GenHistory::getStatus, status)
+    wrapper.eq(GenHistory::getTaskStatus, status)
         .orderByDesc(GenHistory::getStartedAt);
     return mapper.selectList(wrapper);
   }

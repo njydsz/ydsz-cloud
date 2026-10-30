@@ -67,4 +67,11 @@ public interface JobLogContentRepository {
    * @return 新记录 ID
    */
   String insert(JobLogContentVO vo);
+
+  /**
+   * 批量新增日志内容（单次 DB round-trip，使用 MyBatis BATCH 执行器）。
+   *
+   * @param contents 日志内容 VO 列表
+   */
+  void batchInsert(List<JobLogContentVO> contents);
 }

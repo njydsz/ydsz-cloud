@@ -7,7 +7,7 @@ import com.njydsz.common.excel.util.ExcelI18nHelper;
 /**
  * Excel 模块基础异常类
  *
- * <p>继承 RuntimeException，绑定 {@link ExcelExceptionCode} 异常码枚举。 自包含的异常体系，不依赖全局异常处理模块。
+ * <p>继承 {@link RuntimeException}，绑定 {@link ExcelExceptionCode} 异常码枚举。 自包含的异常体系，接入全局异常处理模块。
  *
  * <p><b>国际化</b>：所有接受 {@link ExcelExceptionCode} 的构造器均通过 {@link
  * ExcelI18nHelper#getMessage(String, Object[], String)} 解析 messageKey 为本地化文本后传给 super。 MessageSource

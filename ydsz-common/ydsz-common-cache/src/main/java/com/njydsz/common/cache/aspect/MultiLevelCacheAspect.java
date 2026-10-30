@@ -24,7 +24,7 @@ import com.njydsz.common.cache.annotation.CacheKeyBuilder;
 import com.njydsz.common.cache.annotation.MultiLevelCacheable;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.api.CacheProtectionGuard;
-
+import com.njydsz.common.cache.support.CacheLoadException;
 /**
  * {@link MultiLevelCacheable} 注解的 AOP 切面实现。
  *
@@ -175,7 +175,7 @@ public class MultiLevelCacheAspect {
                 } catch (RuntimeException e) {
                   throw e;
                 } catch (Throwable t) {
-                  throw new RuntimeException("多级缓存 loadFromSource 异常: " + t.getMessage(), t);
+                  throw new CacheLoadException("Multi-level cache loadFromSource error: " + t.getMessage(), t);
                 }
               },
               nullPlaceholderTtlMs(multiLevelCacheable.remoteTTL()),

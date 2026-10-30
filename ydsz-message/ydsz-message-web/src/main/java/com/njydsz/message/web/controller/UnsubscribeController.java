@@ -21,6 +21,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.UnsubscribeQueryDTO;
@@ -87,6 +88,9 @@ public class UnsubscribeController {
   /** 退订服务 */
   private final UnsubscribeService unsubscribeService;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * token 一键退订（无需登录态）。
    *
@@ -108,7 +112,8 @@ public class UnsubscribeController {
   @PostMapping("/oneClick")
   public YdszResponse<MsgSubscriptionVO> oneClick(@RequestParam String token) {
     if (token == null || token.isBlank()) {
-      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "退订 token 不能为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST,
+          i18nMessages.resolve("message.unsubscribe.token.required"));
     }
     return YdszResponse.success(unsubscribeService.unsubscribeByToken(token));
   }
@@ -126,7 +131,8 @@ public class UnsubscribeController {
   @GetMapping("/preview")
   public YdszResponse<UnsubscribeTokenPayload> preview(@RequestParam String token) {
     if (token == null || token.isBlank()) {
-      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "退订 token 不能为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST,
+          i18nMessages.resolve("message.unsubscribe.token.required"));
     }
     return YdszResponse.success(unsubscribeService.previewToken(token));
   }
@@ -175,7 +181,8 @@ public class UnsubscribeController {
         || topicCode.isBlank()
         || channel == null
         || channel.isBlank()) {
-      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST,
+          i18nMessages.resolve("message.unsubscribe.params.required"));
     }
     unsubscribeService.resubscribe(userId, topicCode, channel);
     return YdszResponse.success();

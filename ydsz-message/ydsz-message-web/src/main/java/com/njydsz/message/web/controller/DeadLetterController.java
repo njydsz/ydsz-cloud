@@ -21,6 +21,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -92,6 +93,9 @@ public class DeadLetterController {
   /** 消息日志服务 */
   private final MessageLogService messageLogService;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * 分页查询死信列表。
    *
@@ -135,7 +139,8 @@ public class DeadLetterController {
   @PostMapping("/{logId}/resend")
   public YdszResponse<Void> resend(@PathVariable String logId) {
     if (logId == null || logId.isBlank()) {
-      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "死信日志 ID 不能为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST,
+          i18nMessages.resolve("message.deadletter.logid.required"));
     }
     messageLogService.resendDead(logId);
     return YdszResponse.success();

@@ -24,6 +24,7 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO;
 import com.njydsz.nextwiki.domain.entity.SpaceTemplate;
 import com.njydsz.nextwiki.server.service.SpaceTemplateApplicationService;
@@ -61,6 +62,9 @@ public class FileTemplateController {
 
   /** 空间模板应用服务（复用模板基础设施） */
   private final SpaceTemplateApplicationService spaceTemplateApplicationService;
+
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
 
   /**
    * 将指定文件保存为模板。
@@ -131,7 +135,7 @@ public class FileTemplateController {
 
     log.warn("[FileTemplateController] 从模板创建文件功能尚未实现: templateId={}, parentId={}, userId={}",
         templateId, parentId, userId);
-    return YdszResponse.error("从模板创建文件功能尚未实现");
+    return YdszResponse.error(i18nMessages.resolve("nextwiki.file.template.not.implemented"));
   }
 
   /** 文件模板创建请求 DTO */

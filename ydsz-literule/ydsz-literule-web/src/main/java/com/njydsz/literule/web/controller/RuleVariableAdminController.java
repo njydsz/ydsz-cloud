@@ -101,7 +101,7 @@ public class RuleVariableAdminController {
   public YdszResponse<VariableDefinitionVO> get(@PathVariable String varName) {
     VariableDefinition def = variableRegistry.lookup(varName);
     if (def == null) {
-      return YdszResponse.error(LiteruleExceptionCode.VARIABLE_DEF_NOT_FOUND, "变量不存在: " + varName);
+      return YdszResponse.error(LiteruleExceptionCode.VARIABLE_DEF_NOT_FOUND, "Variable not found: " + varName);
     }
     return YdszResponse.success(toVariableVO(def));
   }
@@ -123,7 +123,7 @@ public class RuleVariableAdminController {
   @PostMapping
   public YdszResponse<VariableDefinitionVO> save(@Valid @RequestBody VariableDefinition definition) {
     if (definition == null || definition.getName() == null || definition.getName().isBlank()) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "变量定义及 name 不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "Variable definition and name must not be blank");
     }
     variableRegistry.register(definition);
     return YdszResponse.success(toVariableVO(variableRegistry.lookup(definition.getName())));

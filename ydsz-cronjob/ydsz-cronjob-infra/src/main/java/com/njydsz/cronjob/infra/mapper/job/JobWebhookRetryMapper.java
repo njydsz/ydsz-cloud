@@ -139,6 +139,54 @@ public interface JobWebhookRetryMapper extends BaseMapper<JobWebhookRetry> {
    *
    * @return 待重试记录数
    */
+  /**
+   * 批量标记重试成功（单条 CASE WHEN，避免 N 次 round-trip）。
+   */
+  @Update(
+      "<script>UPDATE ydsz_job_webhook_retry SET "
+          + "retry_status = 'SUCCESS', "
+          + "last_retry_time = #{successTime}, "
+          + "updated_at = NOW() "
+          + "WHERE id IN "
+          + "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>"
+          + "</script>")
+  int batchMarkSuccess(
+      @Param("ids") List<String> ids, @Param("successTime") LocalDateTime successTime);
+
+  /**
+   * 批量标记死信。
+   */
+  @Update(
+      "<script>UPDATE ydsz_job_webhook_retry SET "
+          + "retry_status = 'DEAD', "
+          + "last_error = #{reason}, "
+          + "last_retry_time = #{deadTime}, "
+          + "updated_at = NOW() "
+          + "WHERE id IN "
+          + "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>"
+          + "</script>")
+  int batchMarkDead(
+      @Param("ids") List<String> ids,
+      @Param("deadTime") LocalDateTime deadTime,
+      @Param("reason") String reason);
+
+  /**
+   * 批量更新重试状态（CASE WHEN 单条 SQL）。
+   */
+  @Update(
+      "<script>UPDATE ydsz_job_webhook_retry SET "
+          + "retry_count = CASE id "
+          + "<foreach collection='updates' item='u'>WHEN #{u[0]} THEN #{u[1]}</foreach> END, "
+          + "next_retry_time = CASE id "
+          + "<foreach collection='updates' item='u'>WHEN #{u[0]} THEN #{u[2]}</foreach> END, "
+          + "last_retry_time = NOW(), "
+          + "retry_status = 'PENDING', "
+          + "updated_at = NOW() "
+          + "WHERE id IN "
+          + "<foreach collection='updates' item='u' open='(' separator=',' close=')'>#{u[0]}</foreach>"
+          + "</script>")
+  int batchUpdateForRetry(@Param("updates") List<Object[]> updates);
+
   @Select("SELECT COUNT(*) FROM ydsz_job_webhook_retry WHERE retry_status = 'PENDING'")
   long countPending();
 

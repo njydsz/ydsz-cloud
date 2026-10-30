@@ -101,7 +101,7 @@ public class RuleDslImportExportController {
     String operator = (String) request.getOrDefault("operator", "SYSTEM");
 
     if (content == null || content.isBlank()) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL content must not be blank");
     }
 
     try {
@@ -126,7 +126,7 @@ public class RuleDslImportExportController {
             importedCodes.add(entry.getCode());
           } catch (Exception e) {
             failCount++;
-            errors.add("规则 " + entry.getCode() + " 导入失败: " + e.getMessage());
+            errors.add("Rule " + entry.getCode() + " import failed: " + e.getMessage());
             log.warn("[DSL] 规则 {} 导入失败: {}", entry.getCode(), e.getMessage());
           }
         }
@@ -141,7 +141,7 @@ public class RuleDslImportExportController {
       result.put(
           "summary",
           String.format(
-              "共 %d 条，成功 %d 条，失败 %d 条",
+              "total %d, success %d, failed %d",
               dsl.getRules() != null ? dsl.getRules().size() : 0, successCount, failCount));
 
       log.info("[DSL] 导入完成: success={}, fail={}", successCount, failCount);
@@ -150,7 +150,7 @@ public class RuleDslImportExportController {
     } catch (Exception e) {
       log.warn("[DSL] 导入失败: {}", e.getMessage());
       return YdszResponse.error(
-          LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL 导入失败: " + e.getMessage());
+          LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL import failed: " + e.getMessage());
     }
   }
 
@@ -172,7 +172,7 @@ public class RuleDslImportExportController {
     }
 
     if (allRules.isEmpty()) {
-      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "没有可导出的规则");
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "No rules available for export");
     }
 
     String yaml =
@@ -196,7 +196,7 @@ public class RuleDslImportExportController {
   public YdszResponse<Map<String, Object>> exportSingle(@PathVariable String ruleCode) {
     RuleDefinitionDTO def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
-      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "Rule not found: " + ruleCode);
     }
 
     String yaml = RuleDslExporter.exportSingleRule(def);

@@ -110,33 +110,34 @@ ydsz:
       provider: ${YDSZ_SMS_PROVIDER:mock}
     push:
       provider: ${YDSZ_PUSH_PROVIDER:mock}
-  webhook:
-    default-url: ${YDSZ_WEBHOOK_DEFAULT_URL:}
-    connect-timeout: 5000
-    read-timeout: 10000
-  channel:
-    dingtalk:
-      default-token: ${YDSZ_DINGTALK_TOKEN:}
-      secret: ${YDSZ_DINGTALK_SECRET:}
-      connect-timeout: 5000
-      read-timeout: 10000
-    wechat-work:
-      default-key: ${YDSZ_WECOM_KEY:}
-      connect-timeout: 5000
-      read-timeout: 10000
-    feishu:
-      default-hook: ${YDSZ_FEISHU_HOOK:}
-      secret: ${YDSZ_FEISHU_SECRET:}
-      connect-timeout: 5000
-      read-timeout: 10000
-    wecom-app:
-      enabled: ${YDSZ_WECOM_APP_ENABLED:false}
-      corp-id: ${YDSZ_WECOM_APP_CORPID:}
-      corp-secret: ${YDSZ_WECOM_APP_CORPSECRET:}
-      agent-id: ${YDSZ_WECOM_APP_AGENTID:0}
-      base-url: https://qyapi.weixin.qq.com
-      connect-timeout: 5000
-      read-timeout: 10000
+    channel:
+      webhook:
+        default-url: ${YDSZ_WEBHOOK_DEFAULT_URL:}
+        connect-timeout: 5000
+        read-timeout: 10000
+      channel:
+        dingtalk:
+          default-token: ${YDSZ_DINGTALK_TOKEN:}
+          secret: ${YDSZ_DINGTALK_SECRET:}
+          connect-timeout: 5000
+          read-timeout: 10000
+        wechat-work:
+          default-key: ${YDSZ_WECOM_KEY:}
+          connect-timeout: 5000
+          read-timeout: 10000
+        feishu:
+          default-hook: ${YDSZ_FEISHU_HOOK:}
+          secret: ${YDSZ_FEISHU_SECRET:}
+          connect-timeout: 5000
+          read-timeout: 10000
+        wecom-app:
+          enabled: ${YDSZ_WECOM_APP_ENABLED:false}
+          corp-id: ${YDSZ_WECOM_APP_CORPID:}
+          corp-secret: ${YDSZ_WECOM_APP_CORPSECRET:}
+          agent-id: ${YDSZ_WECOM_APP_AGENTID:0}
+          base-url: https://qyapi.weixin.qq.com
+          connect-timeout: 5000
+          read-timeout: 10000
 
 rocketmq:
   name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}

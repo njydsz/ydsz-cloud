@@ -13,9 +13,15 @@
         <version>26.10.01-SNAPSHOT</version>
     </parent>
 
-    <!-- L1 工具层模块标识：激活 purity 检查 -->
+    <!-- L1 工具层模块标识：激活 purity 检查；
+         B1-3 覆盖率棘轮：2026-10-28 实测（mvn -o verify -pl ydsz-common/ydsz-common-util）
+         BUNDLE LINE 99/3491 = 0.0284、BRANCH 69/1941 = 0.0355，按实测向下取整钉死地板。
+         本模块此前零测试；首测覆盖 MaskUtils（审计日志脱敏唯一入口，修掉了凭据明文落库），
+         其余工具类仍未覆盖 —— 2.8% 是在记录债而非认可债。只可上调不可下调。 -->
     <properties>
         <l1.module.skip>false</l1.module.skip>
+        <jacoco.line.threshold>0.028</jacoco.line.threshold>
+        <jacoco.branch.threshold>0.035</jacoco.branch.threshold>
     </properties>
 
     <dependencies>
@@ -24,7 +30,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
-
         <!--slf4j-->
         <dependency>
             <groupId>org.slf4j</groupId>

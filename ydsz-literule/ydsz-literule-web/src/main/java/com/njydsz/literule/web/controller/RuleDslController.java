@@ -109,7 +109,7 @@ public class RuleDslController {
     String format = (String) request.getOrDefault("format", "yaml");
 
     if (content == null || content.isBlank()) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL content must not be blank");
     }
 
     Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
@@ -179,7 +179,7 @@ public class RuleDslController {
     String format = (String) request.getOrDefault("format", "yaml");
 
     if (content == null || content.isBlank()) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL content must not be blank");
     }
 
     try {
@@ -215,7 +215,7 @@ public class RuleDslController {
     String format = (String) request.getOrDefault("format", "yaml");
 
     if (content == null || content.isBlank()) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL 内容不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "DSL content must not be blank");
     }
 
     Object factsObj = request.get("facts");

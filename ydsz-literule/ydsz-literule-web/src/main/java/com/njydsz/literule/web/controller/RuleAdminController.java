@@ -257,7 +257,7 @@ public class RuleAdminController {
       log.error("[LiteRule] 版本 Diff 失败: ruleCode={}, oldV={}, newV={}, error={}",
           ruleCode, oldVersion, newVersion, e.getMessage(), e);
       return YdszResponse.error(
-          YdszResultCode.VALIDATION_FAILED, "版本 Diff 解析失败: " + e.getMessage());
+          YdszResultCode.VALIDATION_FAILED, "Version diff parse failed: " + e.getMessage());
     }
   }
 
@@ -484,7 +484,7 @@ public class RuleAdminController {
       @PathVariable String ruleCode, @Valid @RequestBody RuleABTestDTO dto) {
     RuleDefinitionDTO currentDef = ruleAdminService.getByCode(ruleCode);
     if (currentDef == null) {
-      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "Rule not found: " + ruleCode);
     }
 
     // 构建候选规则定义（基于当前规则，覆盖候选字段）

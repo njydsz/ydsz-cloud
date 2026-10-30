@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Gatling 性能测试子模块。
+    通过父 pom 的 perf-test profile 引入，依赖版本在父 pom <dependencyManagement> 中统一管理，
+    此处不重复声明版本号。
+
+    运行方式：
+        mvn test -P perf-test                              # 运行全部 Simulation
+        mvn test -P perf-test -Dgatling.simulationClass=... # 运行指定 Simulation
+        .\run-perf-test.ps1                                # PowerShell 一键启动
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-cloud</artifactId>
+        <version>26.10.01-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>ydsz-perf-tests</artifactId>
+    <packaging>jar</packaging>
+    <name>ydsz-perf-tests</name>
+    <description>云顶云平台 Gatling 性能测试集合</description>
+
+    <properties>
+        <!-- Gatling 版本与父 pom perf-test profile 保持一致 -->
+        <gatling.version>3.10.5</gatling.version>
+        <scala.version>2.13.14</scala.version>
+    </properties>
+
+    <dependencies>
+        <!-- Gatling 核心引擎 -->
+        <dependency>
+            <groupId>io.gatling</groupId>
+            <artifactId>gatling-app</artifactId>
+            <version>${gatling.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Gatling 可视化报表（Highcharts） -->
+        <dependency>
+            <groupId>io.gatling.highcharts</groupId>
+            <artifactId>gatling-charts-highcharts</artifactId>
+            <version>${gatling.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <testSourceDirectory>src/test/scala</testSourceDirectory>
+        <plugins>
+            <!-- Scala 编译插件：Gatling Simulation 使用 Scala 编写 -->
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>4.8.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <args>
+                                <arg>-Jbackend:Code</arg>
+                                <arg>-deprecation</arg>
+                                <arg>-feature</arg>
+                                <arg>-unchecked</arg>
+                                <arg>-language:implicitConversions</arg>
+                                <arg>-language:higherKinds</arg>
+                            </args>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Gatling Maven 插件：提供 mvn gatling:test 入口 -->
+            <plugin>
+                <groupId>io.gatling</groupId>
+                <artifactId>gatling-maven-plugin</artifactId>
+                <version>${gatling.version}</version>
+                <configuration>
+                    <!-- 仿真类（Simulation）自动扫描全部，也可在命令行用 -Dgatling.simulationClass 指定 -->
+                    <simulationClass>CloudPerfTest</simulationClass>
+                    <!-- 结果输出目录 -->
+                    <resultsFolder>${project.build.directory}/gatling-results</resultsFolder>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- 跳过默认 surefire（本模块不使用 JUnit） -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

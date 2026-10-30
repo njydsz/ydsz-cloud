@@ -102,17 +102,17 @@ public class RuleBatchController {
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleDefinitionDTO def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
-      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "Rule not found: " + ruleCode);
     }
     RuleStatus current = parseStatusSafely(def.getStatus());
     if (current == null) {
       return YdszResponse.error(
-          LiteruleExceptionCode.RULE_STATUS_INVALID, "规则状态非法: " + def.getStatus());
+          LiteruleExceptionCode.RULE_STATUS_INVALID, "Rule status is invalid: " + def.getStatus());
     }
     if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
       return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID,
-          "当前状态 " + current.getI18nKey() + " 不允许删除（归档），仅 DRAFT/REVIEW/PUBLISHED/DISABLED 可删除");
+          "Current status " + current.getI18nKey() + " does not allow delete, only DRAFT/REVIEW/PUBLISHED/DISABLED can be deleted");
     }
     def.setStatus(RuleStatus.ARCHIVED.name());
     def.setEnabled(false);
@@ -216,7 +216,7 @@ public class RuleBatchController {
     Integer delta = dto.getDelta();
     // @NotEmpty + @NotNull 已校验非空；delta==0 需保留手动校验（JSR-303 无原生非零约束）
     if (delta == 0) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "delta 不能为 0");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "delta must not be 0");
     }
     int success = 0;
     List<String> failed = new ArrayList<>(COLLECTION_CAPACITY);

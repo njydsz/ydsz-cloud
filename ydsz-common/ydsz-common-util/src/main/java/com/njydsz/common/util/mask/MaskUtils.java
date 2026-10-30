@@ -100,7 +100,7 @@ public final class MaskUtils {
   /**
    * 银行卡号脱敏，保留前 4 后 4 位，中间用 **** 替代。
    *
-   * <p>如 "6222021234567890" → "6222****7890"。
+   * <p>如 "6222021234567890" → "6222********7890"（掩码位数 = 隐藏字符数，长度不变）。
    *
    * @param bankCard 银行卡号
    * @return 脱敏后银行卡号，输入为 null 返回 null
@@ -115,7 +115,7 @@ public final class MaskUtils {
   /**
    * 邮箱脱敏，保留第 1 字符和 @ 及域名部分。
    *
-   * <p>如 "abc@qq.com" → "a****@qq.com"。如果没有 @ 符号，按通用脱敏处理。
+   * <p>如 "abc@qq.com" → "a**@qq.com"（掩码位数 = 隐藏字符数，长度不变）。如果没有 @ 符号，按通用脱敏处理。
    *
    * @param email 邮箱地址
    * @return 脱敏后邮箱，输入为 null 返回 null
@@ -314,6 +314,41 @@ public final class MaskUtils {
   }
 
   /**
+   * 凭据类敏感词：这类值**没有**专属脱敏策略，且整段替换才安全（部分保留仍是泄露）。
+   *
+   * <p>修复前的缺陷：命中 {@link #DEFAULT_SENSITIVE_PATTERNS} 后直接调 {@link #maskByFieldName}，
+   * 而它只识别手机/身份证/银行卡/邮箱/姓名，其余**原样返回** —— 于是 password/token/secret/sessionId
+   * 等凭据以明文进入 `AuditAspect` 的审计日志。
+   */
+  private static final Set<String> CREDENTIAL_PATTERNS =
+      Set.of(
+          "password", "secret", "token", "credential", "apikey", "apisecret",
+          "privatekey", "salt", "auth", "sessionid", "refreshtoken");
+
+  /**
+   * 按字段名选择脱敏策略；无专属策略时按"凭据 → 整体替换 / 其他 → 保留前后 2 位"兜底。
+   *
+   * @param key 字段名
+   * @param text 字段值（非 null）
+   * @return 脱敏后的值
+   */
+  private static String maskSensitiveValue(String key, String text) {
+    String byField = maskByFieldName(key, text);
+    if (!byField.equals(text)) {
+      return byField;
+    }
+    String lower = key.toLowerCase();
+    for (String pattern : CREDENTIAL_PATTERNS) {
+      if (lower.contains(pattern)) {
+        return PLACEHOLDER;
+      }
+    }
+    String generic = mask(text, 2, 2);
+    // 文本太短导致通用脱敏无效时整体替换，避免"脱敏"后仍输出原文
+    return generic.equals(text) ? PLACEHOLDER : generic;
+  }
+
+  /**
    * 递归脱敏处理：根据字段名或 Map key 匹配敏感词。
    *
    * @param value 待处理值
@@ -333,7 +368,7 @@ public final class MaskUtils {
         String key = String.valueOf(entry.getKey());
         Object val = entry.getValue();
         if (isJsonSensitiveKey(key, patterns)) {
-          result.put(key, maskByFieldName(key, String.valueOf(val)));
+          result.put(key, val == null ? null : maskSensitiveValue(key, String.valueOf(val)));
         } else {
           result.put(key, maskJsonValue(val, patterns));
         }

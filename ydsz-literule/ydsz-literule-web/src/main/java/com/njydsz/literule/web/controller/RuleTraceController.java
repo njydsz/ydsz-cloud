@@ -135,14 +135,14 @@ public class RuleTraceController {
 
     if (traces.isEmpty()) {
       return YdszResponse.error(
-          LiteruleExceptionCode.RULE_NOT_FOUND, "未找到 traceId=" + traceId + " 的执行记录");
+          LiteruleExceptionCode.RULE_NOT_FOUND, "No execution record found for traceId=" + traceId);
     }
 
     // 取第一条 trace 的 factsSnapshot 作为回放输入
     Map<String, Object> facts = traces.get(0).getFactsSnapshot();
     if (facts == null || facts.isEmpty()) {
       return YdszResponse.error(
-          LiteruleExceptionCode.RULE_NOT_FOUND, "traceId=" + traceId + " 的事实快照为空，无法回放");
+          LiteruleExceptionCode.RULE_NOT_FOUND, "Facts snapshot is empty for traceId=" + traceId + ", cannot replay");
     }
 
     // 用当前规则集重新评估
@@ -235,7 +235,7 @@ public class RuleTraceController {
     }
 
     if (startTimeStr == null || endTimeStr == null) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "startTime 和 endTime 不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "startTime and endTime must not be blank");
     }
 
     LocalDateTime startTime = DateUtils.parseIso(startTimeStr);
@@ -353,7 +353,7 @@ boolean historicalTriggered = Boolean.TRUE.equals(trace.isTriggered());
     }
 
     if (conditionExpression == null || conditionExpression.isBlank()) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "conditionExpression 不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "conditionExpression must not be blank");
     }
 
     // 解析默认严重度
@@ -364,7 +364,7 @@ boolean historicalTriggered = Boolean.TRUE.equals(trace.isTriggered());
       } catch (IllegalArgumentException e) {
         return YdszResponse.error(
             YdszResultCode.VALIDATION_FAILED,
-            "非法的 defaultSeverity: " + defaultSeverityStr + "，合法值: INFO / YELLOW / RED");
+            "Invalid defaultSeverity: " + defaultSeverityStr + ", valid values: INFO / YELLOW / RED");
       }
     }
 

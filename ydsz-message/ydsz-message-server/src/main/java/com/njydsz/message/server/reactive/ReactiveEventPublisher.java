@@ -66,10 +66,10 @@ public class ReactiveEventPublisher {
         if (result.isSuccess()) {
             log.debug(I18n.message("message.log.other.ReactiveSSE_eventId_{}_userId_{}.757fbb"),
                     event.getEventId(), notification.getReceiverId());
-            return YdszResponse.success("推送成功");
+            return YdszResponse.success("Push succeeded");
         } else {
             log.warn(I18n.message("message.log.other.ReactiveSSE_eventId_{}_result_{}.36026e"), event.getEventId(), result);
-            return YdszResponse.error("推送失败: " + result);
+            return YdszResponse.error("Push failed: " + result);
         }
     }
 
@@ -102,8 +102,8 @@ public class ReactiveEventPublisher {
 
         Sinks.EmitResult result = reactiveSseRegistry.publish(event);
         return result.isSuccess()
-                ? YdszResponse.success("推送成功")
-                : YdszResponse.error("推送失败: " + result);
+                ? YdszResponse.success("Push succeeded")
+                : YdszResponse.error("Push failed: " + result);
     }
 
     /**
@@ -128,9 +128,9 @@ public class ReactiveEventPublisher {
         Sinks.EmitResult result = reactiveSseRegistry.publish(event);
         if (result.isSuccess()) {
             log.info(I18n.message("message.log.other.ReactiveSSE_eventId_{}_title_{}.e1c40d"), event.getEventId(), title);
-            return YdszResponse.success("广播成功");
+            return YdszResponse.success("Broadcast succeeded");
         } else {
-            return YdszResponse.error("广播失败: " + result);
+            return YdszResponse.error("Broadcast failed: " + result);
         }
     }
 }

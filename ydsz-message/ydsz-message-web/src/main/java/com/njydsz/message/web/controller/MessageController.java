@@ -34,6 +34,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -116,6 +117,9 @@ public class MessageController {
   /** 事件发布器 */
   private final ApplicationEventPublisher eventPublisher;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * 统一消息发送入口。
    *
@@ -177,7 +181,8 @@ public class MessageController {
       case BATCH -> {
         List<MessageItemRequestDTO> items = dto.getBatchRequests();
         if (items == null || items.isEmpty()) {
-          yield YdszResponse.error(YdszResultCode.BAD_REQUEST, "批量请求列表为空");
+          yield YdszResponse.error(YdszResultCode.BAD_REQUEST,
+              i18nMessages.resolve("message.batch.request.list.empty"));
         }
         List<MessageItemRequestDTO> requests = toMessageRequestList(items);
         BatchSendResultDTO result = messageService.batchSend(requests, dto.getBatchId());
@@ -200,7 +205,7 @@ public class MessageController {
             + "返回分页结果含 MsgLogVO（消息 ID、通道、接收人、状态、回执 ID、发送时间）。")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "成功，返回发送日志分页结果"),
-      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "401", description = "Not logged in or Token expired"),
       @ApiResponse(responseCode = "403", description = "无访问权限（需要 message.log.view 授权码）"),
       @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @JsonView(MsgLogViews.Summary.class)
@@ -368,7 +373,7 @@ public class MessageController {
             + "返回分页结果含各消息当前状态（PENDING/SENT/FAILED）、通道、接收人、回执 ID。")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "成功，返回批次发送进度分页结果"),
-      @ApiResponse(responseCode = "401", description = "未登录或 Token 过期"),
+      @ApiResponse(responseCode = "401", description = "Not logged in or Token expired"),
       @ApiResponse(responseCode = "403", description = "无访问权限（需要 message.log.view 授权码）"),
       @ApiResponse(responseCode = "500", description = "服务端内部错误")})
   @JsonView(MsgLogViews.Summary.class)

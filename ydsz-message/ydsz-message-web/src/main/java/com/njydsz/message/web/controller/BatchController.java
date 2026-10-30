@@ -24,6 +24,7 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.BatchProgressDTO;
@@ -100,6 +101,9 @@ public class BatchController {
   /** SSE 发射器服务（P1-E2: 批次进度推送） */
   private final SseEmitterService sseEmitterService;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * 异步批量发送消息。
    *
@@ -121,7 +125,8 @@ public class BatchController {
   @PostMapping("/send")
   public YdszResponse<MsgBatchVO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
     if (dto == null) {
-      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "批量发送参数为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST,
+          i18nMessages.resolve("message.batch.param.empty"));
     }
     return YdszResponse.success(batchService.submitBatch(dto));
   }

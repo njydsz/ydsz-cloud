@@ -91,6 +91,17 @@ jobs:
             python3 data/scripts/check-gateway-routes.py
           fi
 
+      # Step 3b: 错误码唯一性门禁（B1-12）
+      # 错误码是跨模块全局命名空间：前端按 code 反解文案（error-codes.generated.ts）。
+      # 实测 22 个枚举 / 528 个码中有 16 个码被跨模块重复占用（如 B91001 = system 字典类型不存在
+      # 与 message 模板不存在），前端产物里后者覆盖前者，用户看到错乱文案。
+      # 判据：新增重号立即红；存量 16 条进 data/error-code-baseline.json 棘轮，只可减不可增。
+      - name: 错误码唯一性门禁（跨模块不重号）
+        working-directory: ydsz-cloud
+        run: |
+          python3 data/scripts/check-error-code-unique.py --self-test
+          python3 data/scripts/check-error-code-unique.py
+
       # Step 4: Checkstyle 增量红线 + 存量棘轮（B1-2）
       # 原步骤 `mvn checkstyle:check -B` 断言"全仓 0 违规"，实测存量 4155 条 error → 该步恒红，
       # 把后面的 mvn verify（单测 + 覆盖率）整段遮断，等于全仓从未有过任何静态检查。

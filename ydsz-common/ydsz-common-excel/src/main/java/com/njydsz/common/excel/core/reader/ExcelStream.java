@@ -281,11 +281,11 @@ class ExcelIterator<T> implements Iterator<T> {
   @SuppressWarnings("unchecked")
   public T next() {
     if (!hasNext() && finished) {
-      throw new NoSuchElementException("Excel 数据已耗尽");
+      throw new NoSuchElementException("Excel data exhausted");
     }
     T result = (T) nextElement;
     if (result == null) {
-      throw new NoSuchElementException("Excel 数据已耗尽");
+      throw new NoSuchElementException("Excel data exhausted");
     }
     nextElement = null;
     return result;

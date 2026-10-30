@@ -67,6 +67,30 @@ public interface WebhookRetryRepository {
   void markDead(String id, LocalDateTime deadTime, String reason);
 
   /**
+   * 批量标记重试成功（单条 CASE WHEN SQL）。
+   *
+   * @param ids 记录 ID 列表
+   * @param successTime 成功时间
+   */
+  void batchMarkSuccess(List<String> ids, LocalDateTime successTime);
+
+  /**
+   * 批量标记死信（单条 CASE WHEN SQL）。
+   *
+   * @param ids 记录 ID 列表
+   * @param deadTime 标记时间
+   * @param reason 死信原因
+   */
+  void batchMarkDead(List<String> ids, LocalDateTime deadTime, String reason);
+
+  /**
+   * 批量更新重试状态（单条 CASE WHEN SQL）。
+   *
+   * @param updates 每项 [id, retryCount, nextRetryTime]
+   */
+  void batchUpdateForRetry(List<Object[]> updates);
+
+  /**
    * 统计待重试记录数。
    *
    * @return 待重试记录数

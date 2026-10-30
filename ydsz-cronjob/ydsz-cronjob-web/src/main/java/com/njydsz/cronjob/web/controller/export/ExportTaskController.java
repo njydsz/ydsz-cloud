@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.cronjob.domain.entity.export.ExportTask;
 import com.njydsz.cronjob.server.service.export.ExportTaskService;
 
@@ -41,6 +42,9 @@ public class ExportTaskController {
   private static final String MODULE_CRONJOB = "cronjob";
 
   private final ExportTaskService exportTaskService;
+
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
 
   /**
    * 提交导出任务（异步）。
@@ -121,10 +125,10 @@ public class ExportTaskController {
     String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
     ExportTask task = exportTaskService.getTask(id, tenantId);
     if (task == null) {
-      return YdszResponse.error("任务不存在");
+      return YdszResponse.error(i18nMessages.resolve("cronjob.export.task.not.found"));
     }
     if (!"SUCCEEDED".equals(task.getStatus())) {
-      return YdszResponse.error("任务未完成，当前状态: " + task.getStatus());
+      return YdszResponse.error(i18nMessages.resolve("cronjob.export.task.not.completed", new Object[] {task.getStatus()}));
     }
     return YdszResponse.success(task.getDownloadUrl());
   }

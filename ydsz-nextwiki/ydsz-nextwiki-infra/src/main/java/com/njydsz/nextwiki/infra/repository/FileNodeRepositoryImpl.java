@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -589,6 +590,18 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
       return 0;
     }
     return fileNodeMapper.batchUpdateSort(items);
+  }
+
+  /**
+   * 单次聚合文件数 + 文件夹数 + 总大小（替代三次独立查询）。
+   */
+  @Override
+  public Map<String, Object> aggregateOverview(String userId) {
+    Map<String, Object> result = fileNodeMapper.aggregateOverview(userId);
+    if (result == null) {
+      return Map.of("fileCount", 0L, "totalSize", 0L, "folderCount", 0L);
+    }
+    return result;
   }
 }
 

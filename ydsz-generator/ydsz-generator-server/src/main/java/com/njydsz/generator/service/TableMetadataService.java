@@ -24,6 +24,7 @@ import com.njydsz.generator.enums.DbDialectEnum;
 import com.njydsz.generator.repository.GenColumnMetaRepository;
 import com.njydsz.generator.repository.GenTableMetaRepository;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -264,7 +265,7 @@ public class TableMetadataService {
     if (comment == null || comment.isEmpty()) {
       return null;
     }
-    java.util.regex.Matcher matcher = ENUM_PATTERN.matcher(comment);
+    Matcher matcher = ENUM_PATTERN.matcher(comment);
     if (matcher.find()) {
       String inner = matcher.group(1).trim();
       // 验证格式：必须包含至少一个 "="

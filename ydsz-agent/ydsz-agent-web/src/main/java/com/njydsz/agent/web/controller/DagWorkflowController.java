@@ -159,7 +159,7 @@ public class DagWorkflowController {
   private DagWorkflowExportVO toExportVO(DagWorkflowVO vo) {
     DagWorkflowExportVO export = new DagWorkflowExportVO();
     export.setWorkflowCode(vo.getWorkflowCode());
-    export.setName(vo.getName());
+    export.setName(vo.getWorkflowName());
     export.setDescription(vo.getDescription());
     export.setCategory(vo.getCategory());
     export.setId(vo.getId());

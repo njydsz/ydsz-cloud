@@ -273,8 +273,9 @@ public class SuperFastExcelWriter {
         if (v >= 1) {
           return v;
         }
-      } catch (NumberFormatException ignored) {
-        // fall through to default
+      } catch (NumberFormatException e) {
+        // fall through to default: 系统属性值非整数时回退到配置默认值
+        LOG.warn("Invalid sstInlineThreshold system property '{}', falling back to default", prop, e);
       }
     }
     return cfg.getSstInlineThreshold();
@@ -385,7 +386,11 @@ public class SuperFastExcelWriter {
       Files.move(current, Path.of(targetPath), StandardCopyOption.REPLACE_EXISTING);
     } finally {
       // best-effort 清理暂存文件（Files.move 成功则 current 已被移除）
-      try { Files.deleteIfExists(tempBase); } catch (IOException ignored) {}
+      try {
+        Files.deleteIfExists(tempBase);
+      } catch (IOException e) {
+        LOG.warn("Failed to delete temp base file: {}", tempBase, e);
+      }
     }
   }
 
@@ -425,7 +430,11 @@ public class SuperFastExcelWriter {
       }
       Files.deleteIfExists(current);
     } finally {
-      try { Files.deleteIfExists(tempBase); } catch (IOException ignored) {}
+      try {
+        Files.deleteIfExists(tempBase);
+      } catch (IOException e) {
+        LOG.warn("Failed to delete temp base file: {}", tempBase, e);
+      }
     }
   }
 

@@ -23,10 +23,10 @@ public class DagWorkflowVO {
   private String workflowCode;
 
   /** 工作流名称 */
-  private String name;
+  private String workflowName;
 
   /** DAG 定义（YAML DSL） */
-  private String dsl;
+  private String dslContent;
 
   /** 工作流描述 */
   private String description;

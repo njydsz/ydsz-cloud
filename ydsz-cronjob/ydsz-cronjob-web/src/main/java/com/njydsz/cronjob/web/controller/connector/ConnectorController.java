@@ -22,6 +22,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.cronjob.domain.dto.post.ConnectorConfigPostDTO;
@@ -63,6 +64,9 @@ public class ConnectorController {
 
   private final ConnectorManager connectorManager;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * 获取所有已注册的连接器类型。
    *
@@ -100,7 +104,8 @@ public class ConnectorController {
       @Valid @RequestBody ConnectorConfigPostDTO dto, @RequestParam String type) {
     JobConnector connector = connectorManager.getConnector(type);
     if (connector == null) {
-      return YdszResponse.error(CronjobExceptionCode.CONNECTOR_NOT_FOUND, "不支持的连接器类型: " + type);
+      return YdszResponse.error(CronjobExceptionCode.CONNECTOR_NOT_FOUND,
+          i18nMessages.resolve("cronjob.connector.type.unsupported", new Object[] {type}));
     }
     ConnectorConfig config = toConnectorConfig(dto);
     return YdszResponse.success(connector.testConnection(config));
@@ -124,7 +129,8 @@ public class ConnectorController {
       @Valid @RequestBody ConnectorConfigPostDTO dto, @RequestParam String type) {
     JobConnector connector = connectorManager.getConnector(type);
     if (connector == null) {
-      return YdszResponse.error(CronjobExceptionCode.CONNECTOR_NOT_FOUND, "不支持的连接器类型: " + type);
+      return YdszResponse.error(CronjobExceptionCode.CONNECTOR_NOT_FOUND,
+          i18nMessages.resolve("cronjob.connector.type.unsupported", new Object[] {type}));
     }
     ConnectorConfig config = toConnectorConfig(dto);
     return YdszResponse.success(connector.listRemoteTasks(config));
@@ -148,7 +154,8 @@ public class ConnectorController {
       @Valid @RequestBody ConnectorConfigPostDTO dto, @RequestParam String type) {
     JobConnector connector = connectorManager.getConnector(type);
     if (connector == null) {
-      return YdszResponse.error(CronjobExceptionCode.CONNECTOR_NOT_FOUND, "不支持的连接器类型: " + type);
+      return YdszResponse.error(CronjobExceptionCode.CONNECTOR_NOT_FOUND,
+          i18nMessages.resolve("cronjob.connector.type.unsupported", new Object[] {type}));
     }
     ConnectorConfig config = toConnectorConfig(dto);
     return YdszResponse.success(connector.importTasks(config));
@@ -176,7 +183,8 @@ public class ConnectorController {
     JobConnector connector = connectorManager.getConnector(request.getType());
     if (connector == null) {
       return YdszResponse.error(
-          CronjobExceptionCode.CONNECTOR_NOT_FOUND, "不支持的连接器类型: " + request.getType());
+          CronjobExceptionCode.CONNECTOR_NOT_FOUND,
+          i18nMessages.resolve("cronjob.connector.type.unsupported", new Object[] {request.getType()}));
     }
     ConnectorConfig config = toConnectorConfig(request.getConfig());
     return YdszResponse.success(connector.exportTasks(request.getTasks(), config));

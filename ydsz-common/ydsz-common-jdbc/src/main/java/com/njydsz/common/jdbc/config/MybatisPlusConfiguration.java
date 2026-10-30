@@ -419,7 +419,7 @@ public class MybatisPlusConfiguration {
         }
       }
     } catch (NoSuchBeanDefinitionException ignored) {
-      // 拦截器链 Bean 不存在
+      // 确认忽略：拦截器链 Bean 不存在（conditional 条件未满足）
     }
     return false;
   }
@@ -434,7 +434,7 @@ public class MybatisPlusConfiguration {
         return count + " registered";
       }
     } catch (NoSuchBeanDefinitionException ignored) {
-      // 动态路由数据源不存在
+      // 确认忽略：动态路由数据源 Bean 不存在（单数据源模式）
     }
     return "single";
   }

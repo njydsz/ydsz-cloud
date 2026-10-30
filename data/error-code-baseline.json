@@ -1,0 +1,5 @@
+{
+  "collisions": [
+    "A00000 -> ydsz-common/ydsz-common-core/src/main/java/com/njydsz/common/core/code/YdszResultCode.java:SUCCESS | ydsz-common/ydsz-common-exception/src/main/java/com/njydsz/common/exception/code/CoreExceptionCode.java:SUCCESS"
+  ]
+}

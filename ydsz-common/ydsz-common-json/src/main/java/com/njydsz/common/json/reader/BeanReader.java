@@ -408,7 +408,12 @@ public final class BeanReader<T> {
               pending.put(fieldName, parsedValue);
             }
           } catch (Exception e) {
-            // 调用失败时跳过该字段
+            // LOG-001 修复: @JsonAnySetter 调用失败时跳过该字段（兼容容错）
+            LOGGER.warn(
+                "Failed to invoke @JsonAnySetter for field {} of {}: {}",
+                fieldName,
+                beanType.getName(),
+                e.getMessage());
           }
         } else if (failOnUnknownProperties) {
           throw JsonDeserializationException.unknownField(fieldName, beanType);

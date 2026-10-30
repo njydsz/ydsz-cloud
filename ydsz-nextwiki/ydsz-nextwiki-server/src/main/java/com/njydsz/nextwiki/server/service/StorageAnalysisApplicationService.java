@@ -60,19 +60,30 @@ public class StorageAnalysisApplicationService {
    * @note 只读，无事务边界；usagePercentage 由调用方结合配额计算后回填
    */
   public StorageOverview getUserOverview(String userId) {
-    int fileCount = fileNodeRepository.countByUser(userId);
-    long totalSize = fileNodeRepository.sumSizeByUser(userId);
+    // 单次聚合查询替代三次独立查询，trash 仍走独立表
+    Map<String, Object> agg = fileNodeRepository.aggregateOverview(userId);
+    long fileCount = toLong(agg.get("fileCount"));
+    long totalSize = toLong(agg.get("totalSize"));
+    long folderCount = toLong(agg.get("folderCount"));
     int trashCount = trashItemRepository.countActiveTrash(userId);
-    // P1-7 修复：folderCount 不再硬编码为 0
-    int folderCount = fileNodeRepository.countFoldersByUser(userId);
 
     return StorageOverview.builder()
         .userId(userId)
         .totalSize(totalSize)
-        .fileCount(fileCount)
-        .folderCount(folderCount)
+        .fileCount((int) fileCount)
+        .folderCount((int) folderCount)
         .trashCount(trashCount)
         .build();
+  }
+
+  private static long toLong(Object value) {
+    if (value == null) {
+      return 0L;
+    }
+    if (value instanceof Number) {
+      return ((Number) value).longValue();
+    }
+    return Long.parseLong(value.toString());
   }
 
   /**

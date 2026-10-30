@@ -218,7 +218,7 @@ public class CacheHealthIndicator {
         }
       }
     } catch (Exception e) {
-      // policy() 可能不支持，忽略
+      LOG.warn("读取缓存 policy 异常（可能不支持）: {}", e.getMessage(), e);
     }
 
     details.put("status", status);

@@ -1,36 +1,40 @@
-# Flyway 数据库版本管理
+# 数据库版本脚本（人工按序执行，无迁移框架）
 
-本目录存放每个版本更新的数据库脚本文件，由 Flyway 自动执行。
+> **事实校正（2026-10-28）**：本文件此前写"本目录脚本由 Flyway 自动执行"，并给出
+> `spring.flyway.*` 配置示例。核对代码后三处都与事实不符：
+>
+> 1. `pom.xml:61` 与 `pom.xml:1163` 明文规定"**项目规范禁止 Flyway / Liquibase**，不引入任何
+>    schema-migration 框架"；
+> 2. 全仓 pom 里**没有任何 flyway 依赖**（`grep -r flyway --include=pom.xml` 仅命中上面两条注释）；
+> 3. 各业务模块的 `application.yml` 也没有 `spring.flyway` 配置。
+>
+> 结论：这些脚本**从来没有被自动执行过**。本文件按事实重写，避免"以为有迁移框架兜底"的误解。
 
-## 脚本命名规范
+## 执行方式
 
-- 格式：`V{版本号}_{描述}.sql`（推荐） 或 `V{版本号}.sql`
+1. 变更数据库前，在本目录新建 `V{版本号}.sql`（见下方命名规范）；
+2. 由 DBA / 发布负责人按**版本号升序人工执行**，执行记录写在发布单/变更单里；
+3. 脚本一旦执行**不再修改**；需要撤销时新建更高版本的修正脚本；
+4. 版本号必须递增，不可重复（重复会使"按序执行"失去唯一锚点）。
+
+## 命名规范
+
+- 格式：`V{版本号}.sql`，或带描述 `V{版本号}_{描述}.sql`
 - 版本号格式：`YY.MM.DD`（与项目版本号一致）
 - 示例：`V26.11.01_add_user_avatar.sql`
 
-## 当前版本
+## 当前基线
 
-- **基线版本**：`V26.10.01`（当前数据库全量快照）
-- 后续变更需在对应版本脚本中编写增量 DDL/DML
+- **基线版本**：`V26.10.01.sql` —— 当前数据库全量快照，仅用于初始化全新库；
+- 后续变更在对应版本脚本中写增量 DDL/DML。
 
-## Flyway 配置（application.yml）
+## 目录名的历史包袱（未改，需决策）
 
-每个业务模块的 `application.yml` 需添加：
+目录仍叫 `flyway/`，但其中并不使用 Flyway —— 属历史命名。改名会影响发布脚本、备份工具与
+既有文档的引用路径，**未擅自重命名**；如需改名，建议连同 `pom.xml` 的两条红线注释一并调整。
 
-```yaml
-spring:
-  flyway:
-    enabled: true
-    baseline-on-migrate: true
-    baseline-version: "26.10.01"
-    locations: "filesystem:./data/sqls/flyway"
-    out-of-order: false
-    validate-on-migrate: true
-```
+## 与红线的关系
 
-## 注意事项
-
-1. 脚本一旦被执行，**禁止修改**（Flyway 会校验 checksum）
-2. 需要撤销时，创建新版本的修正脚本
-3. 版本号必须递增，不可重复
-4. 基线版本 `V26.10.01.sql` 为当前全量快照，仅用于初始化已存在的数据库
+- **禁止引入** Flyway / Liquibase（`pom.xml:61`、`pom.xml:1163`）；
+- 方言差异（PostgreSQL 生产 / MySQL、Oracle 历史脚本）见 `data/sqls/legacy-dialects/`；
+- 需要"脚本是否齐全、方言是否同步"的自动校验，属报告 B1-10（DDL 治理脚本，需 DBA 复核）。

@@ -166,7 +166,7 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
   level:
     root: INFO
-    com.njydsz: DEBUG
+    com.njydsz: INFO
     com.baomidou.mybatisplus: WARN
     org.springframework.cloud: WARN
     io.netty: WARN

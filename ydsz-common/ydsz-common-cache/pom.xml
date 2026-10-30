@@ -107,7 +107,6 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-thread</artifactId>
     </dependency>
-
     <!-- 测试依赖 -->
     <dependency>
       <groupId>org.assertj</groupId>

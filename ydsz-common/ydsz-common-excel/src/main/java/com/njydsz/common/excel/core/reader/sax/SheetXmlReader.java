@@ -2,9 +2,11 @@ package com.njydsz.common.excel.core.reader.sax;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.VarHandle;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Supplier;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -154,11 +156,11 @@ public class SheetXmlReader {
     /** 对象池容量上限 — 超出后 acquire() 返回新实例 */
     private static final int ROW_POOL_MAX = 16;
 
-    private final java.util.function.Supplier<T> factory;
+    private final Supplier<T> factory;
     private final Object[] stack = new Object[ROW_POOL_MAX];
     private int size;
 
-    RowPool(java.util.function.Supplier<T> factory) {
+    RowPool(Supplier<T> factory) {
       this.factory = factory;
     }
 
@@ -211,7 +213,7 @@ public class SheetXmlReader {
     }
     if (rowPool == null && reader.instantiator != null) {
       // ObjectInstantiator.newInstance() throws Exception — wrap in unchecked lambda for Supplier
-      java.util.function.Supplier<Object> supplier = () -> {
+      Supplier<Object> supplier = () -> {
         try {
           return reader.instantiator.newInstance();
         } catch (RuntimeException e) {
@@ -832,7 +834,7 @@ public class SheetXmlReader {
     }
     // P0-VarHandle：使用 VarHandle 替代 MethodHandle.invoke() 提升字段赋值性能
     Object convertedValue = convertCellValue(value, colMeta);
-    java.lang.invoke.VarHandle vh = colMeta.varHandle;
+    VarHandle vh = colMeta.varHandle;
     if (vh != null) {
       // VarHandle.setRelease 由 JIT 编译为直接字段访问指令
       setViaVarHandle(vh, rowData, convertedValue, colMeta.targetType);
@@ -861,7 +863,7 @@ public class SheetXmlReader {
    * @param value 字段值
    * @param targetType 字段目标精确类型（用于精确 set 操作选择）
    */
-  private static void setViaVarHandle(java.lang.invoke.VarHandle vh, Object target, Object value,
+  private static void setViaVarHandle(VarHandle vh, Object target, Object value,
       Class<?> targetType) {
     if (targetType == int.class) {
       vh.set(target, (Integer) value);
@@ -940,6 +942,8 @@ public class SheetXmlReader {
         return colMeta.convertStrategy.convert(dateCell, ExcelCellType.NUMERIC);
       } catch (NumberFormatException e) {
         // 非数值内容按原路径处理（异常生成器的坏数据不在此放大）
+        LOG.warn("Failed to parse date serial value '{}' as number at row {}",
+            actualValue, currentRow, e);
       }
     }
 

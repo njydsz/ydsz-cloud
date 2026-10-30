@@ -179,11 +179,11 @@ public class DebugController {
     log.info("[Debug-API] 重放链路: traceId={}", traceId);
     TraceMeta meta = agentDebuggerService.getTraceMeta(traceId);
     if (meta == null) {
-      return YdszResponse.error(AgentExceptionCode.TRACE_NOT_FOUND, "链路不存在或不支持重放: " + traceId);
+      return YdszResponse.error(AgentExceptionCode.TRACE_NOT_FOUND, "Trace not found or replay not supported: " + traceId);
     }
     List<TraceStep> steps = agentDebuggerService.getTrace(traceId);
     if (steps.isEmpty()) {
-      return YdszResponse.error(AgentExceptionCode.TRACE_EMPTY, "链路无步骤记录，无法提取重放输入: " + traceId);
+      return YdszResponse.error(AgentExceptionCode.TRACE_EMPTY, "Trace has no step records, cannot extract replay input: " + traceId);
     }
     // 从链路第一个步骤提取原始 userInput，从元数据提取 conversationId / agentType
     String userInput = steps.get(0).getContent();

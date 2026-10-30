@@ -95,7 +95,7 @@ public class ImportExportController {
       return YdszResponse.success(count);
     } catch (Exception e) {
       log.error("导入模板失败 err={}", e.getMessage(), e);
-      return YdszResponse.error("导入失败: " + e.getMessage());
+      return YdszResponse.error("Import failed: " + e.getMessage());
     }
   }
 }

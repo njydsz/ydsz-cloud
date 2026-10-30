@@ -55,8 +55,8 @@ public class DagWorkflowServiceImpl implements DagWorkflowService {
               .params(dto.getWorkflowCode()));
       entity = converter.voToEntityWithId(existing);
     }
-    entity.setName(dto.getWorkflowName());
-    entity.setDsl(dto.getDslContent());
+    entity.setWorkflowName(dto.getWorkflowName());
+    entity.setDslContent(dto.getDslContent());
     entity.setDescription(dto.getDescription());
     entity.setCategory(dto.getCategory());
     boolean ok = isCreate
@@ -68,7 +68,7 @@ public class DagWorkflowServiceImpl implements DagWorkflowService {
     log.info("[DagWorkflow] {} workflow: code={}, name={}",
         isCreate ? "created" : "updated",
         entity.getWorkflowCode(),
-        entity.getName());
+        entity.getWorkflowName());
     return entity.getId();
   }
 

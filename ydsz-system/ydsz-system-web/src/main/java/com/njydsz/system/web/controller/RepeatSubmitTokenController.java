@@ -82,7 +82,7 @@ public class RepeatSubmitTokenController {
       return YdszResponse.success(token);
     } catch (IllegalArgumentException e) {
       log.warn(I18n.message("system.web.repeat.submit.token.fail", new Object[]{e.getMessage()}));
-      return YdszResponse.error(YdszResultCode.UNAUTHORIZED, "用户未登录，无法生成 Token");
+      return YdszResponse.error(YdszResultCode.UNAUTHORIZED, "User not logged in, cannot generate Token");
     }
   }
 }

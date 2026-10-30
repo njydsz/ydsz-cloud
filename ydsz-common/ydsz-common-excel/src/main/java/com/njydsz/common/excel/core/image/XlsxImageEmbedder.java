@@ -5,10 +5,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -134,8 +138,8 @@ public final class XlsxImageEmbedder {
    * @param regions 图片区域描述列表
    * @throws IOExcept
    */
-  public static void embed(java.io.InputStream sourceXlsx,
-      java.io.OutputStream destXlsx, List<ImageRegion> regions) throws IOException {
+  public static void embed(InputStream sourceXlsx,
+      OutputStream destXlsx, List<ImageRegion> regions) throws IOException {
     if (regions == null || regions.isEmpty()) {
       // 无图片：直接复制
       byte[] buf = new byte[8192];
@@ -155,7 +159,7 @@ public final class XlsxImageEmbedder {
     }
 
     // 2. 按 sheetIndex 分组
-    java.util.Map<Integer, List<IndexedImage>> bySheet = new java.util.LinkedHashMap<>();
+    Map<Integer, List<IndexedImage>> bySheet = new LinkedHashMap<>();
     for (IndexedImage img : images) {
       bySheet.computeIfAbsent(img.region.sheetIndex, k -> new ArrayList<>()).add(img);
     }
@@ -185,7 +189,7 @@ public final class XlsxImageEmbedder {
       }
 
       // 追加 Drawing XML + rels 给每个 sheet
-      for (java.util.Map.Entry<Integer, List<IndexedImage>> sheetEntry : bySheet.entrySet()) {
+      for (Map.Entry<Integer, List<IndexedImage>> sheetEntry : bySheet.entrySet()) {
         int sheetIndex = sheetEntry.getKey();
         List<IndexedImage> sheetImages = sheetEntry.getValue();
         String drawingName = "xl/drawings/drawing" + (sheetIndex + 1) + ".xml";
@@ -288,7 +292,7 @@ public final class XlsxImageEmbedder {
         + "</Relationships>";
   }
 
-  private static String generateContentTypesOverride(java.util.Map<Integer, List<IndexedImage>> bySheet) {
+  private static String generateContentTypesOverride(Map<Integer, List<IndexedImage>> bySheet) {
     StringBuilder sb = new StringBuilder(300);
     sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
     sb.append("<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">");
@@ -304,27 +308,27 @@ public final class XlsxImageEmbedder {
     return sb.toString();
   }
 
-  private static String generateWorkbookRels(java.util.Map<Integer, List<IndexedImage>> bySheet) {
+  private static String generateWorkbookRels(Map<Integer, List<IndexedImage>> bySheet) {
     return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
         + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
         + "</Relationships>";
   }
 
-  private static String generateWorkbookRelsXml(java.util.Map<Integer, List<IndexedImage>> bySheet) {
+  private static String generateWorkbookRelsXml(Map<Integer, List<IndexedImage>> bySheet) {
     return generateWorkbookRels(bySheet);
   }
 
   // ==================== ZIP 辅助 ====================
 
   private static class ZipCursor {
-    private final java.util.zip.ZipInputStream zis;
+    private final ZipInputStream zis;
 
     ZipCursor(InputStream is) {
-      this.zis = new java.util.zip.ZipInputStream(is);
+      this.zis = new ZipInputStream(is);
     }
 
     ZipEntryInReader nextEntry() throws IOException {
-      java.util.zip.ZipEntry ze = zis.getNextEntry();
+      ZipEntry ze = zis.getNextEntry();
       if (ze == null) {
         return null;
       }
@@ -360,8 +364,8 @@ public final class XlsxImageEmbedder {
       String newContent) throws IOException {
     // 简单实现：先扫描源内容；如有则替换
     ByteArrayOutputStream origBos = new ByteArrayOutputStream();
-    java.util.zip.ZipInputStream tmpZis = new java.util.zip.ZipInputStream(source);
-    java.util.zip.ZipEntry ze;
+    ZipInputStream tmpZis = new ZipInputStream(source);
+    ZipEntry ze;
     boolean found = false;
     while ((ze = tmpZis.getNextEntry()) != null) {
       if (ze.getName().equals(name)) {

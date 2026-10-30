@@ -95,7 +95,7 @@ public final class BeanUpdateUtil {
         try {
           targetPd.getWriteMethod().invoke(target, value);
         } catch (IllegalArgumentException ignored) {
-          // 属性类型不匹配（泛型擦除导致），安全跳过
+          // 确认忽略：属性类型不匹配（泛型擦除导致），安全跳过
         }
       }
     } catch (Exception e) {

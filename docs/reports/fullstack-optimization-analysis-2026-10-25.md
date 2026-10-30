@@ -694,7 +694,7 @@ python3 data/scripts/check-diff-coverage.py --base HEAD~1 --show-files  # 网关
 | 2 个 Testcontainers IT 需 Docker | 本机/无 Docker CI 恒 skip；`TestcontainersBase` 位于 `ydsz-common-core/src/main/java`（测试基类打进生产 jar）→ B1-11 分层问题 |
 | `RbacPermissionEvaluator.resolveTenantIdOrDefault()`（原 :519）| 已删：私有且全仓 grep 无任何调用点，连同 `"__DEFAULT__"` 字面量一并移除 |
 | **origin/dev 尖端当前测试编译不过** | `2ddc8c2efd` 含 `VariableControllerSmokeTest` 的 `ObjectProvider.empty()` 破损版（该文件 testCompile 失败）。工作区已修好并复测 56/56 绿，但**我没有提交/推送权限动作**——需使用方提交这次修复，或授权我提交 |
-| 测试基类仍在 `ydsz-common-core/src/main/java` | 未搬（B1-11 分层轨）：`BaseControllerMockTest`/`TestcontainersBase` 打进生产 jar，且新增到 `src/main` 的行会被**增量覆盖率**按"本模块测试未覆盖"计（common-core 自己的 jacoco 看不到别的模块跑它）→ 需 `-tests` 分类器或独立 guard 模块，属构建结构调整 |
+| 测试基类仍在 `ydsz-common-core/src/main/java` | 未搬（B1-11 分层轨）。**2026-10-28 实测校正**：① 两个类确实随 `ydsz-common-core` 制品发布（jar 内含 `com/njydsz/common/test/{BaseControllerMockTest,TestcontainersBase}.class`）；② 但它们依赖的 JUnit/Mockito/Testcontainers **没有**流进生产包 —— 这些依赖声明为 `optional`，实测 `ydsz-system-web-exec.jar` 的 `BOOT-INF/lib` 里 junit/mockito/testcontainers/spring-test **均为 0 个**，所以此前"测试框架打进生产 jar"的说法不成立；③ 真正未解决的是：新增到 `src/main` 的行会被**增量覆盖率**按"本模块测试未覆盖"计（common-core 自己的 jacoco 看不到别的模块跑它）→ 需 `-tests` 分类器或独立模块，属构建结构调整 → **需决策** |
 
 **复现命令**
 
@@ -866,6 +866,79 @@ python3 data/scripts/check-diff-coverage.py --base HEAD --show-files            
 
 **未修（诚实边界）**：7,425 条存量仍未清零，主题集中在 TS6133（未使用变量，system-web 单应用 126 条）、TS2532/TS18048（可能为 undefined，~62 条）、TS2769（重载不匹配）；热点文件是共享代码（`comm/effects/plugins/src/vxe-table/composables/use-vxe-grid-logic.ts` 27 条、`comm/@core/ui-kit/ydsz-vue/src/shared/useGraceArea.ts` 26 条、`YdOrgChart.vue` 20 条），修一处能同时降低多个应用 —— 但这属于独立的质量攻坚，本次只保证**不再增长**。另两点：① `type-check:strict`（turbo 原始口径）**当前仍红**（`comm/constants` 216 条起），要变绿必须清完 `comm/**` 的存量；② 门禁全量跑约 6 分钟（并发 4，`TYPECHECK_CONCURRENCY` 可调），是否在 CI 里按"改动应用"裁剪需结合 CI 预算决定 → **需决策**。
 
+### B1-12 错误码唯一性门禁：新增重号当场红，存量 16 条进棘轮
+
+错误码是**跨模块全局命名空间**（前端按 code 反解文案），但现有校验只在单模块内生效：`ErrorCodeTable.registerCode` 对同模块重号抛异常，跨模块则各进各的模块索引。本次全量扫描 22 个错误码枚举 / **528 个码**，实测 **16 个码被重复占用**，与报告此前的判断完全一致：
+
+- `B91001-B91004`：system 的字典类 vs message 的模板类；
+- `B92001-B92002`：system 变量 vs cronjob 任务；`B93001-B93002`：system 应用 vs literule 规则；`B94001-B94005`：system 租户 vs agent；`B96001`：system 实体版本 vs generator 数据源；
+- `B30028` 在 `UserInfoExceptionCode` 同一条枚举里出现两次（`PARAM_INVALID` 与 `IMPORT_DEPT_NOT_FOUND`）；
+- `A00000` 在 `YdszResultCode` 与 `CoreExceptionCode` 各定义一次。
+
+新增 `data/scripts/check-error-code-unique.py`（纯标准库，`--self-test` **10 条反例**）：扫描 `**/*ExceptionCode.java` + `YdszResultCode`/`CoreExceptionCode` 的 `NAME("CODE"...` 字面量，**新增重号立即 exit 1**；存量 16 条写入 `data/error-code-baseline.json` 棘轮，只可减不可增，消失时打印"可下调基线"。已接进后端 `ci.yml`（Step 3b，排在 Checkstyle/Maven 之前，避免被它们的红遮挡）。
+
+**可证伪性**：自检 10/10；探针 —— 临时新增一个 `ProbeExceptionCode.PROBE_DUP("B91001")` → 立刻 exit 1 并点名三方占用；删除后恢复 exit 0。
+
+**未做（需决策）**：**改号**。给哪一侧换码会改变既有前端文案映射与客户端判断，属兼容性决策；本项只保证"不再变多"，并把现状钉成 16 条可度量的债。
+
+### B1-1（文档轨）`data/sqls/flyway/README.md` 说"Flyway 自动执行"，而 pom 明令禁止 Flyway
+
+原 README 开篇写"本目录脚本由 Flyway 自动执行"，还给了完整的 `spring.flyway.*` 配置示例。三处证据表明这是假的：`pom.xml:61` / `:1163` 明文禁止 Flyway/Liquibase、全仓 pom **没有任何 flyway 依赖**、各模块 `application.yml` 也没有 `spring.flyway` 配置 —— 也就是说这批脚本**从来没被自动执行过**，实际执行方式是人工按版本号顺序跑（AGENTS.md 也是这么写的）。
+
+本次只做**文档纠真**：README 改写为"人工按序执行、无迁移框架"，保留命名规范与基线说明，并注明目录名 `flyway/` 是历史包袱（改名会牵动发布脚本与文档引用 → **未擅自重命名**，列为需决策）。同时修掉 `pom.xml` 两条红线注释里指向**不存在路径**的引用（`deploy/sql/README.md §1`，全仓无 `deploy/` 目录）→ 改指 `data/sqls/flyway/README.md`。
+
+**仍未做**：是否真正引入 Flyway（等价于给全平台加一条迁移框架依赖）属**架构决策**，本次不替使用者拍板；"脚本齐全性/方言同步"的自动校验归 B1-10（需 DBA 复核）。
+
+### B1-3（common-util 轨）`MaskUtils.maskJson` 的凭据从未被脱敏 —— 密码/token 明文进审计库
+
+`MaskUtils.maskJson` 全仓只有一个调用方：`AuditAspect:493`（审计日志落库）。而审计日志的读取面通常比业务数据更宽，所以"脱敏没生效"等于**把凭据写进审计库**。
+
+缺陷链（实测，非推理）：`maskJsonValue` 命中 `DEFAULT_SENSITIVE_PATTERNS` 后直接调 `maskByFieldName(key, value)`，而后者只识别手机/身份证/银行卡/邮箱/姓名五类，**其余一律原样返回**。于是 `password`、`token`、`secret`、`refreshToken`、`sessionId`、`credential`、`apikey`、`privateKey`、`salt`、`cvv`、`pin`、`accountNo` 等 14 类敏感词全部**明文输出**；而 Javadoc 承诺的"其他保留前后 2 位"兜底**从未实现**。附带两个小缺陷：`{"password": null}` 因 `String.valueOf(null)` 变成字符串 `"null"`；嵌套对象/数组里的敏感字段同样不脱敏（走的是同一条分支）。
+
+改法：新增 `maskSensitiveValue(key, text)` —— 有专属策略则用（手机/身份证/银行卡/邮箱/姓名），否则**凭据类整体替换为 `***`**（部分保留仍是泄露），其余走 `mask(text, 2, 2)`，文本过短导致通用掩码无效时也整体替换；`null` 值保持 `null`。顺带把两处**错误的 Javadoc 示例**改成真实行为（邮箱 `abc@qq.com → a**@qq.com` 而非 4 颗星；银行卡 `6222********7890` 而非 4 颗星 —— 实现是"掩码位数 = 隐藏字符数、长度不变"，更符合脱敏直觉，故改文档而非改代码）。
+
+**可证伪性**：新建 `MaskUtilsTest`（9 例）→ 首跑**红 7 条**（其中 5 条是真实缺陷：密码、凭据、嵌套、null、"额外敏感词"）→ 修 → **9/9 绿**；变异探针（把凭据分支改回 `return text`）→ 3 条转红，恢复后绿。模块棘轮 0.028/0.035（实测 LINE 99/3491、BRANCH 69/1941），C2 新增可执行 13 行**100%** 覆盖，C1 0 违规。
+
+**未修（诚实边界）**：① `DEFAULT_SENSITIVE_PATTERNS` 里的 `auth` 会命中 `author`/`authorName` 之类字段并被整体替换 —— 属**过度脱敏**，改词表会影响既有审计数据的可读性 → 需决策；② 数字型敏感值（如手机号存成 Long）会被转成字符串再脱敏，类型会变；③ `maskByFieldName` 本身对未识别字段"原样返回"的语义未改（直接调用方若拿它当脱敏用仍会漏），本次只在 `maskJson` 路径兜住。
+
+### B1-3（common-core 轨）响应信封补测：把"分页形参错位"钉死在测试里
+
+`ydsz-common-core` 是全平台**响应信封**与**测试基类**（`BaseControllerMockTest` / `TestcontainersBase`）的宿主，此前**零测试** —— 用报告里的话说："给全平台提供测试基座的模块，基座本身从未被验证"。
+
+新增 `PageResponseTest`（10 例），钉住三件编译器管不了的事：
+
+1. **四参数落位**：`PageResponse.success(total, pageNum, pageSize, data)` 四个参数同类型，传反了编译器不会报错。测试对四个字段分别断言（100/2/10/rows），任一错位即红 —— 这一错位在 `ydsz-literule-infra` 真实发生过（B1-3 infra 轨）。
+2. **`getPages()` 边界**：整除、有余数、`pageSize<=0`、`total==null` → 0。
+3. **游标模式三态**：`ofList(rows,"cursor-2")` → `isMore=true`；`ofList(rows,null)` → `isMore=false` 但**仍算游标模式**；`emptyCursor()` → 数据为 null 且 `isCursorMode()=true`。这条容易写反（"末页就不是游标分了"），测试把语义固定住。
+
+**可证伪性**：10/10 绿；变异探针 —— 把 `setPageNum(pageNum)/setPageSize(pageSize)` 改成互换 → **3 条红**（正是断言字段落位的那三条），恢复后绿。棘轮 0.098/0.036（实测 LINE 86/870、BRANCH 13/352）。
+
+**未修（诚实边界）**：① `BaseControllerMockTest` / `TestcontainersBase` 自身的行为仍只被下游模块**间接**覆盖，没有直接用例；② `context`/`trace`/`tenant`/`assembler` 等 core 子包仍未测 —— 9.9% 行覆盖是记录债。
+
+### B1-11（依赖轨）隐性运行时依赖全仓度量：558 条 "used undeclared"，但"测试框架进生产包"被证伪
+
+**为什么量它**：B1-3（infra 轨）补测时踩到的第一个坑是 `NoClassDefFoundError` —— `ydsz-literule-infra` 的代码能编译，测试一跑就缺类（`org/mapstruct/factory/Mappers`、`org/springframework/http/HttpStatus`）。那属于"**能编译，能不能运行取决于宿主 classpath**"的缺陷类，当时只判断"其余模块未逐一核"。
+
+**度量方法**：`mvn -o -T 1C dependency:analyze -DskipTests`（BUILD SUCCESS），逐模块解析 `Used undeclared dependencies found`。
+
+**结果（2026-10-28）**：**56 个模块、共 558 条**未声明但被使用的依赖；按上游声明作用域分：**compile 494 / test 59 / provided 5**。Top：`ydsz-message-server` 27、`ydsz-message-web` 27、`ydsz-system-web` 23、`ydsz-userinfo-server` 23、`ydsz-generator-web` 21、`ydsz-workflow-web` 21。
+
+**对 5 条 `provided` 的逐条核实（这是唯一有运行时风险的一组）**：`ydsz-common-base → org.reactivestreams`、`ydsz-common-sentry → logback-core / opentelemetry-sdk-common / aspectjrt`、`ydsz-nextwiki-app → mybatis-spring`。逐条 grep 实际 import 后发现：common-base 只 import `reactor.core.publisher.Mono`（`reactive-streams` 是它的下游传递产物）；nextwiki-app 的 `src/main` **没有** `org.mybatis.spring` 的 import；sentry 的三个是**真实使用**（`SentryLogbackLayout`、`OtelAutoConfiguration`、`SlaMetricAspect`），且都有 `@ConditionalOnClass` 保护。结论：**这 5 条不是 literule-infra 那类缺陷**，其中 2 条是分析器噪声；**因此没有据此造门禁**——用一个会产生假阳性的判据去卡 CI，只会重演"恒红 = 无门禁"。
+
+**顺带证伪的前序判断**：报告此前后多处写"测试基类打进生产 jar"暗示 JUnit 也跟着进去。实测 `ydsz-common-core` 的 jar 里确实有 `com/njydsz/common/test/{BaseControllerMockTest,TestcontainersBase}.class`，但它们依赖的 junit/mockito/testcontainers 声明为 `optional`，**不会传递**；`ydsz-system-web-exec.jar` 的 `BOOT-INF/lib` 中 junit/mockito/testcontainers/spring-test 计数 **0**。所以"测试框架污染生产包"不成立，真正遗留的只是：① 两个类随制品发布（体积/概念污染）；② 新增到 `src/main` 的行被增量覆盖率按"本模块未测"计。
+
+**未做（需决策）**：① 把 `com/njydsz/common/test/**` 迁到独立 `-tests` 分类器制品或独立模块 —— 会改变所有消费方的依赖声明方式与覆盖率口径；② 494 条 compile 级"未声明依赖"属卫生债，逐条补声明是**纯 churn**（现有传递链都能编译能运行），是否需要按模块清理需排期决定。
+
+### B1-3（common-redis 轨）租户 Redis 隔离补测：7 例钉住数据边界
+
+`ydsz-common-redis` 此前零测试（根默认 0.01 直接判红：`lines covered ratio is 0.00`），而多租户 Redis 隔离是**数据边界** —— `prefixKey`/`deprefixKey`/`KeySerializer` 三者任何一处不一致，A 租户就可能读到 B 租户的缓存或分布式锁。
+
+新增 `TenantRedisKeyPrefixerTest`（7 例），钉住：前缀格式 `t:{tenantId}:{key}`；**未启用 / 租户为 null / 租户为 `0`（超管）三种情况都不加前缀**；null key 安全透传；剥离**只认当前租户**的固定前缀（`t:43:user:1` 在租户 42 下不得被剥）；业务 key 自带 `t:` 字样不被误判（`t:420:user` 原样返回）；Key 序列化器 serialize→deserialize **往返一致**。
+
+**可证伪性**：7/7 绿；变异探针 —— 把前缀标记 `t:` 改成 `x:` → **4 条红**（前缀格式、剥离、序列化器、禁用态断言同时失败），恢复后绿。棘轮 0.009/0.011（实测 LINE 29/3215、BRANCH 20/1693）。
+
+**记录（未修）**：`prefixKey` **不是幂等**的 —— `prefixKey("t:42:already")` 会得到 `t:42:t:42:already`。当前调用链里序列化只发生一次（`RedisTemplate` 编码 key 时），因此不构成现存缺陷；但若将来有人把"已加前缀的 key"再喂进序列化器，就会命中空值。属使用约定，已写进测试固化现状 → 需在规范里明确「禁止手工拼接/添加租户前缀」。
+
 ### B1-9 红线可执行化：AGENTS.md/CLAUDE.md 里 6 个不存在的符号 + 23 份 pom 的棘轮口径写反了
 
 对 `AGENTS.md` 里点名的每一个类/注解/方法/路径逐条 grep 校验后，发现**照做会编译不过**的条目如下（已全部替换为真实符号并加"事实核验（2026-10-27）"抬头）：
@@ -931,6 +1004,12 @@ node ./bash/check-app-typecheck.mts                  # 14 目标合计 7425 条�
 | B1-4 契约测试真正生成并执行 | ✅ 已完成（框架接通 + 1 条契约进 `mvn verify`）：插件 `spring-cloud-contract-maven-plugin:5.0.3` 接入 `ydsz-agent-web`，DSL 从 server 迁到 Controller 同模块，基类由"起不来的 `@SpringBootTest`"改为 standalone + **平台 `JsonHttpMessageConverter`**（默认 Jackson 会裁掉整个信封），SSE 契约删除（SCC 无法表达帧序列）。生成测试**当场抓出**旧 DSL 描述的 `data.reply` 实际是 `data.content`（该契约从未执行过才一直"正确"）。证据：红→绿四次迭代 + 变异探针（改 endpoint 路径即红）；`mvn -o verify` 下 38 + 28 例全绿、stubs jar 产出。**遗留**：仅 1 条契约，覆盖哪些端点是策略问题 → 需决策；`/agent/chat` 不回传 `conversationId`（多轮会话是否需要 → 需决策）|
 | B1-5 生成器输出测试模板 | ✅ 已完成（新增 `controllerMockTest.vm`，生成模块自带 `BaseControllerMockTest` 冒烟测试；顺带修掉 6 个模板的硬伤：`io.swagger.annotations`→springdoc、`javax.`→jakarta、不存在的 `TableDataInfo`/`core.page.PageQuery`→`PageResponse`/`domain.query.PageQuery`、`#foreach($col in $ table…)` 语法错、Lombok `@Builder` 缺全参构造、Controller 落在 `domain` 包且带 `/api` 前缀；新增 6 例合规门禁（含"模板 import 的 com.njydsz 类必须可加载"）；`TemplateDataInitializer` 由"整组跳过"改逐文件补齐，新增 3 例测试，棘轮 0.217/0.238；检查风格棘轮 4132→4131）。**遗留**：未做渲染后编译的端到端校验；生成物分层仍非 DDD（`Service extends IService`）→ 需决策；前端三模板未审 |
 | B1-6 vue-tsc 覆盖 main + 9 app | ✅ 已完成（根 `type-check` 原为 `turbo type-check`，10 个应用一个都没定义该任务 → `.vue` 从未被检查）。新增 `bash/check-app-typecheck.mts`（14 目标 = 10 应用 + 4 comm 包，8 条自检，棘轮基线 `conf/typecheck-baseline.json`，`--only` 局部复跑，漏扫 fail-closed），`pnpm type-check` 直连该脚本、CI 无需改；修 generator-web 的 `composite`/`noEmit` 配置缺陷（原来配置阶段就中止，把 645 条真实错误藏住）；补 3 处未声明的 workspace 类型依赖（`turbo type-check` 此前因此是**红**的，且 `pnpm check:deps` 检出却不阻断）。证据：基线 7,425 条确定性复现；探针 +1 条 → exit 1，移除 → exit 0。**遗留**：存量未清、`type-check:strict` 仍红；CI 是否按改动应用裁剪 → 需决策）|
+| B1-3 续（common-redis 轨）租户 Redis 隔离补测 | ✅ 已完成（`ydsz-common-redis` 零测试 → 7 例：前缀格式、未启用/null/超管零值三类不加前缀、null 透传、只剥本租户前缀、业务 key 含 `t:` 不误判、Key 序列化器往返一致；变异探针改前缀标记 → 4 条红；棘轮 0.009/0.011）。**记录**：`prefixKey` 非幂等，当前调用链安全，需在规范写明禁止手工加前缀 |
+| B1-3 续（common-core 轨）响应信封补测 | ✅ 已完成（全平台响应信封 + 测试基类宿主模块此前零测试；新增 10 例钉住 `PageResponse.success` 四参数落位（分页形参错位在本仓真实发生过）、`getPages()` 四类边界、游标模式三态（末页 `isMore=false` 但仍是游标模式，易写反）、`YdszResponse` success/error 差异；变异探针互换 pageNum/pageSize → 3 条红；棘轮 0.098/0.036）。**遗留**：测试基类自身行为只被下游间接覆盖；context/trace/tenant/assembler 未测 |
+| B1-3 续（common-util 轨）`MaskUtils` 凭据从不脱敏（P1） | ✅ 已修（`maskJson` 唯一调用方是 `AuditAspect:493`；命中敏感词后调 `maskByFieldName`，而它只认手机/身份证/银行卡/邮箱/姓名，其余原样返回 → password/token/secret/refreshToken/sessionId 等 14 类敏感词**明文进审计库**，Javadoc 承诺的"其他保留前后 2 位"从未实现；`{"password":null}` 还会变成字符串 `"null"`。修法：凭据整体替换 `***`、其余走通用掩码、null 保持 null、嵌套/数组一并覆盖；顺带改正两处错误 Javadoc 示例。证据：9 例首跑红 7（5 条真缺陷）→ 修后 9/9；变异探针 3 条转红；棘轮 0.028/0.035，C2 新增 13 行 100% 覆盖）。**遗留**：`auth` 命中 `author` 属过度脱敏 → 需决策；数字型敏感值会被转成字符串 |
+| B1-11（依赖轨）隐性运行时依赖度量 | ✅ 已完成度量与证伪（`dependency:analyze` 全仓：**56 模块 / 558 条** used-undeclared，compile 494 / test 59 / provided 5；逐条核实 5 条 provided：2 条为分析器噪声、3 条为带 `@ConditionalOnClass` 的真实集成 → **不是** literule-infra 那类缺陷，故未造会产生假阳性的门禁；同时证伪前序判断：测试基类随 common-core 制品发布成立，但 junit/mockito/testcontainers 因 `optional` **未**进入 `BOOT-INF/lib`）。**遗留**：测试基类归类需决策；494 条 compile 级卫生债需排期 |
+| B1-12 错误码唯一性（门禁轨） | ✅ 已完成门禁部分（实测 22 枚举/528 码中 **16 个重号**：B91001-04 system×message、B92001-02 system×cronjob、B93001-02 system×literule、B94001-05 system×agent、B96001 system×generator、userinfo 同枚举 B30028 两次、A00000 两处）。新增 `data/scripts/check-error-code-unique.py`（10 条自检，新增重号即红，存量 16 条基线只可减），已接进后端 CI Step 3b；探针注入 `B91001` → exit 1，删除 → exit 0。**遗留**：改号改谁属兼容性决策 → 需决策）|
+| B1-1（文档轨） | ✅ 已纠真（`data/sqls/flyway/README.md` 原称"Flyway 自动执行"并给 `spring.flyway.*` 配置，而 `pom.xml:61/:1163` 禁止 Flyway、全仓无 flyway 依赖、各 yml 无 `spring.flyway` 配置 → 脚本从未被自动执行；已改写为"人工按序执行、无迁移框架"；`pom.xml` 两条红线注释里指向不存在的 `deploy/sql/README.md §1` 已改指真实路径）。**遗留**：是否引入 Flyway 属架构决策；目录名 `flyway/` 改名需决策）|
 | B1-9 红线失真（文档事实核验 + 棘轮口径） | ✅ 已完成（AGENTS.md 6 个不存在的符号全部替换：`JsonUtils`→`YdszJson`、`ExceptionCodeEnum`→`ExceptionCode`、`@RequiresPermission`→`@AuthApiPermission`、`ExcelFacade.export`→`write`、`FileTypeValidator.validate(InputStream,String)`→`validate(MultipartFile)`、两参 `getWithProtection`→四参；短名 `StringOps/HashOps/ListOps/RedisOps`→`Redis*Ops`；路径 `sqls/`/`docs/report/`/`sync-ai-rules.py` 修正或删除；4 处 `ydzs-`/`ydzz-` 前缀；"140 条"→`total_rules: 190`（实测 `- id:` 189）；§2.2 Flyway 与 §4 自相矛盾 → 按 `pom.xml:61`"禁止 Flyway/Liquibase"改正。CLAUDE.md 同批修 3 处，其中 IMPORT-004 红线原来指向不存在的 `com.njydsz.common.json.JsonUtils`。另把 23 份 pom 写反的棘轮口径"只可下调不可上调"改为"只可上调不可下调"，`mvn -o -q validate` exit 0）。**遗留**：`shared-rules.yaml` 自身计数不自洽（190/177/155/189）→ 需规则维护者定口径 |
 | 网关内部头签名**下游从不验签**：仅网关生成签名，无服务设置 `ydsz.security.internal-sign.secret`，`InternalSignatureProperties.isEnabled` 默认 false | 新发现 → 归入 B1-11 |
 | `docs/nacos-config/ydsz-gateway.yml` 与 `application.yml` 的 include 曾不同（cache-metrics 有无） | 已随 B0-2 统一 |
@@ -938,9 +1017,9 @@ node ./bash/check-app-typecheck.mts                  # 14 目标合计 7425 条�
 
 ---
 
-*本报告基于 2026-10-25 两个仓库的工作树快照，§十一 随实施滚动更新到 2026-10-27；所有 ✅ 结论均可按所列 `文件:行号` 直接复核，◇ 结论口径见证据列。当前 `mvn -o -T 1C compile` 为 BUILD SUCCESS（✅，2026-10-27 复跑，Wall Clock 00:50），全仓 `mvn -o -T 1C verify` 亦为 BUILD SUCCESS（900 例 0 失败 0 错误，07:53）。*
+*本报告基于 2026-10-25 两个仓库的工作树快照，§十一 随实施滚动更新到 2026-10-27；所有 ✅ 结论均可按所列 `文件:行号` 直接复核，◇ 结论口径见证据列。当前 `mvn -o -T 1C compile` 为 BUILD SUCCESS（✅，2026-10-27 复跑，Wall Clock 00:50），全仓 `mvn -o -T 1C verify` 亦为 BUILD SUCCESS（**940 例 0 失败 0 错误**，30 个模块汇总，jacoco 违规 0，07:41；较上一轮 900 例多出的 40 例即本轮新增的契约/模板/登记/脱敏/信封测试）。*
 
 *提交状态（2026-10-27 更新）：上一段工作已由使用方提交并推送为 `8940c2dde1`（`fix(file,json,thread): 文件名净化越界 + JSON 缓冲区跨请求串扰 + PageResponse 参数顺序`，24 文件 +1877/−119），`origin/dev` 与 HEAD 同点（`git rev-list --left-right --count` = `0 0`）；该提交同时带上了 `data/checkstyle-baseline.json`（4134 → 4132）与三个新测试根，两个"必须同提交"的约束均已满足，`VariableControllerSmokeTest` 的 `absentProvider()` 也已入库 —— dev 尖端的 `ydsz-system-web` 测试编译**已恢复**。*
 
-*当前工作树（B1-4 / B1-5 / B1-6 / B1-9，均未提交）：后端 —— `AGENTS.md`、`CLAUDE.md`、`.gitignore`、本报告、26 份 pom、`BaseContractTest.java`（重写）、契约 DSL 迁移（server → web，SSE 契约删除）、`effective-excel-pom.xml` 删除、6 个生成器模板重写 + 新增 `controllerMockTest.vm`、`TemplateDataInitializer`（逐文件补齐）、新增 2 个测试类；前端（`ydsz-micro`）—— `bash/check-app-typecheck.mts`、`conf/typecheck-baseline.json`、`package.json`（type-check 重接线 + 4 个脚本）、`apps/generator-web` 两个 tsconfig、3 个 `comm` 包的 `workspace:*` 依赖、`pnpm-lock.yaml`。另有一个 `start-all-services.ps1` 未跟踪文件**不是本次任务产物，未动**。提交前复跑（`--base HEAD`）：C1 exit 0（4 个 .java 文件，棘轮 4132 → **4131** 已随修复下调）、C2 exit 0（`TemplateDataInitializer` 新增可执行 10 行 **100%** 覆盖）、C1/C2 自检 20/20 与 23/23、`check-file-encoding.py` exit 0；前端 `check-app-typecheck` 自检 8/8 + 全量 7425 条未上涨。*
+*当前工作树（B1-4 / B1-5 / B1-6 / B1-9 / B1-12 门禁 / B1-1 文档轨 / B1-3 common-util 轨，均未提交）：后端 —— `AGENTS.md`、`CLAUDE.md`、`.gitignore`、本报告、`.github/workflows/ci.yml`（新增 Step 3b 错误码门禁）、27 份 pom、`data/error-code-baseline.json`、`data/scripts/check-error-code-unique.py`、`data/sqls/flyway/README.md`（纠真）、`BaseContractTest.java`（重写）、契约 DSL 迁移（server → web，SSE 契约删除）、`effective-excel-pom.xml` 删除、6 个生成器模板重写 + 新增 `controllerMockTest.vm`、`TemplateDataInitializer`（逐文件补齐）、`MaskUtils`（凭据脱敏修复）+ 新增 `MaskUtilsTest`、`PageResponseTest`（信封字段落位），新增 5 个测试类，`ydsz-common-core` / `ydsz-common-util` / `ydsz-generator-infra` / `ydsz-common-redis` 四个零测试模块补上测试与棘轮；前端（`ydsz-micro`）—— `bash/check-app-typecheck.mts`、`conf/typecheck-baseline.json`、`package.json`（type-check 重接线 + 4 个脚本）、`apps/generator-web` 两个 tsconfig、3 个 `comm` 包的 `workspace:*` 依赖、`pnpm-lock.yaml`。另有一个 `start-all-services.ps1` 未跟踪文件**不是本次任务产物，未动**。提交前复跑（`--base HEAD`）：C1 exit 0（棘轮 4132 → **4131** 已随修复下调，改动文件 0 违规）、C2 exit 0（`TemplateDataInitializer` 新增可执行 10 行、`MaskUtils` 13 行均 **100%** 覆盖）、C1/C2 自检 20/20 与 23/23、`check-error-code-unique.py` 自检 10/10 + 16 条存量冲突未增加、`check-file-encoding.py` exit 0；前端 `check-app-typecheck` 自检 8/8 + 全量 7425 条未上涨。*
 

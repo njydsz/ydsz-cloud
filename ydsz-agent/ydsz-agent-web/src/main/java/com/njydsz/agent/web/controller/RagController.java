@@ -33,6 +33,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import io.swagger.v3.oas.annotations.Operation;
@@ -99,6 +100,9 @@ public class RagController {
    */
   private final HybridSearchService hybridSearchService;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * 手写构造器（替代 @RequiredArgsConstructor），将 HybridSearchService 改为 ObjectProvider 注入 + null 保护，
    * 避免因缺少 HybridSearchService Bean 导致启动失败。
@@ -106,14 +110,17 @@ public class RagController {
    * @param ragService RAG 检索服务
    * @param ingestionService 文档摄入服务
    * @param hybridSearchServiceProvider 混合搜索服务（可选，Bean 不存在时为 null）
+   * @param i18nMessages 国际化消息工具
    */
   public RagController(
       RagService ragService,
       DocumentIngestionService ingestionService,
-      ObjectProvider<HybridSearchService> hybridSearchServiceProvider) {
+      ObjectProvider<HybridSearchService> hybridSearchServiceProvider,
+      I18nMessages i18nMessages) {
     this.ragService = ragService;
     this.ingestionService = ingestionService;
     this.hybridSearchService = hybridSearchServiceProvider.getIfAvailable();
+    this.i18nMessages = i18nMessages;
   }
 
   /**
@@ -369,7 +376,7 @@ public class RagController {
       @Valid @RequestBody HybridSearchDTO request) {
     // null 保护：HybridSearchService Bean 不存在时降级返回 503
     if (hybridSearchService == null) {
-      return YdszResponse.error("混合搜索服务未启用");
+      return YdszResponse.error(i18nMessages.resolve("agent.hybrid.search.disabled"));
     }
     int topK = request.getTopK() != null ? request.getTopK() : DEFAULT_TOP_K;
     List<HybridSearchService.HybridChunk> results =

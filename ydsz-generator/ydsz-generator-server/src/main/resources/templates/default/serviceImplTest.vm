@@ -1,0 +1,97 @@
+#parse("velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+package ${package}.server.service.impl;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.exception.custom.BusinessException;
+import ${package}.domain.entity.${entityName};
+import ${package}.domain.query.${entityName}Query;
+import ${package}.infra.mapper.${entityName}Mapper;
+
+/**
+ * ${table.comment} ServiceImpl 单元测试。
+ *
+ * <p>由生成器自带，每个 CRUD 模块的 ServiceImpl 从第一天就有：
+ * <ul>
+ *   <li>正例：page 返回正确分页结构 + 空列表兜底</li>
+ *   <li>正例：create 调用 save 并返回实体</li>
+ *   <li>反例：更新不存在实体抛业务异常</li>
+ * </ul>
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("${entityName}ServiceImpl 单元测试")
+class ${entityName}ServiceImplTest {
+
+  @Mock
+  private ${entityName}Mapper ${lowerName}Mapper;
+
+  @InjectMocks
+  private ${entityName}ServiceImpl ${lowerName}ServiceImpl;
+
+  private ${entityName} sampleEntity;
+
+  @BeforeEach
+  void setUp() {
+    sampleEntity = new ${entityName}();
+    sampleEntity.setId("test-id-001");
+  }
+
+  @Test
+  @DisplayName("page: 返回分页结构 + 空列表兜底")
+  void should_return_page_with_empty_list_when_no_data() {
+    ${entityName}Query query = new ${entityName}Query();
+    query.setPageNum(1);
+    query.setPageSize(10);
+
+    PageResponse<${entityName}> result = ${lowerName}ServiceImpl.page(query);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getCode()).isEqualTo(200);
+    assertThat(result.getData()).isNotNull();
+  }
+
+  @Test
+  @DisplayName("create: 调用 save 并返回非空实体")
+  void should_save_and_return_entity() {
+    when(${lowerName}Mapper.insert(any(${entityName}.class))).thenReturn(1);
+
+    ${entityName} result = ${lowerName}ServiceImpl.create(sampleEntity);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getId()).isEqualTo("test-id-001");
+    verify(${lowerName}Mapper).insert(any(${entityName}.class));
+  }
+
+  @Test
+  @DisplayName("update: ID 为空时应抛业务异常，不执行 updateById")
+  void should_throw_when_id_is_null() {
+    sampleEntity.setId(null);
+
+    assertThatThrownBy(() -> ${lowerName}ServiceImpl.update(sampleEntity))
+        .isInstanceOf(BusinessException.class);
+
+    verify(${lowerName}Mapper, never()).updateById(any(${entityName}.class));
+  }
+}

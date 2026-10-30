@@ -71,7 +71,7 @@ public class MultiSheetFastWriter {
    */
   public void finish() throws IOException {
     if (sheets.isEmpty()) {
-      throw new IllegalStateException("至少需要添加一个 Sheet");
+      throw new IllegalStateException("At least one sheet must be added");
     }
     writeAllSheets();
   }

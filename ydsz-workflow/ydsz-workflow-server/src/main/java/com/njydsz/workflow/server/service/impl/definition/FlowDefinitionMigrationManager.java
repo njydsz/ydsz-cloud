@@ -641,8 +641,8 @@ public class FlowDefinitionMigrationManager {
       try {
         Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
         sourceRef = MapUtils.getString(extJson, "sourceRef");
-      } catch (Exception ignored) {
-        // ignore parse error
+      } catch (Exception e) {
+        log.warn("解析连线ext JSON失败，回退使用skipId作为连线键，skipId={}", skip.getId(), e);
       }
     }
     if (sourceRef != null && skip.getNextNodeCode() != null) {
@@ -658,8 +658,8 @@ public class FlowDefinitionMigrationManager {
       try {
         Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
         sourceRef = MapUtils.getString(extJson, "sourceRef");
-      } catch (Exception ignored) {
-        // ignore
+      } catch (Exception e) {
+        log.warn("解析连线ext JSON失败，sourceRef置为空，skipId={}", skip.getId(), e);
       }
     }
     Map<String, Object> map = new LinkedHashMap<>(COLLECTION_CAPACITY);

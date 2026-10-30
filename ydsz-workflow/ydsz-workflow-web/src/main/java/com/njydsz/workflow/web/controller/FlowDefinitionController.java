@@ -160,13 +160,13 @@ public class FlowDefinitionController {
   public YdszResponse<FlowBatchDeployResultVO> batchDeployFromZip(
       @RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "zip 文件不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "ZIP file must not be empty");
     }
     try {
       FlowBatchDeployResultVO result = definitionService.batchDeployFromZip(file.getBytes(), null);
       return YdszResponse.success(result);
     } catch (IOException e) {
-      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "读取 zip 文件失败: " + e.getMessage());
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "Failed to read ZIP file: " + e.getMessage());
     }
   }
 
@@ -668,7 +668,7 @@ public class FlowDefinitionController {
   public YdszResponse<Boolean> slaProcess(@PathVariable String taskId) {
     Boolean ok = taskService.slaProcessByTaskId(taskId);
     if (ok == null) {
-      return YdszResponse.error(YdszResultCode.NOT_FOUND, "任务不存在: " + taskId);
+      return YdszResponse.error(YdszResultCode.NOT_FOUND, "Task not found: " + taskId);
     }
     return YdszResponse.success(ok);
   }

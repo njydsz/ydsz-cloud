@@ -38,7 +38,8 @@ public class GenHistory extends MpBaseEntity<String> {
   /** 生成文件总数。 */
   private Integer fileCount;
   /** 任务执行状态码（RUNNING/SUCCESS/PARTIAL/FAILED）。 */
-  private String status;
+  @TableField("status")
+  private String taskStatus;
   /** 触发人。 */
   private String triggeredBy;
   /** 开始时间。 */

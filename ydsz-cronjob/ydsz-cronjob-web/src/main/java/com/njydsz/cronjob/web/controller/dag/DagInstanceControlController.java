@@ -17,6 +17,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
@@ -85,6 +86,9 @@ public class DagInstanceControlController {
   /** DAG 实例控制服务（暂停/恢复/取消/重试） */
   private final DagInstanceControlService dagInstanceControlService;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * 暂停 DAG 实例。
    *
@@ -110,7 +114,8 @@ public class DagInstanceControlController {
     return success
         ? YdszResponse.success(true)
         : YdszResponse.error(
-            CronjobExceptionCode.DAG_INSTANCE_NOT_FOUND, "暂停失败：实例不存在或非 RUNNING 状态");
+            CronjobExceptionCode.DAG_INSTANCE_NOT_FOUND,
+            i18nMessages.resolve("cronjob.dag.pause.failed"));
   }
 
   /**
@@ -136,7 +141,8 @@ public class DagInstanceControlController {
     boolean success = dagInstanceControlService.resume(instanceId);
     return success
         ? YdszResponse.success(true)
-        : YdszResponse.error(CronjobExceptionCode.DAG_INSTANCE_NOT_FOUND, "恢复失败：实例不存在或非 PAUSED 状态");
+        : YdszResponse.error(CronjobExceptionCode.DAG_INSTANCE_NOT_FOUND,
+            i18nMessages.resolve("cronjob.dag.resume.failed"));
   }
 
   /**
@@ -163,7 +169,8 @@ public class DagInstanceControlController {
     boolean success = dagInstanceControlService.cancel(instanceId);
     return success
         ? YdszResponse.success(true)
-        : YdszResponse.error(CronjobExceptionCode.DAG_INSTANCE_NOT_FOUND, "取消失败：实例不存在或已终态");
+        : YdszResponse.error(CronjobExceptionCode.DAG_INSTANCE_NOT_FOUND,
+            i18nMessages.resolve("cronjob.dag.cancel.failed"));
   }
 
   /**
@@ -192,6 +199,7 @@ public class DagInstanceControlController {
     boolean success = dagInstanceControlService.retryNode(instanceId, jobKey);
     return success
         ? YdszResponse.success(true)
-        : YdszResponse.error(CronjobExceptionCode.DAG_NODE_NOT_FOUND, "重试失败：节点不存在或非 FAILED 状态");
+        : YdszResponse.error(CronjobExceptionCode.DAG_NODE_NOT_FOUND,
+            i18nMessages.resolve("cronjob.dag.retry.failed"));
   }
 }

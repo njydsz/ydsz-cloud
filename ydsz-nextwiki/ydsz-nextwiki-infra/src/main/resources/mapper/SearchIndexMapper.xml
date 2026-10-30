@@ -57,9 +57,18 @@
         LIMIT 1000
     </select>
 
-    <!-- 数据库分页搜索索引（支持 name/path/content/tags 多维度 LIKE 搜索） -->
+    <!--
+         数据库分页搜索（优化版）：
+         1. 移除 content 列（列表展示无需全文，按需通过 selectByFileNodeId 获取）
+         2. 内容范围改用 pg_trgm 相似度：content % keyword（走 idx_search_content_trgm GIN 索引）
+         3. 排序改为 similarity 优先 + updated_at 兜底
+    -->
     <select id="searchPage" resultMap="SearchIndexResult">
-        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_file_search_index
+        SELECT id, file_node_id, name, path,
+               LEFT(content, 200) AS content,
+               suffix, mime_type, size, tags,
+               created_by, created_at, updated_at, revision, is_deleted
+        FROM ydsz_file_search_index
         WHERE is_deleted = 0
         AND created_by = #{createdBy}
         <choose>
@@ -68,7 +77,7 @@
                      OR path ILIKE CONCAT('%', #{keyword}, '%'))
             </when>
             <when test="scope == 'content'">
-                AND content ILIKE CONCAT('%', #{keyword}, '%')
+                AND content % #{keyword}
             </when>
             <when test="scope == 'tag'">
                 AND tags ILIKE CONCAT('%', #{keyword}, '%')
@@ -76,16 +85,17 @@
             <otherwise>
                 AND (name ILIKE CONCAT('%', #{keyword}, '%')
                      OR path ILIKE CONCAT('%', #{keyword}, '%')
-                     OR content ILIKE CONCAT('%', #{keyword}, '%')
+                     OR content % #{keyword}
                      OR tags ILIKE CONCAT('%', #{keyword}, '%'))
             </otherwise>
         </choose>
         ORDER BY
+            similarity(name, #{keyword}) DESC,
             CASE WHEN name ILIKE CONCAT('%', #{keyword}, '%') THEN 0 ELSE 1 END,
             updated_at DESC
     </select>
 
-    <!-- 统计搜索结果总数 -->
+    <!-- 统计搜索结果总数（与 searchPage 过滤条件保持同步，使用 pg_trgm 相似度） -->
     <select id="countSearchResults" resultType="long">
         SELECT COUNT(*) FROM ydsz_file_search_index
         WHERE is_deleted = 0
@@ -96,7 +106,7 @@
                      OR path ILIKE CONCAT('%', #{keyword}, '%'))
             </when>
             <when test="scope == 'content'">
-                AND content ILIKE CONCAT('%', #{keyword}, '%')
+                AND content % #{keyword}
             </when>
             <when test="scope == 'tag'">
                 AND tags ILIKE CONCAT('%', #{keyword}, '%')
@@ -104,7 +114,7 @@
             <otherwise>
                 AND (name ILIKE CONCAT('%', #{keyword}, '%')
                      OR path ILIKE CONCAT('%', #{keyword}, '%')
-                     OR content ILIKE CONCAT('%', #{keyword}, '%')
+                     OR content % #{keyword}
                      OR tags ILIKE CONCAT('%', #{keyword}, '%'))
             </otherwise>
         </choose>

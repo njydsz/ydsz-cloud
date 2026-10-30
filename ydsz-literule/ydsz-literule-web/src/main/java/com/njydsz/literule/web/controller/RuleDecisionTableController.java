@@ -183,7 +183,7 @@ public class RuleDecisionTableController {
       @PathVariable String tableCode, @RequestBody Map<String, Object> facts) {
     DecisionTableEvalProvider provider = decisionTableEvalProvider.getIfAvailable();
     if (provider == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "决策表评估服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "Decision table evaluation service is not enabled");
     }
     return YdszResponse.success(provider.evaluate(tableCode, facts));
   }
@@ -238,10 +238,10 @@ public class RuleDecisionTableController {
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
     if (svc == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "决策表管理服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "Decision table management service is not enabled");
     }
     if (file == null || file.isEmpty()) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "上传文件不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "Upload file must not be empty");
     }
     try {
       byte[] bytes = file.getBytes();

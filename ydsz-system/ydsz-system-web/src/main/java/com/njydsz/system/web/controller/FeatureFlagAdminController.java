@@ -30,6 +30,7 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.id.IdGenerator;
@@ -72,6 +73,14 @@ public class FeatureFlagAdminController {
   /** 日期时间格式 */
   /** 日期格式（与 DateTimeFormatter.ISO_LOCAL_DATE_TIME 等价） */
   private static final String DATE_FMT = "yyyy-MM-dd'T'HH:mm:ss";
+
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
+  /** 构造器注入 I18nMessages */
+  public FeatureFlagAdminController(I18nMessages i18nMessages) {
+    this.i18nMessages = i18nMessages;
+  }
 
   /**
    * 分页查询特性开关列表。
@@ -123,7 +132,7 @@ public class FeatureFlagAdminController {
     boolean exists = STORE.values().stream()
         .anyMatch(vo -> vo.getFlagKey().equals(dto.getFlagKey()));
     if (exists) {
-      return YdszResponse.error("B90001", "开关键已存在: " + dto.getFlagKey());
+      return YdszResponse.error("B90001", i18nMessages.resolve("system.featureflag.key.exists", new Object[] {dto.getFlagKey()}));
     }
 
     String id = IdGenerator.nextIdStr();
@@ -161,16 +170,16 @@ public class FeatureFlagAdminController {
   @PutMapping
   public YdszResponse<Boolean> update(@Valid @RequestBody FeatureFlagDTO dto) {
     if (dto.getId() == null || dto.getId().isBlank()) {
-      return YdszResponse.error("B90001", "更新时 id 不能为空");
+      return YdszResponse.error("B90001", i18nMessages.resolve("system.featureflag.update.id.required"));
     }
     FeatureFlagVO vo = STORE.get(dto.getId());
     if (vo == null) {
-      return YdszResponse.error("B90001", "特性开关不存在: " + dto.getId());
+      return YdszResponse.error("B90001", i18nMessages.resolve("system.featureflag.not.found", new Object[] {dto.getId()}));
     }
     // 校验 key 唯一性（排除自身）
     boolean keyChanged = !vo.getFlagKey().equals(dto.getFlagKey());
     if (keyChanged && STORE.values().stream().anyMatch(v -> v.getFlagKey().equals(dto.getFlagKey()))) {
-      return YdszResponse.error("B90001", "开关键已存在: " + dto.getFlagKey());
+      return YdszResponse.error("B90001", i18nMessages.resolve("system.featureflag.key.exists", new Object[] {dto.getFlagKey()}));
     }
     vo.setFlagKey(dto.getFlagKey());
     vo.setFlagName(dto.getFlagName());
@@ -202,7 +211,7 @@ public class FeatureFlagAdminController {
   public YdszResponse<Boolean> delete(@PathVariable String id) {
     FeatureFlagVO removed = STORE.remove(id);
     if (removed == null) {
-      return YdszResponse.error("B90001", "特性开关不存在: " + id);
+      return YdszResponse.error("B90001", i18nMessages.resolve("system.featureflag.not.found", new Object[] {id}));
     }
     log.info("[FeatureFlagAdmin] deleted: key={}, id={}", removed.getFlagKey(), id);
     return YdszResponse.success(Boolean.TRUE);

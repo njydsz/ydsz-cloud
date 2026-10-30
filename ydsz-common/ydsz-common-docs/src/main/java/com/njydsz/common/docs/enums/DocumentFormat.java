@@ -104,7 +104,7 @@ public enum DocumentFormat {
         }
       }
     } catch (Exception ignored) {
-      // Tika 检测失败时回退到扩展名
+      // 确认忽略：Tika 检测失败时回退到扩展名推断
     }
     return UNKNOWN;
   }

@@ -2,6 +2,7 @@ package com.njydsz.nextwiki.infra.mapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -262,6 +263,23 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
   @Select(
       "SELECT COALESCE(SUM(size), 0) FROM ydsz_file_file_node WHERE created_by = #{userId} AND is_deleted = 0 AND node_type = 'file'")
   Long sumSizeByUser(@Param("userId") String userId);
+
+  /**
+   * 单次查询聚合用户文件/文件夹数量 + 文件大小总和。
+   *
+   * <p>替代 countByUser / sumSizeByUser / countFoldersByUser 三次独立查询，
+   * 走 idx_filenode_overview_agg 复合索引，避免多次全表过滤。
+   *
+   * @param userId 用户 ID
+   * @return Map with keys: fileCount, totalSize, folderCount (all Long)
+   */
+  @Select(
+      "SELECT COUNT(*) FILTER (WHERE node_type = 'file') AS fileCount, "
+          + "COALESCE(SUM(size) FILTER (WHERE node_type = 'file'), 0) AS totalSize, "
+          + "COUNT(*) FILTER (WHERE node_type = 'folder') AS folderCount "
+          + "FROM ydsz_file_file_node "
+          + "WHERE created_by = #{userId} AND is_deleted = 0")
+  Map<String, Object> aggregateOverview(@Param("userId") String userId);
 
   /**
    * 查询用户大文件 Top-N。

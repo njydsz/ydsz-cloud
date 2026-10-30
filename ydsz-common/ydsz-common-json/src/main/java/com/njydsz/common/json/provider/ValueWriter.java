@@ -1098,7 +1098,8 @@ public final class ValueWriter {
                 .format(formatter);
           }
         } catch (Exception e) {
-          // 格式化失败，回退到 toString
+          // LOG-001 修复: 格式化失败，回退到 toString
+          LOGGER.debug("Failed to format date value, falling back to toString: {}", e.getMessage());
         }
       }
     }

@@ -2,7 +2,11 @@ package com.njydsz.common.excel.support.mh;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.RecordComponent;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -78,10 +82,10 @@ public class MHFieldAccessor {
    * 具有更高的 JIT 内联概率（VarHandle.set 为 intrinsic），读取路径使用 VarHandle 替代
    * MethodHandle 可获得 20~40% 的字段赋值性能提升。
    */
-  private static final ClassValue<Map<String, java.lang.invoke.VarHandle>> VH_SETTER_CACHE =
+  private static final ClassValue<Map<String, VarHandle>> VH_SETTER_CACHE =
       new ClassValue<>() {
         @Override
-        protected Map<String, java.lang.invoke.VarHandle> computeValue(Class<?> type) {
+        protected Map<String, VarHandle> computeValue(Class<?> type) {
           return new ConcurrentHashMap<>(16);
         }
       };
@@ -95,10 +99,10 @@ public class MHFieldAccessor {
    * @param field 字段
    * @return VarHandle setter（非 null）
    */
-  public static java.lang.invoke.VarHandle getVarHandleSetter(Class<?> clazz, Field field) {
-    Map<String, java.lang.invoke.VarHandle> classMap = VH_SETTER_CACHE.get(clazz);
+  public static VarHandle getVarHandleSetter(Class<?> clazz, Field field) {
+    Map<String, VarHandle> classMap = VH_SETTER_CACHE.get(clazz);
     String key = field.getName() + ":" + field.getType().getName();
-    java.lang.invoke.VarHandle vh = classMap.get(key);
+    VarHandle vh = classMap.get(key);
     if (vh == null) {
       try {
         vh = MethodHandles.privateLookupIn(clazz, MethodHandles.lookup())
@@ -270,10 +274,10 @@ public class MHFieldAccessor {
     if (clazz.isRecord()) {
       try {
         Class<?>[] paramTypes =
-            java.util.Arrays.stream(clazz.getRecordComponents())
-                .map(java.lang.reflect.RecordComponent::getType)
+            Arrays.stream(clazz.getRecordComponents())
+                .map(RecordComponent::getType)
                 .toArray(Class<?>[]::new);
-        java.lang.reflect.Constructor<?> canonicalCtor = clazz.getDeclaredConstructor(paramTypes);
+        Constructor<?> canonicalCtor = clazz.getDeclaredConstructor(paramTypes);
         canonicalCtor.setAccessible(true);
         return () -> {
           try {

@@ -1,5 +1,7 @@
 package com.njydsz.common.netty.session;
 
+import com.njydsz.common.exception.custom.InfraException;
+
 /**
  * Netty 操作异常（unchecked）。
  *
@@ -8,7 +10,7 @@ package com.njydsz.common.netty.session;
  * @author ydsz-team
  * @since 26.10.03
  */
-public class NettyOperationException extends RuntimeException {
+public class NettyOperationException extends InfraException {
 
   /** 序列化版本号。 */
   private static final long serialVersionUID = 1L;

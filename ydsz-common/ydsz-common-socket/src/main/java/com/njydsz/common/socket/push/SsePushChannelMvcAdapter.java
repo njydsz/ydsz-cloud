@@ -111,8 +111,8 @@ public class SsePushChannelMvcAdapter implements SsePushChannel {
       stopHeartbeat();
       try {
         emitter.complete();
-      } catch (IllegalStateException e) {
-        // 已完成或被客户端关闭，静默忽略
+      } catch (IllegalStateException ignored) {
+        // 确认忽略：SseEmitter 已完成或被客户端关闭，无需重复完成
       }
     }
   }
@@ -123,8 +123,8 @@ public class SsePushChannelMvcAdapter implements SsePushChannel {
       stopHeartbeat();
       try {
         emitter.completeWithError(error);
-      } catch (IllegalStateException e) {
-        // 已完成或被客户端关闭，静默忽略
+      } catch (IllegalStateException ignored) {
+        // 确认忽略：SseEmitter 已完成或被客户端关闭，无需重复完成
       }
     }
   }

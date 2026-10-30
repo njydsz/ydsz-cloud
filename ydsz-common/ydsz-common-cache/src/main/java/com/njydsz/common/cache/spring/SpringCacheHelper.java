@@ -52,8 +52,8 @@ final class SpringCacheHelper {
       if (cache != null) {
         cache.put(key, value);
       }
-    } catch (Exception e) {
-      // 写入异常由调用方记录
+    } catch (Exception ignored) {
+      // 确认忽略：Spring Cache 底层实现不可用时静默降级，避免缓存写入失败阻断主流程
     }
   }
 

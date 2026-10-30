@@ -2,11 +2,13 @@ package com.njydsz.generator.api.fallback;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.generator.api.GeneratorFeignClient;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;
@@ -28,7 +30,11 @@ import com.njydsz.generator.vo.CodePreviewVO;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class GeneratorClientFallbackFactory implements FallbackFactory<GeneratorFeignClient> {
+
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
 
   /** {@inheritDoc} */
   @Override
@@ -39,74 +45,74 @@ public class GeneratorClientFallbackFactory implements FallbackFactory<Generator
       /** {@inheritDoc} */
       @Override
       public YdszResponse<List<GenDatasource>> listDatasources() {
-        return YdszResponse.error("代码生成服务暂不可用");
+        return YdszResponse.error(i18nMessages.resolve("generator.service.unavailable"));
       }
 
       /** {@inheritDoc} */
       @Override
       public YdszResponse<GenDatasource> getDefaultDatasource() {
-        return YdszResponse.error("代码生成服务暂不可用");
+        return YdszResponse.error(i18nMessages.resolve("generator.service.unavailable"));
       }
 
       /** {@inheritDoc} */
       @Override
       public YdszResponse<Boolean> testDatasource(GenDatasource datasource) {
-        return YdszResponse.error("代码生成服务暂不可用");
+        return YdszResponse.error(i18nMessages.resolve("generator.service.unavailable"));
       }
 
       /** {@inheritDoc} */
       @Override
       public YdszResponse<List<GenTemplateGroup>> listGroups() {
-        return YdszResponse.error("代码生成服务暂不可用");
+        return YdszResponse.error(i18nMessages.resolve("generator.service.unavailable"));
       }
 
       /** {@inheritDoc} */
       @Override
       public YdszResponse<Void> activateGroup(String groupId) {
-        return YdszResponse.error("代码生成服务暂不可用");
+        return YdszResponse.error(i18nMessages.resolve("generator.service.unavailable"));
       }
 
       /** {@inheritDoc} */
       @Override
       public YdszResponse<List<GenTableMeta>> listTables(String datasourceId) {
-        return YdszResponse.error("代码生成服务暂不可用");
+        return YdszResponse.error(i18nMessages.resolve("generator.service.unavailable"));
       }
 
       /** {@inheritDoc} */
       @Override
       public YdszResponse<List<GenTableMeta>> refreshTables(String datasourceId) {
-        return YdszResponse.error("代码生成服务暂不可用");
+        return YdszResponse.error(i18nMessages.resolve("generator.service.unavailable"));
       }
 
       /** {@inheritDoc} */
       @Override
       public YdszResponse<List<GenColumnMeta>> getColumns(String tableMetaId) {
-        return YdszResponse.error("代码生成服务暂不可用");
+        return YdszResponse.error(i18nMessages.resolve("generator.service.unavailable"));
       }
 
       /** {@inheritDoc} */
       @Override
       public YdszResponse<List<CodePreviewVO>> preview(
           String datasourceId, String templateGroupId, String tableName) {
-        return YdszResponse.error("代码生成服务暂不可用");
+        return YdszResponse.error(i18nMessages.resolve("generator.service.unavailable"));
       }
 
       /** {@inheritDoc} */
       @Override
       public YdszResponse<String> generate(GenCodeGenerateQuery query) {
-        return YdszResponse.error("代码生成服务暂不可用");
+        return YdszResponse.error(i18nMessages.resolve("generator.service.unavailable"));
       }
 
       /** {@inheritDoc} */
       @Override
       public YdszResponse<List<GenHistory>> listHistory(int limit) {
-        return YdszResponse.error("代码生成服务暂不可用");
+        return YdszResponse.error(i18nMessages.resolve("generator.service.unavailable"));
       }
 
       /** {@inheritDoc} */
       @Override
       public YdszResponse<Void> rollback(String historyId) {
-        return YdszResponse.error("代码生成服务暂不可用");
+        return YdszResponse.error(i18nMessages.resolve("generator.service.unavailable"));
       }
     };
   }

@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.parser.JsonParserUtil;
 
@@ -36,6 +39,8 @@ import com.njydsz.common.json.parser.JsonParserUtil;
  * @since 26.10.01
  */
 public final class JSONReader {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(JSONReader.class);
 
   /** 默认最大 JSON 深度 */
   public static final int DEFAULT_MAX_DEPTH = 256;
@@ -1015,8 +1020,11 @@ public final class JSONReader {
                   pos += 6;
                   break;
                 }
-              } catch (NumberFormatException ignored) {
-                // 不是有效代理对，按单字符处理
+              } catch (NumberFormatException e) {
+                // LOG-001 修复: 不是有效代理对，按单字符处理
+                LOGGER.debug(
+                    "Not a valid surrogate pair at position {}, treating as single char",
+                    pos);
               }
             }
             sb.append(unicode);

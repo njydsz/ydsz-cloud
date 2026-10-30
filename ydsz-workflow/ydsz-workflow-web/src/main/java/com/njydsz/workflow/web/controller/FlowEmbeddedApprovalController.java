@@ -109,7 +109,7 @@ public class FlowEmbeddedApprovalController {
       }
     }
     if (uid == null) {
-      return YdszResponse.error(YdszResultCode.UNAUTHORIZED, "未登录");
+      return YdszResponse.error(YdszResultCode.UNAUTHORIZED, "Not logged in");
     }
     return YdszResponse.success(embeddedApprovalService.loadPanel(businessType, businessId, uid));
   }

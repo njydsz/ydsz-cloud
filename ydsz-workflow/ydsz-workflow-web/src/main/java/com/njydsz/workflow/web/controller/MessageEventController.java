@@ -54,7 +54,7 @@ public class MessageEventController {
         ? new HashMap<>(request.getCorrelationKeys()) : null;
     int count = messageEventService.publishMessageEvent(
         request.getMessageName(), keys);
-    return YdszResponse.success("唤醒了 " + count + " 个等待节点");
+        return YdszResponse.success("Woke up " + count + " waiting node(s)");
   }
 
   /**

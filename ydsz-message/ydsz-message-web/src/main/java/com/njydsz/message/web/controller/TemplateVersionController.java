@@ -148,7 +148,7 @@ public class TemplateVersionController {
   @PostMapping("/preview")
   public YdszResponse<String> preview(@Valid @RequestBody TemplatePreviewDTO dto) {
     if (dto == null) {
-      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "预览参数为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "Preview params is null");
     }
     return YdszResponse.success(templateVersionService.preview(dto));
   }
@@ -174,7 +174,7 @@ public class TemplateVersionController {
   @PostMapping("/testSend")
   public YdszResponse<MessageSendResultVO> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {
     if (dto == null) {
-      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "试发参数为空");
+      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "Test send params is null");
     }
     return YdszResponse.success(templateVersionService.testSend(dto));
   }

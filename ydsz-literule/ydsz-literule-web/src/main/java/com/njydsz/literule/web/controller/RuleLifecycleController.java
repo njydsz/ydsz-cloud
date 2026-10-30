@@ -112,18 +112,18 @@ public class RuleLifecycleController {
     String comment = dto.getComment() == null ? "" : dto.getComment();
     RuleDefinitionDTO def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
-      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "Rule not found: " + ruleCode);
     }
 
     RuleStatus current = parseStatusSafely(def.getStatus());
     if (current == null) {
       return YdszResponse.error(
-          LiteruleExceptionCode.RULE_STATUS_INVALID, "规则当前状态非法: " + def.getStatus());
+          LiteruleExceptionCode.RULE_STATUS_INVALID, "Current rule status is invalid: " + def.getStatus());
     }
     RuleStatus target = parseStatusSafely(targetStatus);
     if (target == null) {
       return YdszResponse.error(
-          LiteruleExceptionCode.RULE_STATUS_INVALID, "目标状态非法: " + targetStatus);
+          LiteruleExceptionCode.RULE_STATUS_INVALID, "Target status is invalid: " + targetStatus);
     }
     if (!current.canTransitionTo(target)) {
       return YdszResponse.error(
@@ -171,18 +171,18 @@ public class RuleLifecycleController {
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleDefinitionDTO def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
-      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "Rule not found: " + ruleCode);
     }
 
     RuleStatus current = parseStatusSafely(def.getStatus());
     if (current == null) {
       return YdszResponse.error(
-          LiteruleExceptionCode.RULE_STATUS_INVALID, "规则状态非法: " + def.getStatus());
+          LiteruleExceptionCode.RULE_STATUS_INVALID, "Rule status is invalid: " + def.getStatus());
     }
     if (!current.canTransitionTo(RuleStatus.PUBLISHED)) {
       return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID,
-          "当前状态 " + current.getI18nKey() + " 不允许审批通过，仅 DRAFT/REVIEW 可审批");
+          "Current status " + current.getI18nKey() + " does not allow approve, only DRAFT/REVIEW can be approved");
     }
 
     String comment = dto.getComment() == null ? "" : dto.getComment();
@@ -229,18 +229,18 @@ public class RuleLifecycleController {
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleDefinitionDTO def = ruleAdminService.getByCode(ruleCode);
     if (def == null) {
-      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
+      return YdszResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "Rule not found: " + ruleCode);
     }
 
     RuleStatus current = parseStatusSafely(def.getStatus());
     if (current == null) {
       return YdszResponse.error(
-          LiteruleExceptionCode.RULE_STATUS_INVALID, "规则状态非法: " + def.getStatus());
+          LiteruleExceptionCode.RULE_STATUS_INVALID, "Rule status is invalid: " + def.getStatus());
     }
     if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
       return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID,
-          "当前状态 " + current.getI18nKey() + " 不允许驳回，仅 DRAFT/REVIEW/PUBLISHED 可驳回");
+          "Current status " + current.getI18nKey() + " does not allow reject, only DRAFT/REVIEW/PUBLISHED can be rejected");
     }
 
     String reason = dto.getReason();
@@ -305,7 +305,7 @@ public class RuleLifecycleController {
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "多级审批流服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "Multi-level approval flow service is not enabled");
     }
     String flowCode = dto == null ? null : dto.getFlowCode();
     return YdszResponse.success(
@@ -338,7 +338,7 @@ public class RuleLifecycleController {
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "多级审批流服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "Multi-level approval flow service is not enabled");
     }
     String comment = dto.getComment() == null ? "" : dto.getComment();
     return YdszResponse.success(
@@ -371,7 +371,7 @@ public class RuleLifecycleController {
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "多级审批流服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "Multi-level approval flow service is not enabled");
     }
     return YdszResponse.success(
         literuleWebConverter.entityToVO(svc.reject(ruleCode, operator, dto.getReason())));
@@ -403,7 +403,7 @@ public class RuleLifecycleController {
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "多级审批流服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "Multi-level approval flow service is not enabled");
     }
     String comment = dto.getComment() == null ? "" : dto.getComment();
     return YdszResponse.success(
@@ -471,7 +471,7 @@ public class RuleLifecycleController {
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
     if (svc == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "多级审批流服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "Multi-level approval flow service is not enabled");
     }
     return YdszResponse.success(
         literuleWebConverter.entityToVO(svc.cancelReview(ruleCode, operator)));

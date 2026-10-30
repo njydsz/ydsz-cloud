@@ -358,7 +358,7 @@ public class RulePackController {
       @RequestBody Map<String, Object> request) {
     RuleStressTestService svc = ruleStressTestServiceProvider.getIfAvailable();
     if (svc == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "规则压测服务未启用");
+      return YdszResponse.error(YdszResultCode.FORBIDDEN, "Rule stress test service is not enabled");
     }
     String ruleCode = (String) request.get("ruleCode");
     if (ruleCode != null && ruleCode.isBlank()) {
@@ -379,7 +379,7 @@ public class RulePackController {
     int iterations = toInt(request.get("iterations"), 1000);
     int warmupIterations = toInt(request.get("warmupIterations"), 100);
     if (factsList == null || factsList.isEmpty()) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "factsList 不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "factsList must not be empty");
     }
     return YdszResponse.success(
         svc.run(ruleCode, factsList, threads, iterations, warmupIterations));

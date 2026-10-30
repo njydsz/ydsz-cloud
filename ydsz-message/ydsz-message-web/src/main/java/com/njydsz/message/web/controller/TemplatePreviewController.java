@@ -19,6 +19,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
@@ -86,6 +87,9 @@ public class TemplatePreviewController {
   private final MessageTemplateRenderer templateEngine;
   private final TemplateVariableValidator variableValidator;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * 按模板编码预览已发布模板的渲染结果。
    *
@@ -99,7 +103,7 @@ public class TemplatePreviewController {
   @PostMapping("/by-code")
   public YdszResponse<Map<String, String>> previewByCode(@Valid @RequestBody PreviewRequest req) {
     if (req == null || !StringUtils.hasText(req.getTemplateCode())) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "模板编码不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, i18nMessages.resolve("message.template.code.required"));
     }
     MsgTemplateVO template =
         templateService.loadByCodeAndChannel(
@@ -109,7 +113,8 @@ public class TemplatePreviewController {
             TenantContextHolder.getTenantId());
     if (template == null) {
       return YdszResponse.error(
-          MessageExceptionCode.TEMPLATE_NOT_FOUND, "模板不存在: " + req.getTemplateCode());
+          MessageExceptionCode.TEMPLATE_NOT_FOUND,
+          i18nMessages.resolve("message.template.not.found", new Object[]{req.getTemplateCode()}));
     }
 
     Map<String, Object> params =
@@ -146,7 +151,7 @@ public class TemplatePreviewController {
   @PostMapping("/raw")
   public YdszResponse<String> previewRaw(@Valid @RequestBody RawPreviewRequest req) {
     if (req == null || !StringUtils.hasText(req.getTemplate())) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "模板内容不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, i18nMessages.resolve("message.template.content.required"));
     }
     Map<String, Object> params = req.getParams() == null ? new HashMap<>(COLLECTION_CAPACITY) : req.getParams();
     String rendered = templateEngine.render(req.getTemplate(), params);

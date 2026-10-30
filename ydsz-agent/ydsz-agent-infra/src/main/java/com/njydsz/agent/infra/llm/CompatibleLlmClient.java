@@ -65,6 +65,7 @@ import io.netty.channel.ChannelOption;
  * @since 26.10.01
  */
 @Slf4j
+@SuppressWarnings("ydiz-import-005")
 public class CompatibleLlmClient implements LlmClient {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;

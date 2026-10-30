@@ -74,7 +74,7 @@ public class RuleDebugController {
    * @return 错误响应对象
    */
   private YdszResponse<Object> debugDisabled() {
-    return YdszResponse.error("规则断点调试未启用（ydsz.literule.debug.enabled=false）");
+    return YdszResponse.error("Rule debug is not enabled (ydsz.literule.debug.enabled=false)");
   }
 
   // ==================== 断点管理 ====================
@@ -130,7 +130,7 @@ public class RuleDebugController {
     }
     String ruleCode = request.get("ruleCode");
     if (ruleCode == null || ruleCode.isBlank()) {
-      return YdszResponse.error("ruleCode 不能为空");
+      return YdszResponse.error("ruleCode must not be blank");
     }
     String nodeType = request.get("nodeType");
     String expression = request.get("expression");
@@ -189,7 +189,7 @@ public class RuleDebugController {
     }
     String ruleCode = request.get("ruleCode");
     if (ruleCode == null || ruleCode.isBlank()) {
-      return YdszResponse.error("ruleCode 不能为空");
+      return YdszResponse.error("ruleCode must not be blank");
     }
     String sessionId = debugger.createSession(ruleCode);
     Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
@@ -212,7 +212,7 @@ public class RuleDebugController {
     }
     DebugSession session = debugger.getSession(sessionId);
     if (session == null) {
-      return YdszResponse.error("会话不存在: " + sessionId);
+      return YdszResponse.error("Session not found: " + sessionId);
     }
     Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("sessionId", session.getSessionId());
@@ -248,18 +248,18 @@ public class RuleDebugController {
     }
     String commandStr = request.get("command");
     if (commandStr == null || commandStr.isBlank()) {
-      return YdszResponse.error("command 不能为空");
+      return YdszResponse.error("command must not be blank");
     }
     DebugCommand command;
     try {
       command = DebugCommand.valueOf(commandStr.toUpperCase());
     } catch (IllegalArgumentException e) {
       return YdszResponse.error(
-          "非法的调试指令: " + commandStr + "，合法值: RESUME / STEP_OVER / STEP_INTO / STEP_OUT / TERMINATE");
+          "Invalid debug command: " + commandStr + ", valid values: RESUME / STEP_OVER / STEP_INTO / STEP_OUT / TERMINATE");
     }
     boolean ok = debugger.submitCommand(sessionId, command);
     if (!ok) {
-      return YdszResponse.error("会话不存在: " + sessionId);
+      return YdszResponse.error("Session not found: " + sessionId);
     }
     return YdszResponse.success(true);
   }

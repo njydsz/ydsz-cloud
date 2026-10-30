@@ -147,9 +147,9 @@ public class RuleAuditLogController {
     } catch (IllegalArgumentException e) {
       return YdszResponse.error(
           YdszResultCode.VALIDATION_FAILED,
-          "非法的操作类型: "
+          "Invalid action type: "
               + action
-              + "，合法值: CREATE / UPDATE / DELETE / IMPORT / EXPORT / ENABLE / DISABLE / APPROVE / "
+              + ", valid values: CREATE / UPDATE / DELETE / IMPORT / EXPORT / ENABLE / DISABLE / APPROVE / "
               + "REJECT / RESET / LOCK / UNLOCK / BACKUP / RESTORE / SYNC / CLEAN / OTHER");
     }
   }
@@ -181,7 +181,7 @@ public class RuleAuditLogController {
     } catch (Exception e) {
       return YdszResponse.error(
           YdszResultCode.VALIDATION_FAILED,
-          "时间格式错误，请使用 ISO 格式（如 2026-07-01T00:00:00）: " + e.getMessage());
+          "Invalid time format, please use ISO format (e.g. 2026-07-01T00:00:00): " + e.getMessage());
     }
   }
 

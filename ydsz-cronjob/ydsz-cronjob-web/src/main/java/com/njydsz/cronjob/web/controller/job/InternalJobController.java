@@ -121,11 +121,11 @@ public class InternalJobController {
   public YdszResponse<String> execute(@Valid @RequestBody RemoteTaskRequest request) {
     if (request == null || request.getJob() == null) {
       log.warn("[InternalJob] 远程派发请求参数为空");
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "请求参数为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "Request params is null");
     }
     if (request.getJob().getJobKey() == null) {
       log.warn("[InternalJob] 远程派发请求 jobKey 为空");
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "jobKey 不能为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "jobKey must not be blank");
     }
     // P1-4: 从请求中恢复 traceId 到 MDC，保证全链路追踪
     String traceId = request.getTraceId();
@@ -191,7 +191,7 @@ public class InternalJobController {
   public YdszResponse<ProcessResult> executeSubTask(@Valid @RequestBody RemoteSubTaskRequest request) {
     if (request == null || request.getJobKey() == null || request.getHandler() == null) {
       log.warn("[InternalJob] 子任务请求参数为空");
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "请求参数为空");
+      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "Request params is null");
     }
     String traceId = request.getTraceId();
     if (traceId != null && !traceId.isBlank()) {

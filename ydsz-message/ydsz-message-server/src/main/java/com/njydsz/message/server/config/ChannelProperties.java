@@ -5,17 +5,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * 通道相关配置（prefix = {@code ydsz}）。
+ * 通道相关配置（prefix = {@code ydsz.message.channel}）。
  *
- * <p>绑定 {@code application.yml} 中 {@code ydsz.webhook.*} 与 {@code ydsz.channel.*} 配置项， 覆盖 Webhook /
- * 钉钉 / 企业微信 / 飞书群机器人的默认地址、密钥与超时。
+ * <p>绑定 {@code application.yml} 中 {@code ydsz.message.channel.webhook.*} 与
+ * {@code ydsz.message.channel.channel.*} 配置项，覆盖 Webhook / 钉钉 / 企业微信 / 飞书群机器人
+ * 的默认地址、密钥与超时。
  *
  * @author ydsz-team
  * @since 26.10.01
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "ydsz")
+@ConfigurationProperties(prefix = "ydsz.message.channel")
 public class ChannelProperties {
 
   /** 默认connectTimeout值（可被配置文件覆盖） */

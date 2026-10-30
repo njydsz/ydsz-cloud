@@ -30,11 +30,11 @@ public class DagWorkflow extends MpBaseEntity<String> {
 
   /** 工作流名称 */
   @TableField("workflow_name")
-  private String name;
+  private String workflowName;
 
   /** DAG 定义（YAML DSL） */
   @TableField("dsl_content")
-  private String dsl;
+  private String dslContent;
 
   /** 工作流描述 */
   private String description;

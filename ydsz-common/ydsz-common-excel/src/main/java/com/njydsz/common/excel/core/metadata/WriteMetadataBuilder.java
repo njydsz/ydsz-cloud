@@ -390,12 +390,12 @@ public class WriteMetadataBuilder {
         && metadata.getFilePath() == null
         && metadata.getFile() == null
         && metadata.getOutputStream() == null) {
-      throw new IllegalStateException("必须设置至少一个输出目标: clazz, filePath, file 或 outputStream");
+      throw new IllegalStateException("At least one output target must be set: clazz, filePath, file, or outputStream");
     }
 
     if (metadata.getExcludeColumnFiledNames() != null
         && metadata.getIncludeColumnFiledNames() != null) {
-      throw new IllegalStateException("excludeColumnFiledNames 和 includeColumnFiledNames 不能同时设置");
+      throw new IllegalStateException("excludeColumnFiledNames and includeColumnFiledNames cannot be set simultaneously");
     }
   }
 }

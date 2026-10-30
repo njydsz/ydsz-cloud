@@ -201,7 +201,7 @@ public final class TreeConverter {
           field.set(instance, converted);
         }
       } catch (Exception e) {
-        // 字段设置失败：跳过，继续后续字段
+        // LOG-001 修复: 字段设置失败时跳过该字段（反射权限不足或类型不兼容），继续后续字段
       }
     }
     return instance;
