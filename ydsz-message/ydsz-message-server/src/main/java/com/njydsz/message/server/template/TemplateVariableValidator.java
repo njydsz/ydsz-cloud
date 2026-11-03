@@ -114,7 +114,7 @@ public class TemplateVariableValidator {
     if (!errors.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("模板变量校验失败[" + templateCode + "]: " + String.join("; ", errors))
+          .message(I18n.message("message.template.variable.validate.failed", new Object[]{templateCode, String.join("; ", errors)}))
           .build();
     }
   }

@@ -56,7 +56,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     if (dto == null || !StringUtils.hasText(dto.getLogId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("回执关联日志 ID 不能为空")
+          .message(I18n.message("message.receipt.log.id.required"))
           .build();
     }
     // P1-3: 回执回调进入追踪上下文（外部回调无原始 traceId，自动生成）

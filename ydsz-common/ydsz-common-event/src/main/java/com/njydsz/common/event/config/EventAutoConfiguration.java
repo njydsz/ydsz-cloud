@@ -31,7 +31,6 @@ import com.njydsz.common.event.archive.OutboxArchiveRepositoryJdbc;
 import com.njydsz.common.event.consumer.OutboxIdempotentAspect;
 import com.njydsz.common.event.consumer.OutboxSubscriber;
 import com.njydsz.common.event.consumer.OutboxSubscriberDispatcher;
-import com.njydsz.common.event.gateway.ChannelEventPublishGateway;
 import com.njydsz.common.event.gateway.EventChannelDefinition;
 import com.njydsz.common.event.gateway.EventChannelRegistry;
 import com.njydsz.common.event.gateway.EventPublishGateway;

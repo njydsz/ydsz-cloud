@@ -21,6 +21,7 @@ import com.njydsz.agent.domain.entity.UserProfile;
 import com.njydsz.agent.domain.profile.UserProfileContext;
 import com.njydsz.agent.domain.profile.UserProfileRepository;
 import com.njydsz.agent.domain.profile.UserProfileService;
+import com.njydsz.agent.domain.vo.UserProfileVO;
 
 /**
  * 用户画像领域服务实现。
@@ -133,8 +134,8 @@ public class UserProfileServiceImpl implements UserProfileService {
         if (userId == null || userId.isBlank()) {
             return Optional.empty();
         }
-        return userProfileRepository.findByUserId(userId)
-                .map(this::toContext);
+        return userProfileRepository.findByUserIdVO(userId)
+                .map(this::toContextFromVO);
     }
 
     @Override
@@ -252,19 +253,19 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
 
     /**
-     * 将 UserProfile 转换为 UserProfileContext。
+     * 将 UserProfileVO 转换为 UserProfileContext（满足 YDIZ-DDD-007）。
      *
-     * @param profile 持久化画像实体
+     * @param vo 用户画像 VO
      * @return 轻量级上下文值对象
      */
-    private UserProfileContext toContext(UserProfile profile) {
+    private UserProfileContext toContextFromVO(UserProfileVO vo) {
         int topN = agentProperties.getMemory().getProfileTopDomains();
-        List<String> topDomains = profile.getTopDomains(topN);
+        List<String> topDomains = vo.getTopDomains(topN);
         return new UserProfileContext(
-                profile.getUserId(),
-                profile.getPreferredLanguage(),
+                vo.getUserId(),
+                vo.getPreferredLanguage(),
                 topDomains,
-                profile.getQueryStyle());
+                vo.getQueryStyle());
     }
 
     /**

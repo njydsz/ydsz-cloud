@@ -30,9 +30,9 @@
   <select id="selectAvailableTemplates" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_file_space_template
-    WHERE is_deleted = FALSE
+    WHERE is_deleted = 0
       AND (
-        (is_system = TRUE AND is_public_access = TRUE)
+        (is_system = 1 AND is_public_access = 1)
         OR
         (tenant_id = #{tenantId})
       )
@@ -44,9 +44,9 @@
   <select id="selectWithPage" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_file_space_template
-    WHERE is_deleted = FALSE
+    WHERE is_deleted = 0
       AND (
-        (is_system = TRUE AND is_public_access = TRUE)
+        (is_system = 1 AND is_public_access = 1)
         OR
         (tenant_id = #{tenantId})
       )
@@ -59,9 +59,9 @@
   <select id="countByCondition" resultType="int">
     SELECT COUNT(*)
     FROM ydsz_file_space_template
-    WHERE is_deleted = FALSE
+    WHERE is_deleted = 0
       AND (
-        (is_system = TRUE AND is_public_access = TRUE)
+        (is_system = 1 AND is_public_access = 1)
         OR
         (tenant_id = #{tenantId})
       )

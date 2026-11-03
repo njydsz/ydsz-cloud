@@ -40,11 +40,6 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
 @Getter
 public enum CoreErrorCode implements ResultCode {
 
-  // ======================== 成功 ========================
-
-  /** 操作成功 */
-  SUCCESS(CoreExceptionCode.SUCCESS),
-
   // ======================== A01 参数/业务异常 ========================
 
   /** 操作失败 */

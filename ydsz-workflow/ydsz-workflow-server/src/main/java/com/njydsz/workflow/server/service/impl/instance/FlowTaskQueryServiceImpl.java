@@ -189,11 +189,10 @@ private static final int MAX_PAGE_SIZE = 100;
       }
     }
     // 3. ROLE/DEPT 匹配 — P1-9: 批量 IN 查询替代循环中的 N 次单条查询
-    // TODO: N+1 治理 — 整体 3 次 DB 查询（selectTodoByAssignee + findByIds + selectTodoByAssignees），
-    // 当 roleCodes/deptIds 较大时（>100），IN 子句超 PG 参数上限
-    // 修复建议： 将 IN 拆批（每批 ≤500），或改为 JOIN ydsz_flow_user 表一次查询
-    int estimatedSize = (roleCodes != null ? roleCodes.size() : 0) + (deptIds != null ? deptIds.size() : 0);
-    Collection<String> multiAssignees = new ArrayList<>(Math.max(estimatedSize, MIN_MULTI_ASSIGNEE_CAPACITY));
+    // N+1 治理（2026-11-03）：原实现把全部 roleCodes + deptIds 一次性塞进 IN 子句，
+    // 当数量超过 PostgreSQL 参数上限（约 65535，实际受网络包大小限制更早触发）时查询直接失败。
+    // 改为按批分片查询后合并结果（用 Set 去重）。
+    Collection<String> multiAssignees = new ArrayList<>(MIN_MULTI_ASSIGNEE_CAPACITY);
     if (roleCodes != null) {
       multiAssignees.addAll(roleCodes);
     }
@@ -201,9 +200,28 @@ private static final int MAX_PAGE_SIZE = 100;
       multiAssignees.addAll(deptIds);
     }
     if (!multiAssignees.isEmpty()) {
-      result.addAll(taskRepository.selectTodoByAssignees(multiAssignees, tid));
+      for (List<String> shard : partitionByInClauseLimit(new ArrayList<>(multiAssignees))) {
+        result.addAll(taskRepository.selectTodoByAssignees(shard, tid));
+      }
     }
     return new ArrayList<>(result);
+  }
+
+  /** IN 子句单批参数上限（PostgreSQL 参数上限 65535，留足余量取 2000） */
+  private static final int IN_CLAUSE_BATCH_SIZE = 2_000;
+
+  /**
+   * 把集合按 IN 子句参数上限分片。
+   *
+   * @param source 源集合
+   * @return 分片后的列表（每片不超过 {@link #IN_CLAUSE_BATCH_SIZE}）
+   */
+  private List<List<String>> partitionByInClauseLimit(List<String> source) {
+    List<List<String>> shards = new ArrayList<>();
+    for (int i = 0; i < source.size(); i += IN_CLAUSE_BATCH_SIZE) {
+      shards.add(source.subList(i, Math.min(i + IN_CLAUSE_BATCH_SIZE, source.size())));
+    }
+    return shards;
   }
 
   /**

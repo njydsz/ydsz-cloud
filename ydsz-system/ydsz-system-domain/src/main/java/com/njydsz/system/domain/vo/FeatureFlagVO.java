@@ -1,6 +1,5 @@
 package com.njydsz.system.domain.vo;
 
-import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Data;
 
 /**

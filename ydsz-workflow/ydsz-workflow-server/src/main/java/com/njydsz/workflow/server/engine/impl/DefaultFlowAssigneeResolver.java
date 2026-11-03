@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.workflow.domain.gateway.FlowAssigneeResolver;

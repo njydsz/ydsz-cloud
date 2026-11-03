@@ -45,7 +45,7 @@ public class FieldEncryptionAutoConfiguration {
   @ConditionalOnMissingBean(FieldEncryptionService.class)
   public FieldEncryptionService fieldEncryptionService(EncryptFieldProperties properties) {
     if (properties.getKeys().isEmpty()) {
-      throw new IllegalStateException("字段加密已启用但未配置密钥，请配置 ydsz.safe.field-encryption.keys");
+      throw new IllegalStateException("Field encryption is enabled but no keys are configured, please configure ydsz.safe.field-encryption.keys");
     }
     FieldEncryptionService service =
         new FieldEncryptionService(properties.getKeys(), properties.getDefaultKeyVersion());

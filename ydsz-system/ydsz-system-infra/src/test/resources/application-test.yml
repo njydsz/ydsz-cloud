@@ -1,0 +1,29 @@
+# =====================================================================
+#  Infra 模块集成测试环境配置（Testcontainers PostgreSQL）
+# =====================================================================
+spring:
+  # 禁用 Flyway：集成测试使用 @Sql 脚本手动初始化 schema
+  flyway:
+    enabled: false
+  sql:
+    init:
+      mode: never
+
+mybatis-plus:
+  configuration:
+    # 开启 SQL 日志：集成测试排障关键信息
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+# 测试标识
+ydsz:
+  local-dev: false
+  test-env: true
+  jdbc:
+    is-enabled: true
+    id-type: ASSIST
+    field-fill:
+      created-by:
+        enabled: false
+      updated-by:
+        enabled: false

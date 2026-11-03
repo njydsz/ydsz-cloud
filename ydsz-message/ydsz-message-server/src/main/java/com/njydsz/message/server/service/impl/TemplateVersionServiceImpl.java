@@ -65,7 +65,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     if (!StringUtils.hasText(templateCode)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("模板编码不能为空")
+          .message(I18n.message("message.template.code.required"))
           .build();
     }
     MsgTemplateVersionQuery query = new MsgTemplateVersionQuery();
@@ -134,7 +134,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     if (versionDO == null || !versionDO.getVersion().equals(version)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("版本不存在: " + version)
+          .message(I18n.message("message.template.version.not.found", new Object[]{version}))
           .build();
     }
     TemplateQueryDTO templateQuery = new TemplateQueryDTO();
@@ -143,7 +143,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     if (template == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("模板不存在: " + templateCode)
+          .message(I18n.message("message.template.not.found.by.code.only", new Object[]{templateCode}))
           .build();
     }
     template.setContent(versionDO.getContent());
@@ -183,7 +183,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     if (dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("预览参数不能为空")
+          .message(I18n.message("message.template.preview.params.required"))
           .build();
     }
     String content = dto.getContent();
@@ -192,7 +192,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
       if (!StringUtils.hasText(dto.getTemplateCode())) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("templateCode 和 content 不能同时为空")
+            .message(I18n.message("message.template.code.content.required"))
             .build();
       }
       TemplateQueryDTO templateQuery = new TemplateQueryDTO();
@@ -201,7 +201,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
       if (template == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .message("模板不存在: " + dto.getTemplateCode())
+            .message(I18n.message("message.template.not.found.dto", new Object[]{dto.getTemplateCode()}))
             .build();
       }
       content = template.getContent();
@@ -221,13 +221,13 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     if (dto == null || !StringUtils.hasText(dto.getTemplateCode())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("模板编码不能为空")
+          .message(I18n.message("message.template.code.required"))
           .build();
     }
     if (!StringUtils.hasText(dto.getTestReceiver())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("测试接收人不能为空")
+          .message(I18n.message("message.template.test.receiver.required"))
           .build();
     }
     MessageItemRequestDTO request = new MessageItemRequestDTO();

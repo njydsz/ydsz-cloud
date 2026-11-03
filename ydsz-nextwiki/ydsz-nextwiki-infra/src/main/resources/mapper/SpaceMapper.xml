@@ -35,7 +35,7 @@
   <select id="selectByTenantId" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_file_space
-    WHERE tenant_id = #{tenantId} AND is_deleted = FALSE
+    WHERE tenant_id = #{tenantId} AND is_deleted = 0
     ORDER BY sort ASC, created_at DESC
   </select>
 
@@ -43,7 +43,7 @@
   <select id="selectByTenantIdWithPage" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_file_space
-    WHERE tenant_id = #{tenantId} AND is_deleted = FALSE
+    WHERE tenant_id = #{tenantId} AND is_deleted = 0
     ORDER BY sort ASC, created_at DESC
   </select>
 
@@ -51,7 +51,7 @@
   <select id="selectByTenantIdAndName" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_file_space
-    WHERE tenant_id = #{tenantId} AND name = #{name} AND is_deleted = FALSE
+    WHERE tenant_id = #{tenantId} AND name = #{name} AND is_deleted = 0
     LIMIT 1
   </select>
 
@@ -59,7 +59,7 @@
   <select id="countByTenantId" resultType="int">
     SELECT COUNT(*)
     FROM ydsz_file_space
-    WHERE tenant_id = #{tenantId} AND is_deleted = FALSE
+    WHERE tenant_id = #{tenantId} AND is_deleted = 0
   </select>
 
 </mapper>

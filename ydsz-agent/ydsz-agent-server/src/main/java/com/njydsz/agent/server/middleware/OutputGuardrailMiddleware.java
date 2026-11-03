@@ -42,7 +42,6 @@ public class OutputGuardrailMiddleware implements AgentMiddleware {
   private final AgentMetrics metrics;
   private final String rejectionMessage;
 
-  @Autowired
   public OutputGuardrailMiddleware(
       List<OutputGuardrail> outputGuardrails, AgentMetrics metrics) {
     this(outputGuardrails, metrics, DEFAULT_REJECTION_MESSAGE);

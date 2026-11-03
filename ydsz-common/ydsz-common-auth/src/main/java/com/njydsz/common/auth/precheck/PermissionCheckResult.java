@@ -73,7 +73,7 @@ public class PermissionCheckResult {
     return PermissionCheckResult.builder()
         .isCheckPassed(true)
         .isHasPermission(true)
-        .message("权限校验通过")
+        .message("Permission check passed")
         .build();
   }
 
@@ -105,7 +105,7 @@ public class PermissionCheckResult {
         .isHasPermission(false)
         .missingPermissions(missingPermissions)
         .grantedPermissions(grantedPermissions)
-        .message("权限不足")
+        .message("Permission denied")
         .errorCode("A03000")
         .build();
   }

@@ -198,7 +198,7 @@ public class FeishuChannel implements MessageChannel {
       if (sign == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.INTERNAL_ERROR)
-            .message("飞书加签失败,请检查 secret 配置")
+            .message(I18n.message("message.channel.feishu.sign.failed"))
             .build();
       }
       payload.put("timestamp", sign.get("timestamp"));

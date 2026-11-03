@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -47,7 +48,6 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.idempotent.annotation.IdempotentExempt;
-import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.cronjob.domain.dto.BatchResultDTO;
@@ -195,7 +195,7 @@ public class JobController {
       result.put("nextFireTimes", nextFireTimes);
     } catch (IllegalArgumentException e) {
       result.put("valid", false);
-      result.put("error", "Cron 表达式非法");
+      result.put("error", I18n.message("cronjob.job.cron.expression.invalid"));
       log.warn("[Cron] 表达式校验失败: expr={}, err={}", expr, e.getMessage());
     }
     return YdszResponse.success(result);

@@ -20,7 +20,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.util.diff.DiffReport;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.diff.FieldDiff;
 import com.njydsz.literule.domain.vo.AuditLogEntryVO;
 import com.njydsz.literule.server.audit.RuleAuditLogService;
@@ -179,9 +179,11 @@ public class RuleAuditLogController {
               .map(this::toAuditLogVO)
               .toList());
     } catch (Exception e) {
+      log.error("[LiteRule] 审计日志查询失败: startTime={}, endTime={}", startTime, endTime, e);
+      // 不把 e.getMessage() 返回给客户端：可能含内部解析细节
       return YdszResponse.error(
           YdszResultCode.VALIDATION_FAILED,
-          "Invalid time format, please use ISO format (e.g. 2026-07-01T00:00:00): " + e.getMessage());
+          I18n.message("literule.audit.log.time.format.invalid"));
     }
   }
 

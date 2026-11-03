@@ -87,7 +87,7 @@ public class EncryptTypeHandler extends BaseTypeHandler<String> {
   public void setNonNullParameter(PreparedStatement ps, int i, String parameter, JdbcType jdbcType)
       throws SQLException {
     if (encryptionService == null) {
-      throw new IllegalStateException("FieldEncryptionService 未初始化，请检查配置");
+      throw new IllegalStateException("FieldEncryptionService is not initialized, please check configuration");
     }
     ps.setString(i, encryptionService.encrypt(parameter));
   }
@@ -129,7 +129,7 @@ public class EncryptTypeHandler extends BaseTypeHandler<String> {
       return value;
     }
     if (encryptionService == null) {
-      throw new IllegalStateException("FieldEncryptionService 未初始化，请检查配置");
+      throw new IllegalStateException("FieldEncryptionService is not initialized, please check configuration");
     }
     // 历史明文兼容：非密文格式直接返回，不触发解密
     if (!looksLikeCiphertext(value)) {
@@ -205,7 +205,7 @@ public class EncryptTypeHandler extends BaseTypeHandler<String> {
       default:
         LOG.error(
             "字段解密失败，按 fail-safe 策略抛出异常 | valueLen={}", value == null ? 0 : value.length(), cause);
-        throw new IllegalStateException("字段解密失败：密文可能被篡改或密钥版本缺失", cause);
+        throw new IllegalStateException("Field decryption failed: ciphertext may be tampered or key version missing", cause);
     }
   }
 }

@@ -70,7 +70,7 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
       ChannelRouter channelRouter) {
     IMessageQueueProvider provider = queueProviderProvider.getIfAvailable();
     if (provider == null) {
-      throw new IllegalStateException("IMessageQueueProvider 未配置，无法使用 common-queue 抽象");
+      throw new IllegalStateException("IMessageQueueProvider not configured, cannot use common-queue abstraction");
     }
     this.queueProvider = provider;
     this.snowflakeIdGenerator = snowflakeIdGenerator;

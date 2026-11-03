@@ -606,8 +606,8 @@ public class AuthServiceImpl implements AuthService {
    * {@inheritDoc}
    *
    * <p>聚合逻辑：用户全部角色（{@link RoleCacheService}）→ 逐角色加载权限集合
-   * （{@link DbRolePermissionLoader}，带 Redis 缓存）→ 取「菜单 + 按钮」权限码并集。
-   * 接口权限码（API）仅用于后端 {@code @AuthApiPermission} 鉴权，不下发前端。
+   * （{@link DbRolePermissionLoader}，带 Redis 缓存）→ 取「菜单 + 按钮 + 接口」权限码并集。
+   * API 权限项由 system 扫描后注册到 userinfo，再通过现有角色授权体系参与前端按钮/操作控制。
    */
   @Override
   public Set<String> getAccessCodes(String userId) {
@@ -627,6 +627,7 @@ public class AuthServiceImpl implements AuthService {
     rolePermissionLoader.loadByRoleCodes(roleCodes).values().forEach(permissions -> {
       codes.addAll(permissions.getMenuPermissions());
       codes.addAll(permissions.getButtonPermissions());
+      codes.addAll(permissions.getApiPermissions());
     });
     return codes;
   }

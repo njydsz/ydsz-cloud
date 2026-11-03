@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
@@ -141,7 +142,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (parentInstance == null || callActivityNode == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("父实例/callActivity 节点不能为空")
+          .message(I18n.message("workflow.subprocess.parent.node.required"))
           .build();
     }
     // 1. 从节点 ext JSON 提取子流程编码
@@ -149,7 +150,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (subFlowCode == null || subFlowCode.isBlank()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("callActivity 节点未配置子流程编码: nodeCode=" + callActivityNode.getNodeCode())
+          .message(I18n.message("workflow.subprocess.flowcode.not.configured", new Object[]{}))
           .build();
     }
     // 2. 校验子流程定义存在且已发布
@@ -158,7 +159,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     if (subDef == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("子流程定义未发布或不存在: flowCode=" + subFlowCode)
+          .message(I18n.message("workflow.subprocess.definition.not.published", new Object[]{}))
           .build();
     }
     // 3. 检查嵌套深度（P2-8: 可配置，默认 3 层）

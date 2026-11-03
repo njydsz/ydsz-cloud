@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
@@ -58,25 +59,25 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
     if (dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("反馈内容不能为空")
+          .message(I18n.message("message.feedback.content.required"))
           .build();
     }
     if (!StringUtils.hasText(dto.getMsgId()) && !StringUtils.hasText(dto.getNotificationId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("消息 ID 或通知 ID 不能为空")
+          .message(I18n.message("message.feedback.target.required"))
           .build();
     }
     if (!StringUtils.hasText(dto.getUserId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("用户 ID 不能为空")
+          .message(I18n.message("message.feedback.user.required"))
           .build();
     }
     if (dto.getRating() == null || dto.getRating() < MIN_RATING || dto.getRating() > MAX_RATING) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("评分必须在 1-5 之间")
+          .message(I18n.message("message.feedback.score.range"))
           .build();
     }
 

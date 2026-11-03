@@ -140,16 +140,16 @@ public class ApiKeyService {
    * 验证 API Key 是否有效。
    *
    * @param plainKey 明文 API Key
-   * @return 有效的 ApiKey 实体
+   * @return 有效的 ApiKey VO（满足 YDIZ-DDD-007）
    * @throws BusinessException Key 无效/过期/禁用时抛出
    */
-  public ApiKey validateKey(String plainKey) {
+  public ApiKeyVO validateKey(String plainKey) {
     if (plainKey == null || plainKey.isBlank()) {
       throw new BusinessException(UserInfoExceptionCode.API_KEY_INVALID);
     }
 
     String keyHash = sha256Hex(plainKey);
-    ApiKey apiKey = apiKeyRepository.findByKeyHash(keyHash)
+    ApiKeyVO apiKey = apiKeyRepository.findByKeyHash(keyHash)
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.API_KEY_INVALID));
 
     // 检查是否启用

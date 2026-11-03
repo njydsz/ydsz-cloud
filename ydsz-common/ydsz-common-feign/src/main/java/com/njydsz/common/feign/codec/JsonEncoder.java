@@ -45,7 +45,7 @@ public class JsonEncoder implements Encoder {
       requestTemplate.header("Content-Type", CONTENT_TYPE);
     } catch (Exception e) {
       LOG.warn("JSON 编码失败, 类型: {}, 错误: {}", bodyType, e.getMessage());
-      throw new EncodeException("JSON 编码失败: " + e.getMessage(), e);
+      throw new EncodeException("JSON encoding failed: " + e.getMessage(), e);
     }
   }
 }

@@ -1,7 +1,6 @@
 package com.njydsz.common.file.spi;
 
 import java.awt.Dimension;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

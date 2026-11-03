@@ -55,7 +55,7 @@ public class RepeatSubmitTokenService {
    */
   public String generateToken(String userId, long ttlMillis) {
     if (!StringUtils.hasText(userId)) {
-      throw new IllegalArgumentException("生成防重复提交 Token 需要用户 ID");
+      throw new IllegalArgumentException("Generating repeat-submit token requires userId");
     }
 
     String token = UUID.randomUUID().toString().replace("-", "");

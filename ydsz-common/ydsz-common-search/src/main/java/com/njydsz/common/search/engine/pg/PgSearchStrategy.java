@@ -131,7 +131,6 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
    * @param pgConfig PG 引擎配置
    * @param probeScheduler 探测调度器（外部注入或内部默认创建）
    */
-  @Autowired
   public PgSearchStrategy(
       JdbcTemplate jdbcTemplate,
       SearchProperties.PgConfig pgConfig,

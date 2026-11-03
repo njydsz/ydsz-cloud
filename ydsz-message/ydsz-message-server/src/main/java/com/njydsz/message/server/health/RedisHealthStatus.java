@@ -1,7 +1,6 @@
 package com.njydsz.message.server.health;
 
-
-import com.njydsz.common.locales.util.I18n;import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
@@ -50,6 +50,11 @@ public class RedisHealthStatus {
    * 定期检查 Redis 连通性（每 10 秒一次）。
    *
    * <p>使用简单的 SET + GET + DEL 组合验证 Redis 读写正常。
+   *
+   * <p><b>YDIZ-CONC-006 豁免说明</b>：本任务为<b>节点本地探针</b>，探测结果 {@link #redisHealthy}
+   * 由本节点的 {@code MessageConsumer} 用于决定是否启用 DB 幂等兜底；每个节点必须独立探测自身的
+   * Redis 连接状态，若加分布式锁会导致未获得锁的节点始终使用默认值而丧失局部降级能力，故不适用
+   * {@code @DistributedScheduled}。
    */
   @Scheduled(fixedDelayString = "${ydsz.message.redis-health-check-interval-ms:10000}")
   public void checkRedisHealth() {

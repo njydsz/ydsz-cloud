@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * 任务执行日志

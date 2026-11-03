@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -834,7 +835,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (j == null) {
           throw SysException.builder()
               .resultCode(YdszResultCode.NOT_FOUND)
-              .message("任务不存在")
+              .message(I18n.message("cronjob.job.not.found"))
               .build();
         }
         j.setJobGroup(newGroup);
@@ -879,7 +880,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (j == null) {
           throw SysException.builder()
               .resultCode(YdszResultCode.NOT_FOUND)
-              .message("任务不存在")
+              .message(I18n.message("cronjob.job.not.found"))
               .build();
         }
         // 仅 CRON 类型任务支持修改 Cron 表达式

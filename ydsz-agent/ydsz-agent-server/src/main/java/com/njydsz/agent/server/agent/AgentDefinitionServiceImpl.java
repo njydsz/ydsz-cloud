@@ -15,6 +15,8 @@ import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.repository.AgentDefinitionRepository;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.json.YdszJson;
@@ -71,6 +73,14 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
   @Override
   public List<AgentDefinitionVO> listActive() {
     return agentDefinitionRepository.findActive();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public PageResponse<List<AgentDefinitionVO>> listActivePage(PageQuery query) {
+    return agentDefinitionRepository.findActivePage(query);
   }
 
   /**

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -254,7 +255,7 @@ public class RuleDslController {
           Map<String, Object> r = new LinkedHashMap<>(COLLECTION_CAPACITY);
           r.put("ruleCode", rule.getCode());
           r.put("triggered", false);
-          r.put("error", "规则评估失败");
+          r.put("error", I18n.message("literule.rule.evaluate.failed"));
           results.add(r);
           log.warn("[DSL] 预览规则执行异常: ruleCode={}", rule.getCode(), e);
         }

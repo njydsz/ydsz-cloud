@@ -52,9 +52,12 @@ public class FlowTimeoutJob {
   private FlowTimeoutHandler timeoutHandler;
 
   /**
-   * 每 60 秒扫描超时任务并执行对应策略
+   * 处理超时任务：扫描到期定时器、触发超时动作（自动通过 / 转办 / 催办）。
    *
-   * <p>通过 {@link YdszDistributedLock} 保证集群单节点执行，获取不到锁的节点直接跳过。
+   * <p>每 60 秒执行一次（可通过 {@code ydsz.flow.timeout.scan-interval-ms} 配置）。
+   *
+   * <p><b>YDIZ-CONC-006 豁免说明</b>：集群单点执行由 {@link YdszDistributedLock} 保证（{@code waitTime=0}
+   * 获取不到锁直接跳过），未使用 {@code @DistributedScheduled} 注解形式。
    */
   @Scheduled(fixedDelayString = "${ydsz.flow.timeout.scan-interval-ms:60000}")
   @YdszDistributedLock(
@@ -62,9 +65,6 @@ public class FlowTimeoutJob {
       waitTime = 0,
       leaseTime = 120,
       message = "超时处理任务正在其他节点执行")
-  /**
-   * 处理超时任务：扫描到期定时器、触发超时动作（自动通过 / 转办 / 催办）。
-   */
   public void processTimeouts() {
     try {
       doProcessTimeouts();

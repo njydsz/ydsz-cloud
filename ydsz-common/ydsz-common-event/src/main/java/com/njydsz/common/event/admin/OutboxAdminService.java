@@ -88,7 +88,7 @@ public class OutboxAdminService {
    * @param messageId 消息 ID
    * @return true 表示重置成功，false 表示消息不存在或状态不是 DEAD_LETTER
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public boolean retryDeadLetter(String messageId) {
     if (messageId == null || messageId.isBlank()) {
       return false;
@@ -108,7 +108,7 @@ public class OutboxAdminService {
    * @param eventTypeFilter 事件类型过滤（可为 null，表示不加过滤）
    * @return 重置的消息数量
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public int retryAllDeadLetters(String eventTypeFilter) {
     int count = outboxRepository.resetAllToPending(OutboxStatus.DEAD_LETTER, eventTypeFilter);
     LOG.info("Bulk dead letter retry: count={}, filter={}", count, eventTypeFilter);
@@ -124,7 +124,7 @@ public class OutboxAdminService {
    * @param messageId 消息 ID
    * @return true 表示删除成功，false 表示消息不存在或非终态
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public boolean deleteTerminatedMessage(String messageId) {
     if (messageId == null || messageId.isBlank()) {
       return false;

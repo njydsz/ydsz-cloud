@@ -64,7 +64,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     if (!StringUtils.hasText(msgId) || !StringUtils.hasText(userId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("消息 ID 和用户 ID 不能为空")
+          .message(I18n.message("message.readstatus.message.user.required"))
           .build();
     }
     // 查找消息日志
@@ -144,7 +144,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     if (!StringUtils.hasText(notificationId) || !StringUtils.hasText(userId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("通知 ID 和用户 ID 不能为空")
+          .message(I18n.message("message.readstatus.notification.user.required"))
           .build();
     }
     int updated = msgNotificationRepository.markRead(notificationId, userId);

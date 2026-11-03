@@ -6,6 +6,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
 import com.njydsz.agent.domain.asynctask.AsyncTaskType;
@@ -79,7 +80,7 @@ public class AsyncTaskService {
     if (taskType == null || taskType.isBlank()) {
       throw BusinessException.builder()
           .code("ASYNC_TASK_TYPE_INVALID")
-          .message("任务类型不能为空")
+          .message(I18n.message("agent.async.task.type.required"))
           .build();
     }
 
@@ -88,7 +89,7 @@ public class AsyncTaskService {
     if (type == null) {
       throw BusinessException.builder()
           .code("ASYNC_TASK_TYPE_INVALID")
-          .message("不支持的任务类型: " + taskType)
+          .message(I18n.message("agent.async.task.type.unsupported", new Object[]{taskType}))
           .build();
     }
 
@@ -96,7 +97,7 @@ public class AsyncTaskService {
     if (!taskStore.isAdmissionAllowed(taskType, tenantCode)) {
       throw BusinessException.builder()
           .code("ASYNC_TASK_ADMISSION_DENIED")
-          .message("租户活跃任务数已达上限，请稍后重试")
+          .message(I18n.message("agent.async.task.tenant.limit"))
           .build();
     }
 
@@ -137,13 +138,13 @@ public class AsyncTaskService {
     if (taskId == null) {
       throw BusinessException.builder()
           .code("ASYNC_TASK_ID_INVALID")
-          .message("任务 ID 不能为空")
+          .message(I18n.message("agent.async.task.id.required"))
           .build();
     }
     return taskStore.findById(taskId)
         .orElseThrow(() -> BusinessException.builder()
             .code("ASYNC_TASK_NOT_FOUND")
-            .message("任务不存在: id=" + taskId)
+            .message(I18n.message("agent.async.task.not.found", new Object[]{taskId}))
             .build());
   }
 
@@ -181,7 +182,7 @@ public class AsyncTaskService {
     if (tenantCode == null || tenantCode.isBlank()) {
       throw BusinessException.builder()
           .code("ASYNC_TASK_TENANT_INVALID")
-          .message("租户编码不能为空")
+          .message(I18n.message("agent.async.task.tenant.required"))
           .build();
     }
     return taskStore.listActiveByTenant(tenantCode);

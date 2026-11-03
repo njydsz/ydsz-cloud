@@ -6,6 +6,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.social.SocialAccessToken;
 import com.njydsz.userinfo.domain.social.SocialAuthException;
@@ -77,7 +78,7 @@ public class GoogleAuthProvider extends AbstractSocialAuthProvider {
   public String authorize(String state, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException(PLATFORM, "Google 配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.google.config.not.found"));
     }
 
     String clientId = config.getAppId();
@@ -101,7 +102,7 @@ public class GoogleAuthProvider extends AbstractSocialAuthProvider {
   public SocialAccessToken exchangeToken(String code, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException(PLATFORM, "Google 配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.google.config.not.found"));
     }
 
     String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
@@ -118,12 +119,13 @@ public class GoogleAuthProvider extends AbstractSocialAuthProvider {
     String error = getStr(tokenResponse, "error");
     if (error != null && !error.isBlank()) {
       String errorDescription = getStr(tokenResponse, "error_description");
-      throw new SocialAuthException(PLATFORM, "Google 获取 access_token 失败: " + errorDescription);
+      throw new SocialAuthException(I18n.message(
+          "userinfo.social.google.access_token.failed", new Object[]{errorDescription}));
     }
 
     String accessToken = getStr(tokenResponse, "access_token");
     if (accessToken == null || accessToken.isBlank()) {
-      throw new SocialAuthException(PLATFORM, "Google 获取 access_token 失败: 未返回 access_token");
+      throw new SocialAuthException(I18n.message("userinfo.social.google.access_token.empty"));
     }
 
     Long expireIn = getLong(tokenResponse, "expires_in", DEFAULT_EXPIRE_IN);
@@ -137,7 +139,7 @@ public class GoogleAuthProvider extends AbstractSocialAuthProvider {
   public SocialUserInfo getUserInfo(SocialAccessToken token) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException(PLATFORM, "Google 配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.google.config.not.found"));
     }
 
     String userInfoUrl = config.getOrDefaultUserInfoUrl(DEFAULT_USER_INFO_URL);
@@ -146,7 +148,8 @@ public class GoogleAuthProvider extends AbstractSocialAuthProvider {
 
     String error = getStr(userResponse, "error");
     if (error != null && !error.isBlank()) {
-      throw new SocialAuthException(PLATFORM, "Google 获取用户信息失败: " + error);
+      throw new SocialAuthException(I18n.message(
+          "userinfo.social.google.userinfo.failed", new Object[]{error}));
     }
 
     // Google 的 sub 字段作为 openId

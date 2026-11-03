@@ -89,6 +89,7 @@ public class I18nProperties {
     "classpath:i18n/notify-messages",
     "classpath:i18n/redis-messages",
     "classpath:i18n/safe-messages",
+    "classpath:i18n/socket-messages",
     "classpath:i18n/search-messages",
     "classpath:i18n/seata-messages",
     "classpath:i18n/tenant-messages",

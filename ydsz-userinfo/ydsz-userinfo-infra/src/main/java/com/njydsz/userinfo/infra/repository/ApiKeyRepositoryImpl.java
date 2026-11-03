@@ -30,11 +30,12 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
   private final ApiKeyMapper apiKeyMapper;
 
   @Override
-  public Optional<ApiKey> findByKeyHash(String apiKeyHash) {
+  public Optional<ApiKeyVO> findByKeyHash(String apiKeyHash) {
     LambdaQueryWrapper<ApiKey> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(ApiKey::getApiKeyHash, apiKeyHash);
     wrapper.eq(ApiKey::getIsDeleted, false);
-    return Optional.ofNullable(apiKeyMapper.selectOne(wrapper));
+    ApiKey entity = apiKeyMapper.selectOne(wrapper);
+    return Optional.ofNullable(entity).map(this::entityToVO);
   }
 
   @Override
@@ -68,9 +69,8 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
   }
 
   @Override
-  public ApiKey save(ApiKey apiKey) {
+  public void save(ApiKey apiKey) {
     apiKeyMapper.insert(apiKey);
-    return apiKey;
   }
 
   @Override

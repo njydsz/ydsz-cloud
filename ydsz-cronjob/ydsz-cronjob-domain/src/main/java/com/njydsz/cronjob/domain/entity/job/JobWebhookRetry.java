@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * WebHook 重试补偿记录（P1-3 Webhook 投递保障）。

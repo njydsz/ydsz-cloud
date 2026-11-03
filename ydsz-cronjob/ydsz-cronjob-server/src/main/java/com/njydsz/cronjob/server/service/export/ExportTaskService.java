@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.cronjob.domain.entity.export.ExportTask;
 import com.njydsz.cronjob.domain.enums.export.ExportTaskStatusEnum;
 import com.njydsz.cronjob.domain.repository.export.ExportTaskRepository;
+import com.njydsz.cronjob.domain.vo.ExportTaskVO;
 import com.njydsz.cronjob.server.worker.export.ExportWorkerDelegate;
 
 /**
@@ -76,28 +77,28 @@ public class ExportTaskService {
   }
 
   /**
-   * 查询任务状态。
+   * 查询任务状态（返回 VO，满足 YDIZ-DDD-007）。
    *
    * @param id       任务 ID
    * @param tenantId 租户 ID（数据隔离）
-   * @return 任务实体
+   * @return 任务 VO；不存在返回 null
    */
-  public ExportTask getTask(String id, String tenantId) {
-    return exportTaskRepository.findById(id)
+  public ExportTaskVO getTask(String id, String tenantId) {
+    return exportTaskRepository.findByIdVO(id)
         .filter(task -> tenantId == null || tenantId.equals(task.getTenantId()))
         .orElse(null);
   }
 
   /**
-   * 查询用户最近的导出任务列表。
+   * 查询用户最近的导出任务列表（返回 VO，满足 YDIZ-DDD-007）。
    *
    * @param tenantId 租户 ID
    * @param userId   用户 ID
    * @param limit    返回数量上限
-   * @return 任务列表
+   * @return 任务 VO 列表
    */
-  public List<ExportTask> listUserTasks(String tenantId, String userId, int limit) {
-    return exportTaskRepository.listByUser(tenantId, userId, Math.min(limit, 50));
+  public List<ExportTaskVO> listUserTasks(String tenantId, String userId, int limit) {
+    return exportTaskRepository.listByUserVO(tenantId, userId, Math.min(limit, 50));
   }
 
   /**
@@ -109,7 +110,9 @@ public class ExportTaskService {
    * @return true=取消成功
    */
   public boolean cancelTask(String id, String userId, String tenantId) {
-    ExportTask task = getTask(id, tenantId);
+    ExportTask task = exportTaskRepository.findById(id)
+        .filter(t -> tenantId == null || tenantId.equals(t.getTenantId()))
+        .orElse(null);
     if (task == null || ExportTaskStatusEnum.isTerminal(task.getStatus())) {
       return false;
     }

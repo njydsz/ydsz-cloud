@@ -132,7 +132,7 @@ public class BatchImportApplicationService {
     }
 
     if (files.length > MAX_BATCH_SIZE) {
-      return BatchImportResult.error("批量上传数量超过限制: " + MAX_BATCH_SIZE);
+      return BatchImportResult.error("Batch upload count exceeds limit: " + MAX_BATCH_SIZE);
     }
 
     // 获取线程池（可能为 null，降级为串行执行）
@@ -141,7 +141,7 @@ public class BatchImportApplicationService {
     FileApplicationService fileService = getFileApplicationService();
     if (fileService == null) {
       log.error("[BatchImportApplicationService] FileApplicationService 不可用，拒绝批量上传");
-      return BatchImportResult.error("文件应用服务不可用");
+      return BatchImportResult.error("File application service unavailable");
     }
 
     List<CompletableFuture<FileNodeVO>> futures = new ArrayList<>(COLLECTION_CAPACITY);
@@ -204,7 +204,7 @@ public class BatchImportApplicationService {
    */
   public BatchImportResult importFromZip(MultipartFile zipFile, String parentId, String userId) {
     if (zipFile == null || zipFile.isEmpty()) {
-      return BatchImportResult.error("ZIP 文件为空");
+      return BatchImportResult.error("ZIP file is empty");
     }
 
     log.info(
@@ -306,7 +306,7 @@ public class BatchImportApplicationService {
       }
     } catch (IOException e) {
       log.error("[BatchImportApplicationService] ZIP 解压失败", e);
-      return BatchImportResult.error("ZIP 解压失败: " + e.getMessage());
+      return BatchImportResult.error("ZIP extraction failed: " + e.getMessage());
     }
 
     log.info(

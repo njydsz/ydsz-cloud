@@ -11,10 +11,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.server.agent.AgentDefinitionService;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.test.BaseControllerMockTest;
 
 /**
@@ -52,6 +55,25 @@ class AgentDefinitionControllerSmokeTest extends BaseControllerMockTest {
       mockMvc.perform(get("/agent/definitions"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.code").value(SUCCESS_CODE));
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /agent/definitions/page")
+  class ListPage {
+
+    @Test
+    @DisplayName("should return 200 with page envelope")
+    void should_return_200_with_page_envelope() throws Exception {
+      when(agentDefinitionService.listActivePage(ArgumentMatchers.any(PageQuery.class)))
+          .thenReturn(PageResponse.success(0L, 1L, 12L, List.of()));
+
+      mockMvc.perform(get("/agent/definitions/page")
+              .param("pageNum", "1")
+              .param("pageSize", "12"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.code").value(SUCCESS_CODE))
+          .andExpect(jsonPath("$.total").value(0));
     }
   }
 

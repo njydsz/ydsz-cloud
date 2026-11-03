@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
@@ -1026,7 +1027,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     if (definition == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .message("流程定义详情缺少 definition")
+          .message(I18n.message("workflow.definition.template.detail.missing"))
           .build();
     }
     List<FlowNodeVO> nodes = detail.getNodes();

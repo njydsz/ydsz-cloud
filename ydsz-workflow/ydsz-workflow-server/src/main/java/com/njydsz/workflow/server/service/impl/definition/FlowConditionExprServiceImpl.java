@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
@@ -252,7 +253,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
     Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     if (expression == null || expression.isBlank()) {
       result.put("valid", false);
-      result.put("error", "表达式不能为空");
+      result.put("error", I18n.message("workflow.condition.expr.empty"));
       return result;
     }
     try {
@@ -267,13 +268,13 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         }
         if (parenCount < 0) {
           result.put("valid", false);
-          result.put("error", "括号不匹配");
+          result.put("error", I18n.message("workflow.condition.expr.paren.mismatch"));
           return result;
         }
       }
       if (parenCount != 0) {
         result.put("valid", false);
-        result.put("error", "括号不匹配");
+        result.put("error", I18n.message("workflow.condition.expr.paren.mismatch"));
         return result;
       }
       // 引号匹配
@@ -281,14 +282,16 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
       long doubleQuotes = expression.chars().filter(c -> c == '"').count();
       if (singleQuotes % 2 != 0 || doubleQuotes % 2 != 0) {
         result.put("valid", false);
-        result.put("error", "引号不匹配");
+        result.put("error", I18n.message("workflow.condition.expr.quote.mismatch"));
         return result;
       }
       result.put("valid", true);
       return result;
     } catch (Exception e) {
+      log.error("[CondExpr] 表达式校验失败: expr={}", expression, e);
       result.put("valid", false);
-      result.put("error", "校验异常: " + e.getMessage());
+      // 不把 e.getMessage() 返回给前端：可能含 Aviator 内部栈/类名
+      result.put("error", I18n.message("workflow.condition.expr.validate.failed"));
       return result;
     }
   }
@@ -622,12 +625,12 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
     Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     if (expression == null || expression.isBlank()) {
       result.put("result", false);
-      result.put("error", "表达式不能为空");
+      result.put("error", I18n.message("workflow.condition.expr.empty"));
       return result;
     }
     if (engine != null && !"AVIATOR".equalsIgnoreCase(engine)) {
       result.put("result", null);
-      result.put("error", "不支持的表达式引擎");
+      result.put("error", I18n.message("workflow.condition.expr.engine.unsupported"));
       return result;
     }
 
@@ -637,9 +640,10 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
       result.put("result", Boolean.TRUE.equals(exprResult));
       result.put("error", null);
     } catch (Exception e) {
-      log.warn("[CondExpr] 表达式预览失败: expr={} err={}", expression, e.getMessage());
+      log.warn("[CondExpr] 表达式预览失败: expr={}", expression, e);
       result.put("result", null);
-      result.put("error", "执行异常: " + e.getMessage());
+      // 不把 e.getMessage() 返回给前端：可能含 Aviator 内部栈/类名
+      result.put("error", I18n.message("workflow.condition.expr.execute.failed"));
     }
     return result;
   }

@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.event.model.OutboxMessage;
 
 /**
@@ -88,8 +89,9 @@ public class OutboxAdminController {
    * @param eventType 事件类型过滤（可选）
    * @return 死信消息分页列表（统一 PageResponse 包装）
    */
-  public PageResponse<List<OutboxMessage>> listDeadLetters(int page, int size, String eventType) {
-    return outboxAdminService.listDeadLetters(page, size, eventType);
+  public YdszResponse<PageResponse<List<OutboxMessage>>> listDeadLetters(
+      int page, int size, String eventType) {
+    return YdszResponse.success(outboxAdminService.listDeadLetters(page, size, eventType));
   }
 
   /**
@@ -98,8 +100,8 @@ public class OutboxAdminController {
    * @param messageId 消息 ID
    * @return true 表示重置成功，false 表示消息不存在或状态不是 DEAD_LETTER
    */
-  public boolean retryDeadLetter(String messageId) {
-    return outboxAdminService.retryDeadLetter(messageId);
+  public YdszResponse<Boolean> retryDeadLetter(String messageId) {
+    return YdszResponse.success(outboxAdminService.retryDeadLetter(messageId));
   }
 
   /**
@@ -108,8 +110,8 @@ public class OutboxAdminController {
    * @param eventType 事件类型过滤（可选）
    * @return 重置的消息数量
    */
-  public int retryAllDeadLetters(String eventType) {
-    return outboxAdminService.retryAllDeadLetters(eventType);
+  public YdszResponse<Integer> retryAllDeadLetters(String eventType) {
+    return YdszResponse.success(outboxAdminService.retryAllDeadLetters(eventType));
   }
 
   /**
@@ -120,8 +122,8 @@ public class OutboxAdminController {
    * @param messageId 消息 ID
    * @return true 表示删除成功
    */
-  public boolean deleteMessage(String messageId) {
-    return outboxAdminService.deleteTerminatedMessage(messageId);
+  public YdszResponse<Boolean> deleteMessage(String messageId) {
+    return YdszResponse.success(outboxAdminService.deleteTerminatedMessage(messageId));
   }
 
   /**
@@ -129,8 +131,8 @@ public class OutboxAdminController {
    *
    * @return 各状态消息数量
    */
-  public Map<String, Long> getStatistics() {
-    return outboxAdminService.getQueueStatistics();
+  public YdszResponse<Map<String, Long>> getStatistics() {
+    return YdszResponse.success(outboxAdminService.getQueueStatistics());
   }
 
   /**
@@ -139,9 +141,9 @@ public class OutboxAdminController {
    * @param retentionDays 保留天数（默认 7）
    * @return 删除的消息数量
    */
-  public int cleanup(int retentionDays) {
+  public YdszResponse<Integer> cleanup(int retentionDays) {
     int days = retentionDays > 0 ? retentionDays : 7;
-    return outboxAdminService.cleanupSentMessages(days);
+    return YdszResponse.success(outboxAdminService.cleanupSentMessages(days));
   }
 
   /**

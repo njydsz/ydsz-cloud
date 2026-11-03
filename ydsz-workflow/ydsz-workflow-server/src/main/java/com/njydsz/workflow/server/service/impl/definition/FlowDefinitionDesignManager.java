@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.server.constant.WorkflowCacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
@@ -117,14 +118,14 @@ public class FlowDefinitionDesignManager {
     if (definitionId == null || !StringUtils.hasText(nodeCode)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("definitionId/nodeCode 不能为空")
+          .message(I18n.message("workflow.definition.node.id.code.required"))
           .build();
     }
     FlowNodeVO node = nodeRepository.findByCode(definitionId, nodeCode).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
+          .message(I18n.message("workflow.definition.node.not.found", new Object[]{}))
           .build();
     }
     node.setCoordinate(coordinate);
@@ -156,20 +157,20 @@ public class FlowDefinitionDesignManager {
     if (definitionId == null || dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("definitionId/dto 不能为空")
+          .message(I18n.message("workflow.definition.design.id.dto.required"))
           .build();
     }
     FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);
     if (def == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("流程定义不存在: " + definitionId)
+          .message(I18n.message("workflow.definition.not.found", new Object[]{}))
           .build();
     }
     if (def.getPublishStatus() != null && def.getPublishStatus() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("已发布的流程定义不可编辑，请创建新版本: " + definitionId)
+          .message(I18n.message("workflow.definition.published.readonly", new Object[]{}))
           .build();
     }
 
@@ -312,13 +313,13 @@ public class FlowDefinitionDesignManager {
     if (def == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("流程定义不存在: " + definitionId)
+          .message(I18n.message("workflow.definition.not.found", new Object[]{}))
           .build();
     }
     if (def.getPublishStatus() != null && def.getPublishStatus() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("已发布的流程定义不可编辑，请先创建新版本")
+          .message(I18n.message("workflow.definition.published.readonly.simple"))
           .build();
     }
 
@@ -378,7 +379,7 @@ public class FlowDefinitionDesignManager {
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
+          .message(I18n.message("workflow.definition.node.not.found", new Object[]{}))
           .build();
     }
     return node.getFormFieldsConfig();
@@ -398,7 +399,7 @@ public class FlowDefinitionDesignManager {
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
+          .message(I18n.message("workflow.definition.node.not.found", new Object[]{}))
           .build();
     }
     node.setFormFieldsConfig(formFieldsConfig);
@@ -421,7 +422,7 @@ public class FlowDefinitionDesignManager {
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
+          .message(I18n.message("workflow.definition.node.not.found", new Object[]{}))
           .build();
     }
     return node == null ? null : node.getSlaConfigJson();
@@ -441,7 +442,7 @@ public class FlowDefinitionDesignManager {
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode)
+          .message(I18n.message("workflow.definition.node.not.found", new Object[]{}))
           .build();
     }
     node.setSlaConfig(slaConfig);

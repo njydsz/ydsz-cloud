@@ -25,6 +25,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import io.swagger.v3.oas.annotations.Operation;
@@ -186,9 +187,11 @@ public class DagController {
               "dagName", dag.getName(),
               "nodeCount", dag.getNodes().size()));
     } catch (Exception e) {
-      log.error("[DAG-API] DSL 解析失败, dsl={}, err={}", request.getDsl(), e.getMessage(), e);
+      log.error("[DAG-API] DSL 解析失败, dsl={}", request.getDsl(), e);
+      // 不把 e.getMessage() 返回给客户端：可能含 AST 内部节点路径/类名；
       // 解析失败时仍返回 success，由 valid 字段标识
-      return YdszResponse.success(Map.of("valid", false, "error", e.getMessage()));
+      return YdszResponse.success(
+          Map.of("valid", false, "error", I18n.message("agent.dag.dsl.parse.failed")));
     }
   }
 }

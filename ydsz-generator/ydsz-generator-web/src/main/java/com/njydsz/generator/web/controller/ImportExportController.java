@@ -22,6 +22,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.generator.web.security.PermissionCodes;
 import com.njydsz.generator.service.TemplateImportExportService;
 import com.njydsz.generator.vo.TemplateZipVO;
@@ -94,8 +95,9 @@ public class ImportExportController {
       log.info("导入模板完成 groupId={} count={}", groupId, count);
       return YdszResponse.success(count);
     } catch (Exception e) {
-      log.error("导入模板失败 err={}", e.getMessage(), e);
-      return YdszResponse.error("Import failed: " + e.getMessage());
+      log.error("导入模板失败 groupId={}", groupId, e);
+      // 不把 e.getMessage() 返回给客户端：可能含类名/路径/ZIP 内部路径
+      return YdszResponse.error(I18n.message("generator.template.import.failed"));
     }
   }
 }

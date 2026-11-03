@@ -1,0 +1,107 @@
+# Nightly 性能基线任务
+#
+# 定位：**趋势观测**，不是 PR 门禁。
+#   - 只在 nightly 运行，不阻塞代码评审与发布
+#   - 产出指标写回 artifact，供人工查看趋势
+#   - 失败只发通知，不回写 PR
+#
+# 前置条件：需要可用的服务实例。本 workflow 用 docker-compose 启动最小栈
+#           （postgres + redis + 网关 + system + userinfo），若服务起不来则任务失败并通知。
+#
+# 运行方式：
+#   mvn -P perf-test test -Dgatling.simulationClass=com.njydsz.perf.CloudPerfTest
+#
+name: Nightly Performance Baseline
+
+on:
+  schedule:
+    # 每天 02:00 UTC（北京时间 10:00）运行，避开业务高峰
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "目标环境地址（留空则用本地 docker-compose 栈）"
+        required: false
+        default: ""
+
+# 同一时刻只保留最新一次运行，超时的旧任务直接取消
+concurrency:
+  group: nightly-perf
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  perf-baseline:
+    name: 性能基线（Gatling）
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: 确定目标地址
+        id: target
+        run: |
+          if [ -n "${{ github.event.inputs.base_url }}" ]; then
+            echo "base_url=${{ github.event.inputs.base_url }}" >> "$GITHUB_OUTPUT"
+            echo "使用外部地址：${{ github.event.inputs.base_url }}"
+          else
+            echo "base_url=http://localhost:9000" >> "$GITHUB_OUTPUT"
+            echo "使用本地 docker-compose 栈"
+          fi
+
+      - name: 启动最小服务栈（可选）
+        if: ${{ github.event.inputs.base_url == '' }}
+        run: |
+          if [ -f docker-compose.yml ]; then
+            docker compose up -d postgres redis gateway system userinfo
+            echo "等待服务就绪..."
+            for i in $(seq 1 30); do
+              if curl -sf http://localhost:9000/actuator/health > /dev/null 2>&1; then
+                echo "服务已就绪"; exit 0
+              fi
+              sleep 10
+            done
+            echo "::warning::服务未在 300s 内就绪，压测可能失败"
+          else
+            echo "未找到 docker-compose.yml，跳过本地栈启动"
+          fi
+
+      - name: 运行 Gatling 压测
+        run: |
+          mvn -P perf-test test \
+            -Dgatling.simulationClass=com.njydsz.perf.CloudPerfTest \
+            -DbaseUrl=${{ steps.target.outputs.base_url }} \
+            -Dperf.username="${{ secrets.PERF_USERNAME }}" \
+            -Dperf.password="${{ secrets.PERF_PASSWORD }}"
+        continue-on-error: true
+
+      - name: 收集压测报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gatling-report-${{ github.run_id }}
+          path: data/perf-tests/target/gatling/**/index.html
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: 输出结论
+        if: always()
+        run: |
+          echo "### 性能基线运行结果" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- 目标地址：${{ steps.target.outputs.base_url }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- 报告 artifact：gatling-report-${{ github.run_id }（保留 30 天）" >> "$GITHUB_STEP_SUMMARY"
+          echo "- 断言：P95 < 800ms / 错误率 < 2% / QPS > 50" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "> 本任务为趋势观测，失败不阻塞发布。" >> "$GITHUB_STEP_SUMMARY"

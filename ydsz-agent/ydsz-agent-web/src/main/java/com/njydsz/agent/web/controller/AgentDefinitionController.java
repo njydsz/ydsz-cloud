@@ -31,7 +31,9 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.agent.server.util.ExcelExportUtil;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -104,6 +106,26 @@ public class AgentDefinitionController {
   @GetMapping
   public YdszResponse<List<AgentDefinitionVO>> list() {
     return YdszResponse.success(agentDefinitionService.listActive());
+  }
+
+  /**
+   * 分页查询活跃 Agent 定义。
+   *
+   * <p>供前端 Agent 列表页使用，避免一次性返回全部数据。
+   *
+   * @param query 分页与排序参数
+   * @return 统一分页响应
+   */
+  @AuthApiPermission(apiCodes = PermissionCodes.AGENT_VIEW)
+  @Audit(
+      module = "Agent定义",
+      type = AuditType.OPERATION,
+      action = AuditAction.QUERY,
+      content = "'listPage'")
+  @GetMapping("/page")
+  @Operation(summary = "分页查询活跃 Agent 定义")
+  public PageResponse<List<AgentDefinitionVO>> listPage(@Valid PageQuery query) {
+    return agentDefinitionService.listActivePage(query);
   }
 
   /**

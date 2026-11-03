@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.agent.domain.entity.UserProfile;
 import com.njydsz.agent.domain.profile.UserProfileRepository;
+import com.njydsz.agent.domain.vo.UserProfileVO;
 
 /**
  * 用户画像 Repository 实现。
@@ -55,6 +56,12 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
   }
 
   @Override
+  public Optional<UserProfileVO> findByUserIdVO(String userId) {
+    UserProfile entity = mapper().selectById(userId);
+    return Optional.ofNullable(entity).map(this::entityToVO);
+  }
+
+  @Override
   public void save(UserProfile profile) {
     if (profile == null) {
       return;
@@ -91,6 +98,13 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
   }
 
   @Override
+  public List<UserProfileVO> findActiveProfilesVO(int limit) {
+    return findActiveProfiles(limit).stream()
+        .map(this::entityToVO)
+        .toList();
+  }
+
+  @Override
   public void deleteByUserId(String userId) {
     mapper().deleteById(userId);
   }
@@ -106,5 +120,23 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
       profile.setCreatedAt(now);
     }
     profile.setUpdatedAt(now);
+  }
+
+  /**
+   * Entity → VO 转换（手动映射，JSON 列在 infra 层解析为强类型集合，满足 YDIZ-DDD-007）。
+   */
+  private UserProfileVO entityToVO(UserProfile entity) {
+    UserProfileVO vo = new UserProfileVO();
+    vo.setUserId(entity.getUserId());
+    vo.setPreferredLanguage(entity.getPreferredLanguage());
+    vo.setQueryStyle(entity.getQueryStyle());
+    vo.setTotalInteractions(entity.getTotalInteractions());
+    vo.setLastInteractionAt(entity.getLastInteractionAt());
+    vo.setCreatedAt(entity.getCreatedAt());
+    vo.setUpdatedAt(entity.getUpdatedAt());
+    vo.setInterestedDomains(entity.getInterestedDomains());
+    vo.setDomainFrequency(entity.getDomainFrequency());
+    vo.setCommonIntents(entity.getCommonIntents());
+    return vo;
   }
 }

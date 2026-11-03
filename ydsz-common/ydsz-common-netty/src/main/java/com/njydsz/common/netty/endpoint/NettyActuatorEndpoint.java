@@ -3,7 +3,6 @@ package com.njydsz.common.netty.endpoint;
 import com.njydsz.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.common.netty.pool.NettyEventLoopPool;
 import com.njydsz.common.netty.server.AbstractNettyServer;
-import com.njydsz.common.netty.session.ConnectionSession;
 import com.njydsz.common.netty.session.SessionRepository;
 import io.netty.channel.Channel;
 import lombok.RequiredArgsConstructor;

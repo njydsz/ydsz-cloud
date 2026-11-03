@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
 
 /**
@@ -81,7 +82,7 @@ public class BatchProgressNotifier {
     payload.put("totalCount", totalCount);
     payload.put("processedCount", 0);
     payload.put("progress", 0.0);
-    payload.put("message", "任务开始执行");
+    payload.put("message", I18n.message("nextwiki.batch.task.started"));
 
     pushToUser(userId, payload);
   }
@@ -172,7 +173,7 @@ public class BatchProgressNotifier {
     payload.put("taskId", taskId);
     payload.put("taskType", taskType);
     payload.put("status", "FAILED");
-    payload.put("message", "任务失败: " + errorMessage);
+    payload.put("message", I18n.message("nextwiki.batch.task.failed", new Object[]{errorMessage}));
 
     pushToUser(userId, payload);
   }

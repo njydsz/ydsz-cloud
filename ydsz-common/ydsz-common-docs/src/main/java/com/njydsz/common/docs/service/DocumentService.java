@@ -236,7 +236,7 @@ public class DocumentService {
   public byte[] convert(InputStream inputStream, String fileName, DocumentFormat targetFormat) {
     DocumentConverter converter = converterProvider.getIfAvailable();
     if (converter == null) {
-      throw new DocumentException(DocumentExceptionCode.CONVERT_FAILED, "文档转换器未注册");
+      throw new DocumentException(DocumentExceptionCode.CONVERT_FAILED, "Document converter not registered");
     }
     DocumentFormat sourceFormat = DocumentFormat.fromFileName(fileName);
     return converter.convert(inputStream, fileName, sourceFormat, targetFormat);
@@ -257,7 +257,7 @@ public class DocumentService {
   public DocumentContent ocrScan(InputStream inputStream, String fileName, OcrEngine engine) {
     OcrProvider provider = ocrProvider.getIfAvailable();
     if (provider == null) {
-      throw new DocumentException(DocumentExceptionCode.PARSE_FAILED, "OCR 提供者未注册");
+      throw new DocumentException(DocumentExceptionCode.PARSE_FAILED, "OCR provider not registered");
     }
     return provider.ocrScan(inputStream, fileName, engine);
   }

@@ -137,7 +137,7 @@ public class AuthPolicyService {
   private AuthPolicyVO buildHardcodedDefault() {
     AuthPolicyVO vo = new AuthPolicyVO();
     vo.setId("hardcoded-default");
-    vo.setName("硬编码默认策略");
+    vo.setName(I18n.message("userinfo.auth.policy.default.name"));
     vo.setPasswordMinLength(DEFAULT_PASSWORD_MIN_LENGTH);
     vo.setIsPasswordRequireUppercase(true);
     vo.setIsPasswordRequireDigit(true);

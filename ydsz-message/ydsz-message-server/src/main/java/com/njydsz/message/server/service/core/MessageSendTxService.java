@@ -48,7 +48,7 @@ public class MessageSendTxService {
    * @param logVO 消息日志 VO（已构造，未落库）
    * @param request 消息发送请求（可为 null，为 null 时仅落库 msgLog）
    */
-  @Transactional(propagation = Propagation.REQUIRED)
+  @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
   public void insertLogAndOutbox(MsgLogVO logVO, MessageItemRequestDTO request) {
     msgLogRepository.save(logVO);
     if (request != null) {

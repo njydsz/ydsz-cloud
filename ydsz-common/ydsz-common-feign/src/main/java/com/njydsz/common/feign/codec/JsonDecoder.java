@@ -146,7 +146,7 @@ public class JsonDecoder implements Decoder {
       return YdszJson.fromJson(body, type);
     } catch (Exception e) {
       LOG.warn("JSON 解码失败, 类型: {}, 错误: {}", type, e.getMessage());
-      throw new DecodeException(500, "JSON 解码失败: " + e.getMessage(), response.request(), e);
+      throw new DecodeException(500, "JSON decode failed: " + e.getMessage(), response.request(), e);
     }
   }
 }

@@ -55,7 +55,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         || !StringUtils.hasText(dto.getChannel())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("用户 ID、主题编码与通道不能为空")
+          .message(I18n.message("message.subscription.user.topic.channel.required"))
           .build();
     }
     MsgSubscriptionQuery query = new MsgSubscriptionQuery();
@@ -199,7 +199,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         || !StringUtils.hasText(channel)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("用户 ID、主题编码与通道不能为空")
+          .message(I18n.message("message.subscription.user.topic.channel.required"))
           .build();
     }
     MsgSubscriptionQuery query = new MsgSubscriptionQuery();

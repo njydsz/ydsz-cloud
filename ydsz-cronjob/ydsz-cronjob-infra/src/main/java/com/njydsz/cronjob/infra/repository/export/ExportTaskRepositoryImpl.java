@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.cronjob.domain.entity.export.ExportTask;
 import com.njydsz.cronjob.domain.repository.export.ExportTaskRepository;
+import com.njydsz.cronjob.domain.vo.ExportTaskVO;
 import com.njydsz.cronjob.infra.mapper.export.ExportTaskMapper;
 
 /**
@@ -40,6 +41,12 @@ public class ExportTaskRepositoryImpl implements ExportTaskRepository {
   }
 
   @Override
+  public Optional<ExportTaskVO> findByIdVO(String id) {
+    ExportTask entity = exportTaskMapper.selectById(id);
+    return Optional.ofNullable(entity).map(this::entityToVO);
+  }
+
+  @Override
   public boolean updateWithVersion(ExportTask task) {
     return exportTaskMapper.updateById(task) > 0;
   }
@@ -52,6 +59,13 @@ public class ExportTaskRepositoryImpl implements ExportTaskRepository {
         .orderByDesc(ExportTask::getCreatedAt)
         .last("LIMIT " + Math.min(limit, 100));
     return exportTaskMapper.selectList(wrapper);
+  }
+
+  @Override
+  public List<ExportTaskVO> listByUserVO(String tenantId, String userId, int limit) {
+    return listByUser(tenantId, userId, limit).stream()
+        .map(this::entityToVO)
+        .toList();
   }
 
   @Override
@@ -68,5 +82,33 @@ public class ExportTaskRepositoryImpl implements ExportTaskRepository {
         .ne(ExportTask::getStatus, "PROCESSING")
         .lt(ExportTask::getUpdatedAt, expireBefore);
     return exportTaskMapper.delete(wrapper);
+  }
+
+  /**
+   * Entity → VO 转换（手动映射，收口在 infra 内部，满足 YDIZ-DDD-007）。
+   */
+  private ExportTaskVO entityToVO(ExportTask entity) {
+    ExportTaskVO vo = new ExportTaskVO();
+    vo.setId(entity.getId());
+    vo.setModule(entity.getModule());
+    vo.setTaskName(entity.getTaskName());
+    vo.setTaskType(entity.getTaskType());
+    vo.setParams(entity.getParams());
+    vo.setProgressPercent(entity.getProgressPercent());
+    vo.setErrorMessage(entity.getErrorMessage());
+    vo.setFileName(entity.getFileName());
+    vo.setFileSize(entity.getFileSize());
+    vo.setStorageBucket(entity.getStorageBucket());
+    vo.setStorageKey(entity.getStorageKey());
+    vo.setMimeType(entity.getMimeType());
+    vo.setDownloadUrl(entity.getDownloadUrl());
+    vo.setExpireAt(entity.getExpireAt());
+    vo.setStartedAt(entity.getStartedAt());
+    vo.setCompletedAt(entity.getCompletedAt());
+    vo.setStatus(entity.getStatus());
+    vo.setTenantId(entity.getTenantId());
+    vo.setCreatedAt(entity.getCreatedAt());
+    vo.setUpdatedAt(entity.getUpdatedAt());
+    return vo;
   }
 }

@@ -33,8 +33,8 @@ import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.domain.query.PageQuery;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.RuleEngine;
@@ -250,14 +250,19 @@ public class RuleAdminController {
       RuleVersionDiff diff = ruleAdminService.getVersionDiff(ruleCode, oldVersion, newVersion);
       return YdszResponse.success(literuleWebConverter.entityToVO(diff));
     } catch (IllegalArgumentException e) {
+      // 业务参数异常（如版本号不存在），message 不含内部细节，可回传
+      log.warn("[LiteRule] 版本 Diff 参数异常: ruleCode={}, oldV={}, newV={}",
+          ruleCode, oldVersion, newVersion);
       return YdszResponse.error(LiteruleExceptionCode.RULE_VERSION_NOT_FOUND, e.getMessage());
     } catch (IllegalStateException e) {
+      log.warn("[LiteRule] 版本 Diff 状态异常: ruleCode={}", ruleCode);
       return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, e.getMessage());
     } catch (Exception e) {
-      log.error("[LiteRule] 版本 Diff 失败: ruleCode={}, oldV={}, newV={}, error={}",
-          ruleCode, oldVersion, newVersion, e.getMessage(), e);
+      log.error("[LiteRule] 版本 Diff 失败: ruleCode={}, oldV={}, newV={}",
+          ruleCode, oldVersion, newVersion, e);
+      // 不把 e.getMessage() 返回给客户端：兜底分支可能捕获系统异常
       return YdszResponse.error(
-          YdszResultCode.VALIDATION_FAILED, "Version diff parse failed: " + e.getMessage());
+          YdszResultCode.VALIDATION_FAILED, I18n.message("literule.rule.version.diff.failed"));
     }
   }
 

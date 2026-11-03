@@ -1,0 +1,26 @@
+ydsz-common/ydsz-common-file/src/main/java/com/njydsz/common/file/config/FileConfiguration.java:93:private ObjectProvider<DistributedLocker> lockerProvider;
+ydsz-common/ydsz-common-search/src/main/java/com/njydsz/common/search/elasticsearch/ElasticsearchSearchStrategy.java:81:public ElasticsearchSearchStrategy(ElasticsearchClient client, SearchProperties properties) {
+ydsz-common/ydsz-common-search/src/main/java/com/njydsz/common/search/engine/pg/PgSearchStrategy.java:134:public PgSearchStrategy(
+ydsz-common/ydsz-common-socket/src/main/java/com/njydsz/common/socket/admin/WebSocketAdminController.java:56:private RealtimePushTemplate pushTemplate;
+ydsz-common/ydsz-common-socket/src/main/java/com/njydsz/common/socket/admin/WebSocketAdminController.java:59:private LocalSessionRegistry sessionRegistry;
+ydsz-common/ydsz-common-socket/src/main/java/com/njydsz/common/socket/admin/WebSocketAdminController.java:66:private WebSocketMetrics webSocketMetrics;
+ydsz-common/ydsz-common-thread/src/main/java/com/njydsz/common/thread/config/ThreadPoolAutoConfiguration.java:96:public void setApplicationContext(ApplicationContext applicationContext) {
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/AbstractFlowInstanceLifecycle.java:104:protected FlowInstanceRepository instanceRepository;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/AbstractFlowInstanceLifecycle.java:108:protected FlowDefinitionService definitionService;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/AbstractFlowInstanceLifecycle.java:121:protected FlowRunTaskRepository taskRepository;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/AbstractFlowInstanceLifecycle.java:125:protected FlowNodeRepository nodeRepository;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/AbstractFlowInstanceLifecycle.java:138:protected FlowSubProcessService subProcessService;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/AbstractFlowInstanceLifecycle.java:142:protected FlowCcService ccService;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/AbstractFlowInstanceLifecycle.java:155:protected FlowAuditLogRepository auditLogRepository;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/AbstractFlowInstanceLifecycle.java:168:protected NameAssembler nameAssembler;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/FlowInstanceLifecycleManager.java:68:private FlowInstanceVariableManager variableManager;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/FlowTaskCoreService.java:155:private FlowRunTaskRepository taskRepository;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/FlowTaskCoreService.java:159:private FlowInstanceRepository instanceRepository;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/FlowTaskCoreService.java:190:private CountersignStrategyFactory strategyFactory;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/FlowTaskCoreService.java:194:private FlowFormFieldPermService formFieldPermService;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/service/impl/instance/FlowTaskCoreService.java:221:private FlowMetrics flowMetrics;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/timer/FlowTimeoutHandlerImpl.java:44:private FlowAuditLogRepository auditLogRepository;
+ydsz-workflow/ydsz-workflow-server/src/main/java/com/njydsz/workflow/server/timer/FlowTimeoutJob.java:44:private FlowTimerRepository timerRepository;
+ydsz-agent/ydsz-agent-server/src/main/java/com/njydsz/agent/server/execution/ExecutionPauseService.java:61:public ExecutionPauseService(
+ydsz-agent/ydsz-agent-server/src/main/java/com/njydsz/agent/server/middleware/OutputGuardrailMiddleware.java:45:public OutputGuardrailMiddleware(
+ydsz-message/ydsz-message-server/src/main/java/com/njydsz/message/server/consumer/BloomFilterDeduplicator.java:94:public BloomFilterDeduplicator(RedisStringOps redisStringOps) {

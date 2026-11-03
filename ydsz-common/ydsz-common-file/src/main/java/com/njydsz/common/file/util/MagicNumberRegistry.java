@@ -76,7 +76,7 @@ public final class MagicNumberRegistry {
   }
 
   private MagicNumberRegistry() {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("Utility class cannot be instantiated");
   }
 
   /**
@@ -87,10 +87,10 @@ public final class MagicNumberRegistry {
    */
   public static void register(String type, byte[] magic) {
     if (type == null || type.isEmpty()) {
-      throw new IllegalArgumentException("类型标识不能为空");
+      throw new IllegalArgumentException("Type identifier must not be null or empty");
     }
     if (magic == null || magic.length == 0) {
-      throw new IllegalArgumentException("Magic Number 不能为空");
+      throw new IllegalArgumentException("Magic Number must not be null or empty");
     }
     REGISTRY.put(type, magic);
   }

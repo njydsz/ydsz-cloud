@@ -1,6 +1,7 @@
 package com.njydsz.workflow.domain.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -120,6 +121,17 @@ public interface FlowInstanceRepository {
    * @return 子流程实例 VO 列表
    */
   List<FlowInstanceVO> findChildren(String parentInstanceId);
+
+  /**
+   * 批量查询多个父流程下的子流程实例（N+1 治理）。
+   *
+   * <p>等价于对每个 parentId 调用 {@link #findChildren(String)}，但只用一次 SQL
+   * （{@code WHERE parent_instance_id IN (...)}），避免批量终止场景下的 O(N) 次查询。
+   *
+   * @param parentInstanceIds 父流程实例 ID 集合
+   * @return 全部子流程实例 VO 列表；入参为空时返回空列表
+   */
+  List<FlowInstanceVO> findChildrenByParentIds(Collection<String> parentInstanceIds);
 
   /**
    * 统计某状态下的实例数量。

@@ -13,19 +13,19 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.10.08-v2"  # v28.2: +YDIZ-CONFIG-004 业务配置命名空间 ydzs.{module}.*
+  version: "26.11.03-v1"  # v29: 修复 9 条 ID 重复（COMMON-062~068 / CONFIG-005~006 重编号）+ 补齐 COMMON-014~017 severity + level→severity 字段统一 + 新增 YDIZ-CONC-006
   source: "docs/云顶编码规范.md v1.0.16"
-  last_synced: "2026-10-08"
-  last_updated: "26.10.08-v2（+1 P1 YDIZ-CONFIG-004 业务配置统一 ydzs.{module}.* 命名空间；总规则 190 条）"
-  total_rules: 190
+  last_synced: "2026-11-03"
+  last_updated: "26.11.03-v1（规则源结构治理：9 条 ID 重复已重编号、4 条缺失 severity 已补齐、level 字段统一为 severity；新增 YDIZ-CONC-006 定时任务集群单点执行；总规则 197 条）"
+  total_rules: 197
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
-    P0: 64
-    P1: 89
-    P2: 24
+    P0: 71
+    P1: 95
+    P2: 31
 
 rules:
   # ============================================
@@ -1030,9 +1030,18 @@ rules:
       6. 检查是否有 `this.status = xxx` 等内部引用，改为 `setStatus(xxx)` / `getStatus()`
       7. 过渡期可保留 getStatusEnum()/setStatusEnum() 别名方法内部路由到新字段，避免批量修改调用方
     exemption: |
-      复合主键表无独立 id 列、继承字段不参与持久化时豁免（需注释说明）。
-      ydzs-common-jdbc 框架自身（基类 impl）不在此约束内。
-      历史遗留 status 列推荐采用"新增列 + 业务字段改名"策略（见字段改名迁移方案）。
+      以下情形豁免（必须在字段 Javadoc 中显式标注豁免依据，否则仍判违规）：
+
+      1. **复合主键表无独立 id 列、继承字段不参与持久化时豁免**（需注释说明）。
+      2. **主键列名非 `id` 的历史表**：MpBaseIdEntity 的 `id` 硬编码 `@TableId(type = ASSIGN_ID)` 且无列名参数，
+         当表结构的主键列名不是 `id`（如 `trace_id` / `user_id`）时，允许子类用 `@TableId(value = "列名", type = IdType.INPUT)`
+         + `@TableField("列名")` 声明同名 `id` 字段进行覆盖。要求：
+         - 必须在 Javadoc 中标注「YDIZ-DDD-008 exemption: 主键列名非 id 的历史表」
+         - 必须显式指定 `type = IdType.INPUT`（业务生成主键）或 `ASSIGN_ID`（框架生成），不得沿用父类默认值
+         - 表结构中不得同时存在 `id` 列与业务主键列（避免字段遮蔽导致读写不一致）
+         - 新表设计一律使用 `id` 作为主键列名，不适用本豁免
+      3. ydzs-common-jdbc 框架自身（基类 impl）不在此约束内。
+      4. 历史遗留 status 列推荐采用"新增列 + 业务字段改名"策略（见字段改名迁移方案）。
     example_bad: |
       // ❌ 违规：Entity 未继承 MpBaseEntity
       @Data
@@ -1179,6 +1188,56 @@ rules:
       删除 PassThrough 包装方法；直接 import ThreadPoolRegistry。
       如特有逻辑（拒绝计数、租户隔离 Bean 装配）需保留，在类 Javadoc 中明确说明。
     source: "ydsz-common-thread 全局引用分析 2026-09-30"
+
+  - id: "YDIZ-CONC-006"
+    category: "concurrency"
+    severity: "P1"
+    title: "【强制】@Scheduled 定时任务必须保证集群单点执行"
+    description: |
+      业务模块中的 `@Scheduled` 定时任务在多节点部署时必须保证同一时刻仅一个节点执行，
+      避免重复处理（重复推送、重复扣减、重复生成报表等）。
+
+      **合规方式（三选一）**：
+      1. `@Scheduled` + `@DistributedScheduled(lockKey = "模块:任务名", leaseTime = N)` 双注解
+         （推荐，`lockKey` 需全局唯一，`leaseTime` 应略大于任务预计耗时）
+      2. `@Scheduled` + 方法体内 `distributedLocker.tryLock(...)`，获取不到锁直接 return
+      3. `@Scheduled` + 类级/方法级 `@YdszDistributedLock(key = "...", waitTime = 0)`
+
+      **豁免条件**（须在方法 Javadoc 中标注「YDIZ-CONC-006 豁免说明」及理由）：
+      - 任务为**节点本地探针**，其结果仅用于本节点决策（如 Redis 连通性探测决定是否启用本地降级），
+        加锁反而会破坏局部可用性
+      - 任务本身幂等且重复执行无副作用（须在注释中论证）
+      - 已由 cronjob 引擎（ydsz-cronjob）统一调度的任务，其单点性由调度中心保证
+
+      **禁止**：既不配对注解、也不加锁，也无 Javadoc 豁免说明的"裸" `@Scheduled` 任务。
+    pattern: |
+      `@Scheduled` 注解所在方法（含其紧邻注解块与上方 Javadoc）中，
+      既无 `@DistributedScheduled` / `@YdszDistributedLock`，方法体内也无 `tryLock` 调用，
+      且 Javadoc 未标注豁免说明。
+    fix: |
+      1. 优先补 `@DistributedScheduled(lockKey = "{module}:{task-name}", leaseTime = N)`
+      2. 若任务已在 Service 层加锁，在 Javadoc 中补充「YDIZ-CONC-006 豁免说明」并指向加锁位置
+      3. 若为节点本地探针，在 Javadoc 中说明为何加锁会破坏局部可用性
+    example_bad: |
+      ```java
+      @Scheduled(cron = "0 */10 * * * ?")
+      public void syncUsers() {
+        // 多节点重复执行，造成重复同步
+      }
+      ```
+    example_good: |
+      ```java
+      @Scheduled(cron = "0 */10 * * * ?")
+      @DistributedScheduled(lockKey = "userinfo:sync-users", leaseTime = 540)
+      public void syncUsers() {
+        // 集群单点执行
+      }
+      ```
+    exemption: |
+      节点本地探针（结果仅用于本节点决策）、已由 ydsz-cronjob 调度的任务、
+      以及方法体内已通过 `DistributedLocker.tryLock` 或 `@YdszDistributedLock` 加锁的任务，
+      均须在 Javadoc 中标注「YDIZ-CONC-006 豁免说明」。
+    source: "定时任务集群单点执行专项（YDIZ-CONC-006，P1，26.11.03）"
 
   # ============================================
   # 十一、性能规范（2 条，P0+P1）
@@ -2742,7 +2801,14 @@ rules:
       Service / Controller 等 Spring 托管层禁止出现自然语言文案字面量。
       异常消息、接口返回 message、业务描述等用户可见文案必须通过 i18n key 解析。
 
-      **允许例外**：日志中的开发者描述字符串、常量类中的技术性 key 名、单元测试中的固定测试字符串。
+      **允许例外**：
+      1. 日志中的开发者描述字符串、常量类中的技术性 key 名、单元测试中的固定测试字符串。
+      2. **common 框架层（L1/L2 及部分 L4/L5 模块）**：受模块分层架构约束，L1 模块（json / util / cache / excel /
+         core-base）零依赖、禁止引入 `ydsz-common-locales`（否则形成 core → locales → core 循环依赖），
+         其异常消息**统一使用纯英文技术性描述**，由上层业务模块通过错误码取 i18n 文案后呈现给终端用户。
+         判定标准：L1/L2 模块的异常消息语言为英文即合规；L4/L5 模块（docs / feign / safe 等）同样采用
+         "错误码 + 纯英文描述"，不强制引入 i18n 依赖。
+      3. 业务模块（`ydsz-*-infra` / `*-server` / `*-web`）的异常消息不受此例外保护，必须走 i18n key。
     pattern: "throw new BusinessException(\"硬编码中文\") 或 msg(\"English literal\")"
     fix: |
       提取为 i18n key，定义为 `{module}-messages*.properties` 中的条目，重构代码调用 I18n.message() 或注入 I18nMessages
@@ -3506,6 +3572,7 @@ rules:
   # P6: 新增 4 条 YDIZ-COMMON 规则，收敛业务模块对 common-json/cache/excel/util 的自实现
   # 编号 014~017：001~013 已被 P0-1/P0-2/P0-3 批次占用（文件存储/Excel/Seata/缓存等 P0 规则）
   - id: "YDIZ-COMMON-014"
+    severity: "P1"
     description: |
       缓存防穿透/防击穿/防雪崩场景必须使用 ydsz-common-cache 提供的 {@code Cache#getWithProtection}（封装 CacheProtectionGuard），
       禁止业务模块使用原生 {@code ConcurrentHashMap + CompletableFuture / Future}、双重检查锁等手写方案实现 Singleflight 语义。
@@ -3528,6 +3595,7 @@ rules:
       3. 调用 cache.getWithProtection(key, loader, minMs, maxMs) 替代手写逻辑
       4. 删除原 ConcurrentHashMap + Future 相关字段
     source: "编码规范附录新增（YDIZ-COMMON-014，P1，26.09.25 公共模块利用率修复）"
+    severity: "P1"
 
   - id: "YDIZ-COMMON-015"
     description: |
@@ -3556,6 +3624,7 @@ rules:
       3. 反序列化替换为 YdszJson.fromJson(json, TargetClass.class)
       4. 删除所有 extract*Field 方法
     source: "编码规范附录新增（YDIZ-COMMON-015，P2，26.09.25 公共模块利用率修复）"
+    severity: "P1"
 
   - id: "YDIZ-COMMON-016"
     description: |
@@ -3569,8 +3638,11 @@ rules:
       3. 校验替换为 PwdUtils.verifyPasswordBCrypt(rawPassword, hashedPassword)
       4. 移除原 BCryptPasswordEncoder Bean 注册
     source: "编码规范附录新增（YDIZ-COMMON-016，P1，26.09.25 公共模块利用率修复）"
+    severity: "P2"
 
   - id: "YDIZ-COMMON-017"
+    category: "common-reuse"
+    severity: "P2"
     description: |
       分布式场景下生成业务主键（如任务 ID、审批单号）必须使用 ydsz-common-util 的 {@code SnowflakeIdGenerator}，
       禁止业务模块使用 {@code AtomicLong.getAndIncrement()}、{@code System.currentTimeMillis()} 等本地自增方案
@@ -3941,8 +4013,8 @@ rules:
   # 异常处理规范（1 条新增，P0）
   # ============================================
   - id: "YDIZ-EXC-001"
-    level: "P0"
     category: "exception"
+    severity: "P0"
     title: "全局异常处理器必须继承 BaseExceptionHandler"
     description: |
       web 模块的全局异常处理器应继承 BaseExceptionHandler 以获得统一响应格式、指标采集和 i18n 能力。
@@ -3954,8 +4026,8 @@ rules:
   # i18n 规范（1 条新增，P0）
   # ============================================
   - id: "YDIZ-I18N-004"
-    level: "P0"
     category: "i18n"
+    severity: "P0"
     title: "禁止异常消息硬编码中文"
     description: |
       抛出业务异常时禁止使用硬编码中文消息，应使用 i18n key 由 MessageSource 解析。
@@ -3968,8 +4040,8 @@ rules:
   # 公共模块规范（1 条新增，P1）
   # ============================================
   - id: "YDIZ-COMMON-018"
-    level: "P1"
     category: "common"
+    severity: "P1"
     title: "模块查询对象应继承 PageQuery 基类"
     description: |
       分页查询对象应 extends PageQuery 统一管理分页参数（pageNum、pageSize 等），
@@ -3981,8 +4053,8 @@ rules:
   # 数据库规范（1 条新增，P2）
   # ============================================
   - id: "YDIZ-DB-005"
-    level: "P2"
     category: "database"
+    severity: "P2"
     title: "Agent 模块所有 Entity 必须继承 MpBaseEntity，禁止自建基类"
     description: |
       Agent 模块历史上出现 Entity 继承 MpBaseAuditEntity 或直接继承 ENTITY 导致 DDL 漂移
@@ -4009,8 +4081,8 @@ rules:
   # 工程规范（2 条新增，P1）
   # ============================================
   - id: "YDIZ-TEST-005"
-    level: "P0"
     category: "testing"
+    severity: "P0"
     title: "执行 DDL 变更时必须同步提供 Flyway 脚本，禁止手工直接修改数据库"
     description: |
       数据库结构变更（ALTER TABLE / ADD COLUMN / RENAME 等）必须通过 Flyway 版本化脚本管理，
@@ -4034,7 +4106,7 @@ rules:
     source: "全维度深度分析（YDIZ-TEST-005，P0，26.09.27）"
 
 - id: "YDIZ-FLYWAY-001"
-  level: "P1"
+  severity: "P1"
   category: "database"
   title: "Flyway 脚本版本号日期不得超过当前日期，同一字段/对象的变更只能在唯一脚本中出现"
   description: |
@@ -4062,7 +4134,7 @@ rules:
   source: "Flyway 脚本专项整改（YDIZ-FLYWAY-001，P1，26.10.08）"
 
 - id: "YDIZ-FE-001"
-  level: "P1"
+  severity: "P1"
   category: "engineering"
   title: "gen-contract.py 更新后必须重新生成全部子应用 API 文件并提交"
   description: |
@@ -4082,8 +4154,8 @@ rules:
   source: "全维度深度分析（YDIZ-FE-001，P1，26.09.27）"
 
   - id: "YDIZ-FE-002"
-    level: "P1"
     category: "engineering"
+    severity: "P1"
     title: "禁止在前端 sdk/schema.d.ts 中手动修改字段命名"
     description: |
       schema.d.ts 由后端 OpenAPI 规范自动生成（springdoc-openapi → openapi-typescript），
@@ -4106,8 +4178,8 @@ rules:
   # 公共模块利用率规则（新增 5 条，26.09.28）
   # ============================================
   - id: "YDIZ-COMMON-028"
-    severity: "P1"
     category: "common-reuse"
+    severity: "P1"
     title: "【强制】Excel 操作必须通过 ExcelFacade"
     description: |
       所有 Excel 导入/导出操作必须通过 com.njydsz.common.excel.core.ExcelFacade 统一入口。
@@ -4146,8 +4218,8 @@ rules:
   # 激活原因: 7 个 export 端点使用 ByteArrayOutputStream 中间缓冲 + 手动 setHeader，
   # 导致流式引擎退化为全量缓冲、文件名编码不统一。
   - id: "YDIZ-COMMON-033"
-    severity: "P1"
     category: "common-reuse"
+    severity: "P1"
     title: "【强制】Excel Web 导出必须通过 ExcelWebSupport 流式写入 response OutputStream"
     description: |
       所有 Controller 层 Excel 导出端点必须通过 com.njydsz.common.excel.spring.ExcelWebSupport
@@ -4198,8 +4270,8 @@ rules:
   # ---- YDIZ-COMMON-034 ----
   # 2026-09-30 P2: 禁止 ByteArrayOutputStream 作为 Excel 流式中转
   - id: "YDIZ-COMMON-034"
-    severity: "P2"
     category: "common-reuse"
+    severity: "P2"
     title: "【建议】禁止 ByteArrayOutputStream 作为 Excel 流式写入的中介缓冲区"
     description: |
       当目标输出流为 ServletOutputStream（response.getOutputStream()）时，
@@ -4217,8 +4289,8 @@ rules:
     source: "ydsz-common-excel 全局引用分析 2026-09-30"
 
   - id: "YDIZ-COMMON-029"
-    severity: "P1"
     category: "common-reuse"
+    severity: "P1"
     title: "【强制】Redis 操作优先使用 RedisOps 封装层"
     description: |
       业务模块操作 Redis 时，禁止直接注入 RedisTemplate 或 StringRedisTemplate，
@@ -4254,8 +4326,8 @@ rules:
     exception: "ydsz-common-redis 框架内部、临时数据迁移脚本除外"
 
   - id: "YDIZ-COMMON-030"
-    severity: "P1"
     category: "common-reuse"
+    severity: "P1"
     title: "【强制】业务通知必须通过 NotifyHelper"
     description: |
       所有业务通知（邮件/短信/钉钉/飞书/企微/站内信）必须通过
@@ -4297,8 +4369,8 @@ rules:
     source: "全局引用分析 v2（YDIZ-COMMON-030，P1，26.09.28 Notify 孤岛治理）"
 
   - id: "YDIZ-COMMON-031"
-    severity: "P2"
     category: "common-reuse"
+    severity: "P2"
     title: "【建议】配置热更新必须通过 ConfigChangeBridge"
     description: |
       业务模块在监听配置变更时（如 database-config、Apollo 配置、Spring Cloud Config 推送），
@@ -4329,8 +4401,8 @@ rules:
     source: "全局引用分析 v2（YDIZ-COMMON-031，P2，26.09.28 ConfigChangeBridge 激活）"
 
   - id: "YDIZ-COMMON-032"
-    severity: "P2"
     category: "common-reuse"
+    severity: "P2"
     title: "【建议】i18n 使用率门禁"
     description: |
       业务模块 pom 引入 ydsz-common-locales 后，必须在代码中实际使用 I18nMessages
@@ -4370,8 +4442,8 @@ rules:
   # 新增 3 条（26.09.29 公共基础深化）
   # ============================================
   - id: "YDIZ-I18N-005"
-    severity: "P1"
     category: "i18n"
+    severity: "P1"
     title: "【严重】响应体内的用户可见文案必须走 i18n，禁止中文硬编码字符串"
     description: |
       所有 HTTP 响应体内的用户可见文案（.data("reason") / .message() / .msg() 的字符串字面量）
@@ -4389,9 +4461,9 @@ rules:
     rule: "YdszResponse.error(code, \"中文\") 中的字符串字面量必须替换为 i18n key 或解析后的文案"
     source: "公共基础深化（YDIZ-I18N-005，P1，26.09.29 P1-2 用户可见文案收敛）"
 
-  - id: "YDIZ-COMMON-033"
-    severity: "P1"
+  - id: "YDIZ-COMMON-062"
     category: "common-reuse"
+    severity: "P1"
     title: "【严重】Agent 业务关联维度必须通过 RequestContext 传递，禁止私建 ThreadLocal"
     description: |
       Agent 模块的 botId / turnId / conversationId / accountId 等链路维度信息必须使用公共
@@ -4407,11 +4479,11 @@ rules:
       - 消费处读取：RequestContext.getBotId() / getConversationId() / getAccountId()
       - 存量 TraceTraceHolder 已收敛为 RequestContext 的适配委托器，新代码直接用 RequestContext
     rule: "禁止 `new ThreadLocal<...>()` 持有链路维度；禁止 AgentFacade/Controller 之外自建业务上下文持有者"
-    source: "公共基础深化（YDIZ-COMMON-033，P1，26.09.29 P1-4 Agent 链路上下文收敛）"
+    source: "公共基础深化（YDIZ-COMMON-062，P1，26.09.29 P1-4 Agent 链路上下文收敛）"
 
   - id: "YDIZ-EX-001"
-    severity: "P0"
     category: "exception"
+    severity: "P0"
     title: "【强制】异常消息禁止透传 e.getMessage() 原始内容到前端"
     description: |
       HTTP 响应体中禁止直接暴露内部异常原始消息（e.getMessage()），所有用户可见的异常文案
@@ -4433,9 +4505,9 @@ rules:
   # ============================================
   # 新增 3 条（26.09.30 公共基础利用率提升 P0）
   # ============================================
-  - id: "YDIZ-COMMON-034"
-    severity: "P0"
+  - id: "YDIZ-COMMON-063"
     category: "common-reuse"
+    severity: "P0"
     title: "【强制】分页查询参数对象必须继承 PageQuery"
     description: |
       所有分页查询的参数对象（XxxQuery / XxxPageQuery）必须继承 com.njydsz.common.domain.query.PageQuery，
@@ -4474,11 +4546,11 @@ rules:
           return YdszResponse.success(jobService.page(query));
       }
       // JobQuery extends PageQuery { String keyword; String status; String group; }
-    source: "公共基础利用率提升（YDIZ-COMMON-034，P0，26.09.30 PageQuery 强制继承规则）"
+    source: "公共基础利用率提升（YDIZ-COMMON-063，P0，26.09.30 PageQuery 强制继承规则）"
 
   - id: "YDIZ-COMMON-035"
-    severity: "P0"
     category: "exception"
+    severity: "P0"
     title: "【强制】业务异常必须引用 *ExceptionCode 枚举常量，禁止使用裸字符串 i18n key"
     description: |
       抛出业务异常（BusinessException / SysException）时，第一个参数（错误码）必须引用对应模块的
@@ -4517,8 +4589,8 @@ rules:
     source: "公共基础利用率提升（YDIZ-COMMON-035，P0，26.09.30 异常枚举强类型规则）"
 
   - id: "YDIZ-I18N-006"
-    severity: "P1"
     category: "i18n"
+    severity: "P1"
     title: "【严重】异步场景（@Async / MQ消费 / 线程池）必须传递 i18n Locale 上下文"
     description: |
       在 @Async 方法、MQ 消费者（RocketMQ/RabbitMQ Listener）、线程池任务中若有日志记录、异常消息生成
@@ -4563,8 +4635,8 @@ rules:
   # 新增 4 条（26.09.30 公共基础利用率提升 P1-P2）
   # ============================================
   - id: "YDIZ-COMMON-036"
-    severity: "P1"
     category: "common-reuse"
+    severity: "P1"
     title: "【严重】获取当前登录用户信息必须使用 CurrentUser 统一模型"
     description: |
       Controller / Service 层获取当前登录用户信息时，必须使用 com.njydsz.common.core.model.CurrentUser
@@ -4592,8 +4664,8 @@ rules:
     source: "公共基础利用率提升（YDIZ-COMMON-036，P1，26.09.30 CurrentUser 统一上下文）"
 
   - id: "YDIZ-COMMON-037"
-    severity: "P1"
     category: "common-reuse"
+    severity: "P1"
     title: "【严重】灰度 / 降级 / 实验开关必须使用 FeatureFlagService"
     description: |
       业务代码中实现灰度发布、功能降级、A/B 实验时，必须使用
@@ -4626,8 +4698,8 @@ rules:
     source: "公共基础利用率提升（YDIZ-COMMON-037，P1，26.09.30 FeatureFlagService 灰度能力）"
 
   - id: "YDIZ-COMMON-038"
-    severity: "P1"
     category: "common-reuse"
+    severity: "P1"
     title: "【严重】状态枚举必须继承 BaseStatusEnum"
     description: |
       业务模块的状态枚举（Status / State 枚举）必须继承 com.njydsz.common.domain.enums.BaseStatusEnum，
@@ -4659,8 +4731,8 @@ rules:
     source: "公共基础利用率提升（YDIZ-COMMON-038，P1，26.09.30 BaseStatusEnum 全覆盖）"
 
   - id: "YDIZ-COMMON-039"
-    severity: "P2"
     category: "common-reuse"
+    severity: "P2"
     title: "【建议】批量操作结果返回必须使用 BatchBusinessException 或结构化 Result"
     description: |
       批量操作接口（批量删除 / 批量启停 / 批量导入）返回结果必须结构化，包含每条记录的成功/失败状态，
@@ -4684,8 +4756,8 @@ rules:
     source: "公共基础利用率提升（YDIZ-COMMON-039，P2，26.09.30 批量操作结构化结果）"
 
   - id: "YDIZ-COMMON-040"
-    severity: "P1"
     category: "common-reuse"
+    severity: "P1"
     title: "【严重】throw 语句禁止硬编码中文，必须使用 I18n.message()"
     description: |
       所有业务模块（ydsz-agent/userinfo/message/workflow/cronjob/nextwiki/literule/system/generator/gateway）的 throw 语句
@@ -4723,8 +4795,8 @@ rules:
 
   # ==================== 公共模块利用率 v2 专项（4 条：业务主键统一 + 脚本引擎收敛 + 利用率门禁 + 沉睡能力退出机制） ====================
   - id: "YDIZ-COMMON-041"
-    severity: "P1"
     category: "common-reuse"
+    severity: "P1"
     title: "【严重】业务主键禁止使用 UUID，必须使用 SnowflakeIdGenerator"
     description: |
       禁止在业务实体 ID 生成场景中使用 `UUID.randomUUID()`（验证码 key / OAuth state / SAML requestId 等安全场景除外），
@@ -4770,8 +4842,8 @@ rules:
     source: "ydsz-common 全局引用深度分析 v2（YDIZ-COMMON-041，P1，26.09.28 业务主键统一）"
 
   - id: "YDIZ-COMMON-042"
-    severity: "P1"
     category: "common-reuse"
+    severity: "P1"
     title: "【严重】脚本引擎禁止直连 GroovyClassLoader/ScriptEngine，必须通过 literule"
     description: |
       禁止业务代码直接使用 `GroovyClassLoader` / `javax.script.ScriptEngine` / `ScriptEngineManager` 执行脚本，
@@ -4813,8 +4885,8 @@ rules:
     source: "ydsz-common 全局引用深度分析 v2（YDIZ-COMMON-042，P1，26.09.28 脚本引擎收敛）"
 
   - id: "YDIZ-COMMON-043"
-    severity: "P2"
     category: "common-reuse"
+    severity: "P2"
     title: "【重要】公共能力上线后利用率须达标"
     description: |
       下沉到 ydzs-common 的能力类在发布后 30 天内须被 ≥3 个业务模块引用（通过 ArchUnit 引用扫描验证），
@@ -4850,8 +4922,8 @@ rules:
     source: "ydsz-common 全局引用深度分析 v2（YDIZ-COMMON-043，P2，26.09.28 利用率门禁机制）"
 
   - id: "YDIZ-COMMON-044"
-    severity: "P2"
     category: "common-reuse"
+    severity: "P2"
     title: "【重要】沉睡能力定期评估退出机制"
     description: |
       上线 90 天内零引用的能力类须进入评估流程（保留/降级/删除），避免公共模块持续积累无消费者能力。
@@ -4892,8 +4964,8 @@ rules:
     source: "ydsz-common 全局引用深度分析 v2（YDIZ-COMMON-044，P2，26.09.28 沉睡能力退出机制）"
 
   - id: "YDIZ-COMMON-045"
-    severity: "P0"
     category: "common-reuse"
+    severity: "P0"
     title: "【强制】禁止业务模块 throw RuntimeException，必须使用 BusinessException / SysException"
     description: |
       所有业务模块（ydsz-system、ydsz-userinfo、ydsz-message、ydsz-workflow、ydsz-cronjob、ydsz-nextwiki、ydsz-literule、ydsz-agent、ydsz-generator）中禁止直接抛出 RuntimeException。
@@ -4939,8 +5011,8 @@ rules:
     source: "公共基础深化落地（YDIZ-COMMON-045，P0，26.09.xx RuntimeException 清零专项）"
 
   - id: "YDIZ-COMMON-046"
-    severity: "P1"
     category: "i18n"
+    severity: "P1"
     title: "【强制】i18n message key 必须使用英文命名规范，禁止中文原文作为 key"
     description: |
       使用 `I18n.message(key, ...)` 或 `I18nMessages.message(key, ...)` 时，key 必须为英文命名规范（如 "module.scenario.error_key"），严禁直接使用中文文本作为 key。
@@ -4982,8 +5054,8 @@ rules:
     source: "公共基础深化落地（YDIZ-COMMON-046，P1，26.09.xx 伪 i18n 清零专项）"
 
   - id: "YDIZ-COMMON-047"
-    severity: "P1"
     category: "common-reuse"
+    severity: "P1"
     title: "【建议】HTTP 请求头常量必须引用 HeaderConstants，禁止硬编码字符串"
     description: |
       在 WebClient、RestTemplate、Feign 拦截器、ServerHttpRequest 构建等需要设置/获取 HTTP 请求头的场景中，必须使用 `HeaderConstants` 中定义的标准常量，禁止硬编码字符串字面量。
@@ -5766,7 +5838,7 @@ rules:
   # ============================================
   # 十三、ydsz-common-config 利用率专项（1 条，26.10.01）
   # ============================================
-  - id: "YDIZ-CONFIG-001"
+  - id: "YDIZ-CONFIG-005"
     category: "common-reuse"
     severity: "P2"
     title: "【规范】多层 JSON 配置合并必须使用 ConfigMergeUtils，禁止自行实现"
@@ -5798,10 +5870,10 @@ rules:
     example_good: |
       ✅ 使用 ConfigMergeUtils
       String merged = ConfigMergeUtils.mergeLayers(defaults, envConfig, tenantConfig);
-    source: "ydsz-common-config 全局引用分析整改（YDIZ-CONFIG-001，P2，26.10.01 ConfigMergeUtils 储备能力）"
+    source: "ydsz-common-config 全局引用分析整改（YDIZ-CONFIG-005，P2，26.10.01 ConfigMergeUtils 储备能力）"
     exception: "Spring Environment 属性源优先级体系已覆盖扁平 key-value 场景；仅多层 JSON 对象深度合并适用"
 
-  - id: "YDIZ-CONFIG-002"
+  - id: "YDIZ-CONFIG-006"
     category: "common-reuse"
     severity: "P2"
     title: "【规范】手动 Jasypt 解密必须使用 ConfigCliTool，禁止直接创建 PooledPBEStringEncryptor"
@@ -5830,7 +5902,7 @@ rules:
     example_good: |
       ✅ 使用 ConfigCliTool
       String plain = ConfigCliTool.decrypt(encryptedValue, masterPassword);
-    source: "ydsz-common-config 全局引用分析整改（YDIZ-CONFIG-002，P2，26.10.01 Jasypt 统一解密入口）"
+    source: "ydsz-common-config 全局引用分析整改（YDIZ-CONFIG-006，P2，26.10.01 Jasypt 统一解密入口）"
     exception: "ydsz-common-config 模块内部的 ConfigCliTool.createEncryptor 方法（属于框架自身实现）"
 
 # ============================================
@@ -6015,9 +6087,9 @@ stats:
   # ============================================
   # ydsz-common-cache 全局引用分析整改（2 条，P1+P2，26.09.29）
   # ============================================
-  - id: "YDIZ-COMMON-048"
-    severity: "P1"
+  - id: "YDIZ-COMMON-064"
     category: "common-reuse"
+    severity: "P1"
     title: "【严重】缓存键必须使用 CacheKeyBuilder 构造，禁止手工拼接 \"ydsz:\" 前缀"
     description: |
       所有业务模块（ydsz-system、ydsz-userinfo、ydsz-message、ydsz-workflow、ydsz-cronjob、
@@ -6067,12 +6139,12 @@ stats:
       // 业务类中注入并调用
       private final CacheKeyBuilder cacheKeyBuilder;
       redisStringOps.set(cacheKeyBuilder.dnd(userId), value);
-    source: "ydsz-common-cache 全局引用分析整改（YDIZ-COMMON-048，P1，26.09.29 CacheKeyBuilder 全覆盖）"
+    source: "ydsz-common-cache 全局引用分析整改（YDIZ-COMMON-064，P1，26.09.29 CacheKeyBuilder 全覆盖）"
     exception: "ydz-common L1 子模块内部、存量 Redis key 格式兼容场景（需文档说明）"
 
-  - id: "YDIZ-COMMON-049"
-    severity: "P2"
+  - id: "YDIZ-COMMON-065"
     category: "common-reuse"
+    severity: "P2"
     title: "【建议】@YdszCacheable 注解启用时必须配 YdszCacheManager，禁止自建 CacheManager"
     description: |
       业务模块使用 `@YdszCacheable` / `@YdszCacheEvict` / `@YdszCachePut` 注解驱动缓存时，
@@ -6122,15 +6194,15 @@ stats:
             key = "@cacheKeyBuilder.configValue(#p0)")
         public String getConfigValue(String configKey) { ... }
       }
-    source: "ydsz-common-cache 全局引用分析整改（YDIZ-COMMON-049，P2，26.09.29 YdszCacheManager 统一治理）"
+    source: "ydsz-common-cache 全局引用分析整改（YDIZ-COMMON-065，P2，26.09.29 YdszCacheManager 统一治理）"
     exception: "复杂 value 结构缓存（VO 集合、多级索引）可使用 YdszCache API 直接操作"
 
   # ============================================
   # 九、异常体系统一（26.09.30 新增 YDIZ-COMMON-050~052，+3 规则）
   # ============================================
-  - id: "YDIZ-COMMON-050"
-    severity: "P1"
+  - id: "YDIZ-COMMON-066"
     category: "common-reuse"
+    severity: "P1"
     title: "【强制】L1/L2 框架模块异常必须使用 InfraException，禁止直接 extends RuntimeException"
     description: |
       ydzs-common 的 L1/L2 工具模块（ydsz-common-util、ydsz-common-json、ydsz-common-excel、
@@ -6170,12 +6242,12 @@ stats:
           super(message, cause);
         }
       }
-    source: "ydsz-common-exception 全局引用分析整改（YDIZ-COMMON-050，P1，26.09.30 InfraException 统一体系）"
+    source: "ydsz-common-exception 全局引用分析整改（YDIZ-COMMON-066，P1，26.09.30 InfraException 统一体系）"
     exception: "L1 模块（util/json/cache/excel）因分层约束可保持 RuntimeException，不需引入 ydzs-common-exception 依赖"
 
-  - id: "YDIZ-COMMON-051"
-    severity: "P1"
+  - id: "YDIZ-COMMON-067"
     category: "common-reuse"
+    severity: "P1"
     title: "【强制】catch 底层异常后应转换为 BusinessException/SysException/InfraException，禁止原样 rethrow RuntimeException"
     description: |
       Service 层调用外部依赖（数据库、RPC、Redis、文件系统、第三方 SDK）时，catch 的底层异常
@@ -6220,12 +6292,12 @@ stats:
             .cause(e)
             .build();
       }
-    source: "exception 体系利用率专项（YDIZ-COMMON-051，P1，26.09.30 RuntimeException 穿透防护）"
+    source: "exception 体系利用率专项（YDIZ-COMMON-067，P1，26.09.30 RuntimeException 穿透防护）"
     exception: "业务模块 server 层 SysException/InfraException 可直接向上抛出（全局异常处理器能正确处理）"
 
-  - id: "YDIZ-COMMON-052"
-    severity: "P2"
+  - id: "YDIZ-COMMON-068"
     category: "common-reuse"
+    severity: "P2"
     title: "【建议】InfraException 默认 i18n key 为 infra.error，各模块可按需覆盖"
     description: |
       使用 `InfraException` 抛出基础设施异常时，**建议**为每个异常类指定默认的 i18n 消息 key，
@@ -6245,7 +6317,7 @@ stats:
       - 具体业务场景提供精确的 i18n key，前端可据此展示针对性文案
       - 符合 EXCEPT-002 规范（异常消息必须走 i18n key）
     pattern: 'new\s+InfraException\(\s*[^k]*\)'
-    source: "exception 体系利用率专项（YDIZ-COMMON-052，P2，26.09.30 默认 key infra.error 治理）"
+    source: "exception 体系利用率专项（YDIZ-COMMON-068，P2，26.09.30 默认 key infra.error 治理）"
     exception: "仅供框架内部用户无法定位精确 key 的场景；业务模块应优先使用精确 key"
 
   # ============================================

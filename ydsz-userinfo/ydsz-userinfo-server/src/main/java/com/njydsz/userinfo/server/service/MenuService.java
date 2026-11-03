@@ -3,6 +3,7 @@ package com.njydsz.userinfo.server.service;
 import java.util.Collection;
 import java.util.List;
 
+import com.njydsz.userinfo.domain.dto.ApiPermissionRegistrationDTO;
 import com.njydsz.userinfo.domain.dto.MenuDTO;
 import com.njydsz.userinfo.domain.vo.MenuRouteVO;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
@@ -47,6 +48,17 @@ public interface MenuService {
    * @return 新菜单 ID
    */
   String create(MenuDTO dto);
+
+  /**
+   * 幂等注册接口权限项。
+  
+   * <p>已存在时更新名称与服务名，不重复创建；权限项类型为 {@code API}，
+   * 不参与前端菜单树，仅参与角色授权与权限码下发。
+   *
+   * @param dto API 权限注册请求
+   * @return 权限项 ID
+   */
+  String registerApiPermission(ApiPermissionRegistrationDTO dto);
 
   /**
    * 更新菜单。

@@ -15,7 +15,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -170,7 +169,9 @@ public class SuperFastExcelTemplateWriter {
     try {
       loadTemplateFromStream(templateStream);
     } catch (IOException e) {
-      throw new IllegalArgumentException("Template stream read failed: " + e.getMessage(), e);
+      // 不把 e.getMessage() 拼进 message：IllegalArgumentException 会被 Spring 直接序列化返回，
+      // 可能泄露模板内部路径；细节由异常链 e 保留，日志可查
+      throw new IllegalArgumentException("Template stream read failed", e);
     }
   }
 

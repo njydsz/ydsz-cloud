@@ -1,6 +1,5 @@
 package com.njydsz.common.auth.security;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.security.DigestUtils;
 
 /**

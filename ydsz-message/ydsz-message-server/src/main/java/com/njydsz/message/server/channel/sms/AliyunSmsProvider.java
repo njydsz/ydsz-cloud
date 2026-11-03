@@ -271,7 +271,7 @@ public class AliyunSmsProvider implements SmsProvider {
   @Override
   public MessageSendResultVO queryReceipt(String providerTraceId, String phone) {
     if (!StringUtils.hasText(providerTraceId) || !StringUtils.hasText(phone)) {
-      String msg = I18n.message("providerTraceId 或手机号为空");
+      String msg = I18n.message("message.sms.providerTraceId.phone.required");
       return MessageSendResultVO.fail("SMS", null, msg, msg, null);
     }
     if (!StringUtils.hasText(config.getAccessKeyId())

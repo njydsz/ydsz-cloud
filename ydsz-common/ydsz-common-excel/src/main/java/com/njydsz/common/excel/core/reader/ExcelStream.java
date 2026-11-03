@@ -149,14 +149,14 @@ public class ExcelStream<T> implements AutoCloseable {
       completion.get();
     } catch (InterruptedException ie) {
       Thread.currentThread().interrupt();
-      throw new ExcelReadException(ExcelExceptionCode.READ_IO_ERROR, "await 中断", ie);
+      throw new ExcelReadException(ExcelExceptionCode.READ_IO_ERROR, "Interrupted while awaiting", ie);
     } catch (ExecutionException ee) {
       throw new ExcelReadException(
-          ExcelExceptionCode.READ_IO_ERROR, "读取异常", ee.getCause());
+          ExcelExceptionCode.READ_IO_ERROR, "Read error", ee.getCause());
     }
     Throwable t = error.get();
     if (t != null) {
-      throw new ExcelReadException(ExcelExceptionCode.READ_IO_ERROR, "读取过程出错", t);
+      throw new ExcelReadException(ExcelExceptionCode.READ_IO_ERROR, "Error during read", t);
     }
     return this;
   }
@@ -200,7 +200,7 @@ public class ExcelStream<T> implements AutoCloseable {
         }
       } catch (InterruptedException ie) {
         Thread.currentThread().interrupt();
-        throw new UncheckedIOException(new IOException("Stream 已关闭", ie));
+        throw new UncheckedIOException(new IOException("Stream already closed", ie));
       }
     }
 
@@ -266,14 +266,14 @@ class ExcelIterator<T> implements Iterator<T> {
         if (error.get() != null) {
           Throwable t = error.get();
           LOG.error("ExcelIterator 遇到异常", t);
-          throw new ExcelReadException(ExcelExceptionCode.READ_IO_ERROR, "读取过程出错", t);
+          throw new ExcelReadException(ExcelExceptionCode.READ_IO_ERROR, "Error during read", t);
         }
       }
       finished = true;
       return false;
     } catch (InterruptedException ie) {
       Thread.currentThread().interrupt();
-      throw new ExcelReadException(ExcelExceptionCode.READ_IO_ERROR, "迭代中断", ie);
+      throw new ExcelReadException(ExcelExceptionCode.READ_IO_ERROR, "Interrupted during iteration", ie);
     }
   }
 

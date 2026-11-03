@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.server.service.FileApplicationService.BatchResultDTO;
@@ -144,6 +145,7 @@ public class BatchTaskService {
    * @return 清理的任务数量（恒为 0，TTL 自动清理）
    */
   @Scheduled(cron = "0 0 * * * *")
+  @DistributedScheduled(lockKey = "nextwiki:batch-task-cleanup", leaseTime = 60)
   public int cleanupExpiredTasks() {
     log.debug("[BatchTaskService] 任务状态由 Redis TTL 自动清理，无需显式遍历");
     return 0;

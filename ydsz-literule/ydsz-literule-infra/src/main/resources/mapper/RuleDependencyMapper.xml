@@ -23,7 +23,7 @@
                description, tenant_id, revision, created_by, created_at
         FROM ydsz_rule_dependency
         WHERE depends_on_rule_code = #{dependsOnRuleCode}
-          AND is_cascade_on_disable = TRUE
+          AND is_cascade_on_disable = 1
     </select>
 
     <delete id="deleteByRuleCode">

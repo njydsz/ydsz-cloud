@@ -11,10 +11,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 安全告警聚合分析定时任务。
@@ -61,6 +62,7 @@ public class SecurityAlertAggregationTask {
    * <p>每次执行分析最近 5 分钟的登录失败记录，按 IP 聚合统计，识别潜在的攻击行为。
    */
   @Scheduled(cron = "${ydsz.userinfo.security.alert.aggregation.cron:0 */5 * * * ?}")
+  @DistributedScheduled(lockKey = "userinfo:security-alert-aggregate", leaseTime = 240)
   public void analyzeLoginPatterns() {
     log.debug("Security alert aggregation task started");
     try {

@@ -394,7 +394,7 @@ public class CachedMessageTemplateRenderer extends SentryMetricsAdapter implemen
       if (value == null || (value instanceof String s && s.isBlank())) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("模板必填参数缺失: " + key)
+            .message(I18n.message("message.template.param.missing", new Object[]{key}))
             .build();
       }
     }

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.custom.SysException;
@@ -170,7 +171,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     try {
       List<String> mentionedUserIds = parseMentions(comment.getContent());
       if (!mentionedUserIds.isEmpty()) {
-        String title = "审批评论提及通知";
+        String title = I18n.message("workflow.notify.comment.mention.title");
         String content = userName + " 在流程评论中提及了您: " + comment.getContent();
         for (String mentionedUserId : mentionedUserIds) {
           // 不通知自己
@@ -202,7 +203,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     // P2-1: 回复通知（回复某条评论时通知被回复人）
     if (StringUtils.hasText(dto.getReplyToUserId()) && !dto.getReplyToUserId().equals(userId)) {
       try {
-        String replyTitle = "审批评论回复通知";
+        String replyTitle = I18n.message("workflow.notify.comment.reply.title");
         String replyContent = userName + " 回复了您的评论: " + comment.getContent();
         notificationService.send(
             "WORKFLOW",

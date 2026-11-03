@@ -120,7 +120,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     if (assigneeId == null) {
       return;
     }
-    String title = "您有一个新的审批待办";
+    String title = I18n.message("workflow.notify.task.created.title");
     String content =
         String.format(
             "【%s】 %s - %s 待您审批",
@@ -279,7 +279,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                 .collect(Collectors.toList());
     Optional<FlowInstanceVO> instanceOpt = instanceRepository.findById(instanceId);
     String flowName = instanceOpt.map(FlowInstanceVO::getFlowName).orElse("");
-    String title = "审批催办";
+    String title = I18n.message("workflow.notify.task.urged.title");
     String content = String.format("【%s】 您有一个待办任务被催办，请尽快处理", flowName);
     notificationService.notifyBatch("INAPP", receivers, title, content, "WORKFLOW_URGE", "URGENT");
   }
@@ -327,7 +327,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                 .collect(Collectors.toList());
     Optional<FlowInstanceVO> instanceOpt = instanceRepository.findById(instanceId);
     String flowName = instanceOpt.map(FlowInstanceVO::getFlowName).orElse("");
-    String title = "审批已撤回";
+    String title = I18n.message("workflow.notify.instance.withdrawn.title");
     String content = String.format("【%s】 该流程已被发起人撤回", flowName);
     notificationService.notifyBatch(
         "INAPP", receivers, title, content, "WORKFLOW_RECALLED", "WARN");

@@ -73,6 +73,9 @@ public class RuleDefinitionVO implements Serializable {
   /** 版本号 */
   private Integer version;
 
+  /** 乐观锁版本号（供 toggleEnabled 等部分更新路径做乐观锁校验） */
+  private Integer revision;
+
   /** 状态（DRAFT/PENDING_REVIEW/APPROVED/PUBLISHED/REJECTED） */
   private String status;
 

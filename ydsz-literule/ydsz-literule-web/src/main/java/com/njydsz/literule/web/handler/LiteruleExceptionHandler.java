@@ -24,6 +24,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.handler.BaseExceptionHandler;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 
 /**
@@ -228,7 +229,9 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
   public YdszResponse<Void> handleIllegalArgument(IllegalArgumentException e) {
     log.warn("{} 非法参数: {}", getLogPrefix(), e.getMessage());
     recordMetrics(e);
-    return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, e.getMessage());
+    // 兜底 handler 无法区分业务异常与系统异常，不把 e.getMessage() 返回给客户端
+    return YdszResponse.error(
+        YdszResultCode.VALIDATION_FAILED, I18n.message("literule.common.invalid.argument"));
   }
 
   /**
@@ -242,7 +245,9 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
   public YdszResponse<Void> handleIllegalState(IllegalStateException e) {
     log.warn("{} 非法状态: {}", getLogPrefix(), e.getMessage());
     recordMetrics(e);
-    return YdszResponse.error(LiteruleExceptionCode.RULE_STATUS_INVALID, e.getMessage());
+    // 兜底 handler 无法区分业务异常与系统异常，不把 e.getMessage() 返回给客户端
+    return YdszResponse.error(
+        LiteruleExceptionCode.RULE_STATUS_INVALID, I18n.message("literule.common.illegal.state"));
   }
 
   /**

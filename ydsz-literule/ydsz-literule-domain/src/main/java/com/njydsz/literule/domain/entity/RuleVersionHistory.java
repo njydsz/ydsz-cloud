@@ -8,7 +8,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**

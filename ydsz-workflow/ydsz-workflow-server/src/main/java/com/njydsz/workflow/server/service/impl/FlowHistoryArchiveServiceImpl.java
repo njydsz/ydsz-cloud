@@ -28,6 +28,7 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.date.DateUtils;
 
 /**
@@ -180,10 +181,11 @@ FlowArchiveCursorVO cursor = archiveCursorRepository.findByTypeAndTenant(
     try {
       candidates = instanceRepository.findArchiveCandidates(statuses, threshold, batch);
     } catch (Exception e) {
-      log.error("[FlowHistoryArchive] 查询历史实例失败: {}", e.getMessage(), e);
+      log.error("[FlowHistoryArchive] 查询历史实例失败", e);
       Map<String, Object> err = new HashMap<>(COLLECTION_CAPACITY);
       err.put("ok", false);
-      err.put("error", e.getMessage());
+      // 不把 e.getMessage() 返回给调用方：可能含 SQL/表名/类名
+      err.put("error", I18n.message("workflow.archive.query.failed"));
       return err;
     }
 
@@ -301,9 +303,10 @@ FlowArchiveCursorVO cursor = archiveCursorRepository.findByTypeAndTenant(
       // 每批最多 500 条，避免单次事务过大
       candidates = hisInstanceRepository.findArchivedBefore(threshold, ARCHIVE_BATCH_SIZE);
     } catch (Exception e) {
-      log.error("[FlowHistoryPurge] 查询归档实例失败: {}", e.getMessage(), e);
+      log.error("[FlowHistoryPurge] 查询归档实例失败", e);
       result.put("ok", false);
-      result.put("error", e.getMessage());
+      // 不把 e.getMessage() 返回给调用方：可能含 SQL/表名/类名
+      result.put("error", I18n.message("workflow.archive.purge.query.failed"));
       result.put("costMs", System.currentTimeMillis() - start);
       return result;
     }

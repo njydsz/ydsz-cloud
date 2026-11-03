@@ -71,7 +71,7 @@ public class CaptchaGenerator {
       return "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes);
     } catch (IOException e) {
       log.error("Failed to generate captcha image, key={}", captchaKey, e);
-      throw new IllegalStateException("验证码图片生成失败", e);
+      throw new IllegalStateException("Failed to generate captcha image", e);
     }
   }
 

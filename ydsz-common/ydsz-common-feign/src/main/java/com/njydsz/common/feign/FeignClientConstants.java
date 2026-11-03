@@ -165,6 +165,10 @@ public final class FeignClientConstants {
   /** 用户密码校验路径（供系统管理模块二次认证使用） */
   public static final String USERINFO_PATH_VERIFY_PASSWORD = "/internal/user/verify-password";
 
+  /** API 权限注册路径（system 扫描后向 userinfo 注册可授权权限项）。 */
+  public static final String USERINFO_PATH_API_PERMISSION_REGISTER =
+      "/internal/api-permissions/register";
+
   // ======================== 知识库服务路径常量 ========================
 
   /** 空间详情查询路径（内部 Feign 通道） */

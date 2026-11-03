@@ -59,7 +59,6 @@ import com.njydsz.common.safe.metrics.SafeMetrics;
 import com.njydsz.common.safe.password.PasswordStrengthValidator;
 import com.njydsz.common.safe.idempotent.aspect.IdempotentAspect;
 import com.njydsz.common.safe.idempotent.aspect.RepeatSubmitAspect;
-import com.njydsz.common.safe.idempotent.exception.IdempotentUnavailableException;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
 import com.njydsz.common.safe.idempotent.strategy.ReactiveIdempotentStrategy;
 import com.njydsz.common.safe.idempotent.strategy.RedisIdempotentStrategy;

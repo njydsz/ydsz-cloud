@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.date.DateUtils;
 
 import com.njydsz.common.exception.custom.SysException;
@@ -96,7 +97,7 @@ public class TemplateImportExportService {
     } catch (Exception e) {
       log.error("导出模板失败 groupId={} err={}", groupId, e.getMessage(), e);
       throw SysException.builder()
-          .message("导出模板失败: " + e.getMessage())
+          .message(I18n.message("generator.template.export.failed"))
           .cause(e)
           .build();
     }
@@ -159,7 +160,7 @@ public class TemplateImportExportService {
     } catch (Exception e) {
       log.error("导入模板失败 err={}", e.getMessage(), e);
       throw SysException.builder()
-          .message("导入模板失败: " + e.getMessage())
+          .message(I18n.message("generator.template.import.failed"))
           .cause(e)
           .build();
     }

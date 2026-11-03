@@ -48,7 +48,12 @@ public class UserProfile extends MpBaseEntity<String> {
   /** 默认 Top 领域数 */
   private static final int DEFAULT_TOP_DOMAINS = 5;
 
-  /** 用户 ID（主键，业务 ID，非自增，对应数据库 user_id 列）。 */
+  /**
+   * 用户 ID（主键，业务 ID，非自增，对应数据库 user_id 列）。
+   *
+   * <p>独立业务字段 {@code userId}，不覆盖 MpBaseEntity 继承的 {@code id}，符合 YDIZ-DDD-008；
+   * {@code id} 列由平台基类维护，{@code user_id} 作为主键通过 {@code @TableId} 显式声明。
+   */
   @TableId(type = IdType.INPUT)
   @TableField("user_id")
   private String userId;

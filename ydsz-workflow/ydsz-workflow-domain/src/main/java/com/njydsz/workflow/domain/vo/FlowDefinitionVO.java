@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 
 import lombok.Data;
 
-import com.njydsz.workflow.domain.entity.FlowDefinition;
-
 /**
  * 流程定义视图对象
  *

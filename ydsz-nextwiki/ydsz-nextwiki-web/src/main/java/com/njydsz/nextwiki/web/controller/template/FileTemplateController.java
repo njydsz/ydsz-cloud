@@ -26,7 +26,6 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO;
-import com.njydsz.nextwiki.domain.entity.SpaceTemplate;
 import com.njydsz.nextwiki.server.service.SpaceTemplateApplicationService;
 
 /**

@@ -20,7 +20,7 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.locales.util.I18nMessages;
-import com.njydsz.cronjob.domain.entity.export.ExportTask;
+import com.njydsz.cronjob.domain.vo.ExportTaskVO;
 import com.njydsz.cronjob.server.service.export.ExportTaskService;
 
 /**
@@ -77,7 +77,7 @@ public class ExportTaskController {
    */
   @Operation(summary = "查询导出任务状态")
   @GetMapping("/{id}")
-  public YdszResponse<ExportTask> getTask(@PathVariable String id) {
+  public YdszResponse<ExportTaskVO> getTask(@PathVariable String id) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
     return YdszResponse.success(exportTaskService.getTask(id, tenantId));
   }
@@ -90,7 +90,7 @@ public class ExportTaskController {
    */
   @Operation(summary = "查询用户导出任务列表")
   @GetMapping("/my")
-  public YdszResponse<List<ExportTask>> listMyTasks(
+  public YdszResponse<List<ExportTaskVO>> listMyTasks(
       @RequestParam(defaultValue = "20") int limit) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
     String userId = AuthContextUtils.getUserId();
@@ -123,7 +123,7 @@ public class ExportTaskController {
   @GetMapping("/{id}/download")
   public YdszResponse<String> getDownloadUrl(@PathVariable String id) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
-    ExportTask task = exportTaskService.getTask(id, tenantId);
+    ExportTaskVO task = exportTaskService.getTask(id, tenantId);
     if (task == null) {
       return YdszResponse.error(i18nMessages.resolve("cronjob.export.task.not.found"));
     }

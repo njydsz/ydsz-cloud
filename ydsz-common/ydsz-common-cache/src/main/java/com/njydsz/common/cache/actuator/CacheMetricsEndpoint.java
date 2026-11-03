@@ -153,7 +153,8 @@ public class CacheMetricsEndpoint {
           return Map.of("success", true, "operation", "clear", "cache", cacheName);
         } catch (Exception e) {
           LOG.warn("清空缓存异常: {}", cacheName, e);
-          return Map.of("error", "Clear failed: " + e.getMessage());
+          // 不把 e.getMessage() 返回给调用方：可能含内部类名/路径
+          return Map.of("error", "Clear failed");
         }
       case "resetStats":
         try {
@@ -163,7 +164,8 @@ public class CacheMetricsEndpoint {
           return Map.of("success", true, "operation", "resetStats", "cache", cacheName);
         } catch (Exception e) {
           LOG.warn("重置统计异常: {}", cacheName, e);
-          return Map.of("error", "ResetStats failed: " + e.getMessage());
+          // 不把 e.getMessage() 返回给调用方：可能含内部类名/路径
+          return Map.of("error", "ResetStats failed");
         }
       default:
         return Map.of(

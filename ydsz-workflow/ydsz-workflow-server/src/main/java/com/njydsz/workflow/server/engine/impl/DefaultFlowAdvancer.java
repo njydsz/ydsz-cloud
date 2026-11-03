@@ -133,7 +133,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
    * @throws SysException 实例不存在时抛出，错误码 {@link YdszResultCode#NOT_FOUND}； 流程定义缺少开始节点时抛出，错误码 {@link
    *     YdszResultCode#INTERNAL_ERROR}
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   @YdszDistributedLock(
       key = "'flow:instance:op:' + #{#instanceId}",
       waitTime = 5,

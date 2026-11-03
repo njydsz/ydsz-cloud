@@ -14,7 +14,6 @@ import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
-import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 

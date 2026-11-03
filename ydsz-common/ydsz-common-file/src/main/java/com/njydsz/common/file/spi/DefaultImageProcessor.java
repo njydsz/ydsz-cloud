@@ -10,7 +10,6 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.Iterator;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -64,7 +63,7 @@ public class DefaultImageProcessor implements ImageProcessor {
       throws IOException {
     BufferedImage src = ImageIO.read(input);
     if (src == null) {
-      throw new IOException("无法识别图片格式或输入流为空");
+      throw new IOException("Unrecognized image format or empty input stream");
     }
     int targetW = targetSize.width;
     int targetH = targetSize.height;
@@ -90,7 +89,7 @@ public class DefaultImageProcessor implements ImageProcessor {
       throws IOException {
     BufferedImage src = ImageIO.read(input);
     if (src == null) {
-      throw new IOException("无法识别图片格式或输入流为空");
+      throw new IOException("Unrecognized image format or empty input stream");
     }
     int clampedX = Math.max(0, x);
     int clampedY = Math.max(0, y);
@@ -98,7 +97,7 @@ public class DefaultImageProcessor implements ImageProcessor {
     int clampedH = Math.min(height, src.getHeight() - clampedY);
     if (clampedW <= 0 || clampedH <= 0) {
       throw new IOException(
-          String.format("裁剪区域无效: x=%d, y=%d, w=%d, h=%d", x, y, width, height));
+          String.format("Invalid crop region: x=%d, y=%d, w=%d, h=%d", x, y, width, height));
     }
     BufferedImage cropped = src.getSubimage(clampedX, clampedY, clampedW, clampedH);
     ImageIO.write(cropped, DEFAULT_FORMAT, output);
@@ -114,7 +113,7 @@ public class DefaultImageProcessor implements ImageProcessor {
       throws IOException {
     BufferedImage src = ImageIO.read(input);
     if (src == null) {
-      throw new IOException("无法识别图片格式或输入流为空");
+      throw new IOException("Unrecognized image format or empty input stream");
     }
     if (position == WatermarkPosition.TILED) {
       applyTiledWatermark(src, watermarkText, opacity);
@@ -205,7 +204,7 @@ public class DefaultImageProcessor implements ImageProcessor {
       throws IOException {
     BufferedImage src = ImageIO.read(input);
     if (src == null) {
-      throw new IOException("无法识别图片格式或输入流为空");
+      throw new IOException("Unrecognized image format or empty input stream");
     }
     javax.imageio.plugins.jpeg.JPEGImageWriteParam jpegParams =
         new javax.imageio.plugins.jpeg.JPEGImageWriteParam(null);
@@ -225,11 +224,11 @@ public class DefaultImageProcessor implements ImageProcessor {
       throws IOException {
     BufferedImage src = ImageIO.read(input);
     if (src == null) {
-      throw new IOException("无法识别图片格式或输入流为空");
+      throw new IOException("Unrecognized image format or empty input stream");
     }
     boolean success = ImageIO.write(src, targetFormat, output);
     if (!success) {
-      throw new IOException("不支持转换为格式: " + targetFormat);
+      throw new IOException("Unsupported conversion format: " + targetFormat);
     }
   }
 
@@ -238,7 +237,7 @@ public class DefaultImageProcessor implements ImageProcessor {
     try (ImageInputStream iis = ImageIO.createImageInputStream(input)) {
       Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
       if (!readers.hasNext()) {
-        throw new IOException("无法识别图片格式");
+        throw new IOException("Unrecognized image format");
       }
       ImageReader reader = readers.next();
       try {

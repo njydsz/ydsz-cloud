@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * 预置流程模板库（P2-1 流程模板市场）
  *
@@ -121,7 +123,7 @@ public class FlowPresetTemplateLibrary {
   private FlowTemplateDefinition buildLeaveTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
     tpl.setTemplateCode("preset_leave");
-    tpl.setTemplateName("请假审批");
+    tpl.setTemplateName(I18n.message("workflow.template.preset.leave.name"));
     tpl.setCategory("HR");
     tpl.setDescription("员工请假审批流程：发起人提交 → 直属上级审批 → HR备案");
     tpl.setSort(SORT_LEAVE);
@@ -155,7 +157,7 @@ public class FlowPresetTemplateLibrary {
   private FlowTemplateDefinition buildExpenseReimbursementTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
     tpl.setTemplateCode("preset_expense_reimbursement");
-    tpl.setTemplateName("费用报销");
+    tpl.setTemplateName(I18n.message("workflow.template.preset.expense.name"));
     tpl.setCategory("FINANCE");
     tpl.setDescription("费用报销审批流程：发起人 → 直属上级 → 财务审批 → 出纳付款");
     tpl.setSort(SORT_EXPENSE);
@@ -191,7 +193,7 @@ public class FlowPresetTemplateLibrary {
   private FlowTemplateDefinition buildPurchaseRequestTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
     tpl.setTemplateCode("preset_purchase_request");
-    tpl.setTemplateName("采购申请");
+    tpl.setTemplateName(I18n.message("workflow.template.preset.purchase.name"));
     tpl.setCategory("FINANCE");
     tpl.setDescription("采购申请审批流程：发起人 → 部门负责人 → 采购审批 → 财务审批");
     tpl.setSort(SORT_PURCHASE);
@@ -228,7 +230,7 @@ public class FlowPresetTemplateLibrary {
   private FlowTemplateDefinition buildBusinessTripTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
     tpl.setTemplateCode("preset_business_trip");
-    tpl.setTemplateName("出差申请");
+    tpl.setTemplateName(I18n.message("workflow.template.preset.business.trip.name"));
     tpl.setCategory("HR");
     tpl.setDescription("出差申请审批流程：发起人 → 直属上级 → HR审批");
     tpl.setSort(SORT_TRIP);
@@ -262,7 +264,7 @@ public class FlowPresetTemplateLibrary {
   private FlowTemplateDefinition buildSealApplicationTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
     tpl.setTemplateCode("preset_seal_application");
-    tpl.setTemplateName("用印申请");
+    tpl.setTemplateName(I18n.message("workflow.template.preset.seal.name"));
     tpl.setCategory("ADMIN");
     tpl.setDescription("用印申请审批流程：发起人 → 直属上级 → 行政审批");
     tpl.setSort(SORT_SEAL);
@@ -296,7 +298,7 @@ public class FlowPresetTemplateLibrary {
   private FlowTemplateDefinition buildProjectInitiationTemplate() {
     FlowTemplateDefinition tpl = new FlowTemplateDefinition();
     tpl.setTemplateCode("preset_project_initiation");
-    tpl.setTemplateName("项目立项");
+    tpl.setTemplateName(I18n.message("workflow.template.preset.project.initiation.name"));
     tpl.setCategory("PROJECT");
     tpl.setDescription("项目立项审批流程：发起人 → 部门负责人 → 项目总监 → 总经理审批");
     tpl.setSort(SORT_PROJECT);

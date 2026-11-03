@@ -6,12 +6,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.builder.CacheBuilder;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.locales.util.I18n;
@@ -70,6 +73,20 @@ public class YdszWorkflowFacade implements WorkflowFacade {
 
   /** Map 初始容量：中集合（16） */
   private static final int MAP_INIT_CAPACITY_16 = 16;
+
+  /**
+   * 时间线本地缓存（N+1 治理 2026-11-03）。
+   *
+   * <p>原实现每次调用产生 3 轮 DB IO（历史任务 + 审计日志 + 当前待办）；
+   * 审批详情页高频刷新时会放大 N 倍。这里用本地缓存做 30s TTL 的短窗口缓存，
+   * 在数据新鲜度与 DB 压力之间取平衡。
+   */
+  private static final Cache<String, List<FlowTimelineVO>> TIMELINE_CACHE =
+      CacheBuilder.<String, List<FlowTimelineVO>>newBuilder()
+          .name("workflow-timeline")
+          .maximumSize(2_000)
+          .expireAfterWrite(30, TimeUnit.SECONDS)
+          .build();
 
   private final FlowInstanceService instanceService;
   private final FlowTaskService taskService;
@@ -134,6 +151,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   @Override
   public void terminateProcess(String processInstanceId, String reason) {
     instanceService.terminate(processInstanceId, reason);
+    // 实例终止后时间线发生变化，主动失效缓存（避免 30s 窗口内看到旧数据）
+    TIMELINE_CACHE.invalidate(processInstanceId);
   }
 
   /** {@inheritDoc} */
@@ -343,21 +362,58 @@ public class YdszWorkflowFacade implements WorkflowFacade {
    * @param comment 审批意见（写入每条通过任务的 comment）
    * @return 实际一键通过的任务数
    */
+  /** 一键通过的单页大小 */
+  private static final int PASS_ALL_PAGE_SIZE = 100;
+  /** 一键通过的总处理上限，防止异常数据导致无限循环 */
+  private static final int PASS_ALL_MAX_TASKS = 10_000;
+  /** 单次批量通过的任务数上限（与 FlowTaskBatchServiceImpl 保持一致） */
+  private static final int BATCH_TASK_ID_LIMIT = 500;
+
   @Override
   public int passAllTodoTasks(String userId, String comment) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    // TODO: N+1 治理 — 一键通过仅取第 1 页（100条），超过 100 条的待办不会被处理
-    // 修复建议： 分页循环拉取全部待办，或多线程分批调用 batchPass
-    PageResponse<List<FlowRunTaskVO>> pageResult =
-        taskService.listTodoByAssigneePage(String.valueOf(userId), tenantId, 1, 100);
-    List<FlowRunTaskVO> todos = MapUtils.safeCastList(pageResult.getData(), FlowRunTaskVO.class);
-    if (todos.isEmpty()) {
+    // N+1 治理（2026-11-03）：原实现只取第 1 页 100 条，超过 100 条的待办不会被处理。
+    // 改用游标分页循环拉取全部待办（O(1) 深分页），并设总量上限防异常数据导致无限循环。
+    List<String> taskIds = new ArrayList<>(LIST_INIT_CAPACITY_32);
+    Integer lastPriority = null;
+    LocalDateTime lastCreatedAt = null;
+    String lastId = null;
+    while (taskIds.size() < PASS_ALL_MAX_TASKS) {
+      List<FlowRunTaskVO> page =
+          taskService.listTodoByAssigneeCursor(
+              String.valueOf(userId), tenantId, lastPriority, lastCreatedAt, lastId, PASS_ALL_PAGE_SIZE);
+      if (page == null || page.isEmpty()) {
+        break;
+      }
+      for (FlowRunTaskVO task : page) {
+        if (task.getId() != null) {
+          taskIds.add(task.getId());
+        }
+      }
+      // 不足一页说明已到末尾
+      if (page.size() < PASS_ALL_PAGE_SIZE) {
+        break;
+      }
+      FlowRunTaskVO last = page.get(page.size() - 1);
+      lastPriority = last.getPriority();
+      lastCreatedAt = last.getCreatedAt();
+      lastId = last.getId();
+      if (lastId == null) {
+        break;
+      }
+    }
+    if (taskIds.isEmpty()) {
       return 0;
     }
-    List<String> taskIds = todos.stream().map(FlowRunTaskVO::getId).toList();
-    taskService.batchPass(taskIds, userId, comment);
-    log.info(I18n.message("workflow.facade.batch.approve", new Object[]{userId, taskIds.size()}));
-    return taskIds.size();
+    int passed = 0;
+    // 按 batchPass 的批次上限分片，避免单次批量过大
+    for (int i = 0; i < taskIds.size(); i += BATCH_TASK_ID_LIMIT) {
+      List<String> shard = taskIds.subList(i, Math.min(i + BATCH_TASK_ID_LIMIT, taskIds.size()));
+      taskService.batchPass(shard, userId, comment);
+      passed += shard.size();
+    }
+    log.info(I18n.message("workflow.facade.batch.approve", new Object[]{userId, passed}));
+    return passed;
   }
 
   // ============================== P2-22: 流程图查询（高亮当前节点） ==============================
@@ -417,17 +473,34 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   @Override
   public List<FlowTimelineVO> getTimeline(String instanceId) {
     String id = instanceId;
+    // N+1 治理（2026-11-03）：原实现每次调用产生 3 轮 DB IO（历史任务 + 审计日志 + 当前待办），
+    // 高频查看时放大 N 倍。改为先查本地缓存（30s TTL），未命中再走原逻辑。
+    List<FlowTimelineVO> cached = TIMELINE_CACHE.getIfPresent(id);
+    if (cached != null) {
+      return cached;
+    }
+    List<FlowTimelineVO> timeline = loadTimeline(id);
+    // 实例不存在时返回空列表，不缓存（避免实例后续被创建后仍返回空）
+    if (timeline != null) {
+      TIMELINE_CACHE.put(id, timeline);
+    }
+    return timeline == null ? Collections.emptyList() : timeline;
+  }
+
+  /**
+   * 加载时间线原始数据（缓存未命中时调用）。
+   *
+   * @return 时间线列表；实例不存在时返回 {@code null}
+   */
+  private List<FlowTimelineVO> loadTimeline(String id) {
     // 1. 获取实例信息
     FlowInstanceVO instance = instanceService.getById(id);
     if (instance == null) {
-      return Collections.emptyList();
+      return null;
     }
 
     List<FlowTimelineVO> timeline = new ArrayList<>(LIST_INIT_CAPACITY_32);
 
-    // TODO: N+1 治理 — 时间线查询执行 3 次独立 DB 查询（历史任务 + 审计日志 + 当前待办），
-    // 每次调用产生 3 轮 DB IO，高频查看时放大 N 倍
-    // 修复建议： 合并为单次 JOIN 查询（UNION ALL），或为时间线数据增加 Redis 缓存（TTL 30s）
     // 2. 获取历史任务列表（通过 Repository，符合 §34.2.3）
     List<FlowHisTaskVO> hisTasks = hisTaskRepository.findByInstanceId(id);
     for (FlowHisTaskVO his : hisTasks) {

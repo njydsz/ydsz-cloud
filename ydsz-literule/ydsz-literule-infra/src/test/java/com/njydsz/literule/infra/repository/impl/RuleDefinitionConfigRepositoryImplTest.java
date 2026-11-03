@@ -20,6 +20,7 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.repository.RuleDefinitionConfigRepository;
+import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.infra.config.LiteruleInfraAutoConfiguration;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 
@@ -80,8 +81,8 @@ class RuleDefinitionConfigRepositoryImplTest {
     }
 
     @Test
-    @DisplayName("结果原样返回，DRAFT 与停用规则不被剔除")
-    void should_pass_through_every_row_untouched() {
+    @DisplayName("返回 VO 列表，DRAFT 与停用规则不被剔除")
+    void should_return_vo_list_without_filtering() {
       List<RuleDefinition> rows =
           List.of(
               entity("R_ON", "PUBLISHED", true),
@@ -89,7 +90,12 @@ class RuleDefinitionConfigRepositoryImplTest {
               entity("R_OFF", "PUBLISHED", false));
       when(ruleDefinitionMapper.selectList(null)).thenReturn(rows);
 
-      assertThat(repository().listAll()).isSameAs(rows);
+      List<RuleDefinitionVO> result = repository().listAll();
+      assertThat(result).hasSize(3);
+      assertThat(result.get(0).getRuleCode()).isEqualTo("R_ON");
+      assertThat(result.get(0).getStatus()).isEqualTo("PUBLISHED");
+      assertThat(result.get(1).getRuleCode()).isEqualTo("R_DRAFT");
+      assertThat(result.get(2).getRuleCode()).isEqualTo("R_OFF");
     }
 
     @Test
@@ -114,12 +120,15 @@ class RuleDefinitionConfigRepositoryImplTest {
     }
 
     @Test
-    @DisplayName("编码原样透传给 selectByCode 并返回同一实体")
-    void should_delegate_code_and_return_same_entity() {
+    @DisplayName("编码原样透传给 selectByCode 并返回 VO")
+    void should_delegate_code_and_return_vo() {
       RuleDefinition found = entity("R_ON", "PUBLISHED", true);
       when(ruleDefinitionMapper.selectByCode("R_ON")).thenReturn(found);
 
-      assertThat(repository().findByCode("R_ON")).isSameAs(found);
+      RuleDefinitionVO vo = repository().findByCode("R_ON");
+      assertThat(vo).isNotNull();
+      assertThat(vo.getRuleCode()).isEqualTo("R_ON");
+      assertThat(vo.getStatus()).isEqualTo("PUBLISHED");
       verify(ruleDefinitionMapper).selectByCode("R_ON");
     }
   }

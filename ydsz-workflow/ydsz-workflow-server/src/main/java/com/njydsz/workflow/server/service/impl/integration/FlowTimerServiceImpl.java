@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
@@ -125,21 +126,21 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     if (instanceId == null || nodeCode == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("instanceId/nodeCode 不能为空")
+          .message(I18n.message("workflow.timer.instance.node.required"))
           .build();
     }
     FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("流程实例不存在: " + instanceId)
+          .message(I18n.message("workflow.instance.not.found", new Object[]{instanceId}))
           .build();
     }
     FlowNodeVO node = nodeRepository.findByCode(instance.getDefinitionId(), nodeCode).orElse(null);
     if (node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("节点不存在: " + nodeCode)
+          .message(I18n.message("workflow.timer.node.not.found", new Object[]{}))
           .build();
     }
     FlowTimerVO timer = new FlowTimerVO();
@@ -170,14 +171,14 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     if (taskId == null || instanceId == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("taskId/instanceId 不能为空")
+          .message(I18n.message("workflow.timer.task.instance.required"))
           .build();
     }
     FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("流程实例不存在: " + instanceId)
+          .message(I18n.message("workflow.instance.not.found", new Object[]{instanceId}))
           .build();
     }
     FlowNodeVO node =

@@ -1,6 +1,7 @@
 package com.njydsz.workflow.infra.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -155,6 +156,19 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
         instanceMapper.selectList(
             new LambdaQueryWrapper<FlowInstance>()
                 .eq(FlowInstance::getParentInstanceId, parentInstanceId)
+                .eq(FlowInstance::getIsDeleted, NOT_DELETED)));
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public List<FlowInstanceVO> findChildrenByParentIds(Collection<String> parentInstanceIds) {
+    if (parentInstanceIds == null || parentInstanceIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return converter.flowInstanceListToVO(
+        instanceMapper.selectList(
+            new LambdaQueryWrapper<FlowInstance>()
+                .in(FlowInstance::getParentInstanceId, parentInstanceIds)
                 .eq(FlowInstance::getIsDeleted, NOT_DELETED)));
   }
 

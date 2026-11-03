@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.auth.model.RolePermissions;
@@ -374,7 +375,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
       }
       throw BusinessException.builder()
           .code(String.valueOf(HttpStatus.FORBIDDEN.value()))
-          .message("角色菜单/按钮权限数据格式错误")
+          .message(I18n.message("common.auth.permission.data.format.error"))
           .build();
     } catch (BusinessException e) {
       throw e;
@@ -382,7 +383,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
       LOG.error("加载角色菜单权限失败：roleCode={}, error={}", roleCode, e.getMessage(), e);
       throw BusinessException.builder()
           .code(String.valueOf(HttpStatus.FORBIDDEN.value()))
-          .message("权限加载失败")
+          .message(I18n.message("common.auth.permission.load.failed"))
           .build();
     }
   }
@@ -410,7 +411,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
       LOG.error("加载角色接口权限失败：roleCode={}, error={}", roleCode, e.getMessage(), e);
       throw BusinessException.builder()
           .code(String.valueOf(HttpStatus.FORBIDDEN.value()))
-          .message("权限加载失败")
+          .message(I18n.message("common.auth.permission.load.failed"))
           .build();
     }
   }

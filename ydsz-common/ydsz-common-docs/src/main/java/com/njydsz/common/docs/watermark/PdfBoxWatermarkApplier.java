@@ -77,7 +77,7 @@ public class PdfBoxWatermarkApplier implements PdfWatermarkApplier {
       return bos.toByteArray();
     } catch (IOException e) {
       log.error("[PdfBoxWatermarkApplier] PDF 水印叠加失败: err={}", e.getMessage(), e);
-      throw new DocumentException(DocumentExceptionCode.PARSE_FAILED, "PDF 水印叠加失败", e);
+      throw new DocumentException(DocumentExceptionCode.PARSE_FAILED, "Failed to apply PDF watermark", e);
     }
   }
 

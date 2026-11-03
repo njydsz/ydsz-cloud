@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.UserChannelBindingDTO;
@@ -51,7 +52,7 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
         || !StringUtils.hasText(dto.getChannelType())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("用户ID和通道类型不能为空")
+          .message(I18n.message("message.user.channel.user.type.required"))
           .build();
     }
     String channelType = dto.getChannelType().trim().toUpperCase();

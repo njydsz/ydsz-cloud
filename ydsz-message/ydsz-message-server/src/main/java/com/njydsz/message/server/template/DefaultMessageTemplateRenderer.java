@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.server.template.util.TemplateFilterUtil;
@@ -110,13 +111,13 @@ public class DefaultMessageTemplateRenderer implements MessageTemplateRenderer {
       if (value == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("模板必填参数缺失: " + key)
+            .message(I18n.message("message.template.param.missing", new Object[]{key}))
             .build();
       }
       if (value instanceof String s && s.isBlank()) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("模板必填参数为空: " + key)
+            .message(I18n.message("message.template.param.empty", new Object[]{key}))
             .build();
       }
     }

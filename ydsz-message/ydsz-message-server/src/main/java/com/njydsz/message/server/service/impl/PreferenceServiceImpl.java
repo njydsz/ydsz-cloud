@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.constant.MessageConstants;
@@ -48,7 +49,7 @@ public class PreferenceServiceImpl implements PreferenceService {
         || !StringUtils.hasText(dto.getChannel())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("用户 ID 与通道不能为空")
+          .message(I18n.message("message.preference.user.channel.required"))
           .build();
     }
     String bizType =
@@ -157,7 +158,7 @@ public class PreferenceServiceImpl implements PreferenceService {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("偏好 ID 不能为空")
+          .message(I18n.message("message.preference.id.required"))
           .build();
     }
     msgPreferenceRepository.deleteById(id);

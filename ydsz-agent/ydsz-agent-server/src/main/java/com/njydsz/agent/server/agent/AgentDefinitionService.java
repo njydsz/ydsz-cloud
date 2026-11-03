@@ -5,6 +5,8 @@ import java.util.List;
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * Agent 定义 Service 接口
@@ -39,6 +41,14 @@ public interface AgentDefinitionService {
    * @return 活跃 Agent 定义 VO 列表
    */
   List<AgentDefinitionVO> listActive();
+
+  /**
+   * 分页查询活跃 Agent 定义。
+   *
+   * @param query 分页与排序参数
+   * @return 统一分页响应
+   */
+  PageResponse<List<AgentDefinitionVO>> listActivePage(PageQuery query);
 
   /**
    * 创建 Agent 定义

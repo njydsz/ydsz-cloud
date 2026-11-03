@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
@@ -257,7 +258,7 @@ public class WebhookRetryScanTask implements ScanTask {
     } catch (Exception e) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("Webhook 签名计算失败: " + e.getMessage())
+          .message(I18n.message("cronjob.webhook.sign.failed"))
           .build();
     }
   }

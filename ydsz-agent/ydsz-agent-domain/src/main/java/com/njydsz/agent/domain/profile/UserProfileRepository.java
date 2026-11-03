@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.agent.domain.entity.UserProfile;
+import com.njydsz.agent.domain.vo.UserProfileVO;
 
 /**
  * 用户画像 Repository 接口。
@@ -17,12 +18,22 @@ import com.njydsz.agent.domain.entity.UserProfile;
 public interface UserProfileRepository {
 
     /**
-     * 根据用户 ID 查询画像。
+     * 根据用户 ID 查询画像（返回 Entity，仅供内部状态变更路径使用）。
      *
      * @param userId 用户 ID
      * @return 用户画像；不存在返回 {@code Optional.empty()}
+     * @deprecated 外部调用方（server/web）应使用 {@link #findByUserIdVO(String)} 以避免 YDIZ-DDD-007 违规
      */
+    @Deprecated
     Optional<UserProfile> findByUserId(String userId);
+
+    /**
+     * 根据用户 ID 查询画像（返回 VO，供 server/web 层使用，满足 YDIZ-DDD-007）。
+     *
+     * @param userId 用户 ID
+     * @return 用户画像 VO；不存在返回 {@code Optional.empty()}
+     */
+    Optional<UserProfileVO> findByUserIdVO(String userId);
 
     /**
      * 保存用户画像（INSERT 或 UPSERT）。
@@ -47,8 +58,18 @@ public interface UserProfileRepository {
      *
      * @param limit 返回数量上限
      * @return 活跃用户画像列表
+     * @deprecated 外部调用方（server/web）应使用 {@link #findActiveProfilesVO(int)} 以避免 YDIZ-DDD-007 违规
      */
+    @Deprecated
     List<UserProfile> findActiveProfiles(int limit);
+
+    /**
+     * 查询活跃用户画像（返回 VO，供 server/web 层使用，满足 YDIZ-DDD-007）。
+     *
+     * @param limit 返回数量上限
+     * @return 活跃用户画像 VO 列表
+     */
+    List<UserProfileVO> findActiveProfilesVO(int limit);
 
     /**
      * 根据用户 ID 删除画像。

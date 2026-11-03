@@ -39,7 +39,7 @@
     <select id="selectActiveVersion" resultMap="FileVersionResult">
         SELECT id, file_node_id, version_number, storage_key, size, file_hash, mime_type, remark, change_type, is_active, status, created_by, created_at, updated_by, updated_at, revision, is_deleted, tenant_id
         FROM ydsz_file_file_version
-        WHERE file_node_id = #{fileNodeId} AND is_active = TRUE AND is_deleted = 0
+        WHERE file_node_id = #{fileNodeId} AND is_active = 1 AND is_deleted = 0
         LIMIT 1
     </select>
 

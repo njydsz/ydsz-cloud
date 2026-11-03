@@ -10,9 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.message.server.config.MessageProperties;
 
@@ -72,7 +72,7 @@ public class UnsubscribeTokenUtil {
         || !StringUtils.hasText(channel)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("用户 ID、主题编码与通道不能为空")
+          .message(I18n.message("message.unsubscribe.user.topic.channel.required"))
           .build();
     }
     int ttlDays = Math.max(1, messageProperties.getUnsubscribe().getTtlDays());
@@ -105,14 +105,14 @@ public class UnsubscribeTokenUtil {
     if (!StringUtils.hasText(token)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("退订 token 不能为空")
+          .message(I18n.message("message.unsubscribe.token.required"))
           .build();
     }
     String[] parts = token.split("\\.");
     if (parts.length != 2) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("退订 token 格式非法")
+          .message(I18n.message("message.unsubscribe.token.format.invalid"))
           .build();
     }
     String payloadB64 = parts[0];
@@ -123,21 +123,21 @@ public class UnsubscribeTokenUtil {
     } catch (Exception e) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("退订 token 解码失败")
+          .message(I18n.message("message.unsubscribe.token.decode.failed"))
           .build();
     }
     String expectedSig = sign(payload);
     if (!DigestUtils.constantTimeEquals(expectedSig, sig)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("退订 token 签名校验失败")
+          .message(I18n.message("message.unsubscribe.token.sign.invalid"))
           .build();
     }
     UnsubscribeTokenPayload result = parsePayload(payload);
     if (Instant.now().getEpochSecond() > result.getExpiresAt()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("退订 token 已过期")
+          .message(I18n.message("message.unsubscribe.token.expired"))
           .build();
     }
     return result;
@@ -169,7 +169,7 @@ public class UnsubscribeTokenUtil {
     if (parts.length != TOKEN_PART_COUNT) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("退订 token 载荷格式非法")
+          .message(I18n.message("message.unsubscribe.token.payload.invalid"))
           .build();
     }
     long expiresAt;
@@ -178,7 +178,7 @@ public class UnsubscribeTokenUtil {
     } catch (NumberFormatException e) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("退订 token 载荷格式非法")
+          .message(I18n.message("message.unsubscribe.token.payload.invalid"))
           .build();
     }
     return new UnsubscribeTokenPayload(parts[0], parts[1], parts[2], expiresAt);

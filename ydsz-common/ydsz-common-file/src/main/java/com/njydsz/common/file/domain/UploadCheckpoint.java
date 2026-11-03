@@ -10,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import com.njydsz.common.json.annotation.JsonIgnore;
-import com.njydsz.common.util.security.HexUtils;
 
 /**
  * 分片上传检查点信息

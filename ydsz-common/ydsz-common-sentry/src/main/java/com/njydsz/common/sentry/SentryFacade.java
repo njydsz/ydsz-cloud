@@ -1,7 +1,6 @@
 package com.njydsz.common.sentry;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

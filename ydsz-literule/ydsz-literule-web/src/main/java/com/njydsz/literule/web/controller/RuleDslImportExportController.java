@@ -24,6 +24,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
@@ -148,9 +149,10 @@ public class RuleDslImportExportController {
       return YdszResponse.success(result);
 
     } catch (Exception e) {
-      log.warn("[DSL] 导入失败: {}", e.getMessage());
+      log.warn("[DSL] 导入失败", e);
+      // 不把 e.getMessage() 返回给客户端：可能含 YAML 内部结构细节
       return YdszResponse.error(
-          LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL import failed: " + e.getMessage());
+          LiteruleExceptionCode.DSL_PARSE_ERROR, I18n.message("literule.dsl.import.failed"));
     }
   }
 

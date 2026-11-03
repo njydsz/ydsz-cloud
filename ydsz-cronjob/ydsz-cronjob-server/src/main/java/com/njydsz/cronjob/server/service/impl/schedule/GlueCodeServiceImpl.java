@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
@@ -213,7 +214,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
       result.put("durationMs", System.currentTimeMillis() - startTime);
     } catch (Exception e) {
       result.put("success", false);
-      result.put("error", "脚本执行失败");
+      result.put("error", I18n.message("cronjob.glue.script.execute.failed"));
       result.put("durationMs", System.currentTimeMillis() - startTime);
       log.warn("[Glue] 测试执行失败: lang={}", lang, e);
     }

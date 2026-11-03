@@ -1,11 +1,14 @@
 package com.njydsz.agent.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
@@ -31,6 +34,18 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 public class AgentTrace extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
+
+  /**
+   * 链路唯一 ID（主键，业务生成，映射到数据库 trace_id 列）。
+   *
+   * <p><b>YDIZ-DDD-008 exemption：主键列名非 id 的历史表</b> —— 表 {@code ydsz_agt_trace} 的主键列为
+   * {@code trace_id} 且无 {@code id} 列；{@code MpBaseIdEntity} 的 {@code id} 硬编码
+   * {@code @TableId(type = ASSIGN_ID)} 且无列名参数，故须覆盖以指定列名与 {@code IdType.INPUT}
+   * （业务生成主键，格式 agt-{agentId}-{yyyyMMdd}-{6位随机数}）。
+   */
+  @TableId(value = "trace_id", type = IdType.INPUT)
+  @TableField("trace_id")
+  private String id;
 
   /** 所属对话 ID */
   private String conversationId;

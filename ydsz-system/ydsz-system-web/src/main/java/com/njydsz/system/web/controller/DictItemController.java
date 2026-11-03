@@ -27,6 +27,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.idempotent.annotation.RepeatSubmit;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -328,12 +329,14 @@ public class DictItemController {
   public YdszResponse<Map<String, Object>> importFromExcel(
       @Parameter(description = "Excel 文件（.xlsx 格式）") @RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
-      return YdszResponse.error("Import file must not be empty");
+      return YdszResponse.error(I18n.message("system.dictitem.import.file.empty"));
     }
     try {
       return YdszResponse.success(importService.importFromExcel(file.getInputStream()));
     } catch (Exception e) {
-      return YdszResponse.error("Import failed: " + e.getMessage());
+      log.error("Excel 导入字典项失败 fileName={}", file.getOriginalFilename(), e);
+      // 不把 e.getMessage() 返回给客户端：可能含类名/路径/SQL 片段
+      return YdszResponse.error(I18n.message("system.dictitem.import.failed"));
     }
   }
 

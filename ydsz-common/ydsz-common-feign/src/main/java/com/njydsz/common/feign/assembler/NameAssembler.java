@@ -1,9 +1,5 @@
 package com.njydsz.common.feign.assembler;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 /**
  * ID → 名称富化组件接口。

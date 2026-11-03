@@ -116,7 +116,7 @@ public class RedisIdempotentStrategy implements IdempotentStrategy {
           "[ydsz-safe] [idempotent] [redis] Redis 不可用且 fail-closed 已启用，拒绝请求 key={} cause={}",
           key,
           e.getMessage());
-      throw new IdempotentUnavailableException("幂等检查依赖的 Redis 不可用，已拒绝请求: " + key, e);
+      throw new IdempotentUnavailableException("Idempotency check depends on Redis which is unavailable, request rejected: " + key, e);
     }
   }
 

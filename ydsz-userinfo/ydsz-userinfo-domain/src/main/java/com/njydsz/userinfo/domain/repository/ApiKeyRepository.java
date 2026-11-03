@@ -24,9 +24,9 @@ public interface ApiKeyRepository {
    * 根据 API Key 哈希查询 Key（用于认证验证）。
    *
    * @param apiKeyHash API Key SHA-256 哈希
-   * @return API Key 实体；不存在返回 Optional.empty()
+   * @return API Key VO；不存在返回 Optional.empty()
    */
-  Optional<ApiKey> findByKeyHash(String apiKeyHash);
+  Optional<ApiKeyVO> findByKeyHash(String apiKeyHash);
 
   /**
    * 根据 ID 查询 API Key。
@@ -55,10 +55,11 @@ public interface ApiKeyRepository {
   /**
    * 保存 API Key（创建）。
    *
+   * <p>注意：保存后实体 ID 由 MyBatis-Plus 回写到入参对象，调用方应直接从入参获取。
+   *
    * @param apiKey API Key 实体
-   * @return 持久化后的实体（含生成的 ID）
    */
-  ApiKey save(ApiKey apiKey);
+  void save(ApiKey apiKey);
 
   /**
    * 批量撤销（软删除）API Key。

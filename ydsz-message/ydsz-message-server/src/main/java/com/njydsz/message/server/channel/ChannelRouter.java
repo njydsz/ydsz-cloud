@@ -119,14 +119,14 @@ public class ChannelRouter {
     if (channel == null || channel.isBlank()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("消息通道不能为空")
+          .message(I18n.message("message.channel.required"))
           .build();
     }
     MessageChannel target = channelCache.get(channel.trim().toUpperCase());
     if (target == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("不支持的消息通道: " + channel)
+          .message(I18n.message("message.channel.unsupported", new Object[]{channel}))
           .build();
     }
     return target;
@@ -222,7 +222,7 @@ public class ChannelRouter {
     if (request == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("消息请求不能为空")
+          .message(I18n.message("message.request.required"))
           .build();
     }
 
@@ -342,7 +342,7 @@ public class ChannelRouter {
    */
   public String dispatch(MsgLogVO logVO) {
     if (logVO == null) {
-      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("消息日志为空").build();
+      throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message(I18n.message("message.log.required")).build();
     }
     MessageItemRequestDTO request = new MessageItemRequestDTO();
     request.setChannel(logVO.getChannel());

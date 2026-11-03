@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +14,8 @@ import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.entity.AgentDefinition;
 import com.njydsz.agent.domain.repository.AgentDefinitionRepository;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * Agent 定义 Repository 实现
@@ -56,6 +59,21 @@ public class AgentDefinitionRepositoryImpl implements AgentDefinitionRepository 
             .eq(AgentDefinition::getStatus, "ACTIVE")
             .orderByDesc(AgentDefinition::getCreatedAt));
     return converter.agentDefinitionListToVO(entityList);
+  }
+
+  @Override
+  public PageResponse<List<AgentDefinitionVO>> findActivePage(PageQuery query) {
+    Page<AgentDefinition> page = new Page<>(query.getPageNum(), query.getPageSize());
+    Page<AgentDefinition> result = agentDefinitionMapper.selectPage(
+        page,
+        new LambdaQueryWrapper<AgentDefinition>()
+            .eq(AgentDefinition::getStatus, "ACTIVE")
+            .orderByDesc(AgentDefinition::getCreatedAt));
+    return PageResponse.success(
+        result.getTotal(),
+        result.getCurrent(),
+        result.getSize(),
+        converter.agentDefinitionListToVO(result.getRecords()));
   }
 
   @Override

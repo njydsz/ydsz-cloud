@@ -52,6 +52,6 @@ public final class StorageType {
 
   /** 工具类构造器，禁止实例化 */
   private StorageType() {
-    throw new UnsupportedOperationException("StorageType 是常量类，禁止实例化");
+    throw new UnsupportedOperationException("StorageType is a constant class, cannot be instantiated");
   }
 }

@@ -1,5 +1,6 @@
 package com.njydsz.literule.server.cache;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.repository.RuleDefinitionConfigRepository;
+import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**
@@ -33,51 +35,54 @@ public class DirectDbRuleConfigProvider implements RuleConfigProvider {
 
   @Override
   public List<RuleDefinitionDTO> loadEnabledRules() {
-    List<RuleDefinition> entities = ruleDefinitionConfigRepository.listAll();
-    return entities.stream()
-        .filter(e -> "PUBLISHED".equals(e.getStatus()) && Boolean.TRUE.equals(e.getIsEnabled()))
-        .map(this::entityToDto)
+    List<RuleDefinitionVO> vos = ruleDefinitionConfigRepository.listAll();
+    return vos.stream()
+        .filter(vo -> "PUBLISHED".equals(vo.getStatus()) && Boolean.TRUE.equals(vo.getIsEnabled()))
+        .map(this::voToDto)
         .toList();
   }
 
   @Override
   public List<RuleDefinitionDTO> loadAllRules() {
-    List<RuleDefinition> entities = ruleDefinitionConfigRepository.listAll();
-    return entities.stream().map(this::entityToDto).toList();
+    List<RuleDefinitionVO> vos = ruleDefinitionConfigRepository.listAll();
+    return vos.stream().map(this::voToDto).toList();
   }
 
   @Override
   public RuleDefinitionDTO save(RuleDefinitionDTO definition, String operator) {
-    RuleDefinition existing = ruleDefinitionConfigRepository.findByCode(definition.getCode());
+    RuleDefinitionVO existingVO = ruleDefinitionConfigRepository.findByCode(definition.getCode());
     RuleDefinition entity = dtoToEntity(definition);
-    if (existing == null) {
+    if (existingVO == null) {
       if (entity.getVersion() == null) {
         entity.setVersion(1);
       }
       ruleDefinitionConfigRepository.insert(entity);
     } else {
-      entity.setId(existing.getId());
+      entity.setId(existingVO.getId());
       ruleDefinitionConfigRepository.updateById(entity);
     }
     log.info("[LiteRule-DirectDb] 规则已保存: code={}, operator={}", definition.getCode(), operator);
-    return entityToDto(ruleDefinitionConfigRepository.findByCode(definition.getCode()));
+    return voToDto(ruleDefinitionConfigRepository.findByCode(definition.getCode()));
   }
 
   @Override
   public void toggleEnabled(String ruleCode, boolean enabled, String operator) {
-    RuleDefinition existing = ruleDefinitionConfigRepository.findByCode(ruleCode);
-    if (existing == null) {
+    RuleDefinitionVO existingVO = ruleDefinitionConfigRepository.findByCode(ruleCode);
+    if (existingVO == null) {
       log.warn("[LiteRule-DirectDb] 规则不存在，无法切换启停状态: ruleCode={}", ruleCode);
       return;
     }
-    existing.setIsEnabled(enabled);
-    ruleDefinitionConfigRepository.updateById(existing);
+    RuleDefinition update = new RuleDefinition();
+    update.setId(existingVO.getId());
+    update.setIsEnabled(enabled);
+    update.setRevision(existingVO.getRevision());
+    ruleDefinitionConfigRepository.updateById(update);
     log.info("[LiteRule-DirectDb] 规则启停切换: ruleCode={}, enabled={}", ruleCode, enabled);
   }
 
   @Override
   public RuleDefinitionDTO findByCode(String ruleCode) {
-    return entityToDto(ruleDefinitionConfigRepository.findByCode(ruleCode));
+    return voToDto(ruleDefinitionConfigRepository.findByCode(ruleCode));
   }
 
   @Override
@@ -97,38 +102,39 @@ public class DirectDbRuleConfigProvider implements RuleConfigProvider {
 
   // ==================== 内部方法 ====================
 
-  /** Entity → DTO 转换（手动映射） */
-  private RuleDefinitionDTO entityToDto(RuleDefinition entity) {
-    if (entity == null) {
+  /** VO → DTO 转换（手动映射） */
+  private RuleDefinitionDTO voToDto(RuleDefinitionVO vo) {
+    if (vo == null) {
       return null;
     }
     RuleDefinitionDTO dto = new RuleDefinitionDTO();
-    dto.setCode(entity.getRuleCode());
-    dto.setName(entity.getRuleName());
-    dto.setCategory(entity.getCategory());
-    dto.setCategoryPath(entity.getCategoryPath());
-    dto.setOwner(entity.getOwner());
-    dto.setDescription(entity.getDescription());
-    dto.setConditionExpression(entity.getConditionExpression());
-    dto.setSeverityExpression(entity.getSeverityExpression());
-    dto.setTitleTemplate(entity.getTitleTemplate());
-    dto.setDescriptionTemplate(entity.getDescriptionTemplate());
-    dto.setPriority(entity.getPriority());
-    dto.setEnabled(Boolean.TRUE.equals(entity.getIsEnabled()));
-    dto.setScope(entity.getScope());
-    dto.setMutexGroup(entity.getMutexGroup());
-    dto.setDrilldownAvailable(Boolean.TRUE.equals(entity.getIsDrilldownAvailable()));
-    dto.setVersion(entity.getVersion() != null ? entity.getVersion() : 1);
-    dto.setTenantId(entity.getTenantId());
-    dto.setStatus(entity.getStatus());
-    dto.setEffectiveFrom(entity.getEffectiveFrom());
-    dto.setEffectiveTo(entity.getEffectiveTo());
-    dto.setReviewedBy(entity.getReviewedBy());
-    dto.setReviewedAt(entity.getReviewedAt());
-    dto.setReviewComment(entity.getReviewComment());
-    dto.setCanaryRatio(entity.getCanaryRatio());
-    dto.setCanaryConditionExpression(entity.getCanaryConditionExpression());
-    dto.setCanarySeverityExpression(entity.getCanarySeverityExpression());
+    dto.setCode(vo.getRuleCode());
+    dto.setName(vo.getRuleName());
+    dto.setCategory(vo.getCategory());
+    dto.setCategoryPath(vo.getCategoryPath());
+    dto.setOwner(vo.getOwner());
+    dto.setDescription(vo.getDescription());
+    dto.setConditionExpression(vo.getConditionExpression());
+    dto.setSeverityExpression(vo.getSeverityExpression());
+    dto.setTitleTemplate(vo.getTitleTemplate());
+    dto.setDescriptionTemplate(vo.getDescriptionTemplate());
+    dto.setPriority(vo.getPriority());
+    dto.setEnabled(Boolean.TRUE.equals(vo.getIsEnabled()));
+    dto.setScope(vo.getScope());
+    dto.setMutexGroup(vo.getMutexGroup());
+    dto.setDrilldownAvailable(Boolean.TRUE.equals(vo.getIsDrilldownAvailable()));
+    dto.setVersion(vo.getVersion() != null ? vo.getVersion() : 1);
+    dto.setTenantId(vo.getTenantId());
+    dto.setStatus(vo.getStatus());
+    dto.setEffectiveFrom(vo.getEffectiveFrom());
+    dto.setEffectiveTo(vo.getEffectiveTo());
+    dto.setReviewedBy(vo.getReviewedBy());
+    dto.setReviewedAt(vo.getReviewedAt());
+    dto.setReviewComment(vo.getReviewComment());
+    dto.setCanaryRatio(vo.getCanaryRatio() != null
+        ? BigDecimal.valueOf(vo.getCanaryRatio()) : null);
+    dto.setCanaryConditionExpression(vo.getCanaryConditionExpression());
+    dto.setCanarySeverityExpression(vo.getCanarySeverityExpression());
     return dto;
   }
 

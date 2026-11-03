@@ -43,7 +43,7 @@ public final class FileTypeDetector {
 
   /** 工具类构造器，禁止实例化 */
   private FileTypeDetector() {
-    throw new UnsupportedOperationException("FileTypeDetector 是工具类，禁止实例化");
+    throw new UnsupportedOperationException("FileTypeDetector is a utility class, cannot be instantiated");
   }
 
   /** 读取文件头的最大字节数，用于 Magic Number 匹配（覆盖所有复合签名的 ASCII 标签） */

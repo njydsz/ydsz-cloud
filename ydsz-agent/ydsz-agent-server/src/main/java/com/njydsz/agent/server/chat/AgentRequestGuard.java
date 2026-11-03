@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.core.DistributedLocker;
@@ -137,7 +138,7 @@ public class AgentRequestGuard {
       log.warn("[Agent-Guard] 限流触发: resource={}, threshold={}", resource, maxRequestsPerMinute);
       throw BusinessException.builder()
           .code("RATE_LIMIT_EXCEEDED")
-          .message("请求过于频繁，每分钟最多 " + maxRequestsPerMinute + " 次")
+          .message(I18n.message("agent.chat.rate.limit", new Object[]{maxRequestsPerMinute}))
           .build();
     }
     if (requestId != null && !requestId.isBlank()) {
@@ -154,7 +155,7 @@ public class AgentRequestGuard {
       log.warn("[Agent-Guard] 重复请求被拒绝: requestId={}", requestId);
       throw BusinessException.builder()
           .code("REQUEST_DUPLICATE")
-          .message("重复请求，请勿在 60 秒内重复提交")
+          .message(I18n.message("agent.chat.duplicate.request"))
           .build();
     }
   }

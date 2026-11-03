@@ -4,7 +4,6 @@ import java.io.Serial;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

@@ -7,6 +7,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.code.CoreExceptionCode;
@@ -15,6 +16,7 @@ import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 import com.njydsz.common.safe.idempotent.annotation.RepeatSubmit;
 import com.njydsz.common.safe.idempotent.strategy.RepeatSubmitTokenService;
 import com.njydsz.common.util.http.RequestContextUtils;
+import com.njydsz.common.util.mask.MaskUtils;
 
 /**
  * 表单重复提交防护 AOP 切面
@@ -77,7 +79,7 @@ public class RepeatSubmitAspect {
       log.warn("[ydsz-safe] [repeat-submit] 缺少防重复提交 Token | header={}", headerName);
       throw BusinessException.builder()
           .code(CoreExceptionCode.FAIL.getCode())
-          .message("缺少防重复提交 Token，请先获取 Token")
+          .message(I18n.message("common.safe.token.required"))
           .build();
     }
 
@@ -99,7 +101,9 @@ public class RepeatSubmitAspect {
 
     boolean valid = tokenService.validateAndConsume(userId, token);
     if (!valid) {
-      log.warn("[ydsz-safe] [repeat-submit] Token 无效或已过期 | header={}, token={}", headerName, token);
+      // Token 属敏感凭证，日志中脱敏（保留前 3 后 3）
+      log.warn("[ydsz-safe] [repeat-submit] Token 无效或已过期 | header={}, token={}",
+          headerName, MaskUtils.mask(token, 3, 3));
       throw BusinessException.builder()
           .code(CoreExceptionCode.FAIL.getCode())
           .message(repeatSubmit.message())

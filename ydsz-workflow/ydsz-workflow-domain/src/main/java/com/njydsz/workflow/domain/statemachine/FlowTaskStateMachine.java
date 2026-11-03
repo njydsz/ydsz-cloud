@@ -6,7 +6,6 @@ import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.domain.enums.BaseStatusEnum;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.exception.WorkflowException;

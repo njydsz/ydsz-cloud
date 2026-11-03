@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.constant.SystemConstants;
@@ -75,7 +76,7 @@ public class NotificationServiceImpl implements NotificationService {
     if (dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("通知参数不能为空")
+          .message(I18n.message("message.notification.params.required"))
           .build();
     }
     List<String> receiverIds = resolveReceiverIds(dto);
@@ -117,7 +118,7 @@ public class NotificationServiceImpl implements NotificationService {
     if (!StringUtils.hasText(userId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("用户 ID 不能为空")
+          .message(I18n.message("message.user.id.required"))
           .build();
     }
     NotificationQueryDTO effectiveQuery = query != null ? query : new NotificationQueryDTO();
@@ -258,7 +259,7 @@ public class NotificationServiceImpl implements NotificationService {
     if (CollectionUtils.isEmpty(receiverIds)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("接收人不能为空")
+          .message(I18n.message("message.receiver.required"))
           .build();
     }
     return receiverIds;

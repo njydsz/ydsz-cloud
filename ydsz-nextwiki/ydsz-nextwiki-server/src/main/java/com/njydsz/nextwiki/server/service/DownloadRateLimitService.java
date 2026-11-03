@@ -92,14 +92,14 @@ public class DownloadRateLimitService {
         KEY_USER_RATE + userId, rateLimitPerMinute, RATE_WINDOW)) {
       log.warn(
           "[DownloadRateLimitService] 用户下载限流: userId={}, limit={}/分钟", userId, rateLimitPerMinute);
-      return RateLimitResult.blocked("用户下载频率超限: " + rateLimitPerMinute + "/分钟");
+      return RateLimitResult.blocked("User download rate limit exceeded: " + rateLimitPerMinute + "/min");
     }
 
     // IP 级限流
     if (!redisRateLimiter.tryAcquireFixedWindow(
         KEY_IP_RATE + ip, ipRateLimitPerMinute, RATE_WINDOW)) {
       log.warn("[DownloadRateLimitService] IP 下载限流: ip={}, limit={}/分钟", ip, ipRateLimitPerMinute);
-      return RateLimitResult.blocked("IP 下载频率超限: " + ipRateLimitPerMinute + "/分钟");
+      return RateLimitResult.blocked("IP download rate limit exceeded: " + ipRateLimitPerMinute + "/min");
     }
 
     return RateLimitResult.allowed();

@@ -73,7 +73,7 @@ public class FreeMarkerTemplateRenderer implements MessageTemplateRenderer {
       log.error(I18n.message("message.log.other.Template_FreeMarker_err_{}.98c1a8"), e.getMessage(), e);
       throw SysException.builder()
           .resultCode(YdszResultCode.INTERNAL_ERROR)
-          .message("模板渲染失败: " + e.getMessage())
+          .message(I18n.message("message.template.render.failed"))
           .build();
     }
   }
@@ -91,13 +91,13 @@ public class FreeMarkerTemplateRenderer implements MessageTemplateRenderer {
       if (value == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("模板必填参数缺失: " + key)
+            .message(I18n.message("message.template.param.missing", new Object[]{key}))
             .build();
       }
       if (value instanceof String s && s.isBlank()) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("模板必填参数为空: " + key)
+            .message(I18n.message("message.template.param.empty", new Object[]{key}))
             .build();
       }
     }

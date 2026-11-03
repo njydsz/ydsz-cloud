@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
@@ -127,14 +128,14 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     if (instanceId == null || node == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("instanceId/node 不能为空")
+          .message(I18n.message("workflow.event.instance.node.required"))
           .build();
     }
     FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("流程实例不存在: " + instanceId)
+          .message(I18n.message("workflow.instance.not.found", new Object[]{}))
           .build();
     }
 
@@ -183,7 +184,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     if (!StringUtils.hasText(messageName)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("messageName 不能为空")
+          .message(I18n.message("workflow.event.message.name.required"))
           .build();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
@@ -225,7 +226,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     if (!StringUtils.hasText(errorCode)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("errorCode 不能为空")
+          .message(I18n.message("workflow.event.error.code.required"))
           .build();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();

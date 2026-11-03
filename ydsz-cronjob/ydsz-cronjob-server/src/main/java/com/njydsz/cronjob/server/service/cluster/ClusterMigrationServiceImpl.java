@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
@@ -77,7 +78,7 @@ public class ClusterMigrationServiceImpl implements ClusterMigrationService {
         || !cronjobProperties.getMultiCluster().getClusters().containsKey(targetCluster)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("目标集群未配置: " + targetCluster)
+          .message(I18n.message("cronjob.cluster.target.not.configured", new Object[]{targetCluster}))
           .build();
     }
 
@@ -85,7 +86,7 @@ public class ClusterMigrationServiceImpl implements ClusterMigrationService {
     if (migrationClient != null && !migrationClient.checkReachable(targetCluster)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.SERVICE_UNAVAILABLE)
-          .message("目标集群不可达: " + targetCluster)
+          .message(I18n.message("cronjob.cluster.target.unreachable", new Object[]{targetCluster}))
           .build();
     }
 
@@ -143,7 +144,7 @@ public class ClusterMigrationServiceImpl implements ClusterMigrationService {
                 () ->
                     SysException.builder()
                         .resultCode(YdszResultCode.NOT_FOUND)
-                        .message("任务不存在: " + jobId)
+                        .message(I18n.message("cronjob.cluster.job.not.found", new Object[]{jobId}))
                         .build());
 
     // 1. 注销本机调度器（停止在当前集群的调度）
@@ -153,7 +154,7 @@ public class ClusterMigrationServiceImpl implements ClusterMigrationService {
     if (migrationClient == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.SERVICE_UNAVAILABLE)
-          .message("多集群漂移功能未启用，无法迁移任务")
+          .message(I18n.message("cronjob.cluster.drift.disabled"))
           .build();
     }
     String requestBody = YdszJson.toJson(job);
@@ -161,7 +162,7 @@ public class ClusterMigrationServiceImpl implements ClusterMigrationService {
     if (!registered) {
       throw SysException.builder()
           .resultCode(YdszResultCode.SERVICE_UNAVAILABLE)
-          .message("目标集群注册失败: " + targetCluster)
+          .message(I18n.message("cronjob.cluster.target.register.failed", new Object[]{targetCluster}))
           .build();
     }
 

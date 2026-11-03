@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.workflow.server.constant.WorkflowCacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
@@ -142,7 +143,7 @@ public class FlowDefinitionPublishManager {
     if (def == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("流程定义不存在: " + definitionId)
+          .message(I18n.message("workflow.definition.not.found", new Object[]{definitionId}))
           .build();
     }
     checkPublishCompatibility(def, force);
@@ -205,20 +206,20 @@ public class FlowDefinitionPublishManager {
     if (!StringUtils.hasText(flowCode)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("flowCode 不能为空")
+          .message(I18n.message("workflow.definition.publish.flowcode.required"))
           .build();
     }
     FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);
     if (def == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("流程定义不存在: " + definitionId)
+          .message(I18n.message("workflow.definition.not.found", new Object[]{definitionId}))
           .build();
     }
     if (!flowCode.equals(def.getFlowCode())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("flowCode 不匹配: 期望=" + flowCode + " 实际=" + def.getFlowCode())
+          .message(I18n.message("workflow.definition.publish.flowcode.mismatch", new Object[]{}))
           .build();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
@@ -279,7 +280,7 @@ public class FlowDefinitionPublishManager {
     if (!StringUtils.hasText(flowCode)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("flowCode 不能为空")
+          .message(I18n.message("workflow.definition.publish.flowcode.required"))
           .build();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
@@ -289,7 +290,7 @@ public class FlowDefinitionPublishManager {
     if (currentDef == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("未找到当前激活的流程定义: flowCode=" + flowCode)
+          .message(I18n.message("workflow.definition.publish.active.not.found", new Object[]{}))
           .build();
     }
 
@@ -298,7 +299,7 @@ public class FlowDefinitionPublishManager {
     if (previousDef == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("无可回滚的历史版本: flowCode=" + flowCode)
+          .message(I18n.message("workflow.definition.publish.rollback.no.history", new Object[]{}))
           .build();
     }
 
@@ -315,7 +316,7 @@ public class FlowDefinitionPublishManager {
           riskLevel);
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("回滚风险等级为 HIGH，存在在途实例将卡死，请先处理在途实例后再回滚")
+          .message(I18n.message("workflow.definition.publish.rollback.high.risk"))
           .build();
     }
 

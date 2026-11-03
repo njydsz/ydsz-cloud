@@ -91,7 +91,6 @@ public class BloomFilterDeduplicator {
    *
    * @param redisStringOps Redis String 操作组件
    */
-  @Autowired
   public BloomFilterDeduplicator(RedisStringOps redisStringOps) {
     this.redisStringOps = redisStringOps;
     this.redisDedupTtlSeconds = DEFAULT_DEDUP_TTL_SECONDS;

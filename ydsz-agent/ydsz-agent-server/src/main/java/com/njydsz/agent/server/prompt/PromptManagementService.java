@@ -99,7 +99,7 @@ public class PromptManagementService {
    * @return 创建的模板快照
    * @throws IllegalArgumentException 当模板编码已存在时抛出
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public PromptTemplate create(
       String code, String name, String content, String description, String category) {
     PromptTemplateVO existing = selectByCode(code);
@@ -136,7 +136,7 @@ public class PromptManagementService {
    * @return 更新后的模板快照
    * @throws IllegalArgumentException 当模板不存在时抛出
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public PromptTemplate update(String code, String content) {
     PromptTemplateVO existing = selectByCode(code);
     if (existing == null) {
@@ -233,7 +233,7 @@ public class PromptManagementService {
    * @param changeNote 发布说明
    * @return 激活后的模板
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public PromptTemplate releaseVersion(String code, int targetVersion, String changeNote) {
     PromptVersion pv = getVersion(code, targetVersion);
     if (pv == null) {
@@ -279,7 +279,7 @@ public class PromptManagementService {
    * @param canaryVersion 灰度（canary）版本号
    * @param trafficPercent 灰度流量百分比（1-100）
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public void enableAbTest(String code, int canaryVersion, int trafficPercent) {
     PromptTemplateVO existing = selectByCode(code);
     if (existing == null) {
@@ -307,7 +307,7 @@ public class PromptManagementService {
    *
    * @param code 模板编码
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public void disableAbTest(String code) {
     PromptTemplateVO existing = selectByCode(code);
     if (existing == null) {
@@ -381,7 +381,7 @@ public class PromptManagementService {
    *
    * @param code 模板编码
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public void delete(String code) {
     PromptTemplateVO existing = selectByCode(code);
     if (existing != null) {
@@ -399,7 +399,7 @@ public class PromptManagementService {
    * @return 回滚后的新版本快照
    * @throws IllegalArgumentException 当版本不存在时抛出
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public PromptTemplate rollback(String code, int targetVersion) {
     PromptVersion pv = getVersion(code, targetVersion);
     if (pv == null) {

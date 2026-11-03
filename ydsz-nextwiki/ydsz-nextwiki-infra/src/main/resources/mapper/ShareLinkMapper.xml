@@ -73,7 +73,7 @@
           AND expire_time IS NOT NULL
           AND expire_time &gt;= NOW()
           AND expire_time &lt;= NOW() + INTERVAL '#{withinHours} hours'
-          AND (is_reminder_sent = FALSE OR is_reminder_sent IS NULL)
+          AND (is_reminder_sent = 0 OR is_reminder_sent IS NULL)
         ORDER BY expire_time ASC
     </select>
 

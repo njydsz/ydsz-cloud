@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
@@ -134,7 +135,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         || businessId.isBlank()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("businessType / businessId 不能为空")
+          .message(I18n.message("workflow.embedded.business.required"))
           .build();
     }
 
@@ -153,7 +154,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
           .actions(List.of("SUBMIT"))
           .isCanRecall(false)
           .isFinished(false)
-          .message("未发起流程")
+          .message(I18n.message("workflow.embedded.not.started"))
           .build();
     }
 
@@ -274,7 +275,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             if (dto.getTargetUserId() == null) {
               throw SysException.builder()
                   .resultCode(YdszResultCode.BAD_REQUEST)
-                  .message("委派操作必须指定 targetUserId")
+                  .message(I18n.message("workflow.embedded.delegate.target.required"))
                   .build();
             }
             taskService.delegate(op);

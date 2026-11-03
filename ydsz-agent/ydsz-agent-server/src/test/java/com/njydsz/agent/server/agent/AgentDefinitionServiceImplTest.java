@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +20,8 @@ import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.repository.AgentDefinitionRepository;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.domain.query.PageQuery;
 
 @ExtendWith(MockitoExtension.class)
 class AgentDefinitionServiceImplTest {
@@ -78,6 +81,20 @@ class AgentDefinitionServiceImplTest {
     AgentDefinition domain = agentService.toDomain(null);
 
     assertThat(domain).isNull();
+  }
+
+  @Test
+  @DisplayName("listActivePage - 委托 Repository 返回分页响应")
+  void listActivePage_delegatesToRepository() {
+    PageQuery query = PageQuery.of(1, 12);
+    PageResponse<List<AgentDefinitionVO>> expected =
+        PageResponse.success(0L, 1L, 12L, List.of());
+    when(agentDefinitionRepository.findActivePage(query)).thenReturn(expected);
+
+    PageResponse<List<AgentDefinitionVO>> actual = agentService.listActivePage(query);
+
+    assertThat(actual).isSameAs(expected);
+    verify(agentDefinitionRepository).findActivePage(query);
   }
 
   @Test

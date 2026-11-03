@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.exception.custom.SysException;
@@ -291,7 +292,7 @@ public class FlowExportServiceImpl implements FlowExportService {
     if (!StringUtils.hasText(instanceId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("实例 ID 不能为空")
+          .message(I18n.message("workflow.instance.id.required"))
           .build();
     }
     return instanceRepository

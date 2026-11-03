@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.generator.engine.GeneratorTypeMapper;
@@ -81,7 +82,7 @@ public class TableMetadataService {
       tableNames = fetchTableNames(datasource);
     } catch (Exception e) {
       throw SysException.builder()
-          .message("刷新表元数据失败: " + e.getMessage())
+          .message(I18n.message("generator.metadata.table.refresh.failed"))
           .cause(e)
           .build();
     }
@@ -120,7 +121,7 @@ public class TableMetadataService {
       columns = fetchColumns(datasource, tableMeta.getTableName());
     } catch (Exception e) {
       throw SysException.builder()
-          .message("刷新列元数据失败: " + e.getMessage())
+          .message(I18n.message("generator.metadata.column.refresh.failed"))
           .cause(e)
           .build();
     }

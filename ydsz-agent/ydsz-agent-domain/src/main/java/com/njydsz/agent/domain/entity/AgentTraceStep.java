@@ -2,13 +2,16 @@ package com.njydsz.agent.domain.entity;
 
 import java.math.BigDecimal;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * Agent 执行链路步骤（domain 层持久化实体，YDIZ-DDD-007 单包模式）
@@ -34,7 +37,14 @@ public class AgentTraceStep extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
 
-  /** 所属链路 ID（复合业务键之一，关联 ydsz_agt_trace.trace_id） */
+  /**
+   * 所属链路 ID（复合主键之一，关联 ydsz_agt_trace.trace_id，映射到数据库 trace_id 列）。
+   *
+   * <p>本字段是独立业务字段 {@code traceId}，<b>不覆盖</b> MpBaseEntity 继承的 {@code id} 字段，
+   * 符合 YDIZ-DDD-008。表中 {@code id} 列由平台基类维护，{@code trace_id} 作为复合主键的一部分
+   * 通过 {@code @TableId} 显式声明列名。
+   */
+  @TableId(value = "trace_id", type = IdType.INPUT)
   @TableField("trace_id")
   private String traceId;
 

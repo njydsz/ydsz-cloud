@@ -341,7 +341,7 @@ ydsz:
     enabled: true
     app-key: ydsz-cloud-common
     storage-type: LOCAL
-    # 落库表名需与 data/sqls/flyway/V26.10.01.sql 的 ydsz_comm_audit_log 保持一致，
+    # 落库表名需与 data/sqls/bootstrap/V26.10.01.bootstrap.sql 的 ydsz_comm_audit_log 保持一致，
     # 代码默认值 sys_audit_log 在库中不存在
     sharding-base-table-name: ydsz_comm_audit_log
     record-request: true

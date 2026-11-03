@@ -90,21 +90,21 @@ public class RecallServiceImpl implements RecallService {
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(notificationId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("用户 ID 与通知 ID 不能为空")
+          .message(I18n.message("message.recall.user.notification.required"))
           .build();
     }
     Optional<MsgNotificationVO> optNotification = msgNotificationRepository.findById(notificationId);
     if (optNotification.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("通知不存在: " + notificationId)
+          .message(I18n.message("message.recall.notification.not.found", new Object[]{notificationId}))
           .build();
     }
     MsgNotificationVO n = optNotification.get();
     if (!userId.equals(n.getReceiverId())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.FORBIDDEN)
-          .message("仅可撤回本人的通知")
+          .message(I18n.message("message.recall.owner.only"))
           .build();
     }
     // P1-F3: 站内通知撤回时间窗口校验
@@ -132,7 +132,7 @@ public class RecallServiceImpl implements RecallService {
     if (!StringUtils.hasText(logId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("日志 ID 不能为空")
+          .message(I18n.message("message.log.id.required"))
           .build();
     }
     messageLogService.markRecalled(logId);
@@ -179,7 +179,7 @@ public class RecallServiceImpl implements RecallService {
     if (!StringUtils.hasText(msgId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("消息 ID 不能为空")
+          .message(I18n.message("message.id.required"))
           .build();
     }
     // 按 msgId 查询消息日志
@@ -189,7 +189,7 @@ public class RecallServiceImpl implements RecallService {
     if (optLog.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("消息不存在: msgId=" + msgId)
+          .message(I18n.message("message.not.found", new Object[]{msgId}))
           .build();
     }
     MsgLogVO logDO = optLog.get();
@@ -198,7 +198,7 @@ public class RecallServiceImpl implements RecallService {
     if (status == MessageStatusEnum.DEAD || status == MessageStatusEnum.SKIPPED) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("消息状态为 " + logDO.getStatus() + "，不可撤回")
+          .message(I18n.message("message.recall.status.invalid", new Object[]{logDO.getStatus()}))
           .build();
     }
     // 校验撤回时间窗口（当前实体无 sentAt 字段，以 createdAt 为基准）
@@ -207,7 +207,7 @@ public class RecallServiceImpl implements RecallService {
       if (minutesElapsed > RECALL_WINDOW_MINUTES) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("消息发送已超过 " + RECALL_WINDOW_MINUTES + " 分钟，不可撤回")
+            .message(I18n.message("message.recall.window.expired", new Object[]{RECALL_WINDOW_MINUTES}))
             .build();
       }
     }
@@ -263,7 +263,7 @@ public class RecallServiceImpl implements RecallService {
     if (!StringUtils.hasText(bizType) || !StringUtils.hasText(bizId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("业务类型与单据 ID 不能为空")
+          .message(I18n.message("message.recall.biz.required"))
           .build();
     }
     // 通知批量撤回

@@ -78,7 +78,6 @@ public class ElasticsearchSearchStrategy implements SearchStrategy, IndexStrateg
    * @param client ES 客户端
    * @param properties 搜索配置
    */
-  @Autowired
   public ElasticsearchSearchStrategy(ElasticsearchClient client, SearchProperties properties) {
     this.client = client;
     if (properties != null && properties.getElasticsearch() != null

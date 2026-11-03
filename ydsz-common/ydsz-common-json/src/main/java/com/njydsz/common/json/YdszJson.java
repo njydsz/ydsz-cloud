@@ -1006,11 +1006,11 @@ public class YdszJson {
       rootNode = TreeConverter.convertToJsonNode(parsed);
     } catch (Exception e) {
       LOGGER.warn("YdszJson.validateSchema JSON 语法校验失败: {}", e.getMessage());
-      throw new JsonException(1001, "JSON 语法不合法: " + e.getMessage(), null, -1,
+      throw new JsonException(1001, "Invalid JSON syntax: " + e.getMessage(), null, -1,
           JsonException.CauseType.PARSE_ERROR);
     }
     if (rootNode == null || !rootNode.isObject()) {
-      throw new JsonException(1002, "根节点必须是 JSON 对象", null, -1,
+      throw new JsonException(1002, "Root node must be a JSON object", null, -1,
           JsonException.CauseType.TYPE_MISMATCH);
     }
     if (requiredFields != null && requiredFields.length > 0) {
@@ -1023,7 +1023,7 @@ public class YdszJson {
         }
       }
       if (!missingFields.isEmpty()) {
-        throw new JsonException(1003, "缺少必填字段: " + String.join(", ", missingFields),
+        throw new JsonException(1003, "Missing required field(s): " + String.join(", ", missingFields),
             null, -1, JsonException.CauseType.MISSING_FIELD);
       }
     }
@@ -1044,14 +1044,14 @@ public class YdszJson {
       Object parsed = JsonParserUtil.parse(jsonString);
       JsonNode rootNode = TreeConverter.convertToJsonNode(parsed);
       if (rootNode == null || !rootNode.isArray()) {
-        throw new JsonException(1004, "根节点必须是 JSON 数组", null, -1,
+        throw new JsonException(1004, "Root node must be a JSON array", null, -1,
             JsonException.CauseType.TYPE_MISMATCH);
       }
     } catch (JsonException e) {
       throw e;
     } catch (Exception e) {
       LOGGER.warn("YdszJson.validateArraySchema JSON 语法校验失败: {}", e.getMessage());
-      throw new JsonException(1001, "JSON 数组语法不合法: " + e.getMessage(), null, -1,
+      throw new JsonException(1001, "Invalid JSON array syntax: " + e.getMessage(), null, -1,
           JsonException.CauseType.PARSE_ERROR);
     }
   }

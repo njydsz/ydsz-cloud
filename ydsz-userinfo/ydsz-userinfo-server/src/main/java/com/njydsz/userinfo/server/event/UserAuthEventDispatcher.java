@@ -95,7 +95,7 @@ public class UserAuthEventDispatcher {
         case PasswordChangedEvent e -> listener.onPasswordChanged(e);
         case AccountBannedEvent e -> listener.onAccountBanned(e);
         case AccountUnbannedEvent e -> listener.onAccountUnbanned(e);
-        default -> log.warn(I18n.message("userinfo.未知事件类型.跳过分发", new Object[]{event.getClass().getName()}));
+        default -> log.warn(I18n.message("userinfo.event.unknown.type.skipped", new Object[]{event.getClass().getName()}));
       }
     } catch (Exception e) {
       log.warn(

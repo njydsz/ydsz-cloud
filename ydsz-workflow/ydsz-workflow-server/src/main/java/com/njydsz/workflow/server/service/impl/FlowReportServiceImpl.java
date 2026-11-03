@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.vo.FlowAnalyticsOverviewVO;
@@ -243,7 +244,8 @@ public class FlowReportServiceImpl implements FlowReportService {
   public boolean sendWeeklyReport(String tenantId) {
     try {
       Map<String, Object> report = generateWeeklyReport(tenantId);
-      String title = "审批周报 - " + report.get("period");
+      String title = I18n.message("workflow.report.weekly.title",
+          new Object[]{report.get("period")});
       String content = buildReportContent(report);
       // 推送给管理员（userId=admin 或通过配置获取管理员列表）
       notificationService.send(
@@ -273,7 +275,8 @@ public class FlowReportServiceImpl implements FlowReportService {
   public boolean sendMonthlyReport(String tenantId) {
     try {
       Map<String, Object> report = generateMonthlyReport(tenantId);
-      String title = "审批月报 - " + report.get("period");
+      String title = I18n.message("workflow.report.monthly.title",
+          new Object[]{report.get("period")});
       String content = buildReportContent(report);
       notificationService.send(
           "WORKFLOW",

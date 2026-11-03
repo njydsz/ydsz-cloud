@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * Agent 定义 Repository
@@ -52,6 +54,14 @@ public interface AgentDefinitionRepository {
    * @return Agent 定义 VO 列表
    */
   List<AgentDefinitionVO> findActive();
+
+  /**
+   * 分页查询活跃 Agent 定义。
+   *
+   * @param query 分页与排序参数
+   * @return 统一分页响应，包含总数、页码、页大小和当前页数据
+   */
+  PageResponse<List<AgentDefinitionVO>> findActivePage(PageQuery query);
 
   /**
    * 查询所有 Agent 定义列表（用于全量索引重建）。

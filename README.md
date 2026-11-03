@@ -164,19 +164,23 @@ mvn clean package -DskipTests
 
 ### 数据库初始化
 
-> 项目规范 **禁止**使用 Flyway / Liquibase 等 schema-migration 框架。数据库 DDL 统一以 SQL 脚本形式管理， **唯一维护目录为 `data/sqls`**（按服务一文件，如 `data/sqls`）。
+> 项目规范 **禁止**使用 Flyway / Liquibase 等 schema-migration 框架。数据库脚本统一以人工按序执行的 SQL 形式管理：空库初始化使用 `data/sqls/bootstrap/V{YY.MM.DD}.bootstrap.sql`，升级变更使用 `data/sqls/flyway/V{YY.MM.DD}.sql`。
 >
-> 注：`data/sqls` 下的 MySQL / Oracle 方言脚本为历史遗留转译产物， **不再随 PostgreSQL 版本同步维护**，仅作迁移参考。
+> 注：`data/sqls/postgre/` 与各模块 SQL 为历史遗留产物；新变更不得以它们替代 bootstrap + flyway 双区流程。
 
 ```bash
 # 1. 创建数据库
 psql -U postgres -c "CREATE DATABASE ydsz_cloud;"
 
-# 2. 按模块导入初始化脚本（唯一事实源：data/postgre/，示例）
-psql -U postgres -d ydsz_cloud -f data/postgre/ydsz-common.sql
-psql -U postgres -d ydsz_cloud -f data/postgre/ydsz-userinfo.sql
-psql -U postgres -d ydsz_cloud -f data/postgre/ydsz-system.sql
-# ...依此类推（data/postgre/ 下其余模块脚本）
+# 2. 仅在目标库为空时执行 bootstrap（含 DROP TABLE，禁止在已有数据的库执行）
+psql -U postgres -d ydsz_cloud -f data/sqls/bootstrap/V26.10.01.bootstrap.sql
+
+# 3. 对已有数据的库，按版本号升序人工执行增量脚本
+# psql -U postgres -d ydsz_cloud -f data/sqls/flyway/V26.10.02.sql
+# ...直至当前版本；每次执行前由 DBA 评审并登记发布单
+
+# 4. 提交数据库变更前执行安全检查
+python data/scripts/check-sql-migrations.py
 ```
 
 ### 本地启动

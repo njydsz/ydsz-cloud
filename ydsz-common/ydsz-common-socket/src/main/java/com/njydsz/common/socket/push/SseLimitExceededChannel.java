@@ -20,7 +20,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class SseLimitExceededChannel implements SsePushChannel {
 
   /** 错误消息 */
-  private static final String ERROR_MESSAGE = "SSE 连接数超限,请稍后重试";
+  private static final String ERROR_MESSAGE = "SSE connection limit exceeded, please try again later";
 
   @Override
   public void sendEvent(String eventName, Object payload) throws IOException {
@@ -54,6 +54,6 @@ public class SseLimitExceededChannel implements SsePushChannel {
 
   @Override
   public SseEmitter getEmitter() {
-    throw new UnsupportedOperationException("限流错误通道无底层 SseEmitter");
+    throw new UnsupportedOperationException("Limit-exceeded error channel has no underlying SseEmitter");
   }
 }

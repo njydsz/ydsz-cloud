@@ -422,7 +422,7 @@ public class VariableServiceImpl implements VariableService {
           .successCount(0)
           .failCount(0)
           .skipCount(0)
-          .message("Excel 文件为空")
+          .message(I18n.message("system.excel.file.empty"))
           .build();
     }
 

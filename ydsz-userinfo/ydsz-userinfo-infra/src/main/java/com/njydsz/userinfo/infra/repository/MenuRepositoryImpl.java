@@ -55,6 +55,13 @@ public class MenuRepositoryImpl implements MenuRepository {
   }
 
   @Override
+  public Optional<MenuVO> findByMenuCode(String menuCode) {
+    LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(Menu::getMenuCode, menuCode);
+    return Optional.ofNullable(menuMapper.selectOne(wrapper, false)).map(converter::entityToVO);
+  }
+
+  @Override
   public PageResponse<List<MenuVO>> page(MenuPageQuery query) {
     Page<Menu> page = new Page<>(query.getPageNum(), query.getPageSize());
     LambdaQueryWrapper<Menu> wrapper = buildWrapper(query);

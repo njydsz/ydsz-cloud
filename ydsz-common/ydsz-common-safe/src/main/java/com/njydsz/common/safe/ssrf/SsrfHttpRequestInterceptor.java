@@ -59,7 +59,9 @@ public class SsrfHttpRequestInterceptor implements ClientHttpRequestInterceptor 
     try {
       validator.validate(request.getURI().toString());
     } catch (SsrfBlockedException e) {
-      throw new IOException("SSRF blocked: " + e.getMessage(), e);
+      // 不把 e.getMessage() 拼进 message：IOException 可能被上层直接序列化返回，
+      // 且 SSRF 拦截原因可能包含内网地址等敏感信息；细节由异常链 e 保留
+      throw new IOException("SSRF blocked", e);
     }
     return execution.execute(request, body);
   }

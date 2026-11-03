@@ -22,7 +22,7 @@
   <select id="selectByUserIdOrderByAccessedAt" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_file_user_recent
-    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
+    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = 0
     ORDER BY accessed_at DESC
     LIMIT #{limit}
   </select>
@@ -31,7 +31,7 @@
   <select id="selectByUserIdWithPage" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_file_user_recent
-    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
+    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = 0
     ORDER BY accessed_at DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
@@ -40,14 +40,14 @@
   <select id="countByUserId" resultType="int">
     SELECT COUNT(*)
     FROM ydsz_file_user_recent
-    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
+    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = 0
   </select>
 
   <!-- 更新节点访问时间（访问记录已存在时） -->
   <update id="updateAccessTime">
     UPDATE ydsz_file_user_recent
     SET access_type = #{accessType}, accessed_at = NOW(), updated_at = NOW()
-    WHERE user_id = #{userId} AND node_id = #{nodeId} AND is_deleted = FALSE
+    WHERE user_id = #{userId} AND node_id = #{nodeId} AND is_deleted = 0
   </update>
 
   <!-- 删除用户最早的最近访问记录（超出容量限制时清理） -->
@@ -56,7 +56,7 @@
     WHERE user_id = #{userId} AND tenant_id = #{tenantId}
       AND id NOT IN (
         SELECT id FROM ydsz_file_user_recent
-        WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
+        WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = 0
         ORDER BY accessed_at DESC
         LIMIT #{keepCount}
       )

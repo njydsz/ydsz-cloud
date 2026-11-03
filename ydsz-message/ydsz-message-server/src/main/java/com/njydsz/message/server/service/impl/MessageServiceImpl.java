@@ -590,7 +590,7 @@ public class MessageServiceImpl implements MessageService {
     if (request == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("消息请求不能为空")
+          .message(I18n.message("message.request.required"))
           .build();
     }
     MessageQueueOperations mqProducer = mqProducerProvider.getIfAvailable();

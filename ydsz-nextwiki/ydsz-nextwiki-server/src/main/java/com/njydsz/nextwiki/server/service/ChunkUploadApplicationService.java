@@ -32,7 +32,6 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.file.util.FileOps;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.sentry.SentryObservation;

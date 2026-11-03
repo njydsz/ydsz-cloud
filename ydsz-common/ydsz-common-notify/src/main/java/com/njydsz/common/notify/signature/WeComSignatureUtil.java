@@ -1,6 +1,5 @@
 package com.njydsz.common.notify.signature;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import com.njydsz.common.util.security.DigestUtils;

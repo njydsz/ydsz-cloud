@@ -21,15 +21,6 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
 @YdszExceptionCode(module = "core", description = "核心模块业务异常码")
 public enum CoreExceptionCode implements ExceptionCode {
 
-  // ==================== 成功 ====================
-
-  /**
-   * 操作成功（原 ResponseCode.SUCCESS 000000）
-   *
-   * @return 处理结果
-   */
-  SUCCESS("A00000", "success", 200, false, 0),
-
   // ==================== A01 参数/业务异常 ====================
 
   /**

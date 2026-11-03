@@ -32,8 +32,8 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
-import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
@@ -160,13 +160,17 @@ public class FlowDefinitionController {
   public YdszResponse<FlowBatchDeployResultVO> batchDeployFromZip(
       @RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
-      return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "ZIP file must not be empty");
+      return YdszResponse.error(
+          YdszResultCode.VALIDATION_FAILED, I18n.message("workflow.definition.deploy.zip.empty"));
     }
     try {
       FlowBatchDeployResultVO result = definitionService.batchDeployFromZip(file.getBytes(), null);
       return YdszResponse.success(result);
     } catch (IOException e) {
-      return YdszResponse.error(YdszResultCode.BAD_REQUEST, "Failed to read ZIP file: " + e.getMessage());
+      log.error("读取部署 ZIP 失败 fileName={}", file.getOriginalFilename(), e);
+      // 不把 e.getMessage() 返回给客户端：可能含 ZIP 内部路径/磁盘路径
+      return YdszResponse.error(
+          YdszResultCode.BAD_REQUEST, I18n.message("workflow.definition.deploy.zip.read.failed"));
     }
   }
 

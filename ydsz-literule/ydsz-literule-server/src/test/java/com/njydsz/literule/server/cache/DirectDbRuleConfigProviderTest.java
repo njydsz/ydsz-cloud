@@ -20,6 +20,7 @@ import com.njydsz.literule.domain.Rule;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.repository.RuleDefinitionConfigRepository;
+import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**
@@ -47,15 +48,15 @@ class DirectDbRuleConfigProviderTest {
    * 因此样本必须带值——把 priority 留空会在映射时触发 {@code Integer.intValue()} NPE，
    * 那是一条只有 DDL 改成可空才会出现的真实故障路径，不属于本测试要锁定的语义。
    */
-  private static RuleDefinition entity(String ruleCode, String status, Boolean enabled) {
-    RuleDefinition entity = new RuleDefinition();
-    entity.setRuleCode(ruleCode);
-    entity.setRuleName(ruleCode + "-name");
-    entity.setStatus(status);
-    entity.setIsEnabled(enabled);
-    entity.setPriority(Rule.DEFAULT_PRIORITY);
-    entity.setVersion(1);
-    return entity;
+  private static RuleDefinitionVO vo(String ruleCode, String status, Boolean enabled) {
+    RuleDefinitionVO vo = new RuleDefinitionVO();
+    vo.setRuleCode(ruleCode);
+    vo.setRuleName(ruleCode + "-name");
+    vo.setStatus(status);
+    vo.setIsEnabled(enabled);
+    vo.setPriority(Rule.DEFAULT_PRIORITY);
+    vo.setVersion(1);
+    return vo;
   }
 
   @Nested
@@ -68,9 +69,9 @@ class DirectDbRuleConfigProviderTest {
       when(configRepository.listAll())
           .thenReturn(
               List.of(
-                  entity("R_ON", "PUBLISHED", true),
-                  entity("R_DRAFT", "DRAFT", true),
-                  entity("R_OFF", "PUBLISHED", false)));
+                  vo("R_ON", "PUBLISHED", true),
+                  vo("R_DRAFT", "DRAFT", true),
+                  vo("R_OFF", "PUBLISHED", false)));
 
       DirectDbRuleConfigProvider provider =
           new DirectDbRuleConfigProvider(configRepository);
@@ -87,7 +88,7 @@ class DirectDbRuleConfigProviderTest {
     @DisplayName("loadAllRules 不做任何状态过滤（全量口径由调用方负责）")
     void should_return_every_rule_without_filtering() {
       when(configRepository.listAll())
-          .thenReturn(List.of(entity("R_ON", "PUBLISHED", true), entity("R_DRAFT", "DRAFT", false)));
+          .thenReturn(List.of(vo("R_ON", "PUBLISHED", true), vo("R_DRAFT", "DRAFT", false)));
 
       DirectDbRuleConfigProvider provider =
           new DirectDbRuleConfigProvider(configRepository);
@@ -105,7 +106,7 @@ class DirectDbRuleConfigProviderTest {
     @Test
     @DisplayName("编码不存在时走 insert 且不携带旧主键")
     void should_insert_without_id_when_rule_is_new() {
-      when(configRepository.findByCode("R_NEW")).thenReturn(null, entity("R_NEW", "DRAFT", true));
+      when(configRepository.findByCode("R_NEW")).thenReturn(null, vo("R_NEW", "DRAFT", true));
 
       DirectDbRuleConfigProvider provider =
           new DirectDbRuleConfigProvider(configRepository);
@@ -128,7 +129,7 @@ class DirectDbRuleConfigProviderTest {
     @Test
     @DisplayName("编码已存在时沿用原主键走 updateById")
     void should_reuse_existing_id_when_rule_already_exists() {
-      RuleDefinition existing = entity("R_OLD", "PUBLISHED", true);
+      RuleDefinitionVO existing = vo("R_OLD", "PUBLISHED", true);
       existing.setId("id-1");
       when(configRepository.findByCode("R_OLD")).thenReturn(existing, existing);
 
@@ -167,7 +168,7 @@ class DirectDbRuleConfigProviderTest {
     @Test
     @DisplayName("规则存在时按原实体改写 isEnabled 后更新")
     void should_update_enabled_flag_on_existing_rule() {
-      RuleDefinition existing = entity("R_ON", "PUBLISHED", true);
+      RuleDefinitionVO existing = vo("R_ON", "PUBLISHED", true);
       existing.setId("id-2");
       when(configRepository.findByCode("R_ON")).thenReturn(existing);
 

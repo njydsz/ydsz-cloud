@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
@@ -66,6 +67,7 @@ public class UserLifecycleTask {
    * </ol>
    */
   @Scheduled(cron = "${ydsz.userinfo.lifecycle.task.cron:0 */10 * * * ?}")
+  @DistributedScheduled(lockKey = "userinfo:lifecycle-transition", leaseTime = 540)
   public void processLifecycleTransitions() {
     log.debug("Scheduled user lifecycle task started");
     try {

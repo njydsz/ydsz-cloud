@@ -318,11 +318,11 @@ public class LockAdminController {
   @WriteOperation
   public Map<String, Object> batchForceUnlock(List<String> keys) {
     if (keys == null || keys.isEmpty()) {
-      return buildErrorMap("参数错误：keys 不能为空");
+      return buildErrorMap("Parameter error: keys must not be empty");
     }
 
     if (keys.size() > BATCH_FORCE_UNLOCK_LIMIT) {
-      return buildErrorMap("单次批量释放数量超限，最多支持 " + BATCH_FORCE_UNLOCK_LIMIT + " 个锁");
+      return buildErrorMap("Batch unlock limit exceeded, max " + BATCH_FORCE_UNLOCK_LIMIT + " locks allowed per request");
     }
 
     int successCount = 0;

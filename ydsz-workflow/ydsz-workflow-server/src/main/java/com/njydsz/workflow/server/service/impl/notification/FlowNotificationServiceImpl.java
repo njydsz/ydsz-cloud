@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowNotificationService;
@@ -125,8 +126,9 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       if (assigneeId == null) {
         return;
       }
-      String title = "您有一个新的审批待办";
-      String content = "流程实例[" + instanceId + "] 任务[" + taskId + "] 需要您处理";
+      String title = I18n.message("workflow.notify.task.created.title");
+      String content = I18n.message("workflow.notify.task.created.content",
+          new Object[]{instanceId, taskId});
       Map<String, Object> extra = new HashMap<>(MAP_INIT_CAPACITY_8);
       extra.put("bizType", "WORKFLOW_TASK");
       extra.put("instanceId", instanceId);
@@ -155,8 +157,9 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       if (assigneeIds == null || assigneeIds.isEmpty()) {
         return;
       }
-      String title = "您有待办被催办";
-      String content = "流程实例[" + instanceId + "] 任务[" + taskId + "] 被催办";
+      String title = I18n.message("workflow.notify.task.urged.title");
+      String content = I18n.message("workflow.notify.task.urged.content",
+          new Object[]{instanceId, taskId});
       if (comment != null && !comment.isBlank()) {
         content += "，备注：" + comment;
       }
@@ -189,7 +192,8 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       if (ccUserIds == null || ccUserIds.isEmpty()) {
         return;
       }
-      String content = "流程实例[" + instanceId + "] 节点[" + nodeCode + "] 抄送给您";
+      String content = I18n.message("workflow.notify.task.cc.content",
+          new Object[]{instanceId, nodeCode});
       for (Long userId : ccUserIds) {
         Map<String, Object> extra = new HashMap<>(MAP_INIT_CAPACITY_8);
         extra.put("bizType", "WORKFLOW_CC");
@@ -218,8 +222,9 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       if (initiatorId == null) {
         return;
       }
-      String title = "您的审批流程已完成";
-      String content = "流程实例[" + instanceId + "] 已审批通过";
+      String title = I18n.message("workflow.notify.instance.completed.title");
+      String content = I18n.message("workflow.notify.instance.completed.content",
+          new Object[]{instanceId});
       Map<String, Object> extra = new HashMap<>(MAP_INIT_CAPACITY_8);
       extra.put("bizType", "WORKFLOW_COMPLETED");
       extra.put("instanceId", instanceId);
@@ -241,8 +246,9 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       if (initiatorId == null) {
         return;
       }
-      String title = "您的审批流程被驳回";
-      String content = "流程实例[" + instanceId + "] 被驳回";
+      String title = I18n.message("workflow.notify.instance.rejected.title");
+      String content = I18n.message("workflow.notify.instance.rejected.content",
+          new Object[]{instanceId});
       if (reason != null && !reason.isBlank()) {
         content += "，原因：" + reason;
       }
@@ -272,8 +278,9 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       if (assigneeId == null) {
         return;
       }
-      String title = "审批任务已超时";
-      String content = "流程实例[" + instanceId + "] 任务[" + taskId + "] 超时，触发动作：" + action;
+      String title = I18n.message("workflow.notify.task.timeout.title");
+      String content = I18n.message("workflow.notify.task.timeout.content",
+          new Object[]{instanceId, taskId, action});
       // SLA 超时使用系统告警（站内信 + 邮件双通道，自动识别接收者类型）
       notifyHelper.sendSystemAlert(title, content, assigneeId);
       log.debug(

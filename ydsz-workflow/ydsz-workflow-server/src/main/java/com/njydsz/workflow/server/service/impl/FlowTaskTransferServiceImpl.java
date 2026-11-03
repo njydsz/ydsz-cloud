@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
@@ -154,8 +155,10 @@ public class FlowTaskTransferServiceImpl implements FlowTaskTransferService {
       return;
     }
 
-    // TODO P2: 查询涉及 deptId 的所有在途流程，批量更新审批人配置
-    // 当前实现：记录变更事件，后续根据组织架构服务获取部门关联用户后批量调整
+    // 功能缺口（非性能问题，2026-11-03 标注）：
+    //   当前仅记录变更事件，尚未查询涉及 deptId 的在途流程并批量更新审批人配置。
+    //   落地时需要：1) 查询该部门关联的在途流程任务；2) 从组织架构服务获取部门新负责人；
+    //   3) 批量更新任务审批人。涉及跨服务数据一致性，需单独立项评审，不在性能治理范围内。
     log.info(
         "[FlowTaskTransfer] 组织架构变更事件已记录，待后续实现自动调整: deptId={}, changeType={}",
         deptId,
@@ -208,7 +211,8 @@ public class FlowTaskTransferServiceImpl implements FlowTaskTransferService {
       dto.setBusinessType("project_initiation");
       dto.setBusinessId(projectId);
       dto.setBusinessNo(projectId);
-      dto.setTitle("项目立项审批: " + (StringUtils.hasText(projectName) ? projectName : projectId));
+      dto.setTitle(I18n.message("workflow.notify.project.initiation.title",
+          new Object[]{StringUtils.hasText(projectName) ? projectName : projectId}));
       dto.setInitiatorId(managerId);
 
       // 设置流程变量

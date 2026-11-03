@@ -1,9 +1,14 @@
 package com.njydsz.workflow.server;
 
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaField;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 import com.tngtech.archunit.library.dependencies.SlicesRuleDefinition;
 import org.junit.jupiter.api.DisplayName;
 
@@ -64,4 +69,45 @@ final class DddLayerArchTest {
         .matching("com.njydsz.workflow.(*)..")
         .should().beFreeOfCycles()
         .because("YDIZ-DDD-001: DDD 分层必须单向依赖（web -> server -> domain <- infra），禁止循环引用.");
+
+    /**
+     * 禁止 {@code @Autowired} 字段注入（构造器注入优先）。
+     *
+     * <p>例外：标注 {@code @Lazy} 的字段 —— 那是为打破循环依赖的有意设计
+     * （见 {@code AbstractFlowInstanceLifecycle} 与 {@code FlowTaskCreateService} 的注释）。
+     * 抽象基类的 {@code protected} 字段同样豁免（供子类直接使用）。
+     */
+    @ArchTest
+    static final ArchRule should_not_use_autowired_field_injection = noClasses()
+        .that().resideInAnyPackage("..server..")
+        .should(new HaveAutowiredFieldInjection())
+        .because("字段注入降低可测试性且隐藏依赖关系，应使用构造器注入"
+            + "（@Lazy 打破循环依赖的场景与抽象基类的 protected 字段豁免）.");
+
+  /** 检测类中是否存在 {@code @Autowired} 字段（@Lazy / protected 豁免）。 */
+  static final class HaveAutowiredFieldInjection extends ArchCondition<JavaClass> {
+
+    HaveAutowiredFieldInjection() {
+      super("use @Autowired field injection");
+    }
+
+    @Override
+    public void check(JavaClass javaClass, ConditionEvents events) {
+      for (JavaField field : javaClass.getFields()) {
+        boolean isAutowired = field.isAnnotatedWith("org.springframework.beans.factory.annotation.Autowired");
+        if (!isAutowired) {
+          continue;
+        }
+        boolean isLazy = field.isAnnotatedWith("org.springframework.context.annotation.Lazy");
+        boolean isProtected = field.getModifiers().contains(com.tngtech.archunit.core.domain.JavaModifier.PROTECTED);
+        if (isLazy || isProtected) {
+          continue;
+        }
+        events.add(SimpleConditionEvent.violated(
+            field,
+            String.format("%s.%s 使用 @Autowired 字段注入（应改为构造器注入）",
+                javaClass.getName(), field.getName())));
+      }
+    }
+  }
 }

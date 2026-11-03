@@ -45,13 +45,13 @@ public interface TypedSearchProvider<T> extends SearchProvider<T> {
    */
   default IndexDocument toIndexDocumentUnsafe(Object entity) {
     if (entity == null) {
-      throw new NullPointerException("[TypedSearchProvider] entity 不能为 null");
+      throw new NullPointerException("[TypedSearchProvider] entity must not be null");
     }
     if (!getEntityType().isInstance(entity)) {
       throw new ClassCastException(
-          "[TypedSearchProvider] 类型不匹配: 期望 "
+          "[TypedSearchProvider] Type mismatch: expected "
               + getEntityType().getName()
-              + ", 实际 "
+              + ", actual "
               + entity.getClass().getName());
     }
     T typed = getEntityType().cast(entity);

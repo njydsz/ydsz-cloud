@@ -119,7 +119,7 @@ public final class SensitiveDataProcessor {
 
     if (maxDepth <= 0) {
       throw new SensitiveDataProcessingException(
-          "敏感数据处理超过最大递归深度，为防深层敏感数据泄露已拒绝返回原始对象: " + obj.getClass().getName());
+          "Sensitive data processing exceeded max recursion depth, refusing to return original object to prevent data leakage: " + obj.getClass().getName());
     }
 
     if (obj instanceof String) {
@@ -171,7 +171,7 @@ public final class SensitiveDataProcessor {
       throw e;
     } catch (Exception e) {
       // fail-closed：处理失败不再返回原始对象，防止未脱敏数据泄露
-      throw new SensitiveDataProcessingException("敏感数据处理失败，为防数据泄露已拒绝返回原始对象: " + clazz.getName(), e);
+      throw new SensitiveDataProcessingException("Sensitive data processing failed, refusing to return original object to prevent data leakage: " + clazz.getName(), e);
     }
   }
 
@@ -251,7 +251,7 @@ public final class SensitiveDataProcessor {
       return (T) canonicalConstructor.newInstance(componentValues);
     } catch (Exception e) {
       // fail-closed：Record 重建失败不返回原对象，防止深层敏感数据泄露
-      throw new SensitiveDataProcessingException("敏感数据处理失败，Record 重建异常: " + clazz.getName(), e);
+      throw new SensitiveDataProcessingException("Sensitive data processing failed, Record reconstruction error: " + clazz.getName(), e);
     }
   }
 
@@ -283,7 +283,7 @@ public final class SensitiveDataProcessor {
       result = tryCreateWithAllArgsConstructor(bean, clazz);
       if (result == null) {
         // fail-closed：无法创建副本时拒绝返回原始对象
-        throw new SensitiveDataProcessingException("敏感数据处理失败，无法创建脱敏副本: " + clazz.getName(), e);
+        throw new SensitiveDataProcessingException("Sensitive data processing failed, cannot create desensitized copy: " + clazz.getName(), e);
       }
     }
 

@@ -105,7 +105,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     if (dto == null || !StringUtils.hasText(dto.getRuleCode())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("规则编码不能为空")
+          .message(I18n.message("message.route.rule.code.required"))
           .build();
     }
     MsgRouteRuleQuery query = new MsgRouteRuleQuery();
@@ -114,7 +114,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     if (existing.isPresent()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("规则编码已存在: " + dto.getRuleCode())
+          .message(I18n.message("message.route.rule.code.exists", new Object[]{dto.getRuleCode()}))
           .build();
     }
     MsgRouteRuleVO vo = toVO(dto);
@@ -134,7 +134,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     if (!StringUtils.hasText(id) || dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("规则 ID 与参数不能为空")
+          .message(I18n.message("message.route.rule.id.params.required"))
           .build();
     }
     MsgRouteRuleVO vo = getById(id);
@@ -183,7 +183,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("规则 ID 不能为空")
+          .message(I18n.message("message.route.rule.id.required"))
           .build();
     }
     msgRouteRuleRepository.deleteById(id);
@@ -198,7 +198,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("规则 ID 不能为空")
+          .message(I18n.message("message.route.rule.id.required"))
           .build();
     }
     return msgRouteRuleRepository
@@ -207,7 +207,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
             () ->
                 SysException.builder()
                     .resultCode(YdszResultCode.NOT_FOUND)
-                    .message("路由规则不存在: " + id)
+                    .message(I18n.message("message.route.rule.not.found", new Object[]{id}))
                     .build());
   }
 

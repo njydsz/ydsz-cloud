@@ -91,7 +91,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     if (!messageProperties.getUnsubscribe().isEnabled()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("退订中心已关闭")
+          .message(I18n.message("message.unsubscribe.center.disabled"))
           .build();
     }
     UnsubscribeTokenPayload payload = unsubscribeTokenUtil.parseAndVerify(token);
@@ -169,7 +169,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
         || !StringUtils.hasText(channel)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("用户 ID、主题编码与通道不能为空")
+          .message(I18n.message("message.unsubscribe.user.topic.channel.required"))
           .build();
     }
     MsgSubscriptionQuery query = new MsgSubscriptionQuery();

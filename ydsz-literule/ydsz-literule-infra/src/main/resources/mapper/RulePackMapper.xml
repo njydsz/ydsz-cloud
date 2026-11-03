@@ -31,7 +31,7 @@
                tenant_id, revision,
                created_by, created_at, updated_by, updated_at
         FROM ydsz_rule_pack
-        WHERE industry = #{industry} AND is_enabled = TRUE
+        WHERE industry = #{industry} AND is_enabled = 1
         ORDER BY is_official DESC, download_count DESC
     </select>
 

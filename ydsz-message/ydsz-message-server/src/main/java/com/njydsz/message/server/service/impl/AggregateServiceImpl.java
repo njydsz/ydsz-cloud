@@ -2,7 +2,6 @@ package com.njydsz.message.server.service.impl.batch;
 
 
 import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +98,7 @@ public class AggregateServiceImpl implements AggregateService {
     if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("聚合组与接收人不能为空")
+          .message(I18n.message("message.aggregate.group.receiver.required"))
           .build();
     }
     String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContextHolder.getTenantId();
@@ -110,14 +109,14 @@ public class AggregateServiceImpl implements AggregateService {
       if (locker == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("分布式锁不可用，请检查 Redis 连接")
+            .message(I18n.message("message.aggregate.lock.unavailable"))
             .build();
       }
       lockValue = locker.tryLock(lockKey, LOCK_WAIT_SECONDS, LOCK_TTL_SECONDS, TimeUnit.SECONDS);
       if (lockValue == null) {
         throw SysException.builder()
             .resultCode(YdszResultCode.BAD_REQUEST)
-            .message("获取聚合锁失败: " + group)
+            .message(I18n.message("message.aggregate.lock.acquire.failed", new Object[]{group}))
             .build();
       }
       // 查 PENDING 批次
@@ -155,7 +154,7 @@ public class AggregateServiceImpl implements AggregateService {
       Thread.currentThread().interrupt();
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("聚合锁等待中断")
+          .message(I18n.message("message.aggregate.lock.interrupted"))
           .build();
     } finally {
       if (lockValue != null) {
@@ -193,7 +192,7 @@ public class AggregateServiceImpl implements AggregateService {
     if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("聚合组与接收人不能为空")
+          .message(I18n.message("message.aggregate.group.receiver.required"))
           .build();
     }
     // 先把 PENDING 批次流转为 READY,统一由 sendBatch 的 CAS 占有发送

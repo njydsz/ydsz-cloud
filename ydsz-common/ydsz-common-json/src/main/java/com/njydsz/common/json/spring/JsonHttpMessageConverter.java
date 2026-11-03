@@ -137,7 +137,9 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
       if (e instanceof IOException) {
         throw (IOException) e;
       }
-      throw new HttpMessageNotReadableException("JSON deserialize failed: " + e.getMessage(), e, inputMessage);
+      // 不把 e.getMessage() 拼进 message：该异常会被 Spring 直接序列化返回给客户端，
+      // 可能泄露 JSON 内部结构细节；细节由异常链 e 保留
+      throw new HttpMessageNotReadableException("JSON deserialize failed", e, inputMessage);
     } finally {
       // 请求结束后清理 ThreadLocal 资源，防止 Tomcat 线程池泄漏
       SerializationProvider.clearThreadLocals();
@@ -195,7 +197,9 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
       StreamUtils.copy(bytes, out);
       // 不手动 flush，由 Spring 框架统一管理输出流生命周期
     } catch (Exception e) {
-      throw new HttpMessageNotWritableException("JSON serialize failed: " + e.getMessage(), e);
+      // 不把 e.getMessage() 拼进 message：该异常会被 Spring 直接序列化返回给客户端；
+      // 细节由异常链 e 保留
+      throw new HttpMessageNotWritableException("JSON serialize failed", e);
     } finally {
       // 请求结束后清理 ThreadLocal 资源（StringBuilder/JSONWriter/循环引用检测集），防止 Tomcat 线程池泄漏
       SerializationProvider.clearThreadLocals();

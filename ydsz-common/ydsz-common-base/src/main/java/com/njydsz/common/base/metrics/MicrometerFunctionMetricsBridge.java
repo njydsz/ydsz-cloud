@@ -1,7 +1,6 @@
 package com.njydsz.common.base.metrics;
 
 import java.time.Duration;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;

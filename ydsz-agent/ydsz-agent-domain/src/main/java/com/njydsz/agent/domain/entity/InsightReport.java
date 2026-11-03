@@ -1,6 +1,5 @@
 package com.njydsz.agent.domain.entity;
 
-import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;

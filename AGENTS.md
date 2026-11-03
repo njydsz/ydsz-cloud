@@ -19,8 +19,8 @@
 | 文件 | 作用 | 何时查阅 |
 |------|------|---------|
 | `CLAUDE.md` | 核心编码红线规则（always 规则）| 所有编码任务 |
-| `docs/ai-rules/shared-rules.yaml` | 红线规则完整定义（单一权威源；`total_rules: 190`）| 违规判定时 |
-| `docs/云顶编码规范.md` | 完整编码规范文档（v1.0.12）| CLAUDE.md 未覆盖的场景 |
+| `docs/ai-rules/shared-rules.yaml` | 红线规则完整定义（单一权威源；`total_rules: 197`）| 违规判定时 |
+| `docs/云顶编码规范.md` | 完整编码规范文档（v1.0.16）| CLAUDE.md 未覆盖的场景 |
 | `docs/checkstyle.xml` | Checkstyle 规则配置（注意：无 phase 绑定，构建期不执行）| checkstyle 相关查询 |
 | `data/checkstyle-baseline.json` | error 级违规存量棘轮基线 | 门禁报"存量上涨"时 |
 | `data/scripts/check-checkstyle-delta.py` | 改动文件 0 违规 + 每模块存量只减不增 | 提交前自查 |
@@ -28,22 +28,26 @@
 | `pom.xml` | 父 POM 依赖版本参考 | 新增依赖前 |
 | `README.md` | 项目概览 + 模块说明 | 理解项目全局 |
 
-> `shared-rules.yaml` 内部计数并不自洽（`total_rules: 190`、`meta.summary` 合计 177、`stats.total` 155、
-> 实际 `- id:` 189 条），以 `- id:` 条目为准；差异待规则维护者核对，**不要**在别处引用"140 条"。
+> **规则源已校准（2026-11-03）**：`shared-rules.yaml` 此前存在 9 条 ID 重复（COMMON-033/034/048~052、CONFIG-001/002）、
+> 4 条缺失 severity（COMMON-014~017）、10 条用 `level:` 而非 `severity:`，导致各文档声明 190 条与实际不符。
+> 现已修复：重复条目重编号为 COMMON-062~068 / CONFIG-005~006，字段统一为 `severity`；
+> 并新增 YDIZ-CONC-006（定时任务集群单点执行）。
+> 当前权威计数：**197 条（P0=71 P1=95 P2=31）**，与 `meta.total_rules` / `summary` 一致。
 
 ### 1.2 目录功能速查
 
 ```
 ydsz-cloud/
 ├── docs/
-│   ├── ai-rules/shared-rules.yaml     # 红线规则权威源（190 条声明）
+│   ├── ai-rules/shared-rules.yaml     # 红线规则权威源（196 条声明）
 │   ├── 云顶编码规范.md                  # 完整规范文本
 │   ├── common-capability-registry.yaml # common 模块能力清单
 │   ├── checkstyle.xml                  # 自动检查配置（无 phase 绑定）
 │   └── reports/                        # 分析/门禁报告
 ├── data/
 │   ├── scripts/                        # 运维/构建/门禁脚本
-│   ├── sqls/flyway/                    # 版本化 SQL 脚本（V{version}.sql）
+│   ├── sqls/bootstrap/                  # 空库初始化脚本（含 DROP，禁止在已有数据的库执行）
+│   ├── sqls/flyway/                    # 增量 SQL 脚本（V{version}.sql，人工按序执行）
 │   └── checkstyle-baseline.json        # 违规存量棘轮基线
 ├── ydsz-common/                        # 30 个公共子模块
 └── ydsz-{module}/                      # 9 个网关外业务微服务
@@ -77,12 +81,14 @@ ydsz-cloud/
   │
   ├─ 表名必须 ydsz_ 前缀
   ├─ 禁止 Flyway / Liquibase（pom.xml:61 明文禁止，不引入任何 schema-migration 框架）
-  ├─ SQL 脚本放 data/sqls/flyway/ 目录，命名 V{version}.sql（人工按序执行，无迁移框架代跑）
+  ├─ 增量 SQL 脚本放 data/sqls/flyway/ 目录，命名 V{version}.sql（人工按序执行，无迁移框架代跑）
+  ├─ 空库初始化脚本放 data/sqls/bootstrap/，含 DROP TABLE，**禁止在已有数据的库上执行**
+  ├─ 增量脚本危险变更（DROP/TRUNCATE/无 WHERE DELETE）由 data/scripts/check-sql-migrations.py 判红
   ├─ Entity 类放在 domain/entity/ 包下
   ├─ 排序字段用 sort（禁用 sort_order）
   ├─ 布尔字段用 is_xxx（Java isXxx）
   ├─ 审计字段：created_at / updated_at / created_by / updated_by
-  ├─ 逻辑删除字段：is_deleted (BOOLEAN DEFAULT false)
+  ├─ 逻辑删除字段：is_deleted SMALLINT NOT NULL DEFAULT 0（Java isDeleted）
   └─ 租户字段：tenant_id（多租户模块需包含）
 ```
 

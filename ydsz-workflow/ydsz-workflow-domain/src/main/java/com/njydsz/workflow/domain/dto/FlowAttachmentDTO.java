@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import com.njydsz.common.safe.annotation.Xss;
-import com.njydsz.workflow.domain.entity.FlowAttachment;
 
 /**
  * 自建工作流引擎 - 审批附件 DTO

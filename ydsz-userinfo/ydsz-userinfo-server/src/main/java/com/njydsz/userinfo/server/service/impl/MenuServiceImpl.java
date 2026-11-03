@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.userinfo.domain.dto.ApiPermissionRegistrationDTO;
 import com.njydsz.userinfo.domain.dto.MenuDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.MenuPageQuery;
@@ -68,6 +70,12 @@ public class MenuServiceImpl implements MenuService {
 
   /** 权限点类型：接口（不参与路由树） */
   private static final String MENU_TYPE_API = "API";
+
+  /** API 权限项编码前缀 */
+  private static final String API_PERMISSION_CODE_PREFIX = "api:";
+
+  /** API 权限项编码摘要长度 */
+  private static final int API_PERMISSION_CODE_DIGEST_LENGTH = 40;
 
   /** 根节点父 ID 约定值 */
   private static final String ROOT_PARENT_ID = "0";
@@ -127,6 +135,45 @@ public class MenuServiceImpl implements MenuService {
     log.info("Menu created: code={}, id={}", dto.getMenuCode(), vo.getId());
     invalidatePermissionCache();
     return vo.getId();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>权限编码使用 {@code api-permission:{apiCode}}，避免 API 权限码与业务菜单编码冲突。
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public String registerApiPermission(ApiPermissionRegistrationDTO dto) {
+    String permissionCode = API_PERMISSION_CODE_PREFIX + DigestUtils.sha256Hex(dto.getApiCode())
+        .substring(0, API_PERMISSION_CODE_DIGEST_LENGTH);
+    MenuVO existing = menuRepository.findByMenuCode(permissionCode).orElse(null);
+    if (existing != null) {
+      MenuDTO update = new MenuDTO();
+      update.setId(existing.getId());
+      update.setMenuName(dto.getApiName());
+      update.setMenuCode(permissionCode);
+      update.setMenuType(MENU_TYPE_API);
+      update.setParentId(ROOT_PARENT_ID);
+      update.setStatus(STATUS_ENABLED);
+      update.setPermissionCode(dto.getApiCode());
+      update.setVisible(0);
+      menuRepository.save(update);
+      invalidatePermissionCache();
+      return existing.getId();
+    }
+
+    MenuDTO create = new MenuDTO();
+    create.setMenuName(dto.getApiName());
+    create.setMenuCode(permissionCode);
+    create.setMenuType(MENU_TYPE_API);
+    create.setParentId(ROOT_PARENT_ID);
+    create.setStatus(STATUS_ENABLED);
+    create.setPermissionCode(dto.getApiCode());
+    create.setVisible(0);
+    MenuVO saved = menuRepository.save(create);
+    invalidatePermissionCache();
+    return saved.getId();
   }
 
   /**

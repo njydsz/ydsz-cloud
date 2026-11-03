@@ -76,7 +76,7 @@ public class EntityReverseService {
     } catch (IOException e) {
       log.error("读取源文件失败 path={} err={}", sourceFilePath, e.getMessage(), e);
       throw SysException.builder()
-          .message("反向解析失败: " + e.getMessage())
+          .message(I18n.message("generator.reverse.parse.failed"))
           .cause(e)
           .build();
     }

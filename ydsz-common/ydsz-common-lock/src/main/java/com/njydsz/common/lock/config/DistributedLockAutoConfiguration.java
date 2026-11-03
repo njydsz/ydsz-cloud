@@ -32,7 +32,6 @@ import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.notify.LockReleaseNotifier;
 import com.njydsz.common.lock.renewal.LockRenewalService;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
-import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 import com.njydsz.common.lock.strategy.DefaultLockStrategy;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.redis.service.ops.RedisStringOps;

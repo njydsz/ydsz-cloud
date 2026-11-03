@@ -96,7 +96,7 @@ public class BatchServiceImpl implements BatchService {
     if (dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("批量发送参数不能为空")
+          .message(I18n.message("message.batch.params.required"))
           .build();
     }
     // 构建请求列表
@@ -104,13 +104,13 @@ public class BatchServiceImpl implements BatchService {
     if (requests.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("接收人列表为空")
+          .message(I18n.message("message.batch.receivers.empty"))
           .build();
     }
     if (requests.size() > MAX_BATCH_SIZE) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("单批最大 " + MAX_BATCH_SIZE + " 条，当前 " + requests.size() + " 条")
+          .message(I18n.message("message.batch.size.exceeded", new Object[]{MAX_BATCH_SIZE, requests.size()}))
           .build();
     }
     // 创建批次记录
@@ -173,7 +173,7 @@ public class BatchServiceImpl implements BatchService {
     if (!StringUtils.hasText(batchId)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("批次 ID 不能为空")
+          .message(I18n.message("message.batch.id.required"))
           .build();
     }
     MsgBatchQuery query = new MsgBatchQuery();
@@ -182,7 +182,7 @@ public class BatchServiceImpl implements BatchService {
     if (batch == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("批次不存在: " + batchId)
+          .message(I18n.message("message.batch.not.found", new Object[]{batchId}))
           .build();
     }
     BatchProgressDTO vo = new BatchProgressDTO();

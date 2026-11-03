@@ -10,11 +10,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
 import com.njydsz.userinfo.domain.provision.ProvisionResult;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 身份供给调度器（P0-1 Identity Provisioning 管道）。
@@ -65,6 +65,9 @@ public class ProvisionScheduler {
    * 定时同步任务。
    *
    * <p>默认每小时执行一次（cron 可通过 ydsz.userinfo.provision.schedule.cron 配置）。
+   *
+   * <p><b>YDIZ-CONC-006 豁免说明</b>：集群单点执行由方法体内的 {@code distributedLocker.tryLock(LOCK_KEY)}
+   * 保证（获取不到锁直接跳过），未使用 {@code @DistributedScheduled} 注解形式。
    */
   @Scheduled(cron = "${ydsz.userinfo.provision.schedule.cron:0 0 * * * ?}")
   public void scheduledProvisioning() {

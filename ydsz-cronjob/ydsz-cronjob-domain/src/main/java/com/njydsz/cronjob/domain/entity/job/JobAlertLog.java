@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * 任务告警日志实体（P5 告警 + 监控, P3-1-merge 重构）。

@@ -1,9 +1,12 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import lombok.RequiredArgsConstructor;
@@ -162,21 +165,22 @@ public class FlowInstanceBatchOperator {
     if (instanceIds == null || instanceIds.isEmpty()) {
       return 0;
     }
+    // N+1 治理（2026-11-03）：原实现对每个实例单独调用 findChildren，批量 N 个实例产生 O(N) 次查询。
+    // 改为一次性批量查询所有父实例的子流程，按 parentId 分组后再逐条终止。
+    // 终止仍保持「每个实例独立事务」（REQUIRES_NEW），单条失败不影响其它 —— 这是原设计意图，不改变。
+    Map<String, List<FlowInstanceVO>> childrenByParent =
+        instanceRepository.findChildrenByParentIds(instanceIds).stream()
+            .filter(c -> FlowInstanceStatus.RUNNING.name().equals(c.getFlowStatus()))
+            .collect(Collectors.groupingBy(FlowInstanceVO::getParentInstanceId));
+
     int count = 0;
-    // TODO: N+1 治理 — 循环内逐条调用 terminate（每条触发独立事务 + DB 写入），
-    // 并逐实例查询子流程（instanceRepository.findChildren），批量 N 个实例产生 O(N) 次 DB 查询
-    // 修复建议：1) 批量查询所有实例的子流程 → 一次性收集全部待终止 ID → 单次批量更新
-    //          2) 或改为分批事务提交（每批 50-100 条），减少事务开销
     for (String instanceId : instanceIds) {
       try {
         // 委托生命周期管理器执行（独立事务）
         lifecycleManager.terminate(instanceId, reason);
         count++;
         // 级联终止子流程实例
-        List<FlowInstanceVO> children = instanceRepository.findChildren(instanceId).stream()
-            .filter(c -> FlowInstanceStatus.RUNNING.name().equals(c.getFlowStatus()))
-            .toList();
-        for (FlowInstanceVO child : children) {
+        for (FlowInstanceVO child : childrenByParent.getOrDefault(instanceId, Collections.emptyList())) {
           try {
             lifecycleManager.terminate(child.getId(), "级联终止: " + reason);
             count++;

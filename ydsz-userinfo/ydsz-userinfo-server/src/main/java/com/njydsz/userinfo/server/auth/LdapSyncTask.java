@@ -32,8 +32,11 @@ public class LdapSyncTask {
   /**
    * 定时执行 LDAP 组织架构同步。
    *
-   * <p>cron 表达式从配置中读取，默认每天凌晨 2 点执行。同步过程由 {@link LdapOrgSyncService} 负责获取分布式锁，
-   * 防止并发执行。
+   * <p>cron 表达式从配置中读取，默认每天凌晨 2 点执行。
+   *
+   * <p><b>YDIZ-CONC-006 豁免说明</b>：集群单点执行由 {@link LdapOrgSyncService#syncAll()} 内部的
+   * {@code distributedLocker.tryLock(LOCK_KEY)} 保证（获取不到锁直接返回），未使用
+   * {@code @DistributedScheduled} 注解形式。
    */
   @Scheduled(cron = "${ydsz.userinfo.ldap.sync.cron:0 0 2 * * ?}")
   public void syncLdapOrg() {

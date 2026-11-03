@@ -1,6 +1,5 @@
 package com.njydsz.common.socket.push;
 
-import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;

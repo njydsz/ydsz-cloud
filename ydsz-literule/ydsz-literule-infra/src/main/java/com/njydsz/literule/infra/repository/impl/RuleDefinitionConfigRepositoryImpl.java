@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.repository.RuleDefinitionConfigRepository;
+import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 
 /**
@@ -40,13 +41,16 @@ public class RuleDefinitionConfigRepositoryImpl implements RuleDefinitionConfigR
   private final RuleDefinitionMapper ruleDefinitionMapper;
 
   @Override
-  public List<RuleDefinition> listAll() {
-    return ruleDefinitionMapper.selectList(null);
+  public List<RuleDefinitionVO> listAll() {
+    return ruleDefinitionMapper.selectList(null).stream()
+        .map(this::entityToVO)
+        .toList();
   }
 
   @Override
-  public RuleDefinition findByCode(String ruleCode) {
-    return ruleDefinitionMapper.selectByCode(ruleCode);
+  public RuleDefinitionVO findByCode(String ruleCode) {
+    RuleDefinition entity = ruleDefinitionMapper.selectByCode(ruleCode);
+    return entity == null ? null : entityToVO(entity);
   }
 
   @Override
@@ -57,5 +61,48 @@ public class RuleDefinitionConfigRepositoryImpl implements RuleDefinitionConfigR
   @Override
   public int updateById(RuleDefinition definition) {
     return ruleDefinitionMapper.updateById(definition);
+  }
+
+  /**
+   * Entity → VO 转换（手动映射，收口在 infra 内部，满足 YDIZ-DDD-007）。
+   */
+  private RuleDefinitionVO entityToVO(RuleDefinition entity) {
+    RuleDefinitionVO vo = new RuleDefinitionVO();
+    vo.setId(entity.getId());
+    vo.setRuleCode(entity.getRuleCode());
+    vo.setRuleName(entity.getRuleName());
+    vo.setCategory(entity.getCategory());
+    vo.setCategoryPath(entity.getCategoryPath());
+    vo.setOwner(entity.getOwner());
+    vo.setDescription(entity.getDescription());
+    vo.setConditionExpression(entity.getConditionExpression());
+    vo.setSeverityExpression(entity.getSeverityExpression());
+    vo.setDefaultSeverity(entity.getDefaultSeverity());
+    vo.setTitleTemplate(entity.getTitleTemplate());
+    vo.setDescriptionTemplate(entity.getDescriptionTemplate());
+    vo.setPriority(entity.getPriority());
+    vo.setIsEnabled(entity.getIsEnabled());
+    vo.setScope(entity.getScope());
+    vo.setMutexGroup(entity.getMutexGroup());
+    vo.setIsDrilldownAvailable(entity.getIsDrilldownAvailable());
+    vo.setVersion(entity.getVersion());
+    vo.setRevision(entity.getRevision());
+    vo.setStatus(entity.getStatus());
+    vo.setTenantId(entity.getTenantId());
+    vo.setEffectiveFrom(entity.getEffectiveFrom());
+    vo.setEffectiveTo(entity.getEffectiveTo());
+    vo.setReviewedBy(entity.getReviewedBy());
+    vo.setReviewedAt(entity.getReviewedAt());
+    vo.setReviewComment(entity.getReviewComment());
+    vo.setCanaryRatio(entity.getCanaryRatio() != null
+        ? entity.getCanaryRatio().doubleValue() : null);
+    vo.setCanaryConditions(entity.getCanaryConditions());
+    vo.setCanaryConditionExpression(entity.getCanaryConditionExpression());
+    vo.setCanarySeverityExpression(entity.getCanarySeverityExpression());
+    vo.setCreatedBy(entity.getCreatedBy());
+    vo.setCreatedAt(entity.getCreatedAt());
+    vo.setUpdatedBy(entity.getUpdatedBy());
+    vo.setUpdatedAt(entity.getUpdatedAt());
+    return vo;
   }
 }

@@ -71,13 +71,13 @@ public class MessageLogServiceImpl implements MessageLogService {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("日志 ID 不能为空")
+          .message(I18n.message("message.log.id.required"))
           .build();
     }
     return msgLogRepository.findById(id)
         .orElseThrow(() -> SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
-            .message("日志不存在: " + id)
+            .message(I18n.message("message.log.not.found", new Object[]{id}))
             .build());
   }
 
@@ -93,7 +93,7 @@ public class MessageLogServiceImpl implements MessageLogService {
     if (!current.canTransitTo(MessageStatusEnum.RETRY)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("非法状态流转: " + current + " -> RETRY")
+          .message(I18n.message("message.log.status.transition.retry", new Object[]{current}))
           .build();
     }
     entity.setStatus(MessageStatusEnum.RETRY.name());
@@ -115,7 +115,7 @@ public class MessageLogServiceImpl implements MessageLogService {
       // 仅 RETRY 可流转到 DEAD；其他状态强制记录但仍校验，非法抛异常
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("非法状态流转: " + current + " -> DEAD")
+          .message(I18n.message("message.log.status.transition.dead", new Object[]{current}))
           .build();
     }
     entity.setStatus(MessageStatusEnum.DEAD.name());
@@ -141,7 +141,7 @@ public class MessageLogServiceImpl implements MessageLogService {
     if (!current.canTransitTo(MessageStatusEnum.RECALLED)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("非法状态流转: " + current + " -> RECALLED")
+          .message(I18n.message("message.log.status.transition.recalled", new Object[]{current}))
           .build();
     }
     entity.setStatus(MessageStatusEnum.RECALLED.name());
@@ -165,7 +165,7 @@ public class MessageLogServiceImpl implements MessageLogService {
     if (current != MessageStatusEnum.DEAD) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("仅死信可手动重发,当前状态: " + current)
+          .message(I18n.message("message.log.resend.dead.only", new Object[]{current}))
           .build();
     }
     try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(entity.getTraceId())) {
@@ -262,7 +262,7 @@ public class MessageLogServiceImpl implements MessageLogService {
     } catch (Exception e) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("非法消息状态: " + value)
+          .message(I18n.message("message.log.status.invalid", new Object[]{value}))
           .build();
     }
   }

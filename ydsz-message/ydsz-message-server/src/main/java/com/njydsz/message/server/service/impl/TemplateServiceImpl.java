@@ -70,13 +70,13 @@ public class TemplateServiceImpl implements TemplateService {
     if (dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("模板参数不能为空")
+          .message(I18n.message("message.template.params.required"))
           .build();
     }
     if (!StringUtils.hasText(dto.getTemplateCode()) || !StringUtils.hasText(dto.getChannel())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("模板编码与通道不能为空")
+          .message(I18n.message("message.template.code.channel.required"))
           .build();
     }
     String tenantId = TenantContextHolder.getTenantId();
@@ -91,7 +91,7 @@ public class TemplateServiceImpl implements TemplateService {
     if (existing != null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("模板已存在: " + dto.getTemplateCode() + "/" + locale)
+          .message(I18n.message("message.template.exists", new Object[]{dto.getTemplateCode(), locale}))
           .build();
     }
     MsgTemplateDTO entity = new MsgTemplateDTO();
@@ -136,14 +136,14 @@ public class TemplateServiceImpl implements TemplateService {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("模板 ID 不能为空")
+          .message(I18n.message("message.template.id.required"))
           .build();
     }
     MsgTemplateVO entity = getById(id);
     if (dto == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("模板参数不能为空")
+          .message(I18n.message("message.template.params.required"))
           .build();
     }
     if (StringUtils.hasText(dto.getLocale())) {
@@ -209,7 +209,7 @@ public class TemplateServiceImpl implements TemplateService {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("模板 ID 不能为空")
+          .message(I18n.message("message.template.id.required"))
           .build();
     }
     msgTemplateRepository.deleteById(id);
@@ -228,14 +228,14 @@ public class TemplateServiceImpl implements TemplateService {
     if (!StringUtils.hasText(id)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("模板 ID 不能为空")
+          .message(I18n.message("message.template.id.required"))
           .build();
     }
     MsgTemplateVO entity = msgTemplateRepository.findById(id).orElse(null);
     if (entity == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("模板不存在: " + id)
+          .message(I18n.message("message.template.not.found", new Object[]{id}))
           .build();
     }
     return entity;
@@ -275,7 +275,7 @@ public class TemplateServiceImpl implements TemplateService {
     if (!StringUtils.hasText(templateCode) || !StringUtils.hasText(channel)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("模板编码与通道不能为空")
+          .message(I18n.message("message.template.code.channel.required"))
           .build();
     }
     String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContextHolder.getTenantId();
@@ -312,7 +312,7 @@ public class TemplateServiceImpl implements TemplateService {
     if (dto == null || !StringUtils.hasText(dto.getAuditStatus())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("审核状态不能为空")
+          .message(I18n.message("message.template.audit.status.required"))
           .build();
     }
     MsgTemplateVO entity = getById(id);
@@ -321,7 +321,7 @@ public class TemplateServiceImpl implements TemplateService {
     if (!canTransitAudit(current, target)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("非法审核状态流转: " + current + " -> " + target)
+          .message(I18n.message("message.template.audit.transition.invalid", new Object[]{current, target}))
           .build();
     }
     entity.setAuditStatus(target.name());
@@ -379,14 +379,14 @@ public class TemplateServiceImpl implements TemplateService {
     if (!StringUtils.hasText(templateCode) || !StringUtils.hasText(channel)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("模板编码与通道不能为空")
+          .message(I18n.message("message.template.code.channel.required"))
           .build();
     }
     MsgTemplateVO template = loadByCodeAndChannel(templateCode, channel, locale, tenantId);
     if (template == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("模板不存在: " + templateCode + "/" + channel)
+          .message(I18n.message("message.template.not.found.by.code", new Object[]{templateCode, channel}))
           .build();
     }
     return templateEngine.render(template.getContent(), params);
@@ -420,7 +420,7 @@ public class TemplateServiceImpl implements TemplateService {
     } catch (Exception e) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("非法审核状态: " + value)
+          .message(I18n.message("message.template.audit.status.invalid", new Object[]{value}))
           .build();
     }
   }

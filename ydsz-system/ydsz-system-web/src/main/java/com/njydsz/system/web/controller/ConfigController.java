@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -32,7 +33,6 @@ import com.njydsz.common.excel.spring.ExcelWebSupport;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.idempotent.annotation.RepeatSubmit;
-import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.ConfigBatchDTO;
 import com.njydsz.system.domain.dto.ConfigDTO;
@@ -372,7 +372,7 @@ public class ConfigController {
               .successCount(0)
               .failCount(0)
               .skipCount(0)
-              .message("文件不能为空")
+              .message(I18n.message("system.config.file.required"))
               .build());
     }
     // Service 层返回部分成功明细（成功/跳过/失败条数 + 逐条错误）；

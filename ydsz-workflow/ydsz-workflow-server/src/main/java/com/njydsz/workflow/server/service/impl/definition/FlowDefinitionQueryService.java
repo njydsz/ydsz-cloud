@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.cache.spring.YdszCacheable;
 import com.njydsz.common.core.response.PageResponse;
@@ -200,7 +201,7 @@ public PageResponse<List<FlowDefinitionVO>> page(int pageNo, int pageSize, Strin
     if (def == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
-          .message("流程定义不存在: " + definitionId)
+          .message(I18n.message("workflow.definition.not.found", new Object[]{}))
           .build();
     }
     String tenantId = def.getTenantId() != null ? def.getTenantId() : "1";

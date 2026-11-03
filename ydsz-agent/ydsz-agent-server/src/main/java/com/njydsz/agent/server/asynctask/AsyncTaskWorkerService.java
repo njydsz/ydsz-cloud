@@ -13,6 +13,7 @@ import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
 import com.njydsz.agent.domain.asynctask.AsyncTaskType;
 import com.njydsz.agent.domain.entity.AsyncTask;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.util.id.IdGenerator;
 
@@ -84,6 +85,7 @@ public class AsyncTaskWorkerService {
    * 避免与长时间运行的任务产生并发冲突。
    */
   @Scheduled(fixedDelayString = "${ydsz.agent.async-task.poll-interval-ms:5000}")
+  @DistributedScheduled(lockKey = "agent:async-task:poll", leaseTime = 60)
   public void pollAndExecute() {
     try {
       List<AsyncTask> pendingTasks = taskStore.pollPending(null, POLL_LIMIT);
@@ -113,6 +115,7 @@ public class AsyncTaskWorkerService {
    * expireAt 早于此阈值的 RUNNING 任务将被重置。
    */
   @Scheduled(fixedDelayString = "${ydsz.agent.async-task.timeout-check-interval-ms:30000}")
+  @DistributedScheduled(lockKey = "agent:async-task:timeout-release", leaseTime = 60)
   public void releaseTimeout() {
     try {
       LocalDateTime threshold = LocalDateTime.now().minusSeconds(TIMEOUT_OFFSET_SECONDS);

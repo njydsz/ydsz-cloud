@@ -102,6 +102,55 @@ jobs:
           python3 data/scripts/check-error-code-unique.py --self-test
           python3 data/scripts/check-error-code-unique.py
 
+      # Step 3c: 数据库增量脚本危险变更门禁
+      # 背景：data/sqls/flyway/V26.10.01.sql 曾被当作「基线升级脚本」，实际是 DBX 导出的空库全量
+      # 快照，含 173 组 DROP TABLE ... CASCADE —— 在已有数据的库上执行会清空业务表。该文件已移入
+      # data/sqls/bootstrap/ 并加警告头；本门禁负责守住增量目录不再出现同类语句。
+      # 判据：DROP TABLE/SCHEMA/DATABASE、无备份的 DROP COLUMN、TRUNCATE、无 WHERE 的 DELETE 判红；
+      #       跨类型且无 USING 的 ALTER COLUMN TYPE 降级为告警（需人工确认）。
+      # 扫描范围仅 data/sqls/flyway/V*.sql；bootstrap 目录不参与（初始化脚本本就需要 DROP）。
+      - name: 数据库增量脚本危险变更门禁
+        working-directory: ydsz-cloud
+        run: |
+          python3 data/scripts/check-db-migrations.py --self-test
+          python3 data/scripts/check-db-migrations.py
+
+      # Step 3d: 错误信息泄露门禁
+      # 背景：多处代码把 e.getMessage() 直接拼进 YdszResponse.error(...) 或返回 Map 的 "error" 字段，
+      # 系统异常的 message 可能含 SQL 片段、类名、文件路径、ZIP 内部路径等内部实现细节。
+      # 判据：
+      #   L1 YdszResponse.error(...) 参数含 getMessage()
+      #   L2 返回对象 "error" 键值含 getMessage()
+      #   L3 throw new XxxException(..., e.getMessage()) —— 仅对会被 Spring 直接序列化返回的异常类型判红
+      # 白名单：日志用途、i18n 插值用法、Actuator/HealthIndicator、AI 工具返回值、已审定的业务语义回传。
+      - name: 错误信息泄露门禁
+        working-directory: ydsz-cloud
+        run: |
+          python3 data/scripts/check-error-message-leak.py --self-test
+          python3 data/scripts/check-error-message-leak.py
+
+      # Step 3e: i18n 硬编码文案门禁（YDIZ-I18N-002）
+      # 背景：业务模块（server/web）禁止出现用户可见的自然语言字面量，必须走 i18n key。
+      # 判据：U1 接口返回 message / U2 异常消息 / U3 返回体 error 字段 / U4 通知标题与模板名。
+      # 白名单（规范允许例外）：日志调用、注释、Swagger 注解及其参数、字符串常量定义行、
+      #           LLM prompt 模板、L1/L2 common 模块（json/util/cache/excel/core-base/core/domain/exception）。
+      # 棘轮基线：data/i18n-hardcode-baseline.json 记录存量上限，只减不增。
+      - name: i18n 硬编码文案门禁
+        working-directory: ydsz-cloud
+        run: |
+          python3 data/scripts/check-i18n-hardcode.py --self-test
+          python3 data/scripts/check-i18n-hardcode.py
+
+      # Step 3f: 未使用 import 门禁（IMPORT-003）
+      # 背景：Checkstyle 的 UnusedImports 规则虽配了 error，但 checkstyle 无 phase 绑定，
+      #       构建期从不执行（见 CLAUDE.md「不要做」清单第 13 条），导致 140 处冗余 import 长期残留。
+      # 判据：import 的简单类名在非 import 行中零出现即判红；注解名（@Xxx 用法）不判红。
+      - name: 未使用 import 门禁
+        working-directory: ydsz-cloud
+        run: |
+          python3 data/scripts/check-unused-imports.py --self-test
+          python3 data/scripts/check-unused-imports.py
+
       # Step 4: Checkstyle 增量红线 + 存量棘轮（B1-2）
       # 原步骤 `mvn checkstyle:check -B` 断言"全仓 0 违规"，实测存量 4155 条 error → 该步恒红，
       # 把后面的 mvn verify（单测 + 覆盖率）整段遮断，等于全仓从未有过任何静态检查。

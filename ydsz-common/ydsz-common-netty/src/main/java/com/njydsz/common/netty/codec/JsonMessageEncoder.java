@@ -1,6 +1,5 @@
 package com.njydsz.common.netty.codec;
 
-import java.nio.charset.StandardCharsets;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -8,7 +7,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.json.YdszJson;
 
 /**
  * JSON 消息编码器 — 将业务对象序列化为 JSON 字节流写入 ByteBuf。

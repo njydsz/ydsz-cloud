@@ -58,7 +58,6 @@ public class ExecutionPauseService {
    * @param stateStoreProvider 分布式状态存储提供者
    * @param ttlHours 检查点 TTL（小时）
    */
-  @Autowired
   public ExecutionPauseService(
       ObjectProvider<AgentStateStore> stateStoreProvider,
       @Value("${ydsz.agent.approval.pause-ttl-hours:1}") int ttlHours) {

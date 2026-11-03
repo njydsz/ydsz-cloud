@@ -59,6 +59,8 @@
         <mybatis-plus.version>3.5.16</mybatis-plus.version>
         <postgresql.version>42.7.4</postgresql.version>
         <!-- 项目规范禁止 Flyway / Liquibase（见 data/sqls/flyway/README.md「与红线的关系」），不引入任何 schema-migration 框架 -->
+        <!-- 空库初始化：data/sqls/bootstrap/*.sql（含 DROP TABLE，禁止在已有数据的库上执行） -->
+        <!-- 增量变更：data/sqls/flyway/V{YY.MM.DD}.sql，人工按序执行；危险变更由 data/scripts/check-db-migrations.py 判红 -->
         <!-- 项目连接池使用 HikariCP（Spring Boot 默认），不引入 Druid -->
         <!-- baomidou 动态数据源（读写分离 P2-3） -->
         <dynamic-datasource.version>4.3.1</dynamic-datasource.version>
@@ -1161,7 +1163,7 @@
     </dependencyManagement>
 
     <!-- 项目规范禁止 Flyway / Liquibase（见 data/sqls/flyway/README.md「与红线的关系」） -->
-    <!-- 所有 schema 变更直接编辑 deploy/sql/V26.10.01.sql 单文件，禁止增量脚本 -->
+    <!-- 空库初始化脚本位于 data/sqls/bootstrap/；增量变更在 data/sqls/flyway/ 下新建 V{YY.MM.DD}.sql -->
 
     <dependencies>
         <!-- Lombok（所有子模块） -->
@@ -1303,20 +1305,16 @@
                         </execution>
                     </executions>
                 </plugin>
-                <!-- springdoc: 构建期生成 OpenAPI spec JSON artifact (供前端契约生成消费) -->
+                <!--
+                    springdoc: OpenAPI spec JSON artifact（供前端契约生成消费）。
+                    该插件依赖运行中的 /v3/api-docs，禁止默认绑定到 compile：
+                    普通构建不会启动服务，隐式 localhost 依赖会产生假绿或阻塞构建。
+                    仅在 -P openapi-spec 且服务已显式启动时生成 target/openapi/openapi.json。
+                -->
                 <plugin>
                     <groupId>org.springdoc</groupId>
                     <artifactId>springdoc-openapi-maven-plugin</artifactId>
                     <version>${springdoc.maven.plugin.version}</version>
-                    <executions>
-                        <execution>
-                            <id>generate-openapi-spec</id>
-                            <phase>compile</phase>
-                            <goals>
-                                <goal>generate</goal>
-                            </goals>
-                        </execution>
-                    </executions>
                 </plugin>
                 <!--
                     maven-source-plugin: 为 api 模块生成 sources 附件（二方/三方消费者依赖时能够获得源码提示）。
@@ -1486,26 +1484,48 @@
                target/openapi/ 目录，供前端 pnpm gen:api 消费（static 模式由前端侧配置）。
          ============================================================ -->
     <profiles>
+        <!--
+            openapi-spec profile 说明（2026-11-03 修正）：
+              原配置把插件放在 <pluginManagement> 且没有 <executions> 绑定 —— 即使激活 profile
+              也不会执行任何 goal；同时 apiDocsUrl 指向 localhost，普通 mvn compile 阶段
+              没有服务在跑，拿不到 spec。
+
+              现在改为两步走的显式流程（不再依赖 compile 阶段隐式生成）：
+                1) 启动目标服务（或本地 docker-compose up）
+                2) mvn -P openapi-spec org.springdoc:springdoc-openapi-maven-plugin:1.4:resolve
+                   插件在 <plugins> 中声明了 execution，resolve goal 会拉取 /v3/api-docs
+                   并写入各模块 target/openapi/openapi.json
+
+              离线生成（无需启动服务）可用 MockMvc 方案，见
+              data/scripts/check-openapi-artifact.py 的说明与各模块 BaseContractTest。
+        -->
         <profile>
             <id>openapi-spec</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
             <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.springdoc</groupId>
-                            <artifactId>springdoc-openapi-maven-plugin</artifactId>
-                            <configuration>
-                                <outputDir>${project.build.directory}/openapi</outputDir>
-                                <outputFileName>openapi</outputFileName>
-                                <apiDocsUrl>http://localhost:${server.port:/v3/api-docs</apiDocsUrl>
-                                <skip>false</skip>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springdoc</groupId>
+                        <artifactId>springdoc-openapi-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>resolve-openapi</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>resolve</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <outputDir>${project.build.directory}/openapi</outputDir>
+                            <outputFileName>openapi</outputFileName>
+                            <apiDocsUrl>http://localhost:${server.port}/v3/api-docs</apiDocsUrl>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
             </build>
         </profile>
 

@@ -115,7 +115,7 @@ public class SentinelGatewayConfig {
    * @return 默认降级响应消息模板
    */
   public static String getDefaultBlockMessage() {
-    return "{\"code\":429,\"msg\":\"请求过于频繁，请稍后再试\"}";
+     return "{\"code\":429,\"msg\":\"Too many requests, please try again later\"}";
   }
 
   /** Sentinel API 路径前缀集合类型别名（仅用于文档说明）。 */

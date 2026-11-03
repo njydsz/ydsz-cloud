@@ -16,8 +16,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.userinfo.domain.entity.ApiKey;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.vo.ApiKeyVO;
 import com.njydsz.userinfo.server.service.ApiKeyService;
 import com.njydsz.common.locales.util.I18n;
 
@@ -31,7 +31,7 @@ import com.njydsz.common.locales.util.I18n;
  *   <li>从 Authorization 请求头提取 Bearer Token</li>
  *   <li>判断 Token 是否以 {@code ak_} 前缀开头（API Key 专属标识）</li>
  *   <li>调用 {@link ApiKeyService#validateKey} 验证有效性</li>
- *   <li>验证通过后将 ApiKey 注入 Request Attribute，供后续使用</li>
+ *   <li>验证通过后将 ApiKeyVO 注入 Request Attribute，供后续使用</li>
  * </ol>
  *
  * <p><b>优先级：</b>{@link Ordered#HIGHEST_PRECEDENCE} + 40，在 ApiSignatureFilter 之后执行，
@@ -95,7 +95,7 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
       if (token.startsWith(API_KEY_PREFIX)) {
         // 需要进行 API Key 认证
         try {
-          ApiKey apiKey = apiKeyService.validateKey(token);
+          ApiKeyVO apiKey = apiKeyService.validateKey(token);
           request.setAttribute(API_KEY_ATTRIBUTE, apiKey);
         } catch (Exception e) {
           log.warn(I18n.message("userinfo.API.Key.认证失败", new Object[]{e.getMessage()}));

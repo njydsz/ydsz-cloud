@@ -126,7 +126,7 @@ public class OutboxService {
    *
    * @param partialBuilder 部分填充的 Builder（业务字段）
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public void appendToOutbox(OutboxMessage.OutboxMessageBuilder partialBuilder) {
     OutboxMessage partial = partialBuilder.build();
 
@@ -203,7 +203,7 @@ public class OutboxService {
    * @param event 领域事件
    * @since 26.10.01
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public void appendToOutbox(DomainEvent event) {
     if (event == null) {
       return;
@@ -471,7 +471,7 @@ public class OutboxService {
    * @param events 领域事件列表
    * @since 26.10.01
    */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public void appendAllToOutbox(List<DomainEvent> events) {
     if (events == null || events.isEmpty()) {
       return;

@@ -1,0 +1,9 @@
+-encoding
+UTF-8
+-proc:none
+-nowarn
+-cp
+;ydsz-common\\ydsz-common-socket\\target\\classes
+-d
+.verify-tmp
+ydsz-common\\ydsz-common-socket\\src\\main\\java\\com\\njydsz\\common\\socket\\admin\\WebSocketAdminController.java

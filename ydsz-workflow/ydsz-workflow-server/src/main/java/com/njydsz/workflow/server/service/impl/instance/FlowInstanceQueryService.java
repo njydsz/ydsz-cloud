@@ -134,18 +134,10 @@ public class FlowInstanceQueryService {
       nameAssembler.enrich(
           list, FlowInstanceVO::getInitiatorId, FlowInstanceVO::setInitiatorName, NameType.USER);
     } catch (Exception e) {
-      log.warn("[FlowInstanceQuery] 批量富化 initiatorName 失败，降级为单条: {}", e.getMessage());
-      // TODO: N+1 治理 — 降级路径仍产生 N 次 API 调用（每个 instance 一次 enrichOne），高并发下可能击穿名称服务
-      // 修复建议：在 NameAssembler 层增加熔断+缓存降级，空列表快速返回，避免逐条调用
-      // 降级：单条富化
-      for (FlowInstanceVO inst : list) {
-        if (inst != null
-            && !StringUtils.hasText(inst.getInitiatorName())
-            && StringUtils.hasText(inst.getInitiatorId())) {
-          nameAssembler.enrichOne(
-              inst, FlowInstanceVO::getInitiatorId, FlowInstanceVO::setInitiatorName, NameType.USER);
-        }
-      }
+      // N+1 治理（2026-11-03）：原降级路径逐条调用 enrichOne，批量失败时会产生 N 次 API 调用，
+      // 反而放大故障、可能击穿名称服务。批量调用失败说明服务整体不可用，
+      // 此时正确做法是放弃富化（列表本身仍完整可用），而非逐条重试。
+      log.warn("[FlowInstanceQuery] 批量富化 initiatorName 失败，跳过富化: {}", e.getMessage());
     }
     return list;
   }
@@ -248,10 +240,11 @@ public class FlowInstanceQueryService {
     } catch (Exception e) {
       log.debug("[Flow] 数据权限片段构建失败（无登录用户上下文）: {}", e.getMessage());
     }
-    // TODO: N+1 治理 — findPage + countPage 产生两次 DB 查询（COUNT + SELECT），
-    // 当分页结果集较大时 COUNT 全表扫描耗时严重
-    // 修复建议： PostgreSQL 可用 EstimateCount（pg_class.reltuples）替代精确 COUNT，
-    //          或缓存 COUNT 结果（相同查询条件 5 秒内复用）
+    // 关于「findPage + countPage 两次查询」的说明（2026-11-03 评估）：
+    //   这是分页的标准模式（每次翻页只执行 1 次 COUNT + 1 次 SELECT，不是 N+1）。
+    //   不采纳 EstimateCount（pg_class.reltuples）方案 —— 估算值误差可达数量级，
+    //   会导致前端分页器 total 不准；V26.11.03 已补建 (initiator_id, tenant_id, is_deleted)
+    //   等索引，COUNT 在典型过滤条件下可走 Index Only Scan，耗时可控。
     List<FlowInstanceVO> list = instanceRepository.findPage(query);
     long total = instanceRepository.countPage(query);
     return PageResponse.success(total, (long) query.getPageNum(), (long) query.getPageSize(), list);

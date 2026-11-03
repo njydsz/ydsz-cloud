@@ -6,6 +6,7 @@ import java.util.Map;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.socket.handler.WebSocketMessageDispatcher;
 import com.njydsz.common.socket.metric.WebSocketMetrics;
 import com.njydsz.common.socket.push.PushResult;
@@ -43,6 +46,7 @@ import com.njydsz.common.socket.session.LocalSessionRegistry;
  * @author ydsz-team
  * @since 26.09.20
  */
+@Slf4j
 @RestController
 @RequestMapping("/admin/ws")
 @Data
@@ -69,7 +73,7 @@ public class WebSocketAdminController {
    */
   @GetMapping("/stats")
   @Operation(summary = "模块实时统计")
-  public Map<String, Object> stats() {
+  public YdszResponse<Map<String, Object>> stats() {
     Map<String, Object> result = new HashMap<>(16);
     result.put("sessionCount", sessionRegistry.getTotalSessionCount());
     result.put("handlerCount", messageDispatcher != null ? messageDispatcher.getHandlerCount() : 0);
@@ -86,7 +90,7 @@ public class WebSocketAdminController {
       funnel.put("ackTimeout", webSocketMetrics.getAckTimeout());
       result.put("funnel", funnel);
     }
-    return result;
+    return YdszResponse.success(result);
   }
 
   /**
@@ -97,11 +101,11 @@ public class WebSocketAdminController {
    */
   @GetMapping("/sessions")
   @Operation(summary = "查询指定用户本地 Session")
-  public Map<String, Object> sessions(@RequestParam String userId) {
+  public YdszResponse<Map<String, Object>> sessions(@RequestParam String userId) {
     Map<String, Object> result = new HashMap<>(8);
     result.put("userId", userId);
     result.put("sessions", sessionRegistry.getAllSessions());
-    return result;
+    return YdszResponse.success(result);
   }
 
   /**
@@ -112,23 +116,25 @@ public class WebSocketAdminController {
    */
   @DeleteMapping("/sessions/{sessionId}")
   @Operation(summary = "强制断开指定 Session")
-  public Map<String, Object> killSession(@PathVariable String sessionId) {
+  public YdszResponse<Map<String, Object>> killSession(@PathVariable String sessionId) {
     Map<String, Object> result = new HashMap<>(8);
     try {
       boolean unregistered = sessionRegistry.unregisterSession(sessionId);
       if (unregistered) {
         result.put("success", true);
         result.put("sessionId", sessionId);
-        result.put("message", "Session 已断开并释放资源");
+        result.put("message", I18n.message("common.ws.session.disconnected"));
       } else {
         result.put("success", false);
-        result.put("error", "Session 不存在或已断开");
+        result.put("error", I18n.message("common.ws.session.not.found"));
       }
     } catch (Exception e) {
+      log.error("[WS-Admin] 断开会话失败 sessionId={}", sessionId, e);
       result.put("success", false);
-      result.put("error", e.getMessage());
+      // 不把 e.getMessage() 返回给管理端：可能含内部类名/路径
+      result.put("error", I18n.message("common.ws.session.disconnect.failed"));
     }
-    return result;
+    return YdszResponse.success(result);
   }
 
   /**
@@ -141,7 +147,7 @@ public class WebSocketAdminController {
    */
   @PostMapping("/push/direct")
   @Operation(summary = "管理端强制推送到指定用户")
-  public Map<String, Object> directPush(
+  public YdszResponse<Map<String, Object>> directPush(
       @RequestParam String userId,
       @RequestParam String type,
       @RequestParam String payload) {
@@ -156,9 +162,11 @@ public class WebSocketAdminController {
       }
     } catch (Exception e) {
       result.put("success", false);
-      result.put("error", e.getMessage());
+      log.error("[WS-Admin] 强制推送失败 userId={}", userId, e);
+      // 不把 e.getMessage() 返回给管理端：可能含内部类名/路径
+      result.put("error", I18n.message("common.ws.push.direct.failed"));
     }
-    return result;
+    return YdszResponse.success(result);
   }
 
   /**

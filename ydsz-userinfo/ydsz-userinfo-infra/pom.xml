@@ -47,6 +47,12 @@
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-redis</artifactId>
     </dependency>
+
+    <!-- 显式声明：SocialAuthProvider 系列直接使用 I18n.message()（YDIZ-I18N-002） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-locales</artifactId>
+    </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-userinfo-domain</artifactId>

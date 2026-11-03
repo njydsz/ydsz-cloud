@@ -56,7 +56,7 @@ public final class OtelExporterFactory {
    */
   public static SpanProcessor batchProcessor(SpanExporter exporter, BatchConfig config) {
     if (exporter == null) {
-      throw new IllegalArgumentException("exporter 不能为 null");
+      throw new IllegalArgumentException("exporter must not be null");
     }
     BatchSpanProcessorBuilder builder = BatchSpanProcessor.builder(exporter);
 
@@ -90,7 +90,7 @@ public final class OtelExporterFactory {
    */
   public static SpanProcessor simpleProcessor(SpanExporter exporter) {
     if (exporter == null) {
-      throw new IllegalArgumentException("exporter 不能为 null");
+      throw new IllegalArgumentException("exporter must not be null");
     }
     log.info("[Sentry] SimpleSpanProcessor 创建完成（开发模式）");
     return SimpleSpanProcessor.create(exporter);

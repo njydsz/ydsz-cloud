@@ -8,7 +8,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 
 /**
  * DAG 实例节点上下文实体（ydsz_job_dag_context 表，P0-13 优化）。 *

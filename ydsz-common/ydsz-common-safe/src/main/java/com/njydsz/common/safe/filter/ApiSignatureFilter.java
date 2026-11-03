@@ -6,8 +6,6 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -28,7 +26,6 @@ import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.common.util.http.UrlPathUtils;
 import com.njydsz.common.util.net.ClientIpResolver;
 import com.njydsz.common.util.security.DigestUtils;
-import com.njydsz.common.util.security.HexUtils;
 
 /**
  * API 签名验证过滤器

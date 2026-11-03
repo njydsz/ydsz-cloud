@@ -39,7 +39,6 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.dto.DecisionTableDTO;
 import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.literule.domain.spi.DecisionTableEvalProvider;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
 import com.njydsz.literule.domain.vo.DecisionTableVO;

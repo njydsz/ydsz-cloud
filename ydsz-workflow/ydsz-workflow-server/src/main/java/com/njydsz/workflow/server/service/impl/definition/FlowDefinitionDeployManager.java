@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.workflow.server.constant.WorkflowCacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
@@ -163,7 +164,7 @@ public class FlowDefinitionDeployManager {
     if (!hasBpmn && !hasJson) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("bpmnXml / nodes 至少二选一")
+          .message(I18n.message("workflow.definition.deploy.source.required"))
           .build();
     }
 
@@ -200,7 +201,7 @@ public class FlowDefinitionDeployManager {
     if (dto == null || !StringUtils.hasText(dto.getFlowCode()) || !StringUtils.hasText(dto.getFlowName())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("flowCode/flowName 不能为空")
+          .message(I18n.message("workflow.definition.deploy.code.name.required"))
           .build();
     }
   }
@@ -218,7 +219,7 @@ public class FlowDefinitionDeployManager {
     if (existing != null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("流程定义已存在: code=" + flowCode + " version=" + version)
+          .message(I18n.message("workflow.definition.deploy.exists", new Object[]{}))
           .build();
     }
   }
@@ -236,8 +237,8 @@ public class FlowDefinitionDeployManager {
         && !bpmnModel.getProcessId().equals(dto.getFlowCode())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("BPMN process id 与 flowCode 不一致: bpmn=" + bpmnModel.getProcessId()
-              + " dto=" + dto.getFlowCode())
+          .message(I18n.message("workflow.definition.deploy.bpmn.id.mismatch",
+              new Object[]{bpmnModel.getProcessId(), dto.getFlowCode()}))
           .build();
     }
     if (!StringUtils.hasText(dto.getFlowName()) || dto.getFlowName().equals(dto.getFlowCode())) {
@@ -311,14 +312,14 @@ public class FlowDefinitionDeployManager {
     if (!hasStart) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("流程定义必须包含开始节点（nodeType=0）")
+          .message(I18n.message("workflow.definition.deploy.start.node.required"))
           .build();
     }
     long uniqueCount = nodes.stream().map(FlowNodeVO::getNodeCode).distinct().count();
     if (uniqueCount != nodes.size()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("节点编码 nodeCode 必须唯一")
+          .message(I18n.message("workflow.definition.deploy.node.code.duplicate"))
           .build();
     }
   }
@@ -420,7 +421,7 @@ public class FlowDefinitionDeployManager {
     if (zipBytes == null || zipBytes.length == 0) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("zip 文件内容为空")
+          .message(I18n.message("workflow.definition.deploy.zip.empty"))
           .build();
     }
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
@@ -451,7 +452,7 @@ public class FlowDefinitionDeployManager {
           if (!StringUtils.hasText(flowCode)) {
             throw SysException.builder()
                 .resultCode(YdszResultCode.BAD_REQUEST)
-                .message("BPMN 文件缺少 process id: " + fileName)
+                .message(I18n.message("workflow.definition.deploy.bpmn.process.id.missing", new Object[]{}))
                 .build();
           }
 
@@ -478,7 +479,7 @@ public class FlowDefinitionDeployManager {
     } catch (Exception e) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message("zip 文件解析失败: " + e.getMessage())
+          .message(I18n.message("workflow.definition.deploy.zip.parse.failed"))
           .build();
     }
 

@@ -39,7 +39,6 @@ import com.njydsz.common.file.util.FileOps;
 import com.njydsz.common.file.util.FileTypeValidator;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.sentry.SentryObservation;

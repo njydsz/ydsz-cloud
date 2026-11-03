@@ -134,7 +134,9 @@ public class SseExecutor {
     }
     try {
       Map<String, Object> data = new LinkedHashMap<>(COLLECTION_CAPACITY);
-      data.put("error", e.getMessage() != null ? e.getMessage() : "未知错误");
+      // 不把 e.getMessage() 推给前端：可能含内部类名/路径/SQL；细节写日志
+      log.error("[SseExecutor] 流式执行失败，已向前端返回通用错误", e);
+      data.put("error", I18n.message("agent.chat.execution.failed"));
       data.put("finished", true);
       channel.sendEvent("error", data);
     } catch (Exception ex) {

@@ -6,6 +6,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.social.SocialAccessToken;
 import com.njydsz.userinfo.domain.social.SocialAuthException;
@@ -80,7 +81,7 @@ public class MicrosoftAuthProvider extends AbstractSocialAuthProvider {
   public String authorize(String state, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException(PLATFORM, "Microsoft 配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.microsoft.config.not.found"));
     }
 
     String clientId = config.getAppId();
@@ -104,7 +105,7 @@ public class MicrosoftAuthProvider extends AbstractSocialAuthProvider {
   public SocialAccessToken exchangeToken(String code, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException(PLATFORM, "Microsoft 配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.microsoft.config.not.found"));
     }
 
     String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
@@ -122,13 +123,13 @@ public class MicrosoftAuthProvider extends AbstractSocialAuthProvider {
     String error = getStr(tokenResponse, "error");
     if (error != null && !error.isBlank()) {
       String errorDescription = getStr(tokenResponse, "error_description");
-      throw new SocialAuthException(PLATFORM,
-          "Microsoft 获取 access_token 失败: " + errorDescription);
+      throw new SocialAuthException(I18n.message(
+          "userinfo.social.microsoft.access_token.failed", new Object[]{errorDescription}));
     }
 
     String accessToken = getStr(tokenResponse, "access_token");
     if (accessToken == null || accessToken.isBlank()) {
-      throw new SocialAuthException(PLATFORM, "Microsoft 获取 access_token 失败: 未返回 access_token");
+      throw new SocialAuthException(I18n.message("userinfo.social.microsoft.access_token.empty"));
     }
 
     Long expireIn = getLong(tokenResponse, "expires_in", DEFAULT_EXPIRE_IN);
@@ -140,7 +141,7 @@ public class MicrosoftAuthProvider extends AbstractSocialAuthProvider {
   public SocialUserInfo getUserInfo(SocialAccessToken token) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException(PLATFORM, "Microsoft 配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.microsoft.config.not.found"));
     }
 
     String userInfoUrl = config.getOrDefaultUserInfoUrl(DEFAULT_USER_INFO_URL);
@@ -150,7 +151,8 @@ public class MicrosoftAuthProvider extends AbstractSocialAuthProvider {
     String error = getStr(userResponse, "error");
     if (error != null && !error.isBlank()) {
       String errorMessage = getStr(userResponse, "message");
-      throw new SocialAuthException(PLATFORM, "Microsoft 获取用户信息失败: " + errorMessage);
+      throw new SocialAuthException(I18n.message(
+          "userinfo.social.microsoft.userinfo.failed", new Object[]{errorMessage}));
     }
 
     // Microsoft Graph: id 作为 openId，displayName 作为昵称，mail 作为邮箱

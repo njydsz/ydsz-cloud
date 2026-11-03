@@ -20,10 +20,19 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-util</artifactId>
   </dependency>
+    <!-- DDD-001 依赖方向：server → domain（显式声明直接依赖，不靠 infra 传递兜底） -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-generator-domain</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- DDD-001 依赖倒置：server 主代码禁止依赖 infra（主代码零 import，仅 DddLayerArchTest 架构断言引用包名） -->
     <dependency>
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-generator-infra</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
     <!-- ydsz-common-exception：全局异常枚举 BusinessException/SysException -->
     <dependency>

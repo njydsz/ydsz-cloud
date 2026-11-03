@@ -23,12 +23,44 @@
 - 版本号格式：`YY.MM.DD`（与项目版本号一致）
 - 示例：`V26.11.01_add_user_avatar.sql`
 
-## 当前基线
+## 目录职责划分（2026-11-03 起）
 
-- **基线版本**：`V26.10.01.sql` —— 当前数据库全量快照，仅用于初始化全新库；
-- 后续变更在对应版本脚本中写增量 DDL/DML。
+| 目录 | 用途 | 是否允许 DROP |
+|------|------|--------------|
+| `data/sqls/bootstrap/` | **空库初始化脚本**（全量快照），仅用于全新空库首次建表 | 允许（文件头有警告） |
+| `data/sqls/flyway/` | **增量变更脚本**，按版本号升序人工执行 | **禁止**（由门禁判红） |
+| `data/sqls/postgre/` | 按模块拆分的表结构参考（无 DROP，不含数据） | — |
 
-## 目录名的历史包袱（未改，需决策）
+- **初始化脚本**：`data/sqls/bootstrap/V26.10.01.bootstrap.sql`
+  —— 含 173 组 `DROP TABLE ... CASCADE`，**禁止在任何已有数据的库上执行**。
+- **增量变更**：在 `data/sqls/flyway/` 新建 `V{YY.MM.DD}.sql`。
+
+## 危险变更门禁
+
+`data/scripts/check-sql-migrations.py` 会扫描 `data/sqls/flyway/` 下全部 `V*.sql`，
+对以下语句判红（CI 强制）：
+
+- `DROP TABLE` / `DROP SCHEMA` / `DROP DATABASE` / `DROP EXTENSION`
+- 无备份的 `DROP COLUMN`
+- `TRUNCATE`
+- 无 `WHERE` 子句的 `DELETE` / `UPDATE`
+- 无替代索引的 `DROP INDEX CONCURRENTLY`
+
+**例外白名单**：
+
+- 被 `--` 注释掉的语句不算；
+- `bootstrap/` 目录不参与扫描；
+- **在线索引替换**：同一脚本内先 `CREATE INDEX CONCURRENTLY` 新索引，再 `DROP INDEX CONCURRENTLY` 旧索引，且新建数量 ≥ 删除数量时允许，避免索引空窗。
+
+## 历史脚本治理策略
+
+- **V26.10.02.sql**：已采用 expand/contract 模式（新增 `life_cycle` 列 → 迁移数据 → 标记旧 `status` 列 deprecated），无直接删除，保留为历史记录；
+- **V26.10.03/V26.10.04/V26.10.07 等**：仅包含 `ALTER COLUMN TYPE` 等在线 DDL，不触发表重写，可保留；
+- **V26.11.03.sql**：在线索引重命名，采用“先建后删”模式，门禁允许。
+
+新增脚本必须遵循 expand/contract：先新增字段/表，迁移数据，再标记废弃，最后在新版本中删除。
+
+## 目录名的历史包袱
 
 目录仍叫 `flyway/`，但其中并不使用 Flyway —— 属历史命名。改名会影响发布脚本、备份工具与
 既有文档的引用路径，**未擅自重命名**；如需改名，建议连同 `pom.xml` 的两条红线注释一并调整。

@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.thread.alarm.AlarmEvent.AlarmDimension;
 import com.njydsz.common.thread.alarm.AlarmEvent.Severity;
 
@@ -266,7 +267,7 @@ public abstract class ThreadPoolAlarmEvaluator {
             .severity(Severity.CRITICAL)
             .currentValue(rejectedCount)
             .threshold(0)
-            .message("线程池拒绝任务执行 (累计拒绝 " + rejectedCount + " 次)，请检查负载和队列配置")
+            .message(I18n.message("common.thread.pool.rejected", new Object[]{rejectedCount}))
             .build();
     alarmNotifier.notify(event);
   }

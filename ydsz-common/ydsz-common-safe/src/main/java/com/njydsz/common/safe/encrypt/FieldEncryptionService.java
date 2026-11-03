@@ -61,14 +61,14 @@ public class FieldEncryptionService {
           byte[] keyBytes = Base64.getDecoder().decode(base64Key);
           if (keyBytes.length != 32) {
             throw new IllegalArgumentException(
-                "AES-256 密钥长度必须为 32 字节，当前版本 " + version + " 长度为 " + keyBytes.length);
+                "AES-256 key length must be 32 bytes, current version " + version + " length is " + keyBytes.length);
           }
           keyMap.put(version, new SecretKeySpec(keyBytes, ALGORITHM));
           LOG.info("加载加密密钥版本: {}", version);
         });
 
     if (!keyMap.containsKey(defaultKeyVersion)) {
-      throw new IllegalArgumentException("默认密钥版本 " + defaultKeyVersion + " 未配置");
+      throw new IllegalArgumentException("Default key version " + defaultKeyVersion + " is not configured");
     }
   }
 
@@ -87,7 +87,7 @@ public class FieldEncryptionService {
     try {
       SecretKey key = keyMap.get(keyVersion);
       if (key == null) {
-        throw new IllegalArgumentException("未知的密钥版本: " + keyVersion);
+        throw new IllegalArgumentException("Unknown key version: " + keyVersion);
       }
 
       byte[] iv = new byte[GCM_IV_LENGTH];
@@ -107,7 +107,7 @@ public class FieldEncryptionService {
       return Base64.getEncoder().encodeToString(byteBuffer.array());
     } catch (Exception e) {
       LOG.error("加密失败: keyVersion={}", keyVersion, e);
-      throw new CryptoException("加密失败: keyVersion=" + keyVersion, e);
+      throw new CryptoException("Encryption failed: keyVersion=" + keyVersion, e);
     }
   }
 
@@ -144,7 +144,7 @@ public class FieldEncryptionService {
 
       SecretKey key = keyMap.get(keyVersion);
       if (key == null) {
-        throw new IllegalArgumentException("未知的密钥版本: " + keyVersion);
+        throw new IllegalArgumentException("Unknown key version: " + keyVersion);
       }
 
       Cipher cipher = Cipher.getInstance(TRANSFORMATION);
@@ -155,7 +155,7 @@ public class FieldEncryptionService {
       return new String(plaintextBytes, StandardCharsets.UTF_8);
     } catch (Exception e) {
       LOG.error("解密失败", e);
-      throw new CryptoException("解密失败", e);
+      throw new CryptoException("Decryption failed", e);
     }
   }
 }

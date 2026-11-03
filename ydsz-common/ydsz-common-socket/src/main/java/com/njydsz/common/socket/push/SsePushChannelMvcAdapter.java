@@ -1,15 +1,12 @@
 package com.njydsz.common.socket.push;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.http.MediaType;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.njydsz.common.json.YdszJson;
@@ -85,7 +82,7 @@ public class SsePushChannelMvcAdapter implements SsePushChannel {
     } catch (IllegalStateException e) {
       // SseEmitter 已关闭（客户端断连）— 静默标记并跳过
       closed.set(true);
-      throw new IOException("SSE 通道已关闭（可能客户端断连）: sessionId=" + sessionId, e);
+      throw new IOException("SSE channel closed (client may have disconnected): sessionId=" + sessionId, e);
     } catch (IOException e) {
       closed.set(true);
       throw e;

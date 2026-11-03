@@ -22,12 +22,14 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.userinfo.domain.dto.ApiPermissionRegistrationDTO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.domain.vo.UserAccountViews;
 import com.njydsz.userinfo.server.service.CompanyService;
 import com.njydsz.userinfo.server.service.DepartmentService;
+import com.njydsz.userinfo.server.service.MenuService;
 import com.njydsz.userinfo.server.service.PostService;
 import com.njydsz.userinfo.server.service.RoleService;
 import com.njydsz.userinfo.server.service.UserAccountService;
@@ -91,6 +93,25 @@ public class InternalApiController {
   private final PostService postService;
   private final CompanyService companyService;
   private final WorkflowApproverCacheService workflowCacheService;
+  private final MenuService menuService;
+
+  /**
+   * 幂等注册 API 权限项。
+   *
+   * <p>system 模块扫描 {@code @AuthApiPermission} 后调用本接口，将权限码注册到
+   * userinfo 的 RBAC 权限表，供角色授权和 {@code /auth/codes} 下发。
+   *
+   * @param dto API 权限注册请求
+   * @return 权限项 ID
+   */
+  @RateLimit(resource = "userinfo.internalapi.registerApiPermission", threshold = 200)
+  @Idempotent(key = "'ydsz:userinfo:internal-api:register-api-permission:' + #dto.apiCode", ttlSeconds = 30)
+  @PostMapping("/api-permissions/register")
+  @Operation(summary = "注册 API 权限项（内部调用）")
+  public YdszResponse<String> registerApiPermission(
+      @Valid @RequestBody ApiPermissionRegistrationDTO dto) {
+    return YdszResponse.success(menuService.registerApiPermission(dto));
+  }
 
   /**
    * 根据 userId 查询用户信息

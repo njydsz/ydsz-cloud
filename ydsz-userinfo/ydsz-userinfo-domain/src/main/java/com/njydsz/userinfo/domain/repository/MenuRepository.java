@@ -46,6 +46,14 @@ public interface MenuRepository {
   List<MenuVO> findByParentId(String parentId);
 
   /**
+   * 根据菜单编码精确查询权限项。
+   *
+   * @param menuCode 菜单/权限编码
+   * @return 权限项；不存在时返回空
+   */
+  Optional<MenuVO> findByMenuCode(String menuCode);
+
+  /**
    * 分页查询菜单列表。
    *
    * @param query 分页查询参数

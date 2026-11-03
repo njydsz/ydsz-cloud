@@ -1,7 +1,6 @@
 package com.njydsz.agent.domain.entity;
 
 import java.io.Serial;
-import java.time.OffsetDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;

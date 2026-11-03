@@ -2,7 +2,6 @@ package com.njydsz.common.netty.rpc;
 
 import com.njydsz.common.netty.client.AbstractNettyClient;
 import com.njydsz.common.netty.config.NettyProperties;
-import io.netty.channel.Channel;
 import io.netty.channel.socket.SocketChannel;
 import lombok.extern.slf4j.Slf4j;
 

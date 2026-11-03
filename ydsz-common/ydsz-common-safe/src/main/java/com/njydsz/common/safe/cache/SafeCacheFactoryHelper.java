@@ -23,7 +23,7 @@ public final class SafeCacheFactoryHelper {
   private static final Logger LOG = LoggerFactory.getLogger(SafeCacheFactoryHelper.class);
 
   private SafeCacheFactoryHelper() {
-    throw new UnsupportedOperationException("工具类不可实例化");
+    throw new UnsupportedOperationException("Utility class cannot be instantiated");
   }
 
   /**

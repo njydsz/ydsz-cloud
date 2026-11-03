@@ -3,7 +3,7 @@
 > **本文件为 Claude Code / Cursor / Windsurf / Aider 等 AI 编码工具的 `always` 规则。**
 > 任何 AI 编码助手在本项目中编程时，都必须遵守本文件中的规则。
 >
-> **规范版本**: v26.10.08-v2（190 条红线规则，P0=64 P1=89 P2=24）
+> **规范版本**: v26.11.03-v1（197 条红线规则，P0=71 P1=95 P2=31）
 > **完整规则源**: `docs/ai-rules/shared-rules.yaml`（单一权威源）
 > **编码规范参考**: `docs/云顶编码规范.md`（v1.0.16）
 
@@ -17,7 +17,7 @@
 | 语言 | Java 21（启用虚拟线程 + 密封类 + record 模式匹配）|
 | 框架 | Spring Boot 4.1.0 + Spring Cloud 2025.1.2 + Spring Cloud Alibaba 2025.1.0.0 |
 | ORM | MyBatis-Plus 3.5.16 + ydsz-common-jdbc 行/列权限增强 |
-| 数据库 | PostgreSQL 18（HikariCP 连接池，**Flyway 版本管理**）|
+| 数据库 | PostgreSQL 18（HikariCP 连接池，**版本化 SQL 脚本，无迁移框架**）|
 | 缓存 | Redis（Redisson 4.6.1），本地缓存通过 ydsz-common-cache（W-TinyLFU）|
 | 消息队列 | RocketMQ 2.3.1 + ydsz-common-queue 6 种 MQ 引擎封装 |
 | 网关 | ydsz-gateway（WebFlux 响应式），12 个全局过滤器 |
@@ -404,8 +404,13 @@ mvn compile
 ## 版本规范
 
 - **版本格式**：`YY.MM.DD`（不含 V 前缀），如 `26.10.01-SNAPSHOT`
-- **Flyway**：已启用（版本脚本目录：`data/sqls/flyway/`，命名格式 `V{YY.MM.DD}.sql`，当前基线版本 `V26.10.01`）
-- **数据库变更**：通过 Flyway 版本脚本管理，脚本目录 `data/sqls/flyway/`，命名 `V{YY.MM.DD}.sql`
+- **迁移框架**：**禁止** Flyway / Liquibase（`pom.xml` 明文禁止，不引入任何 schema-migration 框架）
+- **空库初始化**：`data/sqls/bootstrap/V26.10.01.bootstrap.sql` —— **仅用于全新空库**，含 173 组 `DROP TABLE`，
+  在任何已有数据的库上执行会清空数据，**禁止当升级脚本用**
+- **增量变更**：在 `data/sqls/flyway/` 新建 `V{YY.MM.DD}.sql`，由 DBA / 发布负责人按版本号升序人工执行
+- **增量脚本门禁**：`data/scripts/check-sql-migrations.py` 扫描 `DROP TABLE` / `DROP COLUMN` / `TRUNCATE` /
+  无 `WHERE` 的 `DELETE` 并判红，CI 强制
+- 详见 `data/sqls/flyway/README.md`
 
 ---
 

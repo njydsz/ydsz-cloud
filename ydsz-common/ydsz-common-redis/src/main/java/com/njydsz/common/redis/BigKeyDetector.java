@@ -55,7 +55,7 @@ public final class BigKeyDetector {
 
   /** 私有构造器，禁止实例化 */
   private BigKeyDetector() {
-    throw new UnsupportedOperationException("工具类禁止实例化");
+    throw new UnsupportedOperationException("Utility class cannot be instantiated");
   }
 
   /**
