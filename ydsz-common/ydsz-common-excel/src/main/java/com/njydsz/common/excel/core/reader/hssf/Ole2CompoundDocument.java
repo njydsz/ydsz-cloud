@@ -1,5 +1,6 @@
 package com.njydsz.common.excel.core.reader.hssf;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -88,7 +89,7 @@ public final class Ole2CompoundDocument implements AutoCloseable {
     byte[] tmp = new byte[8192];
     int n;
     // 读取全部字节（对于典型 XLS 文件 &lt; 10MB）
-    java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream(64 * 1024);
+    ByteArrayOutputStream bos = new ByteArrayOutputStream(64 * 1024);
     while ((n = channel.read(buffer)) != -1) {
       buffer.flip();
       byte[] arr = new byte[n];
@@ -269,7 +270,7 @@ public final class Ole2CompoundDocument implements AutoCloseable {
     }
 
     // 遍历迷你 FAT 链
-    java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream(4096);
+    ByteArrayOutputStream bos = new ByteArrayOutputStream(4096);
     int sid = startSector;
     int remaining = miniStreamSize;
     while (sid >= 0 && sid != 0xFFFFFFFE && remaining > 0) {
@@ -289,7 +290,7 @@ public final class Ole2CompoundDocument implements AutoCloseable {
   }
 
   private static int[] readChain(int[] fat, int start, byte[] data, int sectorSize) {
-    java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
     int sid = start;
     while (sid >= 0 && sid != 0xFFFFFFFE) {
       int offset = (sid + 1) * sectorSize;

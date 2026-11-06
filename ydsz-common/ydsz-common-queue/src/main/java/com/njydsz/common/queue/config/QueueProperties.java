@@ -1,5 +1,6 @@
 package com.njydsz.common.queue.config;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.context.annotation.Primary;
 
 import com.njydsz.common.queue.enums.QueueType;
@@ -136,13 +138,13 @@ public class QueueProperties {
    * <p>使用 {@link org.springframework.boot.context.properties.NestedConfigurationProperty} 既保留 IDE 自动补全又兼容 relaxed binding。
    * 当用户未配置任何 {@code ydsz.queue.kafka.*} 字段时，相关访问器回退到通用 host:port 配置。
    */
-  @org.springframework.boot.context.properties.NestedConfigurationProperty
+  @NestedConfigurationProperty
   private KafkaQueueProperties kafka;
 
   /**
    * RabbitMQ 专属配置（独立前缀 {@code ydsz.queue.rabbitmq.*}）。
    */
-  @org.springframework.boot.context.properties.NestedConfigurationProperty
+  @NestedConfigurationProperty
   private RabbitMQProperties rabbitmq;
 
   /**
@@ -269,8 +271,8 @@ public class QueueProperties {
    *         topic: notification-stream
    * }</pre>
    */
-  @org.springframework.boot.context.properties.NestedConfigurationProperty
-  private List<EngineDefinition> engines = new java.util.ArrayList<>();
+  @NestedConfigurationProperty
+  private List<EngineDefinition> engines = new ArrayList<>();
 
   /** 多实例引擎定义（内嵌类，不导出独立 POJO）。 */
   public static class EngineDefinition {

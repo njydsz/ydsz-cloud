@@ -26,6 +26,7 @@ import com.njydsz.agent.domain.service.DagWorkflowService;
 import com.njydsz.agent.domain.vo.DagWorkflowExportVO;
 import com.njydsz.agent.domain.vo.DagWorkflowVO;
 import com.njydsz.agent.server.util.ExcelExportUtil;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.util.date.DateUtils;
@@ -47,6 +48,7 @@ import com.njydsz.common.util.date.DateUtils;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/agent/dag-workflow")
+@AuthApiPermission(apiCodes = "agt:dag-workflow:list")
 public class DagWorkflowController {
 
   /** OOXML Content-Type 常量 */
@@ -73,6 +75,7 @@ public class DagWorkflowController {
    * @return 统一响应结果，data 为保存后的工作流 ID（雪花算法字符串）
    */
   @PostMapping("/save")
+  @AuthApiPermission(apiCodes = "agt:dag-workflow:add")
   public YdszResponse<String> save(@Valid @RequestBody DagWorkflowDTO dto) {
     String id = dagWorkflowService.save(dto);
     return YdszResponse.success(id);
@@ -117,6 +120,7 @@ public class DagWorkflowController {
    * @return 统一响应结果，data 为 true 表示删除成功
    */
   @DeleteMapping("/{code}")
+  @AuthApiPermission(apiCodes = "agt:dag-workflow:delete")
   public YdszResponse<Boolean> delete(@PathVariable String code) {
     return YdszResponse.success(dagWorkflowService.deleteByCode(code));
   }

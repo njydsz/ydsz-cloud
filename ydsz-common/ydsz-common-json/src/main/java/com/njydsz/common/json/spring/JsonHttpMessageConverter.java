@@ -16,6 +16,8 @@ import org.springframework.http.converter.AbstractGenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.util.StreamUtils;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.method.HandlerMethod;
 
 import com.njydsz.common.json.YdszJson;
@@ -242,10 +244,10 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
    */
   private Class<?> resolveViewClass() {
     try {
-      Object handler = org.springframework.web.context.request.RequestContextHolder
+      Object handler = RequestContextHolder
           .currentRequestAttributes()
           .getAttribute(BEST_MATCHING_HANDLER_ATTRIBUTE,
-              org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+              RequestAttributes.SCOPE_REQUEST);
       if (handler instanceof HandlerMethod handlerMethod) {
         Method method = handlerMethod.getMethod();
         JsonView jsonView = method.getAnnotation(JsonView.class);

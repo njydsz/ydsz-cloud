@@ -42,6 +42,9 @@ public class MessageConfigChangeListener implements ConfigChangeListener {
   /** message 模块配置属性前缀 */
   private static final String MESSAGE_CONFIG_PREFIX = "ydsz.message.";
 
+  /** 监听器执行顺序（普通优先级） */
+  private static final int CONFIG_LISTENER_ORDER = 20;
+
   /**
    * 接收配置变更回调。
    *
@@ -74,6 +77,6 @@ public class MessageConfigChangeListener implements ConfigChangeListener {
    */
   @Override
   public int getOrder() {
-    return 20;
+    return CONFIG_LISTENER_ORDER;
   }
 }

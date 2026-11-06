@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -19,6 +18,7 @@ import com.njydsz.agent.domain.code.CodeExecutionException;
 import com.njydsz.agent.domain.code.CodeExecutionRequest;
 import com.njydsz.agent.domain.code.CodeExecutionResult;
 import com.njydsz.agent.domain.code.CodeExecutionService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * Docker 沙箱模式的代码执行服务实现（主实现）。

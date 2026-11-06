@@ -2,6 +2,7 @@ package com.njydsz.common.redis.config;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Random;
 
 import jakarta.validation.constraints.Min;
 import lombok.Data;
@@ -145,7 +146,7 @@ public class RedisProperties {
   private int nullValueTtlSeconds = 1800;
 
   /** 内部随机数生成器（static 避免每次调用创建开销） */
-  private static final java.util.Random TTL_RANDOM = new java.util.Random();
+  private static final Random TTL_RANDOM = new Random();
 
   /**
    * TTL 抖动幅度百分比（±ttlJitterPercent%），用于分散缓存过期时间、防缓存雪崩。

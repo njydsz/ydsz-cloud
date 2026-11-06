@@ -2,10 +2,10 @@ package com.njydsz.common.notify.core;
 
 import java.util.Map;
 
-import com.njydsz.common.locales.util.I18n;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.notify.audit.NotifyAuditService;
 import com.njydsz.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.common.notify.dedup.NotifyDedupService;

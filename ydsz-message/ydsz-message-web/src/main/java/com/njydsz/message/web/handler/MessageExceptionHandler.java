@@ -102,7 +102,7 @@ public class MessageExceptionHandler extends BaseExceptionHandler {
     String developerMessage = buildDeveloperMessage(e);
     Integer retryAfter = messageCode.retryAfterSeconds();
 
-    log.error(
+    getLog().error(
         "{} 消息业务异常 | 路径: {} | 错误码: {} | userMessage: {} | developerMessage: {} | retryAfter: {}s",
         getLogPrefix(),
         request.getRequestURI(),

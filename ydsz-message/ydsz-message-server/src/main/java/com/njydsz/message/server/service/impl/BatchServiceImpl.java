@@ -78,6 +78,15 @@ public class BatchServiceImpl implements BatchService {
   /** 批次执行状态：全部失败 */
   private static final String STATUS_FAILED = "FAILED";
 
+  /** 进度百分比计算精度（保留两位小数） */
+  private static final double PERCENT_CALCULATION_FACTOR = 10000.0;
+
+  /** 进度百分比结果精度 */
+  private static final double PERCENT_RESULT_FACTOR = 100.0;
+
+  /** SSE 进度数据 Map 初始容量 */
+  private static final int SSE_DATA_MAP_CAPACITY = 8;
+
   /** 批次记录 Repository */
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -463,8 +472,8 @@ public class BatchServiceImpl implements BatchService {
       String batchId, String status, int total, int success, int failed, int skipped) {
     try {
       int processed = success + failed + skipped;
-      double percent = total > 0 ? Math.round(processed * 10000.0 / total) / 100.0 : 0.0;
-      Map<String, Object> data = new HashMap<>(8);
+      double percent = total > 0 ? Math.round(processed * PERCENT_CALCULATION_FACTOR / total) / PERCENT_RESULT_FACTOR : 0.0;
+      Map<String, Object> data = new HashMap<>(SSE_DATA_MAP_CAPACITY);
       data.put("batchId", batchId);
       data.put("status", status);
       data.put("total", total);

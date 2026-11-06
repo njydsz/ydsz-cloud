@@ -44,10 +44,16 @@ public class InMemoryAsyncTaskStore implements AsyncTaskStore {
   /** 默认每租户并发任务上限 */
   private static final int DEFAULT_MAX_ACTIVE_PER_TENANT = 10;
 
+  /** 任务存储缓存最大容量 */
+  private static final int TASK_CACHE_MAX_SIZE = 5000;
+
+  /** 任务存储缓存过期时间（分钟） */
+  private static final int TASK_CACHE_EXPIRE_MINUTES = 30;
+
   /** 任务内存存储（YdszCache 替代 ConcurrentHashMap，提供 TTL 防泄漏） */
   private final Cache<String, AsyncTask> taskStore = YdszCache.<String, AsyncTask>newBuilder()
-      .maximumSize(5000)
-      .expireAfterAccess(30, TimeUnit.MINUTES)
+      .maximumSize(TASK_CACHE_MAX_SIZE)
+      .expireAfterAccess(TASK_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
       .build();
 
   /** 按创建时间正序的比较器 */

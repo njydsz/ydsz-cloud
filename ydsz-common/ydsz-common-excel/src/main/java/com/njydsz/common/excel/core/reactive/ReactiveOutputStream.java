@@ -1,13 +1,13 @@
 package com.njydsz.common.excel.core.reactive;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.excel.core.ExcelOperationException;
 
 /**
  * 响应式输出流 — 桥接同步 Excel XML/ZIP 写入到 {@link Flow.Publisher}&lt;byte[]&gt;，适配 WebFlux {@code Flux<byte[]>}。
@@ -59,7 +59,7 @@ public class ReactiveOutputStream extends OutputStream implements Flow.Publisher
   private final AtomicLong requested = new AtomicLong(0);
 
   private Flow.Subscriber<? super byte[]> subscriber;
-  private final java.io.ByteArrayOutputStream buffer;
+  private final ByteArrayOutputStream buffer;
   private volatile boolean closed = false;
 
   public ReactiveOutputStream() {
@@ -73,7 +73,7 @@ public class ReactiveOutputStream extends OutputStream implements Flow.Publisher
   public ReactiveOutputStream(int flushThreshold, long requestTimeoutMs) {
     this.flushThreshold = flushThreshold;
     this.requestTimeoutMs = requestTimeoutMs;
-    this.buffer = new java.io.ByteArrayOutputStream(flushThreshold);
+    this.buffer = new ByteArrayOutputStream(flushThreshold);
   }
 
   /**
@@ -174,11 +174,10 @@ public class ReactiveOutputStream extends OutputStream implements Flow.Publisher
       }
     }
     if (requested.get() <= 0 && !closed) {
-      throw BusinessException.builder()
-          .resultCode(CoreExceptionCode.SYSTEM_ERROR)
-          .message("ReactiveOutputStream timeout: downstream did not send request within "
-              + requestTimeoutMs + "ms")
-          .build();
+      throw new ExcelOperationException(
+          "ReactiveOutputStream timeout: downstream did not send request within "
+              + requestTimeoutMs
+              + "ms");
     }
   }
 

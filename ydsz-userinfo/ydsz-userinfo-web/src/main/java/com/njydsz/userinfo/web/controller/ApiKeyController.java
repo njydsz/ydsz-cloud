@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
@@ -51,6 +52,7 @@ import com.njydsz.userinfo.server.service.ApiKeyService;
 @RestController
 @RequestMapping("/apikey")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:apikey:list")
 public class ApiKeyController {
 
   private final ApiKeyService apiKeyService;
@@ -70,6 +72,7 @@ public class ApiKeyController {
       action = AuditAction.CREATE,
       content = "'创建 API Key: ' + #dto.keyName")
   @PostMapping
+  @AuthApiPermission(apiCodes = "sys:apikey:add")
   @Operation(summary = "创建 API Key", description = "创建新的 API Key，返回明文（仅此一次）")
   public YdszResponse<ApiKeyVO> createKey(@Valid @RequestBody ApiKeyCreateDTO dto) {
     return YdszResponse.success(apiKeyService.createKey(dto));
@@ -110,6 +113,7 @@ public class ApiKeyController {
       action = AuditAction.DELETE,
       content = "'批量撤销 API Key: ' + #ids")
   @DeleteMapping
+  @AuthApiPermission(apiCodes = "sys:apikey:delete")
   @Operation(summary = "批量撤销 API Key")
   public YdszResponse<Integer> revokeKeys(@RequestParam List<String> ids) {
     return YdszResponse.success(apiKeyService.revokeKeys(ids));
@@ -128,6 +132,7 @@ public class ApiKeyController {
       action = AuditAction.UPDATE,
       content = "'更新 API Key 状态: id=' + #id + ', enabled=' + #enabled")
   @PutMapping("/{id}/enabled")
+  @AuthApiPermission(apiCodes = "sys:apikey:edit")
   @Operation(summary = "启用/禁用 API Key")
   public YdszResponse<Void> updateEnabled(@PathVariable String id, @RequestParam Boolean enabled) {
     apiKeyService.updateEnabled(id, enabled);

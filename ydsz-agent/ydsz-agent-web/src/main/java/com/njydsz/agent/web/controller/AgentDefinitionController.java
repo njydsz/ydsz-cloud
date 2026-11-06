@@ -79,6 +79,7 @@ import com.njydsz.common.util.date.DateUtils;
 @RestController
 @RequestMapping("/agent/definitions")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "agt:definition:list")
 public class AgentDefinitionController {
 
   /** OOXML Content-Type 常量 */
@@ -247,6 +248,9 @@ public class AgentDefinitionController {
    * 文件名为 {@code agent_definitions_yyyyMMddHHmmss.xlsx}。
    *
    * <p>Excel 表头和列宽通过 {@link AgentDefinitionExportVO} 上的 {@code @ExcelProperty} 注解定义。
+   *
+   * @param response HTTP 响应对象，导出文件写入其输出流
+   * @throws IOException 写入响应流失败时抛出
    */
   @Operation(summary = "导出 Agent 定义列表（Excel）")
   @GetMapping("/export")

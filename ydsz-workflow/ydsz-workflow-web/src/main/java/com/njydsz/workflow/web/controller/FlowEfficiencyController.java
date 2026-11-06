@@ -36,7 +36,7 @@ import com.njydsz.workflow.server.service.FlowEfficiencyService;
  */
 @Tag(name = "流程效率分析", description = "审批效率统计 / 瓶颈排名 / 审批人排名 / 趋势 / 健康度")
 @RestController
-@RequestMapping("/flow")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowEfficiencyController {

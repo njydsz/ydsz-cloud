@@ -46,6 +46,12 @@ public class DictItemImportServiceImpl implements DictItemImportService {
   /** 单次导入条数上限 */
   private static final int IMPORT_MAX_SIZE = 500;
 
+  /** 字典类型编码最大长度 */
+  private static final int MAX_TYPE_CODE_LENGTH = 64;
+
+  /** 字典项编码最大长度 */
+  private static final int MAX_ITEM_CODE_LENGTH = 64;
+
   /** 结果 Map 初始容量（successCount, totalCount, failCount, message） */
   private static final int RESULT_MAP_CAPACITY = 4;
 
@@ -137,13 +143,13 @@ public class DictItemImportServiceImpl implements DictItemImportService {
       throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
           .data("reason", "第 " + rowNum + " 行：字典项展示值不能为空");
     }
-    if (data.getTypeCode().length() > 64) {
+    if (data.getTypeCode().length() > MAX_TYPE_CODE_LENGTH) {
       throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
-          .data("reason", "第 " + rowNum + " 行：字典类型编码长度不能超过 64");
+          .data("reason", "第 " + rowNum + " 行：字典类型编码长度不能超过 " + MAX_TYPE_CODE_LENGTH);
     }
-    if (data.getItemCode().length() > 64) {
+    if (data.getItemCode().length() > MAX_ITEM_CODE_LENGTH) {
       throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
-          .data("reason", "第 " + rowNum + " 行：字典项编码长度不能超过 64");
+          .data("reason", "第 " + rowNum + " 行：字典项编码长度不能超过 " + MAX_ITEM_CODE_LENGTH);
     }
   }
 

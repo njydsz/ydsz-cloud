@@ -1,6 +1,8 @@
 package com.njydsz.common.excel.core.reader;
 
+import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -88,7 +90,7 @@ public class HeaderAnalyzer {
     Set<String> excludeFields = metadata.getExcludeColumnFiledNames();
     Set<String> includeFields = metadata.getIncludeColumnFiledNames();
 
-    Map<Integer, String> dateFormats = new java.util.HashMap<>(16);
+    Map<Integer, String> dateFormats = new HashMap<>(16);
     int columnCount = 0;
     for (Field field : fields) {
       if (field.isAnnotationPresent(ExcelIgnore.class)) {
@@ -145,7 +147,7 @@ public class HeaderAnalyzer {
       Field field = entry.getValue();
       FieldSetter setter = ReflectCache.getFieldSetter(clazz, field);
       // P0-VarHandle：预创建 VarHandle Setter 以加速读取路径字段赋值
-      java.lang.invoke.VarHandle vh = MHFieldAccessor.getVarHandleSetter(clazz, field);
+      VarHandle vh = MHFieldAccessor.getVarHandleSetter(clazz, field);
       Class<?> targetType = field.getType();
       String dateFormat = dateFormats.get(col);
       columnMetadataArray[idx++] =

@@ -17,6 +17,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.safe.internal.RequireInternal;
 import com.njydsz.system.domain.dto.AppValidateRequest;
 import com.njydsz.system.domain.dto.ConfigGetRequest;
 import com.njydsz.system.domain.dto.DictItemGetRequest;
@@ -62,6 +63,7 @@ import com.njydsz.system.server.service.DictItemService;
 @RequestMapping("/internal")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:internal:api")
+@RequireInternal
 public class InternalApiController {
 
   private final ConfigService configService;

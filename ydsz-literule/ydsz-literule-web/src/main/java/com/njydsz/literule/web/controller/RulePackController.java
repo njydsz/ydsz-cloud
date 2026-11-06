@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
@@ -66,6 +68,7 @@ import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
 @RequestMapping("/literule/rules")
 @Validated
 @Tag(name = "规则集市场", description = "规则集发布、安装、版本管理与压测")
+@AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_VIEW)
 public class RulePackController {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
@@ -171,6 +174,7 @@ public class RulePackController {
    * @param operator 操作人用户名
    * @return 回滚安装结果
    */
+  @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @Audit(
       module = "规则管理",
       type = AuditType.OPERATION,
@@ -217,6 +221,7 @@ public class RulePackController {
    * @return 发布后的规则集信息
    */
   @Idempotent(key = "ruleAdmin:publishPack", ttlSeconds = 5, message = "请勿重复提交")
+  @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @Audit(
       module = "规则管理",
       type = AuditType.OPERATION,
@@ -241,6 +246,7 @@ public class RulePackController {
    * @param operator 操作人用户名
    * @return 安装结果（含成功/失败计数）
    */
+  @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @Audit(
       module = "规则管理",
       type = AuditType.OPERATION,
@@ -266,6 +272,7 @@ public class RulePackController {
    * @return 无返回内容
    */
   @Idempotent(key = "ruleAdmin:deletePack", ttlSeconds = 5, message = "请勿重复提交")
+  @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @Audit(
       module = "规则管理",
       type = AuditType.OPERATION,
@@ -288,6 +295,7 @@ public class RulePackController {
    * @return 无返回内容
    */
   @Idempotent(key = "ruleAdmin:markOfficialPack", ttlSeconds = 5, message = "请勿重复提交")
+  @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @Audit(
       module = "规则管理",
       type = AuditType.OPERATION,
@@ -312,6 +320,7 @@ public class RulePackController {
    * @return 无返回内容
    */
   @Idempotent(key = "ruleAdmin:ratePack", ttlSeconds = 5, message = "请勿重复提交")
+  @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @Audit(
       module = "规则管理",
       type = AuditType.OPERATION,
@@ -346,6 +355,7 @@ public class RulePackController {
    * @param request 压测请求
    * @return 压测结果（含 QPS、分位数耗时、错误率、直方图）
    */
+  @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @Audit(
       module = "规则管理",
       type = AuditType.OPERATION,
@@ -432,6 +442,7 @@ public class RulePackController {
    * @param operator 操作人用户名
    * @return 每个包的更新结果
    */
+  @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @Audit(
       module = "规则管理",
       type = AuditType.OPERATION,

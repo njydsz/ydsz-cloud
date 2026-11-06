@@ -78,11 +78,14 @@ public enum RuleStatus {
    * <p>P1-3 多级审批流状态转换路径：
    *
    * <ul>
-   *   <li>DRAFT → REVIEW_L1（提交多级审核）/ REVIEW（兼容单级审核）/ PUBLISHED / ARCHIVED
+   *   <li>DRAFT → REVIEW_L1（提交多级审核）/ REVIEW（兼容单级审核）/ PUBLISHED / DISABLED（废弃）/ ARCHIVED
    *   <li>REVIEW_L1 → REVIEW_L2（一级通过）/ DRAFT（一级驳回）/ ARCHIVED（一级拒绝） / PUBLISHED（1 级审批流直通发布）
    *   <li>REVIEW_L2 → REVIEW_FINAL（二级通过）/ REVIEW_L1（二级驳回）/ ARCHIVED（二级拒绝） / PUBLISHED（2 级审批流直通发布）
    *   <li>REVIEW_FINAL → PUBLISHED（终审通过）/ REVIEW_L2（终审驳回）/ ARCHIVED（终审拒绝）
    *   <li>REVIEW → PUBLISHED / DRAFT / ARCHIVED / REVIEW_L2（向后兼容，等价于 REVIEW_L1）
+   *   <li>PUBLISHED → DISABLED（下线）/ DRAFT（回退重编）/ ARCHIVED
+   *   <li>DISABLED → PUBLISHED（恢复发布）/ DRAFT（回退重编）/ ARCHIVED
+   *   <li>任意状态 → 同状态（幂等，不抛异常）
    * </ul>
    *
    * <p>设计说明：REVIEW_L1/REVIEW_L2 均允许直通 PUBLISHED，以支持 1 级、2 级、3 级 审批流灵活发布。例如 2 级审批流序列为 REVIEW_L1 →
@@ -92,9 +95,18 @@ public enum RuleStatus {
    * @return 是否允许从当前状态迁移到目标状态
    */
   public boolean canTransitionTo(RuleStatus target) {
+    // 同状态迁移视为幂等操作，一律允许（避免重复发布/重复提交误报异常）
+    if (this == target) {
+      return true;
+    }
     return switch (this) {
+      // DRAFT 可提交审核、直接发布、直接停用（未发布的草稿允许废弃）或归档
       case DRAFT ->
-          target == REVIEW || target == REVIEW_L1 || target == PUBLISHED || target == ARCHIVED;
+          target == REVIEW
+              || target == REVIEW_L1
+              || target == PUBLISHED
+              || target == DISABLED
+              || target == ARCHIVED;
       case REVIEW_L1 ->
           target == REVIEW_L2 || target == DRAFT || target == ARCHIVED || target == PUBLISHED;
       case REVIEW_L2 ->
@@ -106,8 +118,10 @@ public enum RuleStatus {
         // REVIEW 向后兼容：等价于 REVIEW_L1，同时保留 REVIEW → PUBLISHED 的单级审批直通
       case REVIEW ->
           target == PUBLISHED || target == DRAFT || target == ARCHIVED || target == REVIEW_L2;
-      case PUBLISHED -> target == DISABLED || target == ARCHIVED;
-      case DISABLED -> target == PUBLISHED || target == ARCHIVED;
+      // PUBLISHED 可下线（DISABLED）、归档，或回退到草稿重新编辑
+      case PUBLISHED -> target == DISABLED || target == ARCHIVED || target == DRAFT;
+      // DISABLED 可重新发布、回退草稿重新编辑，或归档
+      case DISABLED -> target == PUBLISHED || target == ARCHIVED || target == DRAFT;
       case ARCHIVED -> false; // 已归档不可再变更
     };
   }

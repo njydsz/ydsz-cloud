@@ -515,4 +515,31 @@ public final class PermissionCodes {
 
   /** EVENT_OUTBOX_MANAGE — 事件发件箱管理（重发/清理） */
   public static final String EVENT_OUTBOX_MANAGE = "event:outbox:manage";
+
+  /** CRONJOB_EXPORT_VIEW — 异步导出任务查看（列表/详情/进度） */
+  public static final String CRONJOB_EXPORT_VIEW = "cronjob:export:view";
+
+  /** CRONJOB_EXPORT_CREATE — 提交异步导出任务 */
+  public static final String CRONJOB_EXPORT_CREATE = "cronjob:export:create";
+
+  /** CRONJOB_EXPORT_DELETE — 取消/删除异步导出任务 */
+  public static final String CRONJOB_EXPORT_DELETE = "cronjob:export:delete";
+
+  /** CRONJOB_EXPORT_DOWNLOAD — 下载导出结果文件 */
+  public static final String CRONJOB_EXPORT_DOWNLOAD = "cronjob:export:download";
+
+  /** AGENT_TRIGGER_EXPORT — 触发器配置导出 */
+  public static final String AGENT_TRIGGER_EXPORT = "agent:trigger:export";
+
+  /** LITERULE_RULE_EXPORT — 规则定义导出（含决策表/DSL/YAML） */
+  public static final String LITERULE_RULE_EXPORT = "literule:rule:export";
+
+  /** LITERULE_RULE_IMPORT — 规则定义导入 */
+  public static final String LITERULE_RULE_IMPORT = "literule:rule:import";
+
+  /** LITERULE_CONFLICT_VIEW — 规则冲突检测查看 */
+  public static final String LITERULE_CONFLICT_VIEW = "literule:conflict:view";
+
+  /** LITERULE_PACK_VIEW — 规则包查看 */
+  public static final String LITERULE_PACK_VIEW = "literule:pack:view";
 }

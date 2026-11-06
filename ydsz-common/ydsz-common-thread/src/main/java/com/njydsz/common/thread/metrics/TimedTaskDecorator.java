@@ -1,5 +1,6 @@
 package com.njydsz.common.thread.metrics;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -107,7 +108,7 @@ public class TimedTaskDecorator implements TaskDecorator {
     try {
       // 尝试获取被包装的原始任务类名
       // 通过反射查找常见包装器模式的 "delegate"/"runnable" 字段
-      java.lang.reflect.Field delegateField = findDelegateField(runnable.getClass());
+      Field delegateField = findDelegateField(runnable.getClass());
       if (delegateField != null) {
         delegateField.setAccessible(true);
         Object delegate = delegateField.get(runnable);
@@ -127,10 +128,10 @@ public class TimedTaskDecorator implements TaskDecorator {
    * @param clazz 要检查的类
    * @return 找到的委托字段；未找到返回 null
    */
-  private java.lang.reflect.Field findDelegateField(Class<?> clazz) {
+  private Field findDelegateField(Class<?> clazz) {
     Class<?> current = clazz;
     while (current != null && current != Object.class) {
-      for (java.lang.reflect.Field field : current.getDeclaredFields()) {
+      for (Field field : current.getDeclaredFields()) {
         if ("delegate".equals(field.getName()) || "runnable".equals(field.getName())
             || "task".equals(field.getName())) {
           return field;

@@ -151,7 +151,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     batchResult.put("failureItems", e.getFailureItems());
     batchResult.put("aggregation", e.getFailureAggregation());
 
-    log.warn(
+    getLog().warn(
         "{}批量操作部分成功 | 路径: {} | 成功: {} | 失败: {} | traceId: {}",
         getLogPrefix(),
         request.getRequestURI(),
@@ -179,7 +179,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
   public Object handleBusinessException(
       BusinessException e, HttpServletRequest request, HttpServletResponse response) {
     recordMetrics(e);
-    log.warn(
+    getLog().warn(
         "{}业务异常 | 路径: {} | 错误码: {} | 消息: {}",
         getLogPrefix(),
         request.getRequestURI(),
@@ -207,7 +207,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
   public Object handleSysException(
       SysException e, HttpServletRequest request, HttpServletResponse response) {
     recordMetrics(e);
-    log.error(
+    getLog().error(
         "{}系统异常 | 路径: {} | 错误码: {} | 消息: {}",
         getLogPrefix(),
         request.getRequestURI(),
@@ -235,7 +235,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
   public Object handleAbstractYdszException(
       AbstractYdszException e, HttpServletRequest request, HttpServletResponse response) {
     recordMetrics(e);
-    log.warn(
+    getLog().warn(
         "{}异常 | 路径: {} | 错误码: {} | 消息: {} | 类型: {}",
         getLogPrefix(),
         request.getRequestURI(),
@@ -264,7 +264,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
   public Object handleHttpMessageNotReadableException(
       HttpMessageNotReadableException e, HttpServletRequest request) {
     recordMetrics(e);
-    log.error(
+    getLog().error(
         "{}请求体解析异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
     String message = resolveMessage("invalid.request.format", null, "请求格式错误");
@@ -382,7 +382,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
       MaxUploadSizeExceededException e, HttpServletRequest request) {
     recordMetrics(e);
     String message = resolveMessage("file.size.exceeded.message", null, "上传文件大小超出限制");
-    log.error("{}文件上传超限 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), message, e);
+    getLog().error("{}文件上传超限 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), message, e);
     return buildStandardErrorResponse(
         CoreExceptionCode.FILE_SIZE_EXCEEDED.getCode(),
         CoreExceptionCode.FILE_SIZE_EXCEEDED.getKey(),
@@ -407,7 +407,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     String message =
         resolveMessage(
             "resource.not.found.detail", new Object[] {request.getRequestURI()}, "资源不存在");
-    log.error("{}资源不存在 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), message, e);
+    getLog().error("{}资源不存在 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), message, e);
     return buildStandardErrorResponse(
         CoreExceptionCode.RESOURCE_NOT_FOUND.getCode(),
         CoreExceptionCode.RESOURCE_NOT_FOUND.getKey(),
@@ -429,7 +429,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
   public Object handleIllegalArgumentException(
       IllegalArgumentException e, HttpServletRequest request) {
     recordMetrics(e);
-    log.error(
+    getLog().error(
         "{}非法参数异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
     // 按请求 Locale 解析 i18n 文案，原始异常消息仅保留在日志中，避免泄露内部细节
@@ -459,7 +459,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public Object handleIllegalStateException(IllegalStateException e, HttpServletRequest request) {
     recordMetrics(e);
-    log.error(
+    getLog().error(
         "{}非法状态异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
     String message = resolveMessage("system.error", null, "系统异常，请联系管理员");
@@ -483,7 +483,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public Object handleNullPointerException(NullPointerException e, HttpServletRequest request) {
     recordMetrics(e);
-    log.error(
+    getLog().error(
         "{}空指针异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
     String message = resolveMessage("system.error", null, "系统异常，请联系管理员");
@@ -507,7 +507,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public Object handleException(Exception e, HttpServletRequest request) {
     recordMetrics(e);
-    log.error(
+    getLog().error(
         "{}系统异常 | 路径: {} | 类型: {} | 消息: {}",
         getLogPrefix(),
         request.getRequestURI(),

@@ -8,10 +8,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.locales.util.I18n;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.notify.aggregate.NotificationAggregator;
 import com.njydsz.common.notify.audit.NotifyAuditService;
 import com.njydsz.common.notify.channel.NotifyChannelStrategy;

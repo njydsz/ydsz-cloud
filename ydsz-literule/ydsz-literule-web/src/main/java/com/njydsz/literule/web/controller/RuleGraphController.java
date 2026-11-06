@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -69,6 +70,7 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则链画布", description = "规则链画布编辑、校验、Dry-run 与表达式函数市场")
+@AuthApiPermission(apiCodes = "rule:graph:list")
 public class RuleGraphController {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
@@ -122,6 +124,7 @@ public class RuleGraphController {
   @RateLimit(resource = "literule.rule_graph.saveChainGraph", threshold = 50)
   @Operation(summary = "保存或更新画布")
   @PostMapping("/{ruleCode}/graph")
+  @AuthApiPermission(apiCodes = "rule:graph:add")
   public YdszResponse<Map<String, Object>> saveChainGraph(
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleChainGraph graph,
@@ -156,6 +159,7 @@ public class RuleGraphController {
   @RateLimit(resource = "literule.rule_graph.deleteChainGraph", threshold = 50)
   @Operation(summary = "删除画布")
   @DeleteMapping("/{ruleCode}/graph")
+  @AuthApiPermission(apiCodes = "rule:graph:delete")
   public YdszResponse<Void> deleteChainGraph(@PathVariable String ruleCode) {
     ruleChainGraphProvider.delete(ruleCode);
     return YdszResponse.success();
@@ -177,6 +181,7 @@ public class RuleGraphController {
   @RateLimit(resource = "literule.rule_graph.validateChainGraph", threshold = 50)
   @Operation(summary = "校验画布结构")
   @PostMapping("/{ruleCode}/graph/validate")
+  @AuthApiPermission(apiCodes = "rule:graph:add")
   public YdszResponse<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(
       @Valid @RequestBody RuleChainGraph graph) {
     return YdszResponse.success(RuleGraphValidator.validate(graph));
@@ -199,6 +204,7 @@ public class RuleGraphController {
   @RateLimit(resource = "literule.rule_graph.previewExpression", threshold = 50)
   @Operation(summary = "表达式求值预览")
   @PostMapping("/expression-preview")
+  @AuthApiPermission(apiCodes = "rule:graph:add")
   public YdszResponse<ExpressionPreviewResultVO> previewExpression(
       @RequestParam String expression, @RequestBody Map<String, Object> facts) {
     return YdszResponse.success(
@@ -224,6 +230,7 @@ public class RuleGraphController {
   @RateLimit(resource = "literule.rule_graph.dryRunGraph", threshold = 50)
   @Operation(summary = "画布Dry-run仿真")
   @PostMapping("/{ruleCode}/graph/dry-run")
+  @AuthApiPermission(apiCodes = "rule:graph:add")
   public YdszResponse<List<RuleResultVO>> dryRunGraph(
       @PathVariable String ruleCode, @RequestBody Map<String, Object> facts) {
     List<RuleResultVO> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);

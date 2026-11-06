@@ -1,5 +1,6 @@
 package com.njydsz.common.redis.service;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -197,7 +198,7 @@ public class RedisIdGenerator {
    */
   private String formatDate(long epochMs) {
     return LocalDateTime.ofInstant(
-            java.time.Instant.ofEpochMilli(epochMs), ZONE_CN)
+            Instant.ofEpochMilli(epochMs), ZONE_CN)
         .format(DATE_FORMAT);
   }
 
@@ -218,7 +219,7 @@ public class RedisIdGenerator {
   private long computeTtlForDate(long epochMs) {
     try {
       LocalDateTime targetDateTime =
-          LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(epochMs), ZONE_CN);
+          LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMs), ZONE_CN);
       LocalDate targetDate = targetDateTime.toLocalDate();
       LocalDate today = LocalDate.now(ZONE_CN);
 

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -49,6 +50,7 @@ import com.njydsz.userinfo.server.service.DepartmentService;
 @RequestMapping("/dept")
 @RequiredArgsConstructor
 @Tag(name = "部门管理", description = "部门 CRUD、树形结构查询")
+@AuthApiPermission(apiCodes = "sys:dept:list")
 public class DepartmentController {
 
   private final DepartmentService service;
@@ -135,6 +137,7 @@ public class DepartmentController {
       content = "'创建部门: ' + #dto.deptName")
   @Idempotent(key = "ydsz:userinfo:DepartmentController:create:lock", ttlSeconds = 5)
   @PostMapping
+  @AuthApiPermission(apiCodes = "sys:dept:add")
   @Operation(summary = "创建部门")
   public YdszResponse<String> create(@Valid @RequestBody DepartmentDTO dto) {
     return YdszResponse.success(service.create(dto));
@@ -166,6 +169,7 @@ public class DepartmentController {
       content = "'更新部门: ' + #dto.id")
   @Idempotent(key = "ydsz:userinfo:DepartmentController:update:lock", ttlSeconds = 5)
   @PutMapping
+  @AuthApiPermission(apiCodes = "sys:dept:edit")
   @Operation(summary = "更新部门")
   public YdszResponse<Boolean> update(@Valid @RequestBody DepartmentDTO dto) {
     return YdszResponse.success(service.update(dto));
@@ -196,6 +200,7 @@ public class DepartmentController {
   @RateLimit(resource = "userinfo.Department.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:DepartmentController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
+  @AuthApiPermission(apiCodes = "sys:dept:delete")
   @Operation(summary = "删除部门")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(service.removeById(id));

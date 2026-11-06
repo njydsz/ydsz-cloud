@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.literule.domain.enums.RuleStatusEnum;
+import com.njydsz.literule.domain.enums.RuleStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,7 +27,7 @@ class RuleDefinitionTest {
   private RuleDefinition definition() {
     RuleDefinition d = new RuleDefinition();
     d.setRuleCode("RULE_001");
-    d.setStatus(RuleStatusEnum.DRAFT.name());
+    d.setStatus(RuleStatus.DRAFT.name());
     d.setIsEnabled(true);
     return d;
   }
@@ -40,8 +40,8 @@ class RuleDefinitionTest {
     @DisplayName("getStatusEnum 解析已设置状态")
     void resolvesStatus() {
       RuleDefinition d = definition();
-      d.setStatus(RuleStatusEnum.PUBLISHED.name());
-      assertThat(d.getStatusEnum()).isEqualTo(RuleStatusEnum.PUBLISHED);
+      d.setStatus(RuleStatus.PUBLISHED.name());
+      assertThat(d.getStatusEnum()).isEqualTo(RuleStatus.PUBLISHED);
     }
 
     @Test
@@ -55,7 +55,7 @@ class RuleDefinitionTest {
     @DisplayName("setStatusEnum 设置合法枚举")
     void setsStatus() {
       RuleDefinition d = new RuleDefinition();
-      d.setStatusEnum(RuleStatusEnum.DISABLED);
+      d.setStatusEnum(RuleStatus.DISABLED);
       assertThat(d.getStatus()).isEqualTo("DISABLED");
     }
 
@@ -76,7 +76,7 @@ class RuleDefinitionTest {
     @DisplayName("DRAFT → PUBLISHED 成功并记录审核信息")
     void draftToPublished() {
       RuleDefinition d = definition();
-      d.setStatus(RuleStatusEnum.DRAFT.name());
+      d.setStatus(RuleStatus.DRAFT.name());
       d.publish("reviewer-1");
       assertThat(d.getStatus()).isEqualTo("PUBLISHED");
       assertThat(d.getReviewedBy()).isEqualTo("reviewer-1");
@@ -95,7 +95,7 @@ class RuleDefinitionTest {
     @DisplayName("DISABLED → PUBLISHED 可直接恢复发布")
     void disabledToPublished() {
       RuleDefinition d = definition();
-      d.setStatus(RuleStatusEnum.DISABLED.name());
+      d.setStatus(RuleStatus.DISABLED.name());
       d.publish("r");
       assertThat(d.getStatus()).isEqualTo("PUBLISHED");
     }
@@ -104,7 +104,7 @@ class RuleDefinitionTest {
     @DisplayName("PUBLISHED → 重复发布（同状态）不抛异常")
     void republishSameStateOk() {
       RuleDefinition d = definition();
-      d.setStatus(RuleStatusEnum.PUBLISHED.name());
+      d.setStatus(RuleStatus.PUBLISHED.name());
       d.publish("r");
       assertThat(d.getStatus()).isEqualTo("PUBLISHED");
     }
@@ -118,7 +118,7 @@ class RuleDefinitionTest {
     @DisplayName("PUBLISHED → DISABLED 成功")
     void publishedToDisabled() {
       RuleDefinition d = definition();
-      d.setStatus(RuleStatusEnum.PUBLISHED.name());
+      d.setStatus(RuleStatus.PUBLISHED.name());
       d.disable();
       assertThat(d.getStatus()).isEqualTo("DISABLED");
     }
@@ -147,7 +147,7 @@ class RuleDefinitionTest {
     @DisplayName("PUBLISHED → DRAFT 清空审核信息")
     void publishedToDraftClearsReview() {
       RuleDefinition d = definition();
-      d.setStatus(RuleStatusEnum.PUBLISHED.name());
+      d.setStatus(RuleStatus.PUBLISHED.name());
       d.setReviewedBy("r");
       d.setReviewedAt(LocalDateTime.now());
       d.setReviewComment("ok");
@@ -162,7 +162,7 @@ class RuleDefinitionTest {
     @DisplayName("DISABLED → DRAFT 成功")
     void disabledToDraft() {
       RuleDefinition d = definition();
-      d.setStatus(RuleStatusEnum.DISABLED.name());
+      d.setStatus(RuleStatus.DISABLED.name());
       d.revertToDraft();
       assertThat(d.getStatus()).isEqualTo("DRAFT");
     }
@@ -190,7 +190,7 @@ class RuleDefinitionTest {
     @DisplayName("DISABLED 可编辑")
     void disabledEditable() {
       RuleDefinition d = definition();
-      d.setStatus(RuleStatusEnum.DISABLED.name());
+      d.setStatus(RuleStatus.DISABLED.name());
       assertThat(d.isEditable()).isTrue();
     }
 
@@ -198,7 +198,7 @@ class RuleDefinitionTest {
     @DisplayName("PUBLISHED 不可编辑")
     void publishedNotEditable() {
       RuleDefinition d = definition();
-      d.setStatus(RuleStatusEnum.PUBLISHED.name());
+      d.setStatus(RuleStatus.PUBLISHED.name());
       assertThat(d.isEditable()).isFalse();
     }
   }
@@ -253,7 +253,7 @@ class RuleDefinitionTest {
     @DisplayName("PUBLISHED + enabled 返回 true")
     void publishedAndEnabled() {
       RuleDefinition d = definition();
-      d.setStatus(RuleStatusEnum.PUBLISHED.name());
+      d.setStatus(RuleStatus.PUBLISHED.name());
       d.setIsEnabled(true);
       assertThat(d.isActive()).isTrue();
     }
@@ -262,7 +262,7 @@ class RuleDefinitionTest {
     @DisplayName("PUBLISHED + disabled 返回 false")
     void publishedButDisabled() {
       RuleDefinition d = definition();
-      d.setStatus(RuleStatusEnum.PUBLISHED.name());
+      d.setStatus(RuleStatus.PUBLISHED.name());
       d.setIsEnabled(false);
       assertThat(d.isActive()).isFalse();
     }

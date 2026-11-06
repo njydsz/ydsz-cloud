@@ -2,13 +2,13 @@ package com.njydsz.agent.infra.code;
 
 import java.util.List;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.code.CodeExecutionException;
 import com.njydsz.agent.domain.code.CodeExecutionRequest;
 import com.njydsz.agent.domain.code.CodeExecutionResult;
 import com.njydsz.agent.domain.code.CodeExecutionService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 无操作代码执行服务实现（兜底）。

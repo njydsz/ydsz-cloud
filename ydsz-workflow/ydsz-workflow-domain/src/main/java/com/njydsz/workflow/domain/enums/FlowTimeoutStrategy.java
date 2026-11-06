@@ -1,7 +1,8 @@
 package com.njydsz.workflow.domain.enums;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.Getter;
+
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 超时处理策略枚举

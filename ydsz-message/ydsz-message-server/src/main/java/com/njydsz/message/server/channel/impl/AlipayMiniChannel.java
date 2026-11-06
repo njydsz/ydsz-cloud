@@ -15,9 +15,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;

@@ -137,6 +137,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- ArchUnit：web→infra 边界守护（YDIZ-DDD-006 自动化验证） -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- mockito-junit-jupiter: 提供 @ExtendWith(MockitoExtension.class) -->
         <dependency>
             <groupId>org.mockito</groupId>

@@ -1,6 +1,7 @@
 package com.njydsz.message.web.controller.core;
 
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -120,6 +121,15 @@ public class MessageController {
   /** 国际化消息工具 */
   private final I18nMessages i18nMessages;
 
+  /** 导出分页查询每页大小 */
+  private static final int EXPORT_PAGE_SIZE = 200;
+
+  /** 接收人脱敏前缀可见长度 */
+  private static final int MASK_PREFIX_LENGTH = 3;
+
+  /** 接收人脱敏后缀可见长度 */
+  private static final int MASK_SUFFIX_LENGTH = 4;
+
   /**
    * 统一消息发送入口。
    *
@@ -230,7 +240,7 @@ public class MessageController {
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/log/export")
   public void exportLogs(MessageLogQueryDTO query,
-      HttpServletResponse response) throws java.io.IOException {
+      HttpServletResponse response) throws IOException {
     String fileName = "msg_logs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
@@ -239,10 +249,10 @@ public class MessageController {
                 .replace("+", "%20"));
 
     // 设置大页大小减少分页查询次数
-    query.setPageSize(200);
+    query.setPageSize(EXPORT_PAGE_SIZE);
     query.setIsUseSearchAfter(false);
 
-    final int pageSize = 200;
+    final int pageSize = EXPORT_PAGE_SIZE;
     List<MsgLogExportVO> rows = new ArrayList<>();
     int pageNum = 1;
     while (true) {
@@ -315,7 +325,7 @@ public class MessageController {
     export.setBizType(vo.getBizType());
     export.setBizId(vo.getBizId());
     // 接收人脱敏：前 3 位 + 后 4 位可见
-    export.setReceiver(vo.getReceiver() != null ? MaskUtils.mask(vo.getReceiver(), 3, 4) : null);
+    export.setReceiver(vo.getReceiver() != null ? MaskUtils.mask(vo.getReceiver(), MASK_PREFIX_LENGTH, MASK_SUFFIX_LENGTH) : null);
     export.setTemplateCode(vo.getTemplateCode());
     export.setStatus(vo.getStatus());
     export.setPriority(vo.getPriority());

@@ -54,6 +54,12 @@ public class ExportingTraceRecorder implements TraceRecorder {
   /** 步骤事件列表初始容量 */
   private static final int EVENTS_CAPACITY = 4;
 
+  /** 根 Span 元数据缓存最大容量 */
+  private static final int ROOT_SPAN_CACHE_MAX_SIZE = 1000;
+
+  /** 根 Span 元数据缓存过期时间（分钟） */
+  private static final int ROOT_SPAN_CACHE_EXPIRE_MINUTES = 5;
+
   /** 底层链路记录器（实际写入 PG 或内存） */
   private final TraceRecorder delegate;
 
@@ -66,8 +72,8 @@ public class ExportingTraceRecorder implements TraceRecorder {
    * <p>使用 YdszCache 替代手写 ConcurrentHashMap，提供 TTL 自动清理能力。
    */
   private final Cache<String, AgentRootSpanMeta> rootSpanMetas = YdszCache.<String, AgentRootSpanMeta>newBuilder()
-      .maximumSize(1000)
-      .expireAfterWrite(5, TimeUnit.MINUTES)
+      .maximumSize(ROOT_SPAN_CACHE_MAX_SIZE)
+      .expireAfterWrite(ROOT_SPAN_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
       .build();
 
   /**

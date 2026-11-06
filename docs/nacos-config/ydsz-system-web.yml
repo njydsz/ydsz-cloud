@@ -12,6 +12,16 @@ spring:
       pool-name: ydsz-hikari-system
 
 ydsz:
+
+  # 内部接口服务端二次校验（P0-2 下沉至 common-safe）。
+  # 前置条件：调用方（Feign/网关）已统一注入内部调用凭据，否则开启会导致内部调用 403。
+  # 凭据优先级：内部签名（ydsz.security.internal-sign.enabled=true）> 标记头（X-Internal-Call）。
+  # 默认关闭，各模块确认调用方就绪后逐模块开启。
+  internal-call:
+    enabled: false
+    header-name: X-Internal-Call
+    header-value: "true"
+
   json:
     warmup-classes:
       - com.njydsz.system.domain.vo.ConfigVO

@@ -67,6 +67,7 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.server.cache.NextwikiCacheService;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
+import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 
 /**
  * 文件应用服务
@@ -110,6 +111,9 @@ public class FileApplicationService {
   private final FilePermissionService permissionService;
   private final LockStrategy lockStrategy;
   private final VirusScanApplicationService virusScanApplicationService;
+
+  /** 模块指标采集（上传次数/失败），可选注入以兼容指标降级 */
+  private final NextwikiMetrics nextwikiMetrics;
   private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
 
   /** 统一领域事件发布门面（可选依赖，未配置时安全降级） */
@@ -142,6 +146,31 @@ public class FileApplicationService {
    * <p>使用 @Qualifier("nextwikiBatchImportExecutor") 在构造器参数级别消歧，
    * ObjectProvider.getIfAvailable() 避免 Spring 容器中存在多个 Executor 类型 Bean 时抛出歧义异常，
    * null 时使用 Runnable::run 同步执行降级。
+   *
+   * @param snowflakeIdGenerator 分布式 ID 生成器
+   * @param folderDomainService 目录领域服务
+   * @param versionDomainService 文件版本领域服务
+   * @param quotaDomainService 存储配额领域服务
+   * @param storageQuotaRepository 存储配额仓储
+   * @param storageReferenceService 存储引用计数服务
+   * @param trashDomainService 回收站领域服务
+   * @param fileNodeRepository 文件节点仓储
+   * @param versionRepository 文件版本仓储
+   * @param trashItemRepository 回收站条目仓储
+   * @param eventPublisher Spring 应用事件发布器
+   * @param permissionService 文件权限服务
+   * @param lockStrategy 分布式锁策略
+   * @param virusScanApplicationService 病毒扫描应用服务
+   * @param searchIndexBridgeProvider 搜索索引事件桥（可选）
+   * @param eventPublisherProvider 领域事件发布门面（可选）
+   * @param fileTypeValidatorProvider 文件类型校验器（可选）
+   * @param folderCopyService 目录复制服务
+   * @param transactionManager 平台事务管理器
+   * @param batchTaskExecutorProvider 批处理线程池提供者（可选，降级为同步执行）
+   * @param cacheService 模块缓存服务
+   * @param mapper MapStruct 对象映射器
+   * @param properties 模块配置属性
+   * @param nextwikiMetrics 模块指标采集器，用于记录上传次数与耗时
    */
   public FileApplicationService(
       SnowflakeIdGenerator snowflakeIdGenerator,
@@ -166,7 +195,8 @@ public class FileApplicationService {
       @Qualifier("nextwikiBatchImportExecutor") ObjectProvider<Executor> batchTaskExecutorProvider,
       NextwikiCacheService cacheService,
       NextwikiStructMapper mapper,
-      NextwikiProperties properties) {
+      NextwikiProperties properties,
+      NextwikiMetrics nextwikiMetrics) {
     this.snowflakeIdGenerator = snowflakeIdGenerator;
     this.folderDomainService = folderDomainService;
     this.versionDomainService = versionDomainService;
@@ -192,6 +222,7 @@ public class FileApplicationService {
     this.cacheService = cacheService;
     this.mapper = mapper;
     this.properties = properties;
+    this.nextwikiMetrics = nextwikiMetrics;
   }
 
   @PostConstruct
@@ -239,8 +270,10 @@ public class FileApplicationService {
    */
   public FileNodeVO upload(
       MultipartFile file, String parentId, String rename, String versionRemark, String userId) {
+    long start = System.currentTimeMillis();
     try {
-      return SentryObservation.<FileNodeVO>time("nextwiki.file.upload", null, null, () -> {
+      FileNodeVO uploadedNode = SentryObservation.<FileNodeVO>time(
+          "nextwiki.file.upload", null, null, () -> {
         // ===== 阶段1：准备阶段（无事务边界） =====
         // 1. 安全校验
         validateUpload(file);
@@ -341,8 +374,12 @@ public class FileApplicationService {
         return persistDedupedNode(ctx);
       }
       return persistNewNode(ctx);
-      });
+          });
+      nextwikiMetrics.recordUpload();
+      nextwikiMetrics.recordUploadDuration(System.currentTimeMillis() - start);
+      return uploadedNode;
     } catch (Throwable t) {
+      nextwikiMetrics.recordUploadFailure();
       throw BusinessException.builder()
           .key("nextwiki.error.file_upload_observation_error")
           .cause(t)

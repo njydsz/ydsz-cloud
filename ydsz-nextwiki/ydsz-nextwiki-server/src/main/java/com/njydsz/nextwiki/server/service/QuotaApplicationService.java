@@ -45,6 +45,12 @@ public class QuotaApplicationService {
   /** 空间仓储（查询空间所有者用于配额告警） */
   private final SpaceRepository spaceRepository;
 
+  /** 存储配额告警阈值：80% */
+  private static final int QUOTA_WARNING_PERCENTAGE = 80;
+
+  /** 字节到 MB 的转换因子（1 MB = 1024 * 1024 字节） */
+  private static final long BYTES_PER_MB = 1024 * 1024;
+
   /**
    * 查询配额信息（已用/上限、文件数已用/上限等）。
    *
@@ -159,9 +165,9 @@ public class QuotaApplicationService {
           .fileCountLimit(fresh.getFileCountLimit())
           .fileCountUsed(fresh.getFileCountUsed())
           .build();
-      if (quotaDomainService.isOverPercentage(quotaDto, 80)) {
-        long usedMb = fresh.getQuotaUsed() != null ? fresh.getQuotaUsed() / (1024 * 1024) : 0;
-        long limitMb = fresh.getQuotaLimit() != null ? fresh.getQuotaLimit() / (1024 * 1024) : 0;
+      if (quotaDomainService.isOverPercentage(quotaDto, QUOTA_WARNING_PERCENTAGE)) {
+        long usedMb = fresh.getQuotaUsed() != null ? fresh.getQuotaUsed() / BYTES_PER_MB : 0;
+        long limitMb = fresh.getQuotaLimit() != null ? fresh.getQuotaLimit() / BYTES_PER_MB : 0;
         String alertContent = String.format(
             "您的存储空间使用率已超过 80%%（已用 %d MB / 上限 %d MB），请及时清理或扩容。",
             usedMb, limitMb);
@@ -187,7 +193,7 @@ public class QuotaApplicationService {
    * @param scopeId 空间 ID 或租户 ID
    * @return 管理员用户 ID 列表，查询失败返回空列表
    */
-  private java.util.List<String> resolveSpaceAdminIds(String scopeId) {
+  private List<String> resolveSpaceAdminIds(String scopeId) {
     return spaceRepository.findById(scopeId)
         .filter(space -> space.getOwnerId() != null && !space.getOwnerId().isBlank())
         .map(space -> List.of(space.getOwnerId()))

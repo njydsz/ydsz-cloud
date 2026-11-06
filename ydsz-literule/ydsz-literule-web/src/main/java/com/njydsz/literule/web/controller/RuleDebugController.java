@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.literule.server.debug.BreakpointHit;
@@ -53,6 +54,7 @@ import com.njydsz.literule.server.debug.RuleDebugger;
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则断点调试", description = "规则级/表达式节点级断点、调试会话与单步执行")
+@AuthApiPermission(apiCodes = "rule:debug:list")
 public class RuleDebugController {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
@@ -123,6 +125,7 @@ public class RuleDebugController {
   @Operation(summary = "新增断点", description = "新增规则级或表达式节点级断点，支持条件断点")
   @ApiResponse(responseCode = "200", description = "成功")
   @PostMapping("/breakpoints")
+  @AuthApiPermission(apiCodes = "rule:debug:add")
   public YdszResponse<Object> addBreakpoint(@RequestBody Map<String, String> request) {
     RuleDebugger debugger = debugger();
     if (debugger == null) {
@@ -155,6 +158,7 @@ public class RuleDebugController {
   @Operation(summary = "删除断点", description = "按断点唯一标识移除断点")
   @ApiResponse(responseCode = "200", description = "成功")
   @DeleteMapping("/breakpoints/{breakpointId}")
+  @AuthApiPermission(apiCodes = "rule:debug:delete")
   public YdszResponse<Object> removeBreakpoint(@PathVariable String breakpointId) {
     RuleDebugger debugger = debugger();
     if (debugger == null) {
@@ -182,6 +186,7 @@ public class RuleDebugController {
   @Operation(summary = "创建调试会话", description = "创建绑定规则的调试会话，断点命中时挂起求值线程")
   @ApiResponse(responseCode = "200", description = "成功")
   @PostMapping("/sessions")
+  @AuthApiPermission(apiCodes = "rule:debug:add")
   public YdszResponse<Object> createSession(@RequestBody Map<String, String> request) {
     RuleDebugger debugger = debugger();
     if (debugger == null) {
@@ -240,6 +245,7 @@ public class RuleDebugController {
   @Operation(summary = "下发调试指令", description = "向调试会话下发 RESUME/STEP_OVER/STEP_INTO/STEP_OUT/TERMINATE 指令")
   @ApiResponse(responseCode = "200", description = "成功")
   @PostMapping("/sessions/{sessionId}/command")
+  @AuthApiPermission(apiCodes = "rule:debug:add")
   public YdszResponse<Object> submitCommand(
       @PathVariable String sessionId, @RequestBody Map<String, String> request) {
     RuleDebugger debugger = debugger();
@@ -276,6 +282,7 @@ public class RuleDebugController {
   @Operation(summary = "终止调试会话", description = "强制终止调试会话，释放挂起的求值线程")
   @ApiResponse(responseCode = "200", description = "成功")
   @DeleteMapping("/sessions/{sessionId}")
+  @AuthApiPermission(apiCodes = "rule:debug:delete")
   public YdszResponse<Object> terminateSession(@PathVariable String sessionId) {
     RuleDebugger debugger = debugger();
     if (debugger == null) {

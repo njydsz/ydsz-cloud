@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.connection.Message;
@@ -15,6 +16,8 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.event.RedisKeyExpirationEvent;
@@ -63,11 +66,11 @@ public class RedisKeyExpireListenerRegistry implements SmartInitializingSingleto
     }
 
     // 扫描所有 Spring Bean，查找标注了 @RedisKeyExpireListener 的方法
-    for (Map.Entry<String, Object> entry : applicationContext.getBeansWithAnnotation(org.springframework.stereotype.Component.class).entrySet()) {
+    for (Map.Entry<String, Object> entry : applicationContext.getBeansWithAnnotation(Component.class).entrySet()) {
       registerBeanListeners(entry.getKey(), entry.getValue());
     }
     // 同时扫描@Service @Repository 等衍生注解
-    for (Map.Entry<String, Object> entry : applicationContext.getBeansWithAnnotation(org.springframework.stereotype.Service.class).entrySet()) {
+    for (Map.Entry<String, Object> entry : applicationContext.getBeansWithAnnotation(Service.class).entrySet()) {
       registerBeanListeners(entry.getKey(), entry.getValue());
     }
 
@@ -80,7 +83,7 @@ public class RedisKeyExpireListenerRegistry implements SmartInitializingSingleto
   }
 
   private void registerBeanListeners(String beanName, Object bean) {
-    Class<?> targetClass = org.springframework.aop.support.AopUtils.getTargetClass(bean);
+    Class<?> targetClass = AopUtils.getTargetClass(bean);
     for (Method method : targetClass.getDeclaredMethods()) {
       RedisKeyExpireListener annotation = method.getAnnotation(RedisKeyExpireListener.class);
       if (annotation != null) {

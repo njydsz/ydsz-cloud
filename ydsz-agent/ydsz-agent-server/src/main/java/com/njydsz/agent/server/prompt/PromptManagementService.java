@@ -64,8 +64,8 @@ public class PromptManagementService {
    * 防止缓存无限增长。
    */
   private final Cache<String, PromptTemplate> templateCache = YdszCache.<String, PromptTemplate>newBuilder()
-      .maximumSize(500)
-      .expireAfterWrite(10, TimeUnit.MINUTES)
+      .maximumSize(TEMPLATE_CACHE_MAX_SIZE)
+      .expireAfterWrite(TEMPLATE_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
       .build();
 
   /** Prompt 模板 Repository */
@@ -79,6 +79,12 @@ public class PromptManagementService {
 
   /** 灰度流量分母（百分比精度） */
   private static final int AB_TEST_DENOMINATOR = 100;
+
+  /** 模板缓存最大容量 */
+  private static final int TEMPLATE_CACHE_MAX_SIZE = 500;
+
+  /** 模板缓存过期时间（分钟） */
+  private static final int TEMPLATE_CACHE_EXPIRE_MINUTES = 10;
 
   public PromptManagementService(
       PromptTemplateRepository templateRepository, PromptVersionRepository versionRepository) {

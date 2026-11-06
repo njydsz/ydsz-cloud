@@ -3,6 +3,7 @@ package com.njydsz.common.util.spring;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -79,7 +80,7 @@ public final class SpELKeyUtils {
     /**
      * 获取缓存值；若不存在则计算并原子性写入，保证同一表达式只解析一次。
      */
-    synchronized Expression getOrCompute(String key, java.util.function.Function<String, Expression> loader) {
+    synchronized Expression getOrCompute(String key, Function<String, Expression> loader) {
       Expression existing = super.get(key);
       if (existing != null) {
         return existing;

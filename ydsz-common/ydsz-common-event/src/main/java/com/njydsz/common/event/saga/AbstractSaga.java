@@ -253,6 +253,6 @@ public abstract class AbstractSaga {
 
   @Override
   public int hashCode() {
-    return java.util.Objects.hash(getAssociationKey(), associationValue);
+    return Objects.hash(getAssociationKey(), associationValue);
   }
 }

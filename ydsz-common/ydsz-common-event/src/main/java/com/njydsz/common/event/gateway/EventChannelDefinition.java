@@ -1,5 +1,7 @@
 package com.njydsz.common.event.gateway;
 
+import java.util.Objects;
+
 /**
  * 事件通道定义（O-3）
  *
@@ -93,11 +95,11 @@ public class EventChannelDefinition {
       return false;
     }
     EventChannelDefinition that = (EventChannelDefinition) o;
-    return java.util.Objects.equals(channelName, that.channelName);
+    return Objects.equals(channelName, that.channelName);
   }
 
   @Override
   public int hashCode() {
-    return java.util.Objects.hash(channelName);
+    return Objects.hash(channelName);
   }
 }

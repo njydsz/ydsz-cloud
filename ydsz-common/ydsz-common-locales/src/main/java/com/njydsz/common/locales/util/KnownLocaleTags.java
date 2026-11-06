@@ -16,8 +16,9 @@ import java.util.regex.Pattern;
  * com.njydsz.common.locales.util.MessageSourceHolder#resolve(String, Object[], Locale)} 等
  * 多处共用。
  *
- * <p><b>变更约定：</b>新增支持的 locale tag（如 ja_JP、ko_KR），在本类 {@link #DEFAULT_KNOWN_TAGS} 与 {@link
- * #DEFAULT_SUPPORTED_TAGS} 两处同步登记即可，无需散落到各模块硬编码。
+ * <p><b>变更约定：</b>本项目当前仅支持简体中文（zh_CN）与英文（en_US）两种语言（YDIZ-I18N-007）。
+ * 新增其他语言必须走正式需求评审，评审通过后在本类 {@link #DEFAULT_KNOWN_TAGS} 与 {@link
+ * #DEFAULT_SUPPORTED_TAGS} 两处同步登记，并同步补齐各模块 `{module}-messages_{locale}.properties` 资源文件。
  *
  * <p><b>locale tag 命名规范：</b>遵循 {@code language_country} 下划线格式（如 zh_CN / en_US）， 不设语言
  * (lower-case language) + 国家 (UPPER-CASE region)，由 IETF BCP 47 派生。
@@ -50,7 +51,7 @@ public final class KnownLocaleTags {
   /** 已知 locale tag 按长度降序排列的数组（用于正则构建，优先匹配较长的 tag 如 zh_CN 先于 zh） */
   private static final String[] KNOWN_TAGS_DESC;
 
-  /** 编译后的 locale tag 后缀剥离正则（如 _(zh_CN|en_US|zh_TW|ja_JP|ko_KR)$） */
+  /** 编译后的 locale tag 后缀剥离正则（如 _(zh_CN|en_US)$） */
   public static final Pattern LOCALE_SUFFIX_PATTERN;
 
   /**
@@ -73,22 +74,19 @@ public final class KnownLocaleTags {
     Set<String> known = new LinkedHashSet<>();
     known.add("zh_CN");
     known.add("en_US");
-    known.add("zh_TW");
-    known.add("ja_JP");
-    known.add("ko_KR");
     DEFAULT_KNOWN_TAGS = Collections.unmodifiableSet(known);
 
+    // 当前项目仅开放中文（zh_CN）与英文（en_US），见 YDIZ-I18N-007
     Set<String> supported = new LinkedHashSet<>();
     supported.add("zh_CN");
     supported.add("en_US");
-    supported.add("zh_TW");
     DEFAULT_SUPPORTED_TAGS = Collections.unmodifiableSet(supported);
 
     // 降序排列（优先匹配长 tag）
     KNOWN_TAGS_DESC = DEFAULT_KNOWN_TAGS.toArray(new String[0]);
     Arrays.sort(KNOWN_TAGS_DESC, (a, b) -> Integer.compare(b.length(), a.length()));
 
-    // 构建正则：_(zh_CN|en_US|zh_TW|ja_JP|ko_KR)$
+    // 构建正则：_(zh_CN|en_US)$
     StringBuilder patternBuilder = new StringBuilder("_(");
     for (int i = 0; i < KNOWN_TAGS_DESC.length; i++) {
       if (i > 0) {
@@ -103,7 +101,7 @@ public final class KnownLocaleTags {
   /**
    * 判断给定的 locale tag 是否为框架已知的合法 locale tag。
    *
-   * @param tag locale tag（如 zh_CN、en_US、ja_JP）
+   * @param tag locale tag（如 zh_CN、en_US）
    * @return 已知返回 true
    */
   public static boolean isKnown(String tag) {
@@ -113,8 +111,8 @@ public final class KnownLocaleTags {
   /**
    * 判断给定的 locale tag 是否为框架默认向用户开放的翻译语言。
    *
-   * <p>注意：已知 ≠ 开放。ja_JP / ko_KR 可能在 {@link #DEFAULT_KNOWN_TAGS} 中（已有资源文件），但未在
-   * {@link #DEFAULT_SUPPORTED_TAGS} 中（尚未正式对外提供）。
+   * <p>注意：已知 ≠ 开放。只有同时在 {@link #DEFAULT_KNOWN_TAGS} 与 {@link #DEFAULT_SUPPORTED_TAGS}
+   * 中的 tag 才向用户开放；当前项目仅 zh_CN / en_US 两种（YDIZ-I18N-007）。
    *
    * @param tag locale tag
    * @return 默认开放返回 true

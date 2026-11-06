@@ -1,5 +1,7 @@
 package com.njydsz.common.search.sync;
 
+import java.util.concurrent.TimeUnit;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -60,7 +62,7 @@ public class SearchConsistencyScanTask {
   @DistributedScheduled(
       lockKey = "search:consistency:scan",
       leaseTime = 300,
-      timeUnit = java.util.concurrent.TimeUnit.SECONDS)
+      timeUnit = TimeUnit.SECONDS)
   public void scanConsistency() {
     log.info("[SearchConsistency] 开始索引一致性巡检: autoRepair={}", properties.isAutoRepair());
 

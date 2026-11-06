@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
@@ -53,6 +55,7 @@ public class ExportTaskController {
    * @return 任务 ID
    */
   @Operation(summary = "提交异步导出任务")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_EXPORT_CREATE)
   @PostMapping
   public YdszResponse<String> submit(@RequestBody Map<String, Object> request) {
     String taskType = (String) request.getOrDefault("taskType", "DEFAULT_EXPORT");
@@ -76,6 +79,7 @@ public class ExportTaskController {
    * @return 任务详情（含进度、下载链接）
    */
   @Operation(summary = "查询导出任务状态")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_EXPORT_VIEW)
   @GetMapping("/{id}")
   public YdszResponse<ExportTaskVO> getTask(@PathVariable String id) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
@@ -89,6 +93,7 @@ public class ExportTaskController {
    * @return 任务列表
    */
   @Operation(summary = "查询用户导出任务列表")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_EXPORT_VIEW)
   @GetMapping("/my")
   public YdszResponse<List<ExportTaskVO>> listMyTasks(
       @RequestParam(defaultValue = "20") int limit) {
@@ -104,6 +109,7 @@ public class ExportTaskController {
    * @return 操作结果
    */
   @Operation(summary = "取消导出任务")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_EXPORT_DELETE)
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> cancel(@PathVariable String id) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
@@ -120,6 +126,7 @@ public class ExportTaskController {
    * @return 下载 URL
    */
   @Operation(summary = "获取导出文件下载链接")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_EXPORT_DOWNLOAD)
   @GetMapping("/{id}/download")
   public YdszResponse<String> getDownloadUrl(@PathVariable String id) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault("1");

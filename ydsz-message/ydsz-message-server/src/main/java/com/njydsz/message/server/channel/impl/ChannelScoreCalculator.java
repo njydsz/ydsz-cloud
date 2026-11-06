@@ -50,6 +50,15 @@ public class ChannelScoreCalculator {
   /** 用户打开率默认值（预留扩展口，待用户行为数据接入后替换） */
   private static final double DEFAULT_OPEN_RATE = 0.5;
 
+  /** 成功率评分权重 */
+  private static final double SUCCESS_WEIGHT = 0.5;
+
+  /** 成本评分权重 */
+  private static final double COST_WEIGHT = 0.3;
+
+  /** 用户打开率评分权重 */
+  private static final double OPEN_WEIGHT = 0.2;
+
   private final MessageMetrics messageMetrics;
 
   private final MessageProperties messageProperties;
@@ -216,14 +225,14 @@ public class ChannelScoreCalculator {
   public static class ScoreConfig {
     /** 成功率权重（默认 0.5） */
     @Default
-    private double successWeight = 0.5;
+    private double successWeight = SUCCESS_WEIGHT;
 
     /** 成本权重（默认 0.3） */
     @Default
-    private double costWeight = 0.3;
+    private double costWeight = COST_WEIGHT;
 
     /** 用户打开率权重（默认 0.2） */
     @Default
-    private double openWeight = 0.2;
+    private double openWeight = OPEN_WEIGHT;
   }
 }

@@ -339,7 +339,7 @@ public class FeignConfiguration {
       registry = RateLimiterRegistry.ofDefaults();
     }
     return new FeignRateLimiterInterceptor(
-        registry, java.time.Duration.ofMillis(config.getTimeoutDurationMs()));
+        registry, Duration.ofMillis(config.getTimeoutDurationMs()));
   }
 
   /**

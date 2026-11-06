@@ -27,7 +27,7 @@ import com.njydsz.agent.domain.mcp.McpExposedTool;
 import com.njydsz.agent.domain.mcp.McpServerCapabilityProvider;
 import com.njydsz.agent.domain.mcp.McpServerDescriptor;
 import com.njydsz.agent.domain.model.ChatResponse;
-import com.njydsz.agent.infra.mcp.McpJsonRpcMessage;
+import com.njydsz.agent.domain.mcp.McpJsonRpcMessage;
 import com.njydsz.agent.server.agent.AgentFacade;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.exception.custom.BusinessException;

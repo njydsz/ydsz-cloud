@@ -84,4 +84,6 @@ final class DddLayerArchTest {
         .matching("com.njydsz.agent.(*)..")
         .should().beFreeOfCycles()
         .because("YDIZ-DDD-001: DDD 分层必须单向依赖（web -> server -> domain <- infra），禁止循环引用.");
+
+
 }

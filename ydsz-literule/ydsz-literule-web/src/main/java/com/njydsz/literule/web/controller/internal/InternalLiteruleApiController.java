@@ -18,6 +18,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.safe.internal.RequireInternal;
 import com.njydsz.literule.domain.RuleEngine;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
@@ -56,6 +57,7 @@ import com.njydsz.literule.server.converter.LiteruleWebConverter;
 @RequestMapping("/internal")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "literule:internal:api")
+@RequireInternal
 public class InternalLiteruleApiController {
 
   private final RuleAdminService ruleAdminService;

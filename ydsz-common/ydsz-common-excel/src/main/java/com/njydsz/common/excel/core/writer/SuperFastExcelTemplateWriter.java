@@ -1,6 +1,7 @@
 package com.njydsz.common.excel.core.writer;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,11 +10,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +25,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
@@ -212,8 +217,8 @@ public class SuperFastExcelTemplateWriter {
   }
 
   private void loadTemplateFromBytes(byte[] bytes) {
-    try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(
-        new java.io.ByteArrayInputStream(bytes))) {
+    try (ZipInputStream zis = new ZipInputStream(
+        new ByteArrayInputStream(bytes))) {
       ZipEntry entry;
       while ((entry = zis.getNextEntry()) != null) {
         if (!entry.isDirectory()) {
@@ -1136,13 +1141,13 @@ public class SuperFastExcelTemplateWriter {
       if (value == null) {
         return null;
       }
-      if (value instanceof java.util.Date) {
+      if (value instanceof Date) {
         String fmt = excelConfig.getDefaultDateFormat();
         if (field.getAnnotation(ExcelProperty.class) != null
             && !field.getAnnotation(ExcelProperty.class).dateFormat().isEmpty()) {
           fmt = field.getAnnotation(ExcelProperty.class).dateFormat();
         }
-        return new java.text.SimpleDateFormat(fmt).format((java.util.Date) value);
+        return new SimpleDateFormat(fmt).format((Date) value);
       }
       if (value instanceof LocalDateTime) {
         return value.toString();
@@ -1151,7 +1156,7 @@ public class SuperFastExcelTemplateWriter {
         return value.toString();
       }
       if (value instanceof Number) {
-        if (value instanceof Double || value instanceof Float || value instanceof java.math.BigDecimal) {
+        if (value instanceof Double || value instanceof Float || value instanceof BigDecimal) {
           double d = ((Number) value).doubleValue();
           if (d == Math.floor(d) && !Double.isInfinite(d)) {
             return String.valueOf((long) d);

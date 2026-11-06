@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -33,6 +32,7 @@ import com.njydsz.common.docs.pipeline.DocumentProcessorPipeline;
 import com.njydsz.common.docs.preprocess.pipeline.PreprocessPipeline;
 import com.njydsz.common.docs.security.pii.PiiDetector;
 import com.njydsz.common.docs.security.scanner.DocumentSecurityScanner;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.io.TempFileManager;
 
 /**

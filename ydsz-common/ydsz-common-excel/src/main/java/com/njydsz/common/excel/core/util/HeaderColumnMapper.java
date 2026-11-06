@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
 
@@ -80,7 +81,7 @@ public final class HeaderColumnMapper {
    * @return 映射数组，{@code result[fieldCol] = excelCol}，未匹配字段为 -1
    */
   public static int[] map(Class<?> clazz, List<String> headers, MatchMode mode,
-      java.util.function.Function<String, String> translator) {
+      Function<String, String> translator) {
     if (clazz == null || headers == null || headers.isEmpty() || mode == null) {
       return new int[0];
     }

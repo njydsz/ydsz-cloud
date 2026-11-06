@@ -56,6 +56,9 @@ public class CachedLlmClient implements LlmClient {
   /** 空值占位最小过期时间（毫秒）——防穿透。 */
   private static final long NULL_CACHE_MIN_MS = 2_000L;
 
+  /** 去重缓存最大容量 */
+  private static final int DEDUP_CACHE_MAX_SIZE = 200;
+
   /** 被装饰的实际 LLM 客户端 */
   private final LlmClient delegate;
 
@@ -78,7 +81,7 @@ public class CachedLlmClient implements LlmClient {
       YdszCache.<String, ChatResponse>newBuilder()
           .name("agent:llm-dedup")
           .expireAfterWrite(INFLIGHT_WAIT_MS, TimeUnit.MILLISECONDS)
-          .maximumSize(200)
+          .maximumSize(DEDUP_CACHE_MAX_SIZE)
           .build();
 
   public CachedLlmClient(LlmClient delegate, SemanticLlmCache cache, CacheMetricsRecorder metrics) {

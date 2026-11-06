@@ -39,6 +39,9 @@ public class ActivityQueryService {
   /** 默认每页返回条数 */
   private static final int DEFAULT_LIMIT = 20;
 
+  /** 活动流查询每页最大条数 */
+  private static final int MAX_ACTIVITY_LIMIT = 50;
+
   /** 活动类型：最近访问 */
   public static final String TYPE_RECENT = "recent";
 
@@ -57,7 +60,7 @@ public class ActivityQueryService {
    * @return 活动流条目列表
    */
   public List<ActivityItem> listActivities(String userId, String tenantId, int page, int limit) {
-    int safeLimit = Math.min(Math.max(limit, 1), 50);
+    int safeLimit = Math.min(Math.max(limit, 1), MAX_ACTIVITY_LIMIT);
     int offset = Math.max((page - 1) * safeLimit, 0);
 
     // 1. 最近访问记录

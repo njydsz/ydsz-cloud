@@ -2,7 +2,6 @@ package com.njydsz.agent.infra.text2sql;
 
 import java.util.List;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -13,6 +12,7 @@ import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
 import com.njydsz.common.json.parser.TolerantJsonUtils;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 基于 LLM 的语义一致性校验实现。

@@ -16,10 +16,17 @@ import java.lang.annotation.Target;
  * <p><b>启用开关：</b>{@code ydsz.userinfo.internal-call.enabled=true} 时校验生效；
  * 默认关闭以兼容存量 Feign 客户端，各业务模块统一注入请求头后可开启。
  *
+ * <p><b>已废弃（26.11.06）</b>：本注解已下沉至
+ * {@link com.njydsz.common.safe.internal.RequireInternal}，由 common-safe 的
+ * {@code RequireInternalAspect} 统一校验。新代码请直接使用公共注解；
+ * 本注解保留仅为兼容存量引用，公共切面已同时识别两处注解。
+ *
  * @author ydsz-team
  * @since 26.10.01
- * @see com.njydsz.userinfo.web.aspect.RequireInternalAspect 内部调用校验切面
+ * @deprecated 使用 {@link com.njydsz.common.safe.internal.RequireInternal}
+ * @see com.njydsz.common.safe.internal.RequireInternalAspect 内部调用校验切面（公共）
  */
+@Deprecated(since = "26.11.06", forRemoval = true)
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

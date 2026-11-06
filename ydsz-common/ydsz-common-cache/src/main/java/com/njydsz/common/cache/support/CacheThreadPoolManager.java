@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 
-import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
  * 缓存线程池统一管理器 — 集中管理缓存相关的所有线程池
@@ -27,10 +26,12 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  *
  * <p>实现 {@link DisposableBean} 确保应用关闭时优雅关闭所有线程池。
  *
- * <p><b>变更记录：</b>自建 {@code new ThreadPoolExecutor} 逻辑已委托
- * {@link InternalExecutorFactory}（符合云顶编码规范 YDIZ-CONC-001/002），
- * 所有创建的线程池自动注册到 {@code com.njydsz.common.thread.registry.ThreadPoolRegistry}
- * 纳入统一监控、指标采集与 Actuator 端点查询。
+ * <p><b>变更记录（26.11.06）</b>：本模块属 L1 工具层，按云顶编码规范 §22.2「L1 工具纯度」
+ * 禁止依赖 L2+ 内部模块。历史实现委托 {@code common-thread}（L4）的
+ * {@code InternalExecutorFactory}，构成 L1→L4 反向依赖（规范原文已将此列为违规示例）。
+ * 现改用本模块自持的 {@link CacheThreadFactory} + JDK {@code ThreadPoolExecutor}，
+ * 线程命名规则与 common-thread 保持一致（{@code ydsz-internal-cache-*}}），
+ * 如需纳入 {@code ThreadPoolRegistry} 监控，请在业务侧通过 Spring 事件注册。
  *
  * @author ydsz-team
  * @since 26.10.01
@@ -111,13 +112,14 @@ public class CacheThreadPoolManager implements DisposableBean {
     return pools.computeIfAbsent(
         name,
         n ->
-            InternalExecutorFactory.newCustomThreadPool(
-                "cache-" + n,
+            new ThreadPoolExecutor(
                 coreSize,
                 maxSize,
                 60L,
                 TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(DEFAULT_QUEUE_CAPACITY)));
+                new LinkedBlockingQueue<>(DEFAULT_QUEUE_CAPACITY),
+                new CacheThreadFactory("cache-" + n),
+                new ThreadPoolExecutor.CallerRunsPolicy()));
   }
 
   /**
@@ -129,7 +131,12 @@ public class CacheThreadPoolManager implements DisposableBean {
    */
   public ScheduledExecutorService getOrCreateScheduledPool(String name, int coreSize) {
     return scheduledPools.computeIfAbsent(
-        name, n -> InternalExecutorFactory.newScheduledThreadPool("cache-" + n, coreSize));
+        name,
+        n ->
+            new ScheduledThreadPoolExecutor(
+                coreSize,
+                new CacheThreadFactory("cache-" + n),
+                new ThreadPoolExecutor.CallerRunsPolicy()));
   }
 
   /**

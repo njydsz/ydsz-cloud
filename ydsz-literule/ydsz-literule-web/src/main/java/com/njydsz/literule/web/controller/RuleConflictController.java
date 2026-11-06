@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.literule.domain.vo.RuleConflictInfoVO;
@@ -55,6 +57,7 @@ public class RuleConflictController {
    */
   @Operation(summary = "检测规则冲突", description = "对当前生效规则集做静态分析，返回条件重叠、严重度矛盾、优先级倒挂等冲突对列表")
   @ApiResponse(responseCode = "200", description = "成功")
+  @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_CONFLICT_VIEW)
   @GetMapping("/conflicts")
   public YdszResponse<List<RuleConflictInfoVO>> detectConflicts() {
     return YdszResponse.success(

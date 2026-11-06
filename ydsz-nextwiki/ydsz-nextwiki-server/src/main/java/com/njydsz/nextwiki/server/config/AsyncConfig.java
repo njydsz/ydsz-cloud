@@ -33,6 +33,9 @@ import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;
 @EnableConfigurationProperties(NextwikiProperties.class)
 public class AsyncConfig {
 
+  /** ClamAV 病毒扫描文件大小上限：100 MB */
+  private static final long CLAMAV_MAX_FILE_SIZE = 100L * 1024 * 1024;
+
   /** P1-1: 健康检查 Bean 注册（统一模式，不使用 @Component） */
   @Bean
   @ConditionalOnClass(HealthIndicator.class)
@@ -62,7 +65,7 @@ public class AsyncConfig {
     return new ClamAvVirusScanner(
         virusScan.getHost(),
         virusScan.getPort(),
-        100L * 1024 * 1024, // 100MB 文件大小上限
+        CLAMAV_MAX_FILE_SIZE,
         virusScan.isEnabled());
   }
 }

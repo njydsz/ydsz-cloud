@@ -3,6 +3,7 @@ package com.njydsz.common.queue.config;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
@@ -138,7 +139,7 @@ public class QueueEngines {
    *
    * @return 引擎名称 Set
    */
-  public java.util.Set<String> engineNames() {
+  public Set<String> engineNames() {
     return Collections.unmodifiableSet(engineDefs.keySet());
   }
 

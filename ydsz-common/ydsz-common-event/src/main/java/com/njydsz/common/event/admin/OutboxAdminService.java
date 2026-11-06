@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,7 +71,7 @@ public class OutboxAdminService {
   public PageResponse<List<OutboxMessage>> listDeadLetters(int page, int size, String eventTypeFilter) {
     int validatedSize = Math.min(Math.max(size, 1), 200);
     Pageable pageable = PageRequest.of(Math.max(page, 0), validatedSize);
-    org.springframework.data.domain.Page<OutboxMessage> springPage =
+    Page<OutboxMessage> springPage =
         outboxRepository.findByStatus(OutboxStatus.DEAD_LETTER, pageable, eventTypeFilter);
     return PageResponse.success(
         springPage.getTotalElements(),

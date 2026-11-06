@@ -64,13 +64,22 @@ public class HumanApprovalService {
   /** 审批上下文摘要最大字符数 */
   private static final int SUMMARY_MAX_CHARS = 500;
 
+  /** 审批缓存最大容量 */
+  private static final int APPROVAL_CACHE_MAX_SIZE = 500;
+
+  /** 审批缓存过期时间（小时） */
+  private static final int APPROVAL_CACHE_EXPIRE_HOURS = 24;
+
+  /** 审批过期淘汰阈值（小时） */
+  private static final int APPROVAL_EXPIRE_HOURS = 1;
+
   /** 审批结果事件类型（审批通过/拒绝统一发布，metadata.status 区分） */
   private static final String EVENT_APPROVAL_RESOLVED = "AGENT_APPROVAL_RESOLVED";
 
   /** 审批请求内存缓存（YdszCache 替代 ConcurrentHashMap，DB 为准，缓存仅加速热查询） */
   private final Cache<String, ApprovalRequest> pendingApprovals = YdszCache.<String, ApprovalRequest>newBuilder()
-      .maximumSize(500)
-      .expireAfterAccess(24, TimeUnit.HOURS)
+      .maximumSize(APPROVAL_CACHE_MAX_SIZE)
+      .expireAfterAccess(APPROVAL_CACHE_EXPIRE_HOURS, TimeUnit.HOURS)
       .build();
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -323,7 +332,7 @@ public class HumanApprovalService {
 
   /** 清理过期的审批请求（超过 1 小时未处理，状态置为 EXPIRED）。 */
   private void evictExpired() {
-    LocalDateTime cutoff = LocalDateTime.now().minusHours(1);
+    LocalDateTime cutoff = LocalDateTime.now().minusHours(APPROVAL_EXPIRE_HOURS);
     try {
       agentApprovalRepository.expirePendingBefore(
           ApprovalStatus.PENDING.name(),

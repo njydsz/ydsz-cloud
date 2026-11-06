@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
@@ -14,6 +13,7 @@ import com.njydsz.agent.domain.code.CodeExecutionResult;
 import com.njydsz.agent.domain.code.CodeExecutionService;
 import com.njydsz.agent.domain.entity.AsyncTask;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 代码沙箱执行异步任务执行器。
@@ -42,6 +42,15 @@ public class CodeExecutionTaskExecutor implements AsyncTaskExecutor {
   /** 代码最大长度限制 */
   private static final int MAX_CODE_LENGTH = 50000;
 
+  /** 初始进度百分比 */
+  private static final int PROGRESS_INITIAL = 5;
+
+  /** 默认超时时间（秒） */
+  private static final int DEFAULT_TIMEOUT_SECONDS = 30;
+
+  /** 错误消息截断最大长度 */
+  private static final int ERROR_MESSAGE_MAX_LENGTH = 200;
+
   private final CodeExecutionService codeExecutionService;
 
   public CodeExecutionTaskExecutor(CodeExecutionService codeExecutionService) {
@@ -56,7 +65,7 @@ public class CodeExecutionTaskExecutor implements AsyncTaskExecutor {
   @Override
   public void execute(AsyncTask task, Consumer<Integer> progressConsumer) {
     log.info("[AsyncTask:CODE_EXECUTION] 开始执行: taskId={}", task.getId());
-    consumeProgress(progressConsumer, 5);
+    consumeProgress(progressConsumer, PROGRESS_INITIAL);
 
     try {
       Map<String, Object> params = parseInputPayload(task.getInputPayload());
@@ -73,7 +82,7 @@ public class CodeExecutionTaskExecutor implements AsyncTaskExecutor {
       }
 
       // 解析超时时间
-      int timeoutSeconds = 30;
+      int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
       Object timeoutObj = params.get("timeoutSeconds");
       if (timeoutObj instanceof Number num) {
         timeoutSeconds = num.intValue();
@@ -112,7 +121,7 @@ public class CodeExecutionTaskExecutor implements AsyncTaskExecutor {
           task.getId(), result.success());
     } catch (Exception e) {
       log.error("[AsyncTask:CODE_EXECUTION] 执行失败: taskId={}, error={}", task.getId(), e.getMessage(), e);
-      task.fail(I18n.message("agent.error.codeexecution.exception", new Object[]{truncate(e.getMessage(), 200)}));
+      task.fail(I18n.message("agent.error.codeexecution.exception", new Object[]{truncate(e.getMessage(), ERROR_MESSAGE_MAX_LENGTH)}));
     }
   }
 

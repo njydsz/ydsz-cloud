@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.locales.util.KnownLocaleTags;
 import com.njydsz.common.locales.util.MessageSourceHolder;
 
@@ -47,7 +47,7 @@ import com.njydsz.common.locales.util.MessageSourceHolder;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/i18n")
+@RequestMapping("/admin/i18n")
 @RequiredArgsConstructor
 @Tag(name = "i18n-admin", description = "i18n 翻译管理 API（配置/翻译/缺失检测/缓存管理）")
 public class I18nAdminController {

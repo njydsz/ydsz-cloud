@@ -5,8 +5,8 @@
   "excluded_checks": [
     "NewlineAtEndOfFile"
   ],
-  "total_errors": 737,
-  "platform_noise_errors": 23,
+  "total_errors": 747,
+  "platform_noise_errors": 32,
   "modules": {
     "ydsz-agent/ydsz-agent-infra": {
       "errors": 9,
@@ -179,9 +179,8 @@
       }
     },
     "ydsz-common/ydsz-common-socket": {
-      "errors": 32,
+      "errors": 29,
       "by_rule": {
-        "CustomImportOrder": 3,
         "JavadocMethod": 26,
         "RegexpSinglelineJava": 1,
         "JavadocVariable": 2
@@ -209,10 +208,9 @@
       }
     },
     "ydsz-common/ydsz-common-web": {
-      "errors": 2,
+      "errors": 1,
       "by_rule": {
-        "RegexpSinglelineJava": 1,
-        "CustomImportOrder": 1
+        "RegexpSinglelineJava": 1
       }
     },
     "ydsz-cronjob/ydsz-cronjob-infra": {
@@ -222,13 +220,12 @@
       }
     },
     "ydsz-cronjob/ydsz-cronjob-server": {
-      "errors": 37,
+      "errors": 36,
       "by_rule": {
         "MagicNumber": 5,
         "JavadocMethod": 27,
         "JavadocType": 3,
-        "RegexpSinglelineJava": 1,
-        "CustomImportOrder": 1
+        "RegexpSinglelineJava": 1
       }
     },
     "ydsz-cronjob/ydsz-cronjob-web": {
@@ -265,9 +262,8 @@
       }
     },
     "ydsz-literule/ydsz-literule-web": {
-      "errors": 13,
+      "errors": 8,
       "by_rule": {
-        "CustomImportOrder": 5,
         "JavadocMethod": 5,
         "MagicNumber": 1,
         "RegexpSinglelineJava": 1,
@@ -275,8 +271,9 @@
       }
     },
     "ydsz-message/ydsz-message-server": {
-      "errors": 9,
+      "errors": 34,
       "by_rule": {
+        "LineLength": 25,
         "MagicNumber": 8,
         "JavadocStyle": 1
       }
@@ -307,9 +304,8 @@
       }
     },
     "ydsz-nextwiki/ydsz-nextwiki-web": {
-      "errors": 4,
+      "errors": 3,
       "by_rule": {
-        "CustomImportOrder": 1,
         "JavadocMethod": 1,
         "RegexpSinglelineJava": 1,
         "LineLength": 1
@@ -332,12 +328,11 @@
       }
     },
     "ydsz-system/ydsz-system-web": {
-      "errors": 8,
+      "errors": 7,
       "by_rule": {
         "MagicNumber": 2,
         "JavadocMethod": 1,
         "CyclomaticComplexity": 2,
-        "CustomImportOrder": 1,
         "RegexpSinglelineJava": 1,
         "LineLength": 1
       }
@@ -358,16 +353,16 @@
       }
     },
     "ydsz-userinfo/ydsz-userinfo-web": {
-      "errors": 7,
+      "errors": 2,
       "by_rule": {
-        "CustomImportOrder": 5,
         "RegexpSinglelineJava": 1,
         "LineLength": 1
       }
     },
     "ydsz-workflow/ydsz-workflow-domain": {
-      "errors": 4,
+      "errors": 5,
       "by_rule": {
+        "UnusedImports": 1,
         "LineLength": 4
       }
     },
@@ -378,9 +373,10 @@
       }
     },
     "ydsz-workflow/ydsz-workflow-server": {
-      "errors": 35,
+      "errors": 36,
       "by_rule": {
         "MagicNumber": 17,
+        "UnusedImports": 1,
         "JavadocStyle": 1,
         "JavadocMethod": 14,
         "LineLength": 2,

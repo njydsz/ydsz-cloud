@@ -56,6 +56,7 @@ import com.njydsz.common.core.response.YdszResponse;
 @RequestMapping("/agent")
 @RequiredArgsConstructor
 @Tag(name = "Agent 元数据查询", description = "可用模型 / 已注册工具元数据查询")
+@AuthApiPermission(apiCodes = "agt:metadata:list")
 public class AgentMetadataController {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;

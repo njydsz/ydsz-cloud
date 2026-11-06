@@ -113,6 +113,12 @@ public class SessionActivityService {
   /** 会话令牌日志脱敏后缀长度 */
   private static final int TOKEN_LOG_SUFFIX_LENGTH = 4;
 
+  /** 脱敏时保留的前缀长度 */
+  private static final int MASK_KEEP_PREFIX = 8;
+
+  /** 脱敏时保留的后缀长度 */
+  private static final int MASK_KEEP_SUFFIX = 4;
+
   private final RedisStringOps redisStringOps;
   private final RedisHashOps redisHashOps;
   private final RedisCollectionOps redisCollectionOps;
@@ -686,8 +692,8 @@ public class SessionActivityService {
     if (token == null || token.length() < MIN_TOKEN_LENGTH) {
       return MaskUtils.PLACEHOLDER;
     }
-    // keepPrefix=8, keepSuffix=4：保留前 8 位 + 后 4 位
-    return MaskUtils.mask(token, 8, 4);
+    // 保留前 8 位 + 后 4 位
+    return MaskUtils.mask(token, MASK_KEEP_PREFIX, MASK_KEEP_SUFFIX);
   }
 
   /**

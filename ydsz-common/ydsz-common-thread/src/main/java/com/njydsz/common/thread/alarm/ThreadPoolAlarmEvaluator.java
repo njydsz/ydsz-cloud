@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -111,7 +112,7 @@ public abstract class ThreadPoolAlarmEvaluator {
    * @param executor 线程池对象
    * @return 对应的 ThreadPoolExecutor；无法转换时返回 null
    */
-  protected abstract java.util.concurrent.ThreadPoolExecutor unwrapExecutor(Object executor);
+  protected abstract ThreadPoolExecutor unwrapExecutor(Object executor);
 
   /**
    * 安全评估所有线程池（捕获异常防止调度器静默吞掉错误）。
@@ -134,7 +135,7 @@ public abstract class ThreadPoolAlarmEvaluator {
     }
     List<AlarmEvent> events = new ArrayList<>(executors.size() * 2);
     for (Map.Entry<String, ? extends Object> entry : executors.entrySet()) {
-      java.util.concurrent.ThreadPoolExecutor pool = unwrapExecutor(entry.getValue());
+      ThreadPoolExecutor pool = unwrapExecutor(entry.getValue());
       if (pool != null) {
         evaluateSinglePool(entry.getKey(), pool, events);
       }
@@ -153,7 +154,7 @@ public abstract class ThreadPoolAlarmEvaluator {
    */
   private void evaluateSinglePool(
       String poolName,
-      java.util.concurrent.ThreadPoolExecutor pool,
+      ThreadPoolExecutor pool,
       List<AlarmEvent> outEvents) {
     int activeCount = pool.getActiveCount();
     int maxSize = pool.getMaximumPoolSize();

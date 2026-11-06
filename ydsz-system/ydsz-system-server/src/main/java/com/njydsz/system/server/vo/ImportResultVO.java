@@ -29,6 +29,9 @@ import com.njydsz.common.excel.api.result.ExcelImportResult;
 @ToString(callSuper = true)
 public class ImportResultVO extends ExcelImportResult {
 
+  /** 错误列表初始容量 */
+  private static final int ERROR_ITEMS_INITIAL_CAPACITY = 16;
+
   /** 导入结果消息 */
   private String message;
 
@@ -38,7 +41,7 @@ public class ImportResultVO extends ExcelImportResult {
    * <p>前端可按此渲染错误定位单元格，无需解析字符串。若为空则兼容旧的 {@link #errors} 纯文本列表。
    */
   @Builder.Default
-  private List<ImportErrorItem> errorItems = new ArrayList<>(16);
+  private List<ImportErrorItem> errorItems = new ArrayList<>(ERROR_ITEMS_INITIAL_CAPACITY);
 
   /**
    * 导入错误项 DTO（结构化表示单条错误的位置和原因）。

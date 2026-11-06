@@ -14,6 +14,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.safe.internal.RequireInternal;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
@@ -49,6 +50,7 @@ import com.njydsz.message.server.service.core.MessageService;
 @RequestMapping("/internal")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "message:internal:api")
+@RequireInternal
 public class InternalMessageApiController {
 
   private final MessageService messageService;

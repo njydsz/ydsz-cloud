@@ -13,6 +13,9 @@ import lombok.Data;
 @Data
 public class LockPageQuery {
 
+  /** 默认每页条数 */
+  private static final int DEFAULT_PAGE_SIZE = 20;
+
   /** 页码（从 1 开始） */
   @Min(value = 1, message = "页码最小为 1")
   private Integer pageNum = 1;
@@ -20,7 +23,7 @@ public class LockPageQuery {
   /** 每页条数（1-100） */
   @Min(value = 1, message = "每页条数最小为 1")
   @Max(value = 100, message = "每页条数最大为 100")
-  private Integer pageSize = 20;
+  private Integer pageSize = DEFAULT_PAGE_SIZE;
 
   /** lockKey 模糊搜索（可选） */
   private String lockKey;

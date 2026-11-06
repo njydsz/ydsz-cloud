@@ -43,6 +43,9 @@ public class FlowConfigChangeListener implements ConfigChangeListener {
   /** workflow 模块配置属性前缀 */
   private static final String FLOW_CONFIG_PREFIX = "ydsz.flow.";
 
+  /** 监听器执行顺序（普通优先级） */
+  private static final int LISTENER_ORDER = 20;
+
   /**
    * 接收配置变更回调。
    *
@@ -74,12 +77,12 @@ public class FlowConfigChangeListener implements ConfigChangeListener {
   /**
    * 获取监听器执行顺序。
    *
-   * <p>workflow 配置监听器优先级为 20（普通优先级）。
+   * <p>workflow 配置监听器优先级为 {@value #LISTENER_ORDER}（普通优先级）。
    *
-   * @return 20
+   * @return {@value #LISTENER_ORDER}
    */
   @Override
   public int getOrder() {
-    return 20;
+    return LISTENER_ORDER;
   }
 }

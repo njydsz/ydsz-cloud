@@ -1,8 +1,10 @@
 package com.njydsz.common.feign.codec;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 
 import feign.Response;
 import feign.codec.DecodeException;
@@ -217,7 +219,7 @@ public class ResponseUnwrapDecoder implements Decoder {
       return null;
     }
     // Feign Response.body() 是 Response.Body，使用 asReader 读取
-    try (java.io.Reader reader = response.body().asReader(java.nio.charset.StandardCharsets.UTF_8)) {
+    try (Reader reader = response.body().asReader(StandardCharsets.UTF_8)) {
       StringBuilder sb = new StringBuilder(1024);
       char[] buffer = new char[1024];
       int n;

@@ -17,11 +17,13 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.Deflater;
@@ -133,7 +135,7 @@ public class SuperFastExcelWriter {
    * 每行每列调用累计百万次开销显著）。
    * 提升为 static final 一次性引用，消除 100k 行 × 9 列 = 90 万次重复查找。
    */
-  private static final java.time.ZoneId SYSTEM_ZONE = java.time.ZoneId.systemDefault();
+  private static final ZoneId SYSTEM_ZONE = ZoneId.systemDefault();
 
   static {
     CONTENT_TYPES_BYTES =
@@ -713,7 +715,7 @@ public class SuperFastExcelWriter {
       }
 
       // 采样统计唯一值数量
-      java.util.HashSet<String> seen = new java.util.HashSet<>(sampleSize * 2);
+      HashSet<String> seen = new HashSet<>(sampleSize * 2);
       for (int rowIdx = 0; rowIdx < sampleSize; rowIdx++) {
         Object item = list.get(rowIdx);
         Object value;

@@ -112,7 +112,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
   @ExceptionHandler(BusinessException.class)
   public Object handleBusinessException(BusinessException e, ServerWebExchange exchange) {
     recordMetrics(e);
-    log.warn(
+    getLog().warn(
         "{}业务异常 | 路径: {} | 错误码: {} | 消息: {}",
         getLogPrefix(),
         exchange.getRequest().getPath().value(),
@@ -135,7 +135,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public Object handleSysException(SysException e, ServerWebExchange exchange) {
     recordMetrics(e);
-    log.error(
+    getLog().error(
         "{}系统异常 | 路径: {} | 错误码: {} | 消息: {}",
         getLogPrefix(),
         exchange.getRequest().getPath().value(),
@@ -156,7 +156,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
   @ExceptionHandler(AbstractYdszException.class)
   public Object handleAbstractYdszException(AbstractYdszException e, ServerWebExchange exchange) {
     recordMetrics(e);
-    log.warn(
+    getLog().warn(
         "{}异常 | 路径: {} | 错误码: {} | 消息: {} | 类型: {}",
         getLogPrefix(),
         exchange.getRequest().getPath().value(),
@@ -180,7 +180,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
   public Object handleIllegalArgumentException(
       IllegalArgumentException e, ServerWebExchange exchange) {
     recordMetrics(e);
-    log.error(
+    getLog().error(
         "{}非法参数异常 | 路径: {} | 消息: {}",
         getLogPrefix(),
         exchange.getRequest().getPath().value(),
@@ -212,7 +212,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public Object handleIllegalStateException(IllegalStateException e, ServerWebExchange exchange) {
     recordMetrics(e);
-    log.error(
+    getLog().error(
         "{}非法状态异常 | 路径: {} | 消息: {}",
         getLogPrefix(),
         exchange.getRequest().getPath().value(),
@@ -233,7 +233,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public Object handleNullPointerException(NullPointerException e, ServerWebExchange exchange) {
     recordMetrics(e);
-    log.error(
+    getLog().error(
         "{}空指针异常 | 路径: {} | 消息: {}",
         getLogPrefix(),
         exchange.getRequest().getPath().value(),
@@ -254,7 +254,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public Object handleException(Exception e, ServerWebExchange exchange) {
     recordMetrics(e);
-    log.error(
+    getLog().error(
         "{}系统异常 | 路径: {} | 类型: {} | 消息: {}",
         getLogPrefix(),
         exchange.getRequest().getPath().value(),
@@ -285,7 +285,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
     CoreExceptionCode errorCode = mapResponseStatus(status);
 
     if (status.is5xxServerError()) {
-      log.error(
+      getLog().error(
           "{}响应状态异常 | 路径: {} | 状态码: {} | 错误码: {} | 消息: {}",
           getLogPrefix(),
           path,
@@ -294,7 +294,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
           e.getMessage(),
           e);
     } else {
-      log.warn(
+      getLog().warn(
           "{}响应状态异常 | 路径: {} | 状态码: {} | 错误码: {}",
           getLogPrefix(),
           path,

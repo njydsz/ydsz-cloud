@@ -3,7 +3,6 @@ package com.njydsz.agent.server.asynctask;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
@@ -13,6 +12,7 @@ import com.njydsz.agent.domain.insight.InsightReportRequest;
 import com.njydsz.agent.domain.insight.InsightReportResult;
 import com.njydsz.agent.domain.insight.InsightReportService;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 洞察报告生成异步任务执行器。
@@ -43,6 +43,15 @@ public class ReportGenerateTaskExecutor implements AsyncTaskExecutor {
   /** 报告 ID 随机段长度 */
   private static final int REPORT_ID_RANDOM_LENGTH = 16;
 
+  /** 初始进度百分比 */
+  private static final int PROGRESS_INITIAL = 5;
+
+  /** 生成完成进度百分比 */
+  private static final int PROGRESS_GENERATED = 90;
+
+  /** 错误消息截断最大长度 */
+  private static final int ERROR_MESSAGE_MAX_LENGTH = 200;
+
   private final InsightReportService reportService;
 
   public ReportGenerateTaskExecutor(InsightReportService reportService) {
@@ -57,7 +66,7 @@ public class ReportGenerateTaskExecutor implements AsyncTaskExecutor {
   @Override
   public void execute(AsyncTask task, Consumer<Integer> progressConsumer) {
     log.info("[AsyncTask:REPORT_GENERATE] 开始执行: taskId={}", task.getId());
-    consumeProgress(progressConsumer, 5);
+    consumeProgress(progressConsumer, PROGRESS_INITIAL);
 
     try {
       Map<String, Object> params = parseInputPayload(task.getInputPayload());
@@ -85,7 +94,7 @@ public class ReportGenerateTaskExecutor implements AsyncTaskExecutor {
 
       InsightReportResult result = reportService.generateReport(request);
 
-      consumeProgress(progressConsumer, 90);
+      consumeProgress(progressConsumer, PROGRESS_GENERATED);
 
       task.succeed(YdszJson.toJson(Map.of(
           "reportId", result.reportId(),
@@ -97,7 +106,7 @@ public class ReportGenerateTaskExecutor implements AsyncTaskExecutor {
     } catch (Exception e) {
       log.error("[AsyncTask:REPORT_GENERATE] 执行失败: taskId={}, error={}",
           task.getId(), e.getMessage(), e);
-      task.fail(I18n.message("agent.error.report.generate.failed", new Object[]{truncate(e.getMessage(), 200)}));
+      task.fail(I18n.message("agent.error.report.generate.failed", new Object[]{truncate(e.getMessage(), ERROR_MESSAGE_MAX_LENGTH)}));
     }
   }
 

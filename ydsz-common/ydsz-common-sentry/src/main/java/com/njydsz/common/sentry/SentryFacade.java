@@ -1,5 +1,6 @@
 package com.njydsz.common.sentry;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -170,7 +171,7 @@ public class SentryFacade {
    */
   private void alertOnFailure(String operationName, Map<String, String> tags, Throwable throwable) {
     try {
-      Map<String, String> alertLabels = new java.util.HashMap<>(tags);
+      Map<String, String> alertLabels = new HashMap<>(tags);
       alertLabels.put("exception", throwable.getClass().getSimpleName());
       alertLabels.put("message", throwable.getMessage() != null ? throwable.getMessage() : "");
 

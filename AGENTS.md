@@ -19,8 +19,8 @@
 | 文件 | 作用 | 何时查阅 |
 |------|------|---------|
 | `CLAUDE.md` | 核心编码红线规则（always 规则）| 所有编码任务 |
-| `docs/ai-rules/shared-rules.yaml` | 红线规则完整定义（单一权威源；`total_rules: 199`）| 违规判定时 |
-| `docs/云顶编码规范.md` | 完整编码规范文档（v1.0.16）| CLAUDE.md 未覆盖的场景 |
+| `docs/ai-rules/shared-rules.yaml` | 红线规则完整定义（单一权威源；`total_rules: 200`）| 违规判定时 |
+| `docs/云顶编码规范.md` | 完整编码规范文档（v1.0.17）| CLAUDE.md 未覆盖的场景 |
 | `docs/checkstyle.xml` | Checkstyle 规则配置（注意：无 phase 绑定，构建期不执行）| checkstyle 相关查询 |
 | `data/checkstyle-baseline.json` | error 级违规存量棘轮基线 | 门禁报"存量上涨"时 |
 | `data/scripts/check-checkstyle-delta.py` | 改动文件 0 违规 + 每模块存量只减不增 | 提交前自查 |
@@ -32,7 +32,7 @@
 > 4 条缺失 severity（COMMON-014~017）、10 条用 `level:` 而非 `severity:`，导致各文档声明 190 条与实际不符。
 > 现已修复：重复条目重编号为 COMMON-062~068 / CONFIG-005~006，字段统一为 `severity`；
 > 并新增 YDIZ-CONC-006（定时任务集群单点执行）。
-> 当前权威计数：**199 条（P0=71 P1=97 P2=31）**，与 `meta.total_rules` / `summary` 一致（2026-11-06 校准：补入 JDIZ-JDBC-001/002 两条 P1）。
+> 当前权威计数：**200 条（P0=71 P1=98 P2=31）**，与 `meta.total_rules` / `summary` 一致（2026-11-06 校准：补入 JDIZ-JDBC-001/002 两条 P1；新增 YDIZ-I18N-007 语言范围收敛）。
 
 ### 1.2 目录功能速查
 
@@ -103,7 +103,7 @@ ydsz-cloud/
   ├─ 异常交给全局 advice 统一处理（MvcExceptionHandler / BaseExceptionHandler），禁止 Controller 内 try-catch
   ├─ @Operation / @ApiResponse 注解标注 OpenAPI 文档
   ├─ 权限注解：@PreAuthorize，或 ydsz-common-auth 的 @AuthApiPermission
-  └─ i18n key 预填到至少 zh_CN + en_US 两个 properties
+  └─ i18n key 预填到 zh_CN + en_US 两个 properties（仅支持中英文，YDIZ-I18N-007）
 ```
 
 ### 2.4 引入第三方依赖时
@@ -161,7 +161,7 @@ server 不依赖 infra（P1-2 整改后）
 **步骤**:
 1. 确认异常场景（业务异常 vs 系统异常）
 2. 在对应模块 `ExceptionCode`（`com.njydsz.common.exception.enums`）中添加新错误码
-3. 在 i18n properties 文件中添加中英 key
+3. 在 i18n properties 文件中添加中英 key（仅 zh_CN + en_US 两份，禁止其他语言）
 4. 用 `throw new BusinessException(ExceptionCode.XXX, params)` 抛出
 5. i18n 异常消息用 `I18n.message()` 或注入 `I18nMessages`
 
@@ -271,6 +271,8 @@ server 不依赖 infra（P1-2 整改后）
 - [ ] Repository 接口定义在 domain/repository/，实现在 infra/repository/
 - [ ] Controller 返回 `YdszResponse<T>` 包装类型
 - [ ] 异常使用 `ExceptionCode` + i18n key
+- [ ] i18n 资源文件仅 `_zh_CN` / `_en_US` 两种语言，无繁体/日韩等冗余文件（YDIZ-I18N-007）
+- [ ] 未硬编码 `"zh_TW"` / `"ja_JP"` / `"ko_KR"` 等 locale 字面量，应用 `KnownLocaleTags`
 - [ ] 日期使用 `DateUtils`，JSON 使用 `YdszJson`
 - [ ] 脱敏使用 `MaskUtils`，缓存使用 `YdszCache`
 - [ ] server 不 import infra 类（依赖倒置 = infra 依赖 domain）

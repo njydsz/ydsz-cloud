@@ -53,6 +53,9 @@ public class NotificationSearchProvider implements SearchProvider<MsgNotificatio
   /** 状态搜索权重 */
   private static final BigDecimal STATUS_WEIGHT = new BigDecimal("0.5");
 
+  /** 过滤器列表初始容量 */
+  private static final int FILTER_LIST_CAPACITY = 3;
+
   private final MsgNotificationRepository msgNotificationRepository;
 
   /** {@inheritDoc} */
@@ -83,7 +86,7 @@ public class NotificationSearchProvider implements SearchProvider<MsgNotificatio
     if (context == null || context.isAdmin()) {
       return List.of();
     }
-    List<SearchFilter> filters = new ArrayList<>(3);
+    List<SearchFilter> filters = new ArrayList<>(FILTER_LIST_CAPACITY);
     // 租户隔离
     if (context.getTenantId() != null && !context.getTenantId().isBlank()) {
       filters.add(

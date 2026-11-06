@@ -18,6 +18,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -243,7 +244,7 @@ public class SuperFastExcelReader {
       }
       if (attempt < maxRetries) {
         try {
-          java.util.concurrent.TimeUnit.MILLISECONDS.sleep(backoffMs);
+          TimeUnit.MILLISECONDS.sleep(backoffMs);
           backoffMs *= 2;
         } catch (InterruptedException ie) {
           Thread.currentThread().interrupt();

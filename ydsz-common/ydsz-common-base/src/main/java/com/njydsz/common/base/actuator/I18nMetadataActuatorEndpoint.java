@@ -59,7 +59,7 @@ public class I18nMetadataActuatorEndpoint {
   /**
    * 读取支持的语言标签列表。
    *
-   * @return 语言标签有序列表（如 zh_CN、en_US、zh_TW）
+   * @return 语言标签有序列表（当前项目为 zh_CN、en_US，见 YDIZ-I18N-007）
    */
   @ReadOperation
   public List<String> languages() {

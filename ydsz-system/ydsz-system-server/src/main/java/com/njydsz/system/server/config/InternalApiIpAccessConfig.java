@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 
 import com.njydsz.common.safe.filter.IpAccessFilter;
 import com.njydsz.common.safe.ip.IpAccessService;
@@ -51,7 +52,7 @@ public class InternalApiIpAccessConfig {
     FilterRegistrationBean<IpAccessFilter> registration = new FilterRegistrationBean<>(filter);
     registration.setName("internalApiIpFilter");
     registration.addUrlPatterns("/*");
-    registration.setOrder(org.springframework.core.Ordered.HIGHEST_PRECEDENCE + 10);
+    registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
     return registration;
   }
 }

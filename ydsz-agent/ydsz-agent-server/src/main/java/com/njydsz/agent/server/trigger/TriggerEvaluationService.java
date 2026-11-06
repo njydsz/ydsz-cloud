@@ -48,7 +48,7 @@ public class TriggerEvaluationService {
      * <p>使用 YdszCache 管理 1 小时 TTL 窗口，替代手写 HourlyCounter 内部类。
      */
     private final Cache<String, AtomicInteger> triggerCounters =
-        YdszCache.<String, AtomicInteger>newBuilder().expireAfterAccess(1, TimeUnit.HOURS).build();
+        YdszCache.<String, AtomicInteger>newBuilder().expireAfterAccess(TRIGGER_COUNTER_EXPIRE_HOURS, TimeUnit.HOURS).build();
 
     /**
      * 去重集合：记录已处理的事件指纹。
@@ -56,7 +56,7 @@ public class TriggerEvaluationService {
      * <p>使用 YdszCache 管理 5 分钟 TTL，替代手写 Set + 手动清理。
      */
     private final Cache<String, Boolean> deduplicationCache =
-        YdszCache.<String, Boolean>newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
+        YdszCache.<String, Boolean>newBuilder().expireAfterWrite(DEDUP_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES).build();
 
     /** 递归深度跟踪：executionId -> 深度 */
     private final ConcurrentHashMap<String, AtomicInteger> recursionDepthMap = new ConcurrentHashMap<>();
@@ -67,10 +67,19 @@ public class TriggerEvaluationService {
      * <p>使用 YdszCache 管理容量（最大 256 条），替代手写 ConcurrentHashMap。
      */
     private final Cache<String, Pattern> patternCache =
-        YdszCache.<String, Pattern>newBuilder().maximumSize(256).build();
+        YdszCache.<String, Pattern>newBuilder().maximumSize(PATTERN_CACHE_MAX_SIZE).build();
 
     /** 最大递归深度 */
     private static final int MAX_RECURSION_DEPTH = 3;
+
+    /** 触发器计数缓存过期时间（小时） */
+    private static final int TRIGGER_COUNTER_EXPIRE_HOURS = 1;
+
+    /** 去重缓存过期时间（分钟） */
+    private static final int DEDUP_CACHE_EXPIRE_MINUTES = 5;
+
+    /** 正则表达式缓存最大容量 */
+    private static final int PATTERN_CACHE_MAX_SIZE = 256;
 
     public TriggerEvaluationService(TriggerRepository triggerRepository,
                                     TriggerExecutionService executionService) {

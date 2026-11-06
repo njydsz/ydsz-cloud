@@ -110,22 +110,25 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ydzz-common-thread：AsyncReadBridge 统一使用 ExecutorUtils.newVirtualThreadExecutor 替代反射 hack（P0-3） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-thread</artifactId>
-        </dependency>
-
-        <!-- ydsz-common-exception：BusinessException + CoreExceptionCode（EXCEPT-003 红线：禁止 RuntimeException） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-exception</artifactId>
-        </dependency>
+        <!--
+          ydsz-common-thread / ydsz-common-exception 已移除（26.11.06）：
+          ydsz-common-excel 属 L1 工具层，按云顶编码规范 §22.2「L1 工具纯度」禁止依赖 L2+ 内部模块。
+          AsyncReadBridge 改用 JDK 21 Thread.ofVirtual()（与原虚拟线程语义一致），
+          ExcelReadResult 改用本模块自带的 ExcelOperationException，不再抛 BusinessException。
+          异常语义变化：Excel 读取失败由 BusinessException 改为 ExcelOperationException（同为
+          unchecked，全局异常处理器已能处理），调用方若依赖具体异常类型请做适配。
+        -->
 
         <!-- JUnit 5 (test scope)，版本由根 POM / Spring Boot BOM 统一管控 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- ArchUnit：L1 工具纯度守护（YDIZ-ARCH-L1-PURITY 自动化验证） -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
             <scope>test</scope>
         </dependency>
 

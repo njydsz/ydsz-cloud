@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
@@ -51,6 +52,7 @@ import com.njydsz.literule.server.audit.RuleAuditLogService;
 @RequiredArgsConstructor
 @ConditionalOnBean(RuleAuditLogService.class)
 @Tag(name = "规则审计日志", description = "P3-5 规则操作审计日志查询 API")
+@AuthApiPermission(apiCodes = "rule:audit-log:list")
 public class RuleAuditLogController {
     /** 集合初始容量 */
     private static final int COLLECTION_CAPACITY = 16;

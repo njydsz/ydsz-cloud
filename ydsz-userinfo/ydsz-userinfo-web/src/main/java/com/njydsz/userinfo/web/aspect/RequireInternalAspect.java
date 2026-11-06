@@ -48,8 +48,16 @@ public class RequireInternalAspect {
   private final ApiSignatureProperties signatureProperties;
 
   /** 切点：类级或方法级标注了 @RequireInternal 的方法 */
+  /**
+   * 切点：同时识别本地注解与公共注解。
+   *
+   * <p>本地注解已 {@code @Deprecated} 并下沉至 common-safe；此处保留双识别，
+   * 使存量 userinfo 代码与新增公共注解代码都能得到校验。
+   */
   @Pointcut("@annotation(com.njydsz.userinfo.web.annotation.RequireInternal) "
-      + "|| @within(com.njydsz.userinfo.web.annotation.RequireInternal)")
+      + "|| @within(com.njydsz.userinfo.web.annotation.RequireInternal) "
+      + "|| @annotation(com.njydsz.common.safe.internal.RequireInternal) "
+      + "|| @within(com.njydsz.common.safe.internal.RequireInternal)")
   public void internalPointcut() {}
 
   /**

@@ -141,7 +141,7 @@ public class ExceptionCodeDocEndpoint {
   /**
    * 解析异常码对应的全部已配置语言的国际化消息（26.09.19 新增）。
    *
-   * <p>遍历项目已配置的 Locale 集合（{@code zh_CN} / {@code en_US} / {@code zh_TW}），
+   * <p>遍历项目已配置的 Locale 集合（当前为 {@code zh_CN} / {@code en_US}，见 YDIZ-I18N-007），
    * 按 key 逐一解析，返回 locale 标签 → 文案的不可变映射。前端可据此一次性拉取全部语言文案，
    * 本地切换语言时无需再次请求。
    *
@@ -262,7 +262,7 @@ public class ExceptionCodeDocEndpoint {
     /**
      * 多语言消息映射（26.09.19 新增）。
      *
-     * <p>键为 {@link Locale#toString()}（{@code zh_CN}/{@code en_US}/{@code zh_TW}/{@code ""}），
+     * <p>键为 {@link Locale#toString()}（{@code zh_CN}/{@code en_US}/{@code ""}），
      * 值为对应语言的已解析文案。前端可据此实现错误文案本地化，避免硬编码 i18n key。
      */
     private final Map<String, String> messages;

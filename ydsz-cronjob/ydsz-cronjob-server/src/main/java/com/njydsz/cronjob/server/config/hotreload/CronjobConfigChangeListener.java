@@ -40,6 +40,9 @@ public class CronjobConfigChangeListener implements ConfigChangeListener {
   /** cronjob 模块配置属性前缀 */
   private static final String CRONJOB_CONFIG_PREFIX = "ydsz.cronjob.";
 
+  /** 监听器执行顺序（普通优先级） */
+  private static final int LISTENER_ORDER = 20;
+
   /**
    * 接收配置变更回调。
    *
@@ -72,6 +75,6 @@ public class CronjobConfigChangeListener implements ConfigChangeListener {
    */
   @Override
   public int getOrder() {
-    return 20;
+    return LISTENER_ORDER;
   }
 }

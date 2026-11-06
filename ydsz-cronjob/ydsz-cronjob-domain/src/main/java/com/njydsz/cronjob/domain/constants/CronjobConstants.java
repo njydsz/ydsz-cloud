@@ -57,8 +57,19 @@ public final class CronjobConstants {
 
   // ============================== 内部通信（节点间派发） ==============================
 
-  /** 内部执行接口基路径（与 InternalJobController RequestMapping 保持一致）。 */
-  public static final String INTERNAL_API_PREFIX = "/api/cronjob/internal";
+  /**
+   * 内部执行接口基路径（必须与 InternalJobController 的 @RequestMapping 逐字一致）。
+   *
+   * <p><b>注意</b>：节点间派发是<b>服务直连</b>（{@code http://host:port} + 本常量），
+   * 不经过网关，因此<b>不得</b>包含 {@code /api} 前缀——该前缀仅由网关路由
+   * （{@code /api/cronjob/**} + StripPrefix=1）剥离。历史上本常量误写为
+   * {@code /api/cronjob/internal}，导致 RemoteTaskClient 拼出的 URL 与 Controller 映射
+   * 不匹配（派发 404）、InternalTokenFilter 前缀匹配恒不命中（令牌校验从未生效）。
+   *
+   * <p>变更本常量前请同步核对 {@code InternalJobController} 类级 @RequestMapping，
+   * 并由 {@code InternalApiPathConsistencyTest} 守护。
+   */
+  public static final String INTERNAL_API_PREFIX = "/cronjob/internal";
 
   /** 远程任务执行接口路径（InternalJobController#execute）。 */
   public static final String INTERNAL_EXECUTE_PATH = INTERNAL_API_PREFIX + "/execute";

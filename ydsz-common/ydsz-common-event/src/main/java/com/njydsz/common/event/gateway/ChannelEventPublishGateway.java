@@ -1,5 +1,6 @@
 package com.njydsz.common.event.gateway;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -70,7 +71,7 @@ public class ChannelEventPublishGateway implements EventPublishGateway {
 
   @Override
   public List<Boolean> publishBatch(List<OutboxMessage> messages) throws Throwable {
-    List<Boolean> results = new java.util.ArrayList<>(messages.size());
+    List<Boolean> results = new ArrayList<>(messages.size());
     for (OutboxMessage message : messages) {
       try {
         results.add(publish(message));

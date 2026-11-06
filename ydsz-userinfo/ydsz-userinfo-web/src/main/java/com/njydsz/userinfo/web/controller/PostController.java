@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -65,6 +66,7 @@ import com.njydsz.userinfo.server.service.PostService;
 @RequestMapping("/post")
 @RequiredArgsConstructor
 @Tag(name = "岗位管理", description = "岗位 CRUD")
+@AuthApiPermission(apiCodes = "sys:post:list")
 public class PostController {
 
   private final PostService service;
@@ -118,6 +120,7 @@ public class PostController {
   @Idempotent(key = "ydsz:userinfo:PostController:create:lock", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.Post.create", threshold = 50)
   @PostMapping
+  @AuthApiPermission(apiCodes = "sys:post:add")
   @Operation(summary = "创建岗位")
   public YdszResponse<String> create(@Valid @RequestBody PostDTO dto) {
     return YdszResponse.success(service.create(dto));
@@ -143,6 +146,7 @@ public class PostController {
   @Idempotent(key = "ydsz:userinfo:PostController:update:lock", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.Post.update", threshold = 50)
   @PutMapping
+  @AuthApiPermission(apiCodes = "sys:post:edit")
   @Operation(summary = "更新岗位")
   public YdszResponse<Boolean> update(@Valid @RequestBody PostDTO dto) {
     return YdszResponse.success(service.update(dto));
@@ -173,6 +177,7 @@ public class PostController {
   @RateLimit(resource = "userinfo.Post.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:PostController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
+  @AuthApiPermission(apiCodes = "sys:post:delete")
   @Operation(summary = "删除岗位")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(service.removeById(id));

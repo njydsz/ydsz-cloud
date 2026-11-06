@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -15,9 +16,6 @@ import com.njydsz.common.excel.core.ExcelOperationException;
 import com.njydsz.common.excel.core.ExcelReader;
 import com.njydsz.common.excel.core.context.AnalysisContext;
 import com.njydsz.common.excel.core.listener.ReadListener;
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 异步读取桥接 — 利用 Java 21 虚拟线程实现不阻塞调用线程的 Excel 读取。
@@ -194,7 +192,7 @@ public final class AsyncReadBridge {
             }
             @Override
             public void onError(AnalysisContext ctx, Exception e) {
-              throw new BusinessException(CoreExceptionCode.INTERNAL_ERROR, e);
+              throw new ExcelOperationException("Excel 异步读取失败: " + e.getMessage(), e);
             }
           });
           return list;
@@ -241,10 +239,18 @@ public final class AsyncReadBridge {
   /**
    * 创建虚拟线程执行器。
    *
-   * <p>P0-3: 委托 ExecutorUtils.newVirtualThreadExecutor（Java 21 virtual thread per-task），
-   * 纳入 ydsz-common-thread 统一治理框架；原反射 hack（脆弱的字符串方法名依赖）已移除。
+   * <p>26.11.06：本模块属 L1 工具层，按云顶编码规范 §22.2 禁止依赖 L2+ 内部模块。
+   * 历史实现委托 {@code common-thread} 的 {@code ExecutorUtils}（L4），构成 L1→L4 反向依赖。
+   * 现改用 JDK 21 {@code Thread.ofVirtual()}（每任务一线程），与原语义完全一致。
    */
   private static Executor virtualThreadExecutor() {
-    return ExecutorUtils.newVirtualThreadExecutor("excel-async-");
+    final AtomicInteger threadNumber = new AtomicInteger(1);
+    return task -> {
+      Thread thread =
+          Thread.ofVirtual()
+              .name("excel-async-" + threadNumber.getAndIncrement())
+              .unstarted(task);
+      thread.start();
+    };
   }
 }

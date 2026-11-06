@@ -47,6 +47,9 @@ public class DefaultGraphExecutionProvider implements GraphExecutionProvider {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
+  /** 缓存容量负载因子（规则数的 2 倍作为初始容量） */
+  private static final int CACHE_LOAD_FACTOR = 2;
+
 
   /** 规则引擎（用于解析画布节点的 Rule 实例） */
   private final RuleEngine ruleEngine;
@@ -233,7 +236,7 @@ public class DefaultGraphExecutionProvider implements GraphExecutionProvider {
       return ruleCodeCache;
     }
     List<Rule> rules = ruleEngine.getRules();
-    Map<String, Rule> newCache = new ConcurrentHashMap<>(Math.max(16, rules.size() * 2));
+    Map<String, Rule> newCache = new ConcurrentHashMap<>(Math.max(COLLECTION_CAPACITY, rules.size() * CACHE_LOAD_FACTOR));
     for (Rule rule : rules) {
       if (rule.getCode() != null) {
         newCache.put(rule.getCode(), rule);

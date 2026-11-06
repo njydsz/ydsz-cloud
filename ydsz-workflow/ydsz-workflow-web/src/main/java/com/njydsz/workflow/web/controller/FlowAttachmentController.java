@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -34,6 +35,7 @@ import com.njydsz.workflow.server.service.FlowAttachmentService;
 @RestController
 @RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "flow:attachment:list")
 public class FlowAttachmentController {
 
   /** 审批附件服务 */
@@ -73,6 +75,7 @@ public class FlowAttachmentController {
   @Idempotent(key = "ydsz:workflow:attachment:delete", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowAttachment.delete", threshold = 50)
   @DeleteMapping("/attachment/{attachmentId}")
+  @AuthApiPermission(apiCodes = "flow:attachment:delete")
   @Audit(
       module = "流程附件",
       type = AuditType.OPERATION,

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -52,6 +53,7 @@ import com.njydsz.literule.server.spi.RuleTemplateProvider;
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则模板市场", description = "规则模板查询与一键导入")
+@AuthApiPermission(apiCodes = "rule:template:list")
 public class RuleTemplateController {
 
   /** 规则模板服务（SPI，由 project 模块提供实现） */
@@ -118,6 +120,7 @@ public class RuleTemplateController {
   @RateLimit(resource = "literule.rule_template.importTemplate", threshold = 50)
   @Operation(summary = "一键导入模板为规则定义")
   @PostMapping("/templates/{templateCode}/import")
+  @AuthApiPermission(apiCodes = "rule:template:add")
   public YdszResponse<RuleDefinitionVO> importTemplate(
       @PathVariable String templateCode,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {

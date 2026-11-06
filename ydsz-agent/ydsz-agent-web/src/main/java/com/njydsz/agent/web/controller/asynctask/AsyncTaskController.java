@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.agent.domain.dto.AsyncTaskSubmitDTO;
 import com.njydsz.agent.domain.vo.AsyncTaskVO;
 import com.njydsz.agent.server.asynctask.AsyncTaskService;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 
 /**
@@ -54,6 +55,7 @@ import com.njydsz.common.core.response.YdszResponse;
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "异步任务", description = "异步任务提交 / 查询 / 取消 / 列表")
+@AuthApiPermission(apiCodes = "agt:async-task:list")
 public class AsyncTaskController {
 
   private final AsyncTaskService asyncTaskService;
@@ -65,6 +67,7 @@ public class AsyncTaskController {
    * @return 统一响应，data 为生成的任务 ID
    */
   @PostMapping("/submit")
+  @AuthApiPermission(apiCodes = "agt:async-task:add")
   @Operation(summary = "提交异步任务", description = "提交一条新异步任务，返回任务 ID")
   public YdszResponse<String> submitTask(@Valid @RequestBody AsyncTaskSubmitDTO submitDTO) {
     log.info("[AsyncTask-API] 提交任务请求: type={}, tenant={}, userId={}",
@@ -103,6 +106,7 @@ public class AsyncTaskController {
    * @return 统一响应，data 为取消后的任务 VO
    */
   @PostMapping("/{taskId}/cancel")
+  @AuthApiPermission(apiCodes = "agt:async-task:add")
   @Operation(summary = "取消任务", description = "取消指定任务（仅非终态任务可取消）")
   public YdszResponse<AsyncTaskVO> cancelTask(
       @PathVariable("taskId")

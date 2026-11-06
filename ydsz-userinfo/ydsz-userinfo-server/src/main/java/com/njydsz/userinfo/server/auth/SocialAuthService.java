@@ -46,6 +46,9 @@ public class SocialAuthService {
   /** State 有效期（秒）：10 分钟 */
   private static final long STATE_TTL_SECONDS = 600;
 
+  /** 生成 state 的随机字节长度 */
+  private static final int STATE_RANDOM_BYTES_LENGTH = 24;
+
   private final SocialAuthProperties socialAuthProperties;
   private final SocialAccountRepository socialAccountRepository;
   private final Map<String, SocialAuthProvider> socialAuthProviderMap;
@@ -287,7 +290,7 @@ public class SocialAuthService {
    * @return 随机状态码
    */
   private String generateState() {
-    byte[] randomBytes = new byte[24];
+    byte[] randomBytes = new byte[STATE_RANDOM_BYTES_LENGTH];
     SECURE_RANDOM.nextBytes(randomBytes);
     String state = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     try {

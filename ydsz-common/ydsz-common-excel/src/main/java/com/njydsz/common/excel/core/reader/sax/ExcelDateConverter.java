@@ -3,6 +3,7 @@ package com.njydsz.common.excel.core.reader.sax;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
@@ -45,7 +46,7 @@ public final class ExcelDateConverter {
    * @param use1904Windowing {@code true} 使用 Mac 1904 日期系统
    * @return 对应的 Date 对象
    */
-  public static java.util.Date getJavaDate(double date, boolean use1904Windowing) {
+  public static Date getJavaDate(double date, boolean use1904Windowing) {
     return getCalendar(date, use1904Windowing).getTime();
   }
 

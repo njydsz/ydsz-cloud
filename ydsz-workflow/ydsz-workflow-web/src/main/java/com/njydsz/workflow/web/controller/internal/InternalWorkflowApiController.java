@@ -17,6 +17,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.safe.internal.RequireInternal;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
@@ -51,6 +52,7 @@ import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 @RequestMapping("/internal")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "workflow:internal:api")
+@RequireInternal
 public class InternalWorkflowApiController {
 
   private final WorkflowFacade workflowFacade;

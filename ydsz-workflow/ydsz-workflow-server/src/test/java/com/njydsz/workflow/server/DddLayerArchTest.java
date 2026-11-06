@@ -82,6 +82,8 @@ final class DddLayerArchTest {
         .that().resideInAnyPackage("..server..")
         .should(new HaveAutowiredFieldInjection())
         .because("字段注入降低可测试性且隐藏依赖关系，应使用构造器注入"
+
+
             + "（@Lazy 打破循环依赖的场景与抽象基类的 protected 字段豁免）.");
 
   /** 检测类中是否存在 {@code @Autowired} 字段（@Lazy / protected 豁免）。 */

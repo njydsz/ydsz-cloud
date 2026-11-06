@@ -6,8 +6,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.test.BaseControllerMockTest;
 
+import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -27,7 +29,8 @@ class FeatureFlagAdminControllerSmokeTest extends BaseControllerMockTest {
 
   @BeforeEach
   void setUp() {
-    FeatureFlagAdminController featureFlagController = new FeatureFlagAdminController();
+    I18nMessages i18nMessages = mock(I18nMessages.class);
+    FeatureFlagAdminController featureFlagController = new FeatureFlagAdminController(i18nMessages);
     mockMvc = standaloneSetup(featureFlagController);
   }
 

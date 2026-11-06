@@ -33,6 +33,9 @@ import com.njydsz.workflow.server.service.FlowAnalyticsService;
 @RequiredArgsConstructor
 public class FlowAnomalyAlertTask {
 
+  /** 异常汇总日志最大条数 */
+  private static final int MAX_SUMMARY_ANOMALIES = 5;
+
   private final FlowAnalyticsService analyticsService;
   private final FlowAlertProperties alertProperties;
 
@@ -91,7 +94,7 @@ public class FlowAnomalyAlertTask {
    */
   private String summarizeAnomalies(List<FlowAnomalyVO> anomalies) {
     return anomalies.stream()
-        .limit(5)
+        .limit(MAX_SUMMARY_ANOMALIES)
         .map(a -> a.getType() + ":" + a.getDescription())
         .reduce((a, b) -> a + " | " + b)
         .orElse("");

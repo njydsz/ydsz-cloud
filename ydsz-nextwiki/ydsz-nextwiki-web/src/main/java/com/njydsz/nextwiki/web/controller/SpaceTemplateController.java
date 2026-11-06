@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
@@ -52,6 +53,7 @@ import com.njydsz.nextwiki.server.service.SpaceTemplateApplicationService;
 @RequestMapping("/nextwiki/templates")
 @RequiredArgsConstructor
 @Tag(name = "空间模板管理", description = "S4-P3-02：文档模板体系")
+@AuthApiPermission(apiCodes = "wiki:space-template:list")
 public class SpaceTemplateController {
 
   private final SpaceTemplateApplicationService spaceTemplateApplicationService;
@@ -101,6 +103,7 @@ public class SpaceTemplateController {
    * @return 统一响应结果，data 为新创建的 {@link SpaceTemplateDTO}
    */
   @PostMapping
+  @AuthApiPermission(apiCodes = "wiki:space-template:add")
   @Operation(summary = "创建模板", description = "创建租户自定义模板")
   public YdszResponse<SpaceTemplateDTO> createTemplate(
       @Valid @RequestBody CreateTemplateRequest request,
@@ -124,6 +127,7 @@ public class SpaceTemplateController {
    * @return 统一响应结果，data 为更新后的 {@link SpaceTemplateDTO}
    */
   @PutMapping("/{templateId}")
+  @AuthApiPermission(apiCodes = "wiki:space-template:edit")
   @Operation(summary = "更新模板", description = "更新租户自定义模板（系统模板不可修改）")
   public YdszResponse<SpaceTemplateDTO> updateTemplate(
       @PathVariable String templateId,
@@ -147,6 +151,7 @@ public class SpaceTemplateController {
    * @return 统一响应结果，data 为 true 表示删除成功
    */
   @DeleteMapping("/{templateId}")
+  @AuthApiPermission(apiCodes = "wiki:space-template:delete")
   @Operation(summary = "删除模板", description = "删除租户自定义模板（系统模板不可删除）")
   public YdszResponse<Boolean> deleteTemplate(
       @PathVariable String templateId,
@@ -168,6 +173,7 @@ public class SpaceTemplateController {
    * @return 统一响应结果，data 为新创建的 {@link SpaceVO}
    */
   @PostMapping("/{templateId}/use")
+  @AuthApiPermission(apiCodes = "wiki:space-template:add")
   @Operation(summary = "使用模板创建空间", description = "基于模板预定义结构创建新空间")
   public YdszResponse<SpaceVO> useTemplate(
       @PathVariable String templateId,

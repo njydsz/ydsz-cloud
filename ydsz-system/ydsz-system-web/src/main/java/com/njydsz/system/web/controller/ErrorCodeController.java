@@ -49,6 +49,9 @@ import com.njydsz.system.domain.vo.ErrorCodeVO;
 @RequiredArgsConstructor
 public class ErrorCodeController {
 
+  /** 默认 HTTP 状态码（当异常码未注册时的兜底值） */
+  private static final int DEFAULT_HTTP_STATUS = 400;
+
   private final ErrorCodeTable errorCodeTable;
 
   /**
@@ -78,7 +81,7 @@ public class ErrorCodeController {
       for (Map.Entry<String, ErrorCodeTable.CodeEntry> codeEntry : moduleEntry.getValue().entrySet()) {
         ErrorCodeTable.CodeEntry ce = codeEntry.getValue();
         ExceptionCode exceptionCode = errorCodeTable.lookup(ce.code());
-        int httpStatus = exceptionCode != null ? exceptionCode.getHttpStatus() : 400;
+        int httpStatus = exceptionCode != null ? exceptionCode.getHttpStatus() : DEFAULT_HTTP_STATUS;
 
         result.add(new ErrorCodeVO(ce.code(), ce.key(), httpStatus, moduleName, moduleDesc));
       }

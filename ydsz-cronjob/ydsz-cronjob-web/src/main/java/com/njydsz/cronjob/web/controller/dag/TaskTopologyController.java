@@ -64,6 +64,9 @@ import com.njydsz.cronjob.domain.vo.JobLogVO;
 @RequestMapping("/cronjob/topology")
 @RequiredArgsConstructor
 public class TaskTopologyController {
+  /** 任务执行历史最大返回条数 */
+  private static final int MAX_JOB_HISTORY_SIZE = 20;
+
   /** DAG 拓扑查询 Service（DDD 分层：Controller → Service → Repository） */
   private final DagTopologyQueryService dagTopologyQueryService;
 
@@ -138,6 +141,6 @@ public class TaskTopologyController {
   @GetMapping("/jobHistory/{jobKey}")
   public YdszResponse<List<JobLogVO>> getJobExecutionHistory(@PathVariable String jobKey) {
     // 通过 Service 查询执行历史（Service → Repository）
-    return YdszResponse.success(dagTopologyQueryService.getJobExecutionHistory(jobKey, 20));
+    return YdszResponse.success(dagTopologyQueryService.getJobExecutionHistory(jobKey, MAX_JOB_HISTORY_SIZE));
   }
 }

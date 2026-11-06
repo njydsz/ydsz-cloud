@@ -1,6 +1,5 @@
 package com.njydsz.workflow.server.config;
 
-import com.njydsz.common.locales.util.I18n;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -18,6 +17,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.core.assembler.NameAssembler;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.workflow.domain.gateway.NameServiceClient;

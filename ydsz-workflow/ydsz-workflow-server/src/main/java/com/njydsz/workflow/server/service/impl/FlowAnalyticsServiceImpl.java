@@ -129,6 +129,39 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
   /** 默认积压告警阈值 */
   private static final int DEFAULT_BACKLOG_THRESHOLD = 20;
 
+  /** 瓶颈热力图默认时间窗口（天） */
+  private static final int BOTTLENECK_WINDOW_DAYS = 30;
+
+  /** 高驳回率检测时间窗口（天） */
+  private static final int REJECT_RATE_WINDOW_DAYS = 7;
+
+  /** RED 级别驳回率阈值 */
+  private static final double RED_ALERT_RATE_THRESHOLD = 0.8;
+
+  /** 风险等级 MEDIUM 的在途实例数阈值 */
+  private static final int MEDIUM_RISK_INSTANCE_THRESHOLD = 50;
+
+  /** 阻塞节点 Map 初始容量 */
+  private static final int BLOCKED_NODE_MAP_CAPACITY = 4;
+
+  /** 告警等级优先级：RED */
+  private static final int PRIORITY_RED = 3;
+
+  /** 告警等级优先级：ORANGE */
+  private static final int PRIORITY_ORANGE = 2;
+
+  /** 告警等级优先级：YELLOW */
+  private static final int PRIORITY_YELLOW = 1;
+
+  /** 毫秒到小时的转换系数 */
+  private static final double MS_TO_HOURS = 3_600_000.0;
+
+  /** 比率到百分比的转换系数 */
+  private static final double RATIO_TO_PERCENT = 100;
+
+  /** 比率四舍五入精度系数 */
+  private static final double RATE_ROUNDING_FACTOR = 10000.0;
+
   /** {@inheritDoc} */
   @Override
   public FlowAnalyticsOverviewVO overview(
@@ -157,7 +190,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     result.setRejectedTasks(rejectedCount);
     result.setPendingTasks(pendingCount);
     result.setOverdueCount(overdueCount);
-    result.setRejectionRate(Math.round(rejectionRate * 10000) / 10000.0);
+    result.setRejectionRate(Math.round(rejectionRate * RATE_ROUNDING_FACTOR) / RATE_ROUNDING_FACTOR);
     result.setAvgDurationMs(Math.round(avgDurationMs));
     return result;
   }
@@ -265,7 +298,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
       LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
     LocalDateTime end = endTime != null ? endTime : LocalDateTime.now();
-    LocalDateTime start = startTime != null ? startTime : end.minusDays(30);
+    LocalDateTime start = startTime != null ? startTime : end.minusDays(BOTTLENECK_WINDOW_DAYS);
 
     List<Map<String, Object>> rows =
         hisTaskRepository.selectBottleneckStats(tid, start, end);
@@ -334,7 +367,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     }
 
     // 3. 检测高驳回率（按流程编码维度）
-    LocalDateTime rejectWindowStart = now.minusDays(7);
+    LocalDateTime rejectWindowStart = now.minusDays(REJECT_RATE_WINDOW_DAYS);
     List<Map<String, Object>> rejectRows =
         hisTaskRepository.selectRejectionByFlowCode(tid, rejectWindowStart, now);
     if (rejectRows != null) {
@@ -348,14 +381,14 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
         if (rate >= rejectRate) {
           FlowAnomalyVO vo = new FlowAnomalyVO();
           vo.setType("HIGH_REJECTION");
-          vo.setWarnLevel(rate >= 0.8 ? "RED" : "YELLOW");
+          vo.setWarnLevel(rate >= RED_ALERT_RATE_THRESHOLD ? "RED" : "YELLOW");
           vo.setAnomalyType("高驳回率");
           vo.setTotalCount(total);
           vo.setRejectedCount(rejected);
-          vo.setRejectionRate(Math.round(rate * 10000.0) / 10000.0);
+          vo.setRejectionRate(Math.round(rate * RATE_ROUNDING_FACTOR) / RATE_ROUNDING_FACTOR);
           String flowCode = row.get("flowCode") != null ? row.get("flowCode").toString() : "unknown";
           vo.setDescription(String.format("流程 %s 近 7 天驳回率 %.1f%%（%d/%d）",
-              flowCode, rate * 100, rejected, total));
+              flowCode, rate * RATIO_TO_PERCENT, rejected, total));
           vo.setCreatedAt(now);
           anomalies.add(vo);
         }
@@ -412,7 +445,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
       }
 
       if (!affectedInstances.isEmpty()) {
-        Map<String, Object> blockedNode = new LinkedHashMap<>(4);
+        Map<String, Object> blockedNode = new LinkedHashMap<>(BLOCKED_NODE_MAP_CAPACITY);
         blockedNode.put("nodeCode", nodeIdToCheck);
         blockedNode.put("affectedCount", affectedInstances.size());
         blockedNodes.add(blockedNode);
@@ -431,7 +464,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
       impact.setRecommendation(String.format(
           "发布将影响 %d 个在途实例（卡在待变更节点 %s），建议先在测试环境验证并分批发布",
           affectedInstances.size(), nodeIdToCheck));
-    } else if (runningCount > 50) {
+    } else if (runningCount > MEDIUM_RISK_INSTANCE_THRESHOLD) {
       impact.setRiskLevel("MEDIUM");
       impact.setRecommendation(String.format(
           "%d 个在途实例但无节点阻塞风险，建议分批灰度发布", runningCount));
@@ -457,9 +490,9 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
       return 0;
     }
     return switch (warnLevel) {
-      case "RED" -> 3;
-      case "ORANGE" -> 2;
-      case "YELLOW" -> 1;
+      case "RED" -> PRIORITY_RED;
+      case "ORANGE" -> PRIORITY_ORANGE;
+      case "YELLOW" -> PRIORITY_YELLOW;
       default -> 0;
     };
   }
@@ -534,8 +567,8 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     export.setUserId(src.getUserId());
     export.setUserName(src.getUserName());
     export.setCompletedCount(src.getCompletedCount());
-    export.setAvgDurationHours(src.getAvgDurationMs() / 3_600_000.0);
-    export.setTotalDurationHours(src.getTotalDurationMs() / 3_600_000.0);
+    export.setAvgDurationHours(src.getAvgDurationMs() / MS_TO_HOURS);
+    export.setTotalDurationHours(src.getTotalDurationMs() / MS_TO_HOURS);
     return export;
   }
 
@@ -548,9 +581,9 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     export.setFlowName(src.getFlowName());
     export.setTotalCount(src.getTotalCount());
     export.setCompletedCount(src.getCompletedCount());
-    export.setAvgDurationHours(src.getAvgDurationMs() / 3_600_000.0);
-    export.setRejectionRatePercent(src.getRejectionRate() * 100);
-    export.setOverdueRatePercent(src.getOverdueRate() * 100);
+    export.setAvgDurationHours(src.getAvgDurationMs() / MS_TO_HOURS);
+    export.setRejectionRatePercent(src.getRejectionRate() * RATIO_TO_PERCENT);
+    export.setOverdueRatePercent(src.getOverdueRate() * RATIO_TO_PERCENT);
     return export;
   }
 }

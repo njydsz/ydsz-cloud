@@ -34,6 +34,9 @@ public class ExportTaskService {
   private static final int DEFAULT_EXPIRE_HOURS = 24;
   private static final int MAX_TASK_PER_USER = 10;
 
+  /** 用户任务列表查询上限 */
+  private static final int MAX_TASK_QUERY_LIMIT = 50;
+
   private final ExportTaskRepository exportTaskRepository;
   private final SnowflakeIdGenerator idGenerator;
   private final ExportWorkerDelegate exportWorkerDelegate;
@@ -98,7 +101,7 @@ public class ExportTaskService {
    * @return 任务 VO 列表
    */
   public List<ExportTaskVO> listUserTasks(String tenantId, String userId, int limit) {
-    return exportTaskRepository.listByUserVO(tenantId, userId, Math.min(limit, 50));
+    return exportTaskRepository.listByUserVO(tenantId, userId, Math.min(limit, MAX_TASK_QUERY_LIMIT));
   }
 
   /**

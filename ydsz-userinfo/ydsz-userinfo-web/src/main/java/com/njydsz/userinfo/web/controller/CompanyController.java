@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -72,6 +73,7 @@ import com.njydsz.userinfo.server.service.CompanyService;
 @RequestMapping("/company")
 @RequiredArgsConstructor
 @Tag(name = "公司管理", description = "公司 CRUD")
+@AuthApiPermission(apiCodes = "sys:company:list")
 public class CompanyController {
 
   private final CompanyService service;
@@ -133,6 +135,7 @@ public class CompanyController {
   @RateLimit(resource = "userinfo.Company.create", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:CompanyController:create:lock", ttlSeconds = 5)
   @PostMapping
+  @AuthApiPermission(apiCodes = "sys:company:add")
   @Operation(summary = "创建公司")
   public YdszResponse<String> create(@Valid @RequestBody CompanyDTO dto) {
     return YdszResponse.success(service.create(dto));
@@ -156,6 +159,7 @@ public class CompanyController {
   @Idempotent(key = "ydsz:userinfo:CompanyController:update:lock", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.Company.update", threshold = 50)
   @PutMapping
+  @AuthApiPermission(apiCodes = "sys:company:edit")
   @Operation(summary = "更新公司")
   public YdszResponse<Boolean> update(@Valid @RequestBody CompanyDTO dto) {
     return YdszResponse.success(service.update(dto));
@@ -187,6 +191,7 @@ public class CompanyController {
   @RateLimit(resource = "userinfo.Company.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:CompanyController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
+  @AuthApiPermission(apiCodes = "sys:company:delete")
   @Operation(summary = "删除公司")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(service.removeById(id));

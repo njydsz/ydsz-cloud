@@ -49,9 +49,58 @@ CLASS_DECL_RE = re.compile(
     r'^(?:public\s+)?(?:final\s+)?(?:abstract\s+)?class\s+(\w+)', re.MULTILINE)
 JAVADOC_OR_COMMENT_RE = re.compile(r'^\s*(?://|\*|/\*)')
 
-SENSITIVE_PREFIXES = ("/admin", "/internal", "/ops")
+# 敏感路径前缀：命中任一即视为需要权限注解的端点。
+#
+# 历史缺口（2026-11-06）：原清单仅含 ("/admin", "/internal", "/ops")，
+# 导致以下端点全部逃逸——RuleImportExportController（导出全量规则/DSL）、
+# RuleDebugController（调试会话控制）、ExportTaskController（导出任务提交）、
+# AsyncTaskController（Agent 任务提交）、ErrorCodeController（全量错误码）、
+# MetricsDashboardController（系统指标）。故按“危险能力语义”扩展为前缀 + 关键词双维度。
+SENSITIVE_PREFIXES = (
+    "/admin",
+    "/internal",
+    "/ops",
+    "/export",
+    "/debug",
+    "/metrics",
+    "/error-codes",
+    "/rules",
+    "/async-task",
+    "/repeat-submit",
+    "/rollback",
+    "/terminate",
+    "/trigger",
+    "/import",
+)
+
+# 危险能力关键词：类级 @RequestMapping 含任一关键词即敏感（用于捕获
+# /literule/rules、/cronjob/export-tasks、/system/metrics 等前缀不在上表的场景）。
+SENSITIVE_KEYWORDS = (
+    "admin",
+    "internal",
+    "export",
+    "debug",
+    "rollback",
+    "terminate",
+    "trigger",
+    "error-codes",
+    "async-task",
+    "repeat-submit",
+)
+
 SENSITIVE_CLASS_SUFFIXES = ("AdminController", "InternalController", "OpsController")
 HEALTH_PATH_HINTS = ("/ping", "/health", "/healthz", "/ready", "/live", "/metrics")
+
+# 公共元数据端点：路径含这些关键词的端点面向前端构建期/CI 拉取，已在网关
+# common-ignore-url 白名单中免 Token（见 ydsz-gateway application.yml），
+# 再加权限注解会直接打挂前端构建与错误码同步流水线，故豁免。
+# 如需新增，请同步确认已在网关白名单内。
+PUBLIC_METADATA_HINTS = (
+    "error-codes",
+    "error_codes",
+    "repeat-submit",
+    "repeat_submit",
+)
 
 
 def iter_java_sources(root: Path):
@@ -72,6 +121,35 @@ def _strip_comments(text: str) -> str:
     text = re.sub(r'/\*.*?\*/', '', text, flags=re.DOTALL)
     text = re.sub(r'//[^\n]*', '', text)
     return text
+
+
+def _build_line_map(raw: str, stripped: str) -> dict[int, int]:
+    """建立「去注释文本行号 → 原始文本行号」的映射。
+
+    <p>去注释只删除注释<b>内容</b>（保留换行），因此两者行数一致时可直接按下标对应。
+    但若块注释独占整行，剥除后该行会变成空行而依然保留，行号仍然对齐；
+    本函数采用逐行贪心匹配，对少数边界情况（注释内出现换行拼接）做容错。
+    """
+    if raw.count("\n") == stripped.count("\n"):
+        return {i: i for i in range(stripped.count("\n") + 1)}
+    # 行数不一致时退化：逐行做内容包含匹配
+    raw_lines = raw.split("\n")
+    stripped_lines = stripped.split("\n")
+    mapping: dict[int, int] = {}
+    raw_idx = 0
+    for stripped_idx, stripped_line in enumerate(stripped_lines):
+        needle = stripped_line.strip()
+        if not needle:
+            mapping[stripped_idx] = stripped_idx
+            continue
+        while raw_idx < len(raw_lines):
+            candidate = _strip_comments(raw_lines[raw_idx]).strip()
+            if candidate == needle:
+                mapping[stripped_idx] = raw_idx
+                raw_idx += 1
+                break
+            raw_idx += 1
+    return mapping
 
 
 def _class_decl_start(text: str) -> int:
@@ -117,15 +195,25 @@ def _is_internal_token_protected(text: str, raw_text: str = "") -> bool:
 
     参数 text 为去注释后的文本（用于类声明定位），raw_text 为原始文本（保留 Javadoc，
     因为 "InternalTokenFilter" 通常写在 Javadoc 里）。
+
+    实现说明：去注释会缩短文本长度，不能直接用 `raw_text[:len(header)]` 取原始头部
+    （会漏掉 Javadoc 尾部，导致 InternalJobController 这类把说明写在 Javadoc 的
+    Controller 无法命中豁免）。这里改为在原始文本中定位类声明行后取其全部前置内容。
     """
     pos = _class_decl_start(text)
     if pos < 0:
         return False
     header = text[:pos]
-    raw_header = raw_text[: len(header)] if raw_text else header
-    return "InternalTokenFilter" in header or "内部签名" in header or (
-        "InternalTokenFilter" in raw_header or "内部签名" in raw_header
-    )
+    if "InternalTokenFilter" in header or "内部签名" in header:
+        return True
+    if not raw_text:
+        return False
+    # 在原始文本中定位同一个类名声明，取其前置内容（含 Javadoc）
+    m = CLASS_DECL_RE.search(raw_text)
+    if not m:
+        return False
+    raw_header = raw_text[: m.start()]
+    return "InternalTokenFilter" in raw_header or "内部签名" in raw_header
 
 
 def _has_controller_annotation(text: str) -> bool:
@@ -138,11 +226,23 @@ def _has_controller_annotation(text: str) -> bool:
 
 
 def is_sensitive(mapping: str | None, cls_name: str | None) -> bool:
-    """判定是否为敏感 Controller。"""
+    """判定是否为敏感 Controller。
+
+    <p>命中任一维度即敏感：
+    <ul>
+      <li>类级 @RequestMapping 以 SENSITIVE_PREFIXES 中任一前缀开头</li>
+      <li>类级 @RequestMapping 含 SENSITIVE_KEYWORDS 中任一关键词（忽略大小写）</li>
+      <li>类名以 SENSITIVE_CLASS_SUFFIXES 中任一后缀结尾</li>
+    </ul>
+    """
     if mapping:
         normalized = mapping.rstrip("/")
         for prefix in SENSITIVE_PREFIXES:
             if normalized == prefix or normalized.startswith(prefix + "/"):
+                return True
+        lowered = normalized.lower()
+        for keyword in SENSITIVE_KEYWORDS:
+            if keyword in lowered:
                 return True
     if cls_name:
         for suffix in SENSITIVE_CLASS_SUFFIXES:
@@ -168,6 +268,12 @@ def scan_file(path: Path) -> list[tuple[int, str]]:
     text = _strip_comments(raw)
     lines = text.split("\n")
     raw_lines = raw.split("\n")
+
+    # 建立 text（去注释）→ raw（原始）行号映射。
+    # 去注释会删除块注释/行注释行，导致同一端点在两个文本中下标不同；
+    # 上报行号必须基于原始文件，否则定位漂移（历史 bug：DebugController
+    # replay 实际在 177 行，门禁却报 111 行，指向了无关代码）。
+    text_to_raw = _build_line_map(raw, text)
 
     if not _has_controller_annotation(text):
         return []
@@ -195,30 +301,30 @@ def scan_file(path: Path) -> list[tuple[int, str]]:
         # 跳过类级 @RequestMapping（位于类声明行之前）
         if class_start_line >= 0 and idx < class_start_line:
             continue
-        # 端点注解区 = 本 Mapping 行 + 其上方的连续注解行（Spring 注解可写在 Mapping 之前）
-        start = idx
-        j = idx - 1
-        while j >= 0:
-            prev = lines[j].strip()
-            if not prev or JAVADOC_OR_COMMENT_RE.match(prev):
-                break
-            if HTTP_MAPPING_RE.match(lines[j]) or PERMISSION_ANN_RE.match(prev):
-                start = j
-                j -= 1
-                continue
-            if prev.startswith("@"):
-                start = j
-                j -= 1
-                continue
-            break
-        # 端点方法签名区 = 本 Mapping 行 + 其下方直到方法体结束（取 25 行窗口）
-        window = "\n".join(lines[start: idx + 25])
+        # 端点注解区：从 Mapping 行向上取固定窗口（覆盖多行注解 + Javadoc）。
+        #
+        # 不采用「向上逐行判断是否停止」的策略——注解可跨多行（@Audit(...)）、
+        # 字符串内可含括号（content = "'xxx: ' + #id")，任何基于括号深度或
+        # 「遇非 @ 即停」的启发式都会被这些边界情况击穿（历史 bug：DebugController
+        # replay 已有 @AuthApiPermission 却被误报）。固定窗口简单且鲁棒：
+        # 上方 20 行足以覆盖任意注解组合，误报只会来自「20 行内混入上一端点的注解」，
+        # 而相邻端点间距通常 > 20 行（含 Javadoc），风险可控。
+        window_start = max(0, idx - 20)
+        window = "\n".join(lines[window_start: idx + 25])
         if PERMISSION_ANN_RE.search(window):
             continue
         if _is_health_endpoint(stripped):
             continue
+        # 公共元数据端点（错误码表、防重令牌）已免 Token，不再要求权限码。
+        # 类级路径含关键词也认（部分端点的 @GetMapping 不带路径参数，如 @GetMapping 直接映射类路径）。
+        lowered = (stripped + " " + str(mapping)).lower()
+        if any(hint in lowered for hint in PUBLIC_METADATA_HINTS):
+            continue
+        # 上报原始文件行号（便于直接跳转），并回显原始行内容
+        raw_idx = text_to_raw.get(idx, idx)
+        raw_stripped = raw_lines[raw_idx].strip() if raw_idx < len(raw_lines) else stripped
         rel = path.relative_to(REPO_ROOT).as_posix()
-        violations.append((idx + 1, f"{rel}:{idx + 1} 端点缺权限注解 → {stripped[:80]}"))
+        violations.append((raw_idx + 1, f"{rel}:{raw_idx + 1} 端点缺权限注解 → {raw_stripped[:80]}"))
     return violations
 
 

@@ -74,6 +74,12 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   /** Map 初始容量：中集合（16） */
   private static final int MAP_INIT_CAPACITY_16 = 16;
 
+  /** 时间线缓存最大容量 */
+  private static final int TIMELINE_CACHE_MAX_SIZE = 2_000;
+
+  /** 时间线缓存 TTL（秒） */
+  private static final int TIMELINE_CACHE_TTL_SECONDS = 30;
+
   /**
    * 时间线本地缓存（N+1 治理 2026-11-03）。
    *
@@ -84,8 +90,8 @@ public class YdszWorkflowFacade implements WorkflowFacade {
   private static final Cache<String, List<FlowTimelineVO>> TIMELINE_CACHE =
       CacheBuilder.<String, List<FlowTimelineVO>>newBuilder()
           .name("workflow-timeline")
-          .maximumSize(2_000)
-          .expireAfterWrite(30, TimeUnit.SECONDS)
+          .maximumSize(TIMELINE_CACHE_MAX_SIZE)
+          .expireAfterWrite(TIMELINE_CACHE_TTL_SECONDS, TimeUnit.SECONDS)
           .build();
 
   private final FlowInstanceService instanceService;

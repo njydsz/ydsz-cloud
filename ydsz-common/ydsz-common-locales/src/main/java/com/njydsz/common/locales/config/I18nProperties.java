@@ -40,7 +40,6 @@ import com.njydsz.common.locales.util.RuntimeStrictness;
  *     supported-locales:
  *       - zh_CN
  *       - en_US
- *       - zh_TW
  *     lang-param-name: "lang"
  *     validate-on-startup: true
  *     wildcard-scan-enabled: true
@@ -70,6 +69,7 @@ public class I18nProperties {
    */
   private static final String[] DEFAULT_SUPPORTED_LOCALES =
       com.njydsz.common.locales.util.KnownLocaleTags.DEFAULT_SUPPORTED_TAGS.toArray(new String[0]);
+  // 默认值即 [zh_CN, en_US]：当前项目仅支持中英文（YDIZ-I18N-007），新增语言需走需求评审
 
   /**
    * 默认资源前缀列表

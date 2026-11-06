@@ -2,7 +2,6 @@ package com.njydsz.nextwiki.server.service;
 
 import java.io.InputStream;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.file.virus.VirusScanner;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**

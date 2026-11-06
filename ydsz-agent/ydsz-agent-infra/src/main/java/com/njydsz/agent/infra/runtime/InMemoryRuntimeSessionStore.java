@@ -34,6 +34,10 @@ import com.njydsz.common.cache.api.Cache;
 public class InMemoryRuntimeSessionStore implements RuntimeSessionStore {
 
     private static final int DEFAULT_FIND_ALL_LIMIT = 200;
+    /** 会话缓存最大容量 */
+    private static final int SESSION_CACHE_MAX_SIZE = 2000;
+    /** 会话缓存过期时间（分钟） */
+    private static final int SESSION_CACHE_EXPIRE_MINUTES = 15;
     private static final Comparator<RuntimeSession> START_TIME_DESC =
             (a, b) -> {
                 if (a.getStartTime() == null && b.getStartTime() == null) {
@@ -49,8 +53,8 @@ public class InMemoryRuntimeSessionStore implements RuntimeSessionStore {
             };
 
     private final Cache<String, RuntimeSession> sessions = YdszCache.<String, RuntimeSession>newBuilder()
-        .maximumSize(2000)
-        .expireAfterAccess(15, TimeUnit.MINUTES)
+        .maximumSize(SESSION_CACHE_MAX_SIZE)
+        .expireAfterAccess(SESSION_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
         .build();
 
     @Override

@@ -11,7 +11,7 @@
  *       {@code ApprovalRecordRepository}、{@code DecisionTableRepository}、
  *       {@code RuleTestCaseRepository} 等，定义持久化契约</li>
  *   <li>领域事件：{@code RuleConfigRefreshEvent} 在规则配置变更时发布，驱动热加载与分布式广播</li>
- *   <li>枚举：{@code RuleStatusEnum} 定义规则状态机；{@code LiteruleExceptionCode} 统一异常码</li>
+ *   <li>枚举：{@code RuleStatus} 定义规则多级审批状态机；{@code LiteruleExceptionCode} 统一异常码</li>
  *   <li>值对象：包括 {@code RuleDefinitionVO}、{@code RuleVersionVO}、{@code RuleChainGraphVO}、
  *       {@code DecisionTableVO}、{@code CEPPatternVO}、{@code CEPHitVO} 等运维修复视图对象</li>
  * </ul>

@@ -127,6 +127,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- ArchUnit：web→infra 边界守护（YDIZ-DDD-006 自动化验证） -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- Spring Cloud Contract Verifier（契约测试基类 BaseContractTest 依赖 RestAssuredMockMvc） -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>

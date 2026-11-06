@@ -50,14 +50,20 @@ public class RuleCircuitBreaker {
   private final int minEvaluations;
   private final long openStateMs;
 
+  /** 熔断器缓存最大条目数 */
+  private static final int BREAKER_CACHE_MAX_SIZE = 5_000;
+
+  /** 熔断器缓存过期时间（小时） */
+  private static final long BREAKER_CACHE_EXPIRE_HOURS = 1;
+
   /** 共享的 Resilience4j 注册表（所有规则共用配置模板） */
   private final CircuitBreakerRegistry sharedRegistry;
 
   /** 每个规则一个独立熔断器（Resilience4j 实例，基于 ydsz-common-cache YDIZ-COMMON-021） */
   private final Cache<String, CircuitBreaker> breakers =
       YdszCache.<String, CircuitBreaker>newBuilder()
-          .maximumSize(5_000)
-          .expireAfterAccess(1, TimeUnit.HOURS)
+          .maximumSize(BREAKER_CACHE_MAX_SIZE)
+          .expireAfterAccess(BREAKER_CACHE_EXPIRE_HOURS, TimeUnit.HOURS)
           .recordStats()
           .build();
 

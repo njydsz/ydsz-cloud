@@ -68,7 +68,9 @@ public class FeatureFlagAdminController {
   /** 自增 ID 种子 */
   private static final AtomicLong ID_SEED = new AtomicLong(1);
 
-  /** 日期时间格式 */
+  /** 默认每页条数 */
+  private static final int DEFAULT_PAGE_SIZE = 20;
+
   /** 日期格式（与 DateTimeFormatter.ISO_LOCAL_DATE_TIME 等价） */
   private static final String DATE_FMT = "yyyy-MM-dd'T'HH:mm:ss";
 
@@ -101,7 +103,7 @@ public class FeatureFlagAdminController {
     // 内存分页
     int pageNum = (query.getPageNum() != null && query.getPageNum() > 0) ? query.getPageNum() : 1;
     int pageSize = (query.getPageSize() != null && query.getPageSize() > 0 && query.getPageSize() <= 100)
-        ? query.getPageSize() : 20;
+        ? query.getPageSize() : DEFAULT_PAGE_SIZE;
     int fromIndex = (pageNum - 1) * pageSize;
     int toIndex = Math.min(fromIndex + pageSize, all.size());
     List<FeatureFlagVO> subList = fromIndex < all.size() ? all.subList(fromIndex, toIndex) : List.of();

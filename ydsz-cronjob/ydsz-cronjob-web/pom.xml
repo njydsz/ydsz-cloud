@@ -157,6 +157,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- ArchUnit：web→infra 边界守护（YDIZ-DDD-006 自动化验证） -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- Testcontainers：集成测试数据库/缓存真实环境（PG 18 + Redis 7） -->
         <dependency>
             <groupId>org.testcontainers</groupId>

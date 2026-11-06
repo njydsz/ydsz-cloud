@@ -60,6 +60,9 @@ public class ScheduledMessageScanner {
   /** 单次扫描批量大小 */
   private static final int BATCH_SIZE = 200;
 
+  /** Future 获取结果超时时间（秒） */
+  private static final long FUTURE_GET_TIMEOUT_SECONDS = 30;
+
   /** F2: 定时消息并发发送线程池（守护线程，核心数 = CPU 核数，最大 4）。统一走 ydsz-common-thread（YDIZ-CONC-001）。 */
   private final ExecutorService dispatcher =
       ExecutorUtils.newDaemonFixedThreadPool(
@@ -146,7 +149,7 @@ public class ScheduledMessageScanner {
             .filter(
                 f -> {
                   try {
-                    return f.get(30, TimeUnit.SECONDS);
+                    return f.get(FUTURE_GET_TIMEOUT_SECONDS, TimeUnit.SECONDS);
                   } catch (Exception e) {
                     return false;
                   }

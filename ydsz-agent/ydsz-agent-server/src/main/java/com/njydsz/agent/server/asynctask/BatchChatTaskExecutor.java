@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +13,7 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.server.chat.TokenCostCalculator;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 批量对话异步任务执行器。
@@ -43,6 +43,18 @@ public class BatchChatTaskExecutor implements AsyncTaskExecutor {
 
   /** 进度参数校验完成 */
   private static final int PROGRESS_PARAMS_READY = 5;
+
+  /** Token 估算的字符数与 Token 比例（每 Token 约 4 字符） */
+  private static final int CHARS_PER_TOKEN = 4;
+
+  /** 错误消息截断最大长度 */
+  private static final int ERROR_MESSAGE_MAX_LENGTH = 200;
+
+  /** ChatRequest 默认温度 */
+  private static final double DEFAULT_TEMPERATURE = 0.7;
+
+  /** ChatRequest 默认最大 Token 数 */
+  private static final int DEFAULT_MAX_TOKENS = 2048;
 
   private final TokenCostCalculator tokenCostCalculator;
 
@@ -95,7 +107,7 @@ public class BatchChatTaskExecutor implements AsyncTaskExecutor {
           // 当前骨架：估算 Token 成本并计入统计
           totalEstimatedTokens += tokenCostCalculator != null
               ? tokenCostCalculator.estimateBeforeCall(request).getEstimatedTotalTokens()
-              : userMessage.length() / 4;
+              : userMessage.length() / CHARS_PER_TOKEN;
           successCount++;
         } catch (Exception e) {
           failCount++;
@@ -120,7 +132,7 @@ public class BatchChatTaskExecutor implements AsyncTaskExecutor {
           task.getId(), total, successCount, failCount);
     } catch (Exception e) {
       log.error("[AsyncTask:BATCH_CHAT] 执行失败: taskId={}, error={}", task.getId(), e.getMessage(), e);
-      task.fail(I18n.message("agent.error.batchchat.failed", new Object[]{truncate(e.getMessage(), 200)}));
+      task.fail(I18n.message("agent.error.batchchat.failed", new Object[]{truncate(e.getMessage(), ERROR_MESSAGE_MAX_LENGTH)}));
     }
   }
 
@@ -134,8 +146,8 @@ public class BatchChatTaskExecutor implements AsyncTaskExecutor {
     return ChatRequest.builder()
         .model(model)
         .messages(messages)
-        .temperature(0.7)
-        .maxTokens(2048)
+        .temperature(DEFAULT_TEMPERATURE)
+        .maxTokens(DEFAULT_MAX_TOKENS)
         .build();
   }
 

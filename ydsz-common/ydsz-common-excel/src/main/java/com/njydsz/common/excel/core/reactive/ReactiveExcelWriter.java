@@ -14,10 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
+import com.njydsz.common.excel.core.ExcelOperationException;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor;
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
 
 import static com.njydsz.common.excel.core.writer.OoxmlPackShared.ROOT_RELS;
 import static com.njydsz.common.excel.core.writer.OoxmlPackShared.STYLES;
@@ -155,10 +154,7 @@ public final class ReactiveExcelWriter implements Flow.Publisher<byte[]> {
       generateXlsx();
     } catch (Exception e) {
       LOG.error("Reactive writer xlsx generation failed", e);
-      throw BusinessException.builder()
-          .resultCode(CoreExceptionCode.INTERNAL_ERROR)
-          .message("Excel generation failed: " + e.getMessage())
-          .build();
+      throw new ExcelOperationException("Excel generation failed: " + e.getMessage(), e);
     }
   }
 
@@ -300,7 +296,7 @@ public final class ReactiveExcelWriter implements Flow.Publisher<byte[]> {
       try {
         return field.get(obj);
       } catch (IllegalAccessException e) {
-        throw new BusinessException(CoreExceptionCode.INTERNAL_ERROR, e);
+        throw new ExcelOperationException("反射读取 Excel 字段失败", e);
       }
     };
   }

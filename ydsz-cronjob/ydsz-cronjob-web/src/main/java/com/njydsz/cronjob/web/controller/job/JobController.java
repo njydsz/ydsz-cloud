@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.web.controller.job;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -107,6 +108,9 @@ import com.njydsz.cronjob.server.vo.JobLogExportVO;
 public class JobController {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
+
+  /** 错误消息截断最大长度 */
+  private static final int ERROR_MESSAGE_MAX_LENGTH = 200;
 
 
   /** 任务调度服务 */
@@ -500,7 +504,7 @@ public class JobController {
   @GetMapping("/export")
   public void exportJobs(@RequestParam(required = false) String keyword,
       @RequestParam(required = false) String status, @RequestParam(required = false) String group,
-      HttpServletResponse response) throws java.io.IOException {
+      HttpServletResponse response) throws IOException {
     String fileName = "jobs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
@@ -552,7 +556,7 @@ public class JobController {
   @GetMapping("/log/export")
   public void exportJobLogs(@RequestParam(required = false) String jobKey,
       @RequestParam(required = false) String status,
-      HttpServletResponse response) throws java.io.IOException {
+      HttpServletResponse response) throws IOException {
     String fileName = "job_logs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
@@ -667,8 +671,8 @@ public class JobController {
     export.setShardIndex(vo.getShardIndex());
     export.setSlow(vo.getSlow() != null && vo.getSlow() == 1);
     export.setCreatedAt(vo.getCreatedAt() != null ? vo.getCreatedAt().toString() : null);
-    if (vo.getErrorMessage() != null && vo.getErrorMessage().length() > 200) {
-      export.setErrorMessage(vo.getErrorMessage().substring(0, 200) + "...");
+    if (vo.getErrorMessage() != null && vo.getErrorMessage().length() > ERROR_MESSAGE_MAX_LENGTH) {
+      export.setErrorMessage(vo.getErrorMessage().substring(0, ERROR_MESSAGE_MAX_LENGTH) + "...");
     } else {
       export.setErrorMessage(vo.getErrorMessage());
     }

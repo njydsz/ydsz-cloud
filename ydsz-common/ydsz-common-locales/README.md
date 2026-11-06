@@ -130,7 +130,7 @@ public class Application { }
 | `ydsz.i18n.fallbackToSystemLocale` | false | 是否回退系统 Locale（false 固定使用 defaultLocale） |
 | `ydsz.i18n.defaultLocale` | zh_CN | 默认 Locale |
 | `ydsz.i18n.fallbackMessage` | 未找到对应的提示信息: {0} | 缺省 i18n 提示（占位符 {0} 为消息键） |
-| `ydsz.i18n.supportedLocales` | [zh_CN, en_US, zh_TW] | 支持的翻译语言列表 |
+| `ydsz.i18n.supportedLocales` | [zh_CN, en_US] | 支持的翻译语言列表（当前项目仅中英文，见 YDIZ-I18N-007） |
 | `ydsz.i18n.langParamName` | lang | URL 语言参数名 |
 | `ydsz.i18n.locale-resolver-type` | accept-header | Locale 解析器类型：accept-header / user-priority |
 | `ydsz.i18n.validateOnStartup` | true | 启动时校验 key 存在性（fail-fast） |

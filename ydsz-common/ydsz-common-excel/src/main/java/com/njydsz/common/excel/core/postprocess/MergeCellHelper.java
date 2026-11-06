@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -95,7 +96,7 @@ public final class MergeCellHelper {
    * @throws IOException IO 或 ZIP 解析异常
    */
   public static void apply(InputStream sourceXlsx, OutputStream destXlsx,
-      java.util.function.Consumer<MergeConfig> configurer) throws IOException {
+      Consumer<MergeConfig> configurer) throws IOException {
     MergeConfig config = new MergeConfig();
     configurer.accept(config);
 

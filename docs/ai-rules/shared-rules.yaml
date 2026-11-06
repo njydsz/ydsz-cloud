@@ -13,18 +13,18 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.11.06-v2"  # v30: YAML 语法修复（9 处非法转义 + 2 处缩进错乱 + stats 块归位）+ 计数校准 199 条
-  source: "docs/云顶编码规范.md v1.0.16"
+  version: "26.11.06-v3"  # v31: 新增 YDIZ-I18N-007（项目仅支持中英文，P1）+ i18n 规则表述对齐
+  source: "docs/云顶编码规范.md v1.0.17"
   last_synced: "2026-11-06"
-  last_updated: "26.11.06-v2（规则源可解析性修复：9 处双引号标量非法转义改为单引号、YDIZ-FLYWAY-001/YDIZ-FE-001 两条目缩进归位、stats 块从 rules 序列中移出至顶层；JDIZ-JDBC-001/002 两条 P1 已计入；总规则 199 条 P0=71 P1=97 P2=31）"
-  total_rules: 199
+  last_updated: "26.11.06-v3（新增 YDIZ-I18N-007：项目仅支持 zh_CN + en_US 两种语言；YDIZ-I18N-001 命名规范移除繁体条目；YDIZ-LOCALE-003 / YDIZ-COMMON-040 / YDIZ-COMMON-046 表述对齐；总规则 199→200 条 P0=71 P1=98 P2=31）"
+  total_rules: 200
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
     P0: 71
-    P1: 97
+    P1: 98
     P2: 31
 
 rules:
@@ -2773,7 +2773,7 @@ rules:
       - 兜底（无后缀）：`{module}-messages.properties`
       - 中文简体：`{module}-messages_zh_CN.properties`
       - 英文：`{module}-messages_en_US.properties`
-      - 繁体中文：`{module}-messages_zh_TW.properties`（按需）
+      - **仅此两种**：项目当前只支持中英文，禁止新增其他语言资源文件（YDIZ-I18N-007）
     pattern: "业务模块的 messages*.properties 未带模块前缀"
     fix: |
       将 `messages.properties` / `messages_zh_CN.properties` 重命名为 `{module}-messages.properties` / `{module}-messages_zh_CN.properties`
@@ -2792,6 +2792,59 @@ rules:
         └── foo-messages_zh_CN.properties
       ```
     source: "编码规范 §36.4.1 资源文件命名（YDIZ-I18N-001，P0）"
+
+  - id: "YDIZ-I18N-007"
+    category: "i18n"
+    severity: "P1"
+    title: "【强制】项目仅支持中文（zh_CN）与英文（en_US）两种语言，禁止新增其他语言"
+    description: |
+      本项目国际化范围**收敛为简体中文 + 英文两种语言**，不支持繁体中文、日语、韩语或其他任何语言。
+
+      **为什么**：
+      - 多语言资源文件是**成对维护成本**：每新增一种语言，所有模块的 `{module}-messages_{locale}.properties`
+        都要同步补齐，漏一个 key 就会在运行时 fallback 出混合语言文案
+      - 当前项目实际用户群体仅覆盖中文与英文，其他语言无真实业务场景，属于过度设计
+      - 框架默认值（`KnownLocaleTags.DEFAULT_KNOWN_TAGS` / `DEFAULT_SUPPORTED_TAGS`）已收敛为
+        `[zh_CN, en_US]`；`ydsz.i18n.supportedLocales` 默认值同步为 `[zh_CN, en_US]`
+
+      **禁止行为**：
+      1. 新增 `{module}-messages_{locale}.properties`，其中 locale 不是 `zh_CN` / `en_US`
+      2. 在 `KnownLocaleTags` 的 `DEFAULT_KNOWN_TAGS` / `DEFAULT_SUPPORTED_TAGS` 中新增其他 tag
+      3. 在业务代码中硬编码 `zh_TW` / `ja_JP` / `ko_KR` / `zh_HK` 等 locale 字面量
+      4. 通过 `Accept-Language` 解析出非支持语言时不回退，直接把非支持 tag 返回给上层
+
+      **正确做法**：
+      - 新增文案只写两份：`{module}-messages_zh_CN.properties` + `{module}-messages_en_US.properties`
+      - 请求语言不在支持列表时，回退到 `ydsz.i18n.default-locale`（默认 `zh_CN`）
+      - 若未来确需新增语言，必须先走需求评审，再同步修改 `KnownLocaleTags`、
+        `I18nProperties` 默认值、全部模块资源文件三处，并在本规则追加变更记录
+    pattern: |
+      1. `{module}-messages_(?!zh_CN|en_US)[a-z]{2}_[A-Z]{2}\\.properties`
+      2. `KnownLocaleTags\\.(DEFAULT_KNOWN_TAGS|DEFAULT_SUPPORTED_TAGS)` 含非 zh_CN/en_US 的 tag
+      3. 代码中出现 `"zh_TW"` / `"ja_JP"` / `"ko_KR"` / `"zh_HK"` 等 locale 字面量
+    fix: |
+      1. 删除多余的 `_{locale}.properties` 资源文件
+      2. 将 `KnownLocaleTags` 中新增的 tag 移除，保持 `[zh_CN, en_US]`
+      3. 非支持语言的请求统一回退 `default-locale`
+      4. 若确需新增语言，走需求评审后同步修改框架默认值与全模块资源文件
+    example_bad: |
+      ```
+      # ❌ 违反 YDIZ-I18N-007：项目不支持繁体
+      ydsz-message/ydsz-message-server/src/main/resources/i18n/
+        ├── message-messages.properties
+        ├── message-messages_zh_CN.properties
+        ├── message-messages_en_US.properties
+        └── message-messages_zh_TW.properties   ← 冗余，应删除
+      ```
+    example_good: |
+      ```
+      # ✅ 仅保留中英文
+      ydsz-message/ydsz-message-server/src/main/resources/i18n/
+        ├── message-messages.properties
+        ├── message-messages_zh_CN.properties
+        └── message-messages_en_US.properties
+      ```
+    source: "编码规范 §36.11 支持语言集（YDIZ-I18N-007，P1，26.11.06 语言范围收敛专项）"
 
   - id: "YDIZ-I18N-002"
     category: "i18n"
@@ -4777,7 +4830,7 @@ rules:
       - 构造 BusinessException/SysException 时使用中文字符串作为 message（而不是 i18n key + I18n.message() 调用）
 
       **正确做法**：
-      - 中文 keys 同步追加到模块 messages.properties（默认 + zh_CN + en_US 三份同步）
+      - 中文 keys 同步追加到模块 messages.properties（默认 + zh_CN + en_US，仅支持中英文，YDIZ-I18N-007）
       - 含变量 → `I18n.message("module.error.scenario", new Object[]{var})`
       - JDK RT（IllegalStateException/IllegalArgumentException）直接 `new IllegalStateException(I18n.message("key", params))`
 
@@ -4789,7 +4842,7 @@ rules:
       3. throw 改写为 `throw new XxxException(I18n.message("module.scenario.key", new Object[]{var}))`
       4. 确保 Java 文件已 `import com.njydsz.common.locales.util.I18n;`
     example_good: |
-      // 正确：i18n 调用 + 三语 properties 同步追加
+      // 正确：i18n 调用 + 中英文 properties 同步追加（YDIZ-I18N-007）
       throw new WorkflowException(
         "workflow.validation.status_required",
         I18n.message("workflow.validation.status_required")
@@ -5023,7 +5076,7 @@ rules:
       **为什么禁止**：
       - 当 `useCodeAsDefaultMessage=true` 时，中文 key 会将原文直接返回给用户，永远无法被翻译
       - properties 文件的 key 命名规范要求英文点分格式，中文 key 违反命名约定
-      - 英文 key + properties 翻译才是正确的三语支持模式
+      - 英文 key + properties 翻译才是正确的中英文支持模式（YDIZ-I18N-007）
 
       **合法示例**：
       - `I18n.message("system.config.value_type.bool_invalid")` ✅
@@ -5036,12 +5089,12 @@ rules:
       **修复方式**：
       1. 搜索 `I18n.message("中文` 和 `I18nMessages.message("中文` 定位所有伪 i18n 调用
       2. 提取英文 key（格式 module.submodule.action_description）
-      3. 追加 key 到三份 properties 文件（default/en_US/zh_CN）
+      3. 追加 key 到三份 properties 文件（default/en_US/zh_CN，仅中英文）
       4. 调用点改引用英文 key
     pattern: 'I18n\.message\(\s*"[^a-zA-Z_\.].*I18nMessages\.message\(\s*"[^a-zA-Z_\.]'
     fix: |
       1. 全局搜索定位伪 i18n 调用
-      2. 创建英文 key 并追加到三份 properties 文件
+      2. 创建英文 key 并追加到三份 properties 文件（default/en_US/zh_CN）
       3. 替换调用点的 key 引用
       4. 验证三文件 key 一致率 ≥ 98%
     example_bad: |
@@ -5812,7 +5865,7 @@ rules:
     description: |
       业务代码中禁止使用以下方式处理语言/区域：
       - 直接 new Locale("zh", "CN") 或 Locale.CHINA 等 JDK 常量
-      - 硬编码字符串 "zh_CN"、"en_US"、"zh_TW" 做 locale 比较
+      - 硬编码字符串 "zh_CN"、"en_US" 做 locale 比较（项目仅这两种，见 YDIZ-I18N-007）
       - 字符串拼接生成 locale 标签（如 locale.getLanguage() + "_" + locale.getCountry()）
 
       **为什么必须使用 KnownLocaleTags**：
@@ -6266,7 +6319,7 @@ rules:
     title: "【建议】InfraException 默认 i18n key 为 infra.error，各模块可按需覆盖"
     description: |
       使用 `InfraException` 抛出基础设施异常时，**建议**为每个异常类指定默认的 i18n 消息 key，
-      确保内嵌文案在英文/中文/繁体环境下可读。
+      确保内嵌文案在英文/中文环境下可读（项目仅支持中英文，YDIZ-I18N-007）。
 
       **默认 i18n key 规范**：
       - 通用基础设施错误（未知类型）：`infra.error` = "Infrastructure error, please try again later"

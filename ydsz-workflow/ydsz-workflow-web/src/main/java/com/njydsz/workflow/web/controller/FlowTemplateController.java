@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
@@ -77,6 +78,7 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
 @RequestMapping("/workflow/template")
 @RequiredArgsConstructor
 @Validated
+@AuthApiPermission(apiCodes = "flow:template:list")
 public class FlowTemplateController {
 
   /** 流程模板服务，负责模板查询、导入、导出与版本管理 */
@@ -128,6 +130,7 @@ public class FlowTemplateController {
       action = AuditAction.CREATE,
       content = "'导入模板:' + #templateCode")
   @PostMapping("/{templateCode}/import")
+  @AuthApiPermission(apiCodes = "flow:template:add")
   public YdszResponse<String> importTemplate(
       @PathVariable String templateCode, @RequestParam(required = false) String flowName) {
     return YdszResponse.success(templateService.importTemplate(templateCode, flowName));
@@ -152,6 +155,7 @@ public class FlowTemplateController {
       action = AuditAction.CREATE,
       content = "'导出模板:' + #templateName")
   @PostMapping("/export/{definitionId}")
+  @AuthApiPermission(apiCodes = "flow:template:add")
   public YdszResponse<Void> exportAsTemplate(
       @PathVariable String definitionId,
       @RequestParam String templateName,
@@ -206,6 +210,7 @@ public class FlowTemplateController {
       action = AuditAction.CREATE,
       content = "'创建模板新版本:' + #templateCode")
   @PostMapping("/{templateCode}/newVersion")
+  @AuthApiPermission(apiCodes = "flow:template:add")
   public YdszResponse<Integer> createNewVersion(
       @PathVariable String templateCode, @RequestParam(required = false) String versionLabel) {
     return YdszResponse.success(templateService.createNewVersion(templateCode, versionLabel));
@@ -230,6 +235,7 @@ public class FlowTemplateController {
       action = AuditAction.CREATE,
       content = "'克隆模板:' + #templateCode + ' -> ' + #newTemplateCode")
   @PostMapping("/{templateCode}/clone")
+  @AuthApiPermission(apiCodes = "flow:template:add")
   public YdszResponse<String> cloneTemplate(
       @PathVariable String templateCode,
       @RequestParam String newTemplateCode,
@@ -253,6 +259,7 @@ public class FlowTemplateController {
   @Operation(summary = "P2-9: 从父模板继承创建子模板")
   @Idempotent(key = "ydsz:workflow:template:inherit", ttlSeconds = 5)
   @PostMapping("/{parentTemplateCode}/inherit")
+  @AuthApiPermission(apiCodes = "flow:template:add")
   @Audit(
       module = "流程模板",
       type = AuditType.OPERATION,
@@ -293,6 +300,7 @@ public class FlowTemplateController {
   @Idempotent(key = "ydsz:workflow:template:syncFromParent", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowTemplate.syncFromParent", threshold = 50)
   @PostMapping("/{childTemplateCode}/sync")
+  @AuthApiPermission(apiCodes = "flow:template:add")
   @Audit(
       module = "流程模板",
       type = AuditType.OPERATION,

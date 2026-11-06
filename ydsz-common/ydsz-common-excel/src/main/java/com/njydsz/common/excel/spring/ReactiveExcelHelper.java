@@ -2,6 +2,7 @@ package com.njydsz.common.excel.spring;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.Flow;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -51,7 +52,7 @@ public final class ReactiveExcelHelper {
    * @param <T> 泛型类型
    * @return ResponseEntity 包装响应式数据源
    */
-  public static <T> ResponseEntity<java.util.concurrent.Flow.Publisher<byte[]>> buildReactiveResponse(
+  public static <T> ResponseEntity<Flow.Publisher<byte[]>> buildReactiveResponse(
       List<T> data,
       Class<T> clazz,
       String filename,

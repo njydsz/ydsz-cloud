@@ -1,5 +1,6 @@
 package com.njydsz.common.excel.core.reader;
 
+import java.lang.invoke.VarHandle;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -81,7 +82,7 @@ public final class ColumnMetadata {
    * 比 MethodHandle.invoke() 快 20~40%。由 {@code SuperFastExcelReader} 在分析阶段
    * 通过 {@code MHFieldAccessor.getVarHandleSetter} 创建并赋值。
    */
-  public final java.lang.invoke.VarHandle varHandle;
+  public final VarHandle varHandle;
 
   /** 目标字段类型（预计算，避免重复调用 {@code field.getType()}）。 */
   public final Class<?> targetType;
@@ -114,7 +115,7 @@ public final class ColumnMetadata {
   public ColumnMetadata(
       int columnIndex,
       FieldSetter setter,
-      java.lang.invoke.VarHandle varHandle,
+      VarHandle varHandle,
       Class<?> targetType,
       String dateFormat,
       boolean automaticTrim) {

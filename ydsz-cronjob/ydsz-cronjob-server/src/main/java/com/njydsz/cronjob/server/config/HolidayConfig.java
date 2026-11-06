@@ -27,6 +27,12 @@ import lombok.Data;
 @Data
 public class HolidayConfig {
 
+  /** 默认 API 请求超时（毫秒） */
+  private static final int DEFAULT_TIMEOUT_MS = 3000;
+
+  /** 默认缓存刷新周期（小时） */
+  private static final int DEFAULT_REFRESH_HOURS = 24;
+
   /**
    * 是否启用全局节假日 API 拉取。
    *
@@ -46,12 +52,12 @@ public class HolidayConfig {
   /**
    * API 请求超时（毫秒）。
    */
-  private int timeoutMs = 3000;
+  private int timeoutMs = DEFAULT_TIMEOUT_MS;
 
   /**
    * 缓存刷新周期（小时）。
    *
    * <p>默认 24 小时，避免频繁请求 API。
    */
-  private int refreshHours = 24;
+  private int refreshHours = DEFAULT_REFRESH_HOURS;
 }

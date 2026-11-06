@@ -11,11 +11,10 @@ import lombok.Setter;
 import lombok.ToString;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
-import com.njydsz.literule.domain.enums.RuleStatusEnum;
+import com.njydsz.literule.domain.enums.RuleStatus;
 
 /**
  * LiteRule 规则定义
@@ -149,8 +148,8 @@ public class RuleDefinition extends MpBaseEntity<String> {
    *
    * @return 状态枚举，无法解析时返回 null
    */
-  public RuleStatusEnum getStatusEnum() {
-    return RuleStatusEnum.parse(getStatus());
+  public RuleStatus getStatusEnum() {
+    return RuleStatus.fromCode(getStatus());
   }
 
   /**
@@ -158,7 +157,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
    *
    * @param statusEnum 状态枚举，不可为 null
    */
-  public void setStatusEnum(RuleStatusEnum statusEnum) {
+  public void setStatusEnum(RuleStatus statusEnum) {
     if (statusEnum == null) {
       throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_INVALID);
     }
@@ -174,14 +173,14 @@ public class RuleDefinition extends MpBaseEntity<String> {
    * @throws IllegalStateException 当当前状态不允许发布时
    */
   public void publish(String reviewer) {
-    RuleStatusEnum current = getStatusEnum();
+    RuleStatus current = getStatusEnum();
     if (current == null) {
-      current = RuleStatusEnum.DRAFT;
+      current = RuleStatus.DRAFT;
     }
-    if (!current.canTransitTo(RuleStatusEnum.PUBLISHED)) {
+    if (!current.canTransitionTo(RuleStatus.PUBLISHED)) {
       throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
-    setStatus(RuleStatusEnum.PUBLISHED.name());
+    setStatus(RuleStatus.PUBLISHED.name());
     this.reviewedBy = reviewer;
     this.reviewedAt = LocalDateTime.now();
   }
@@ -194,14 +193,14 @@ public class RuleDefinition extends MpBaseEntity<String> {
    * @throws IllegalStateException 当当前状态不允许停用时
    */
   public void disable() {
-    RuleStatusEnum current = getStatusEnum();
+    RuleStatus current = getStatusEnum();
     if (current == null) {
       throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_INVALID);
     }
-    if (!current.canTransitTo(RuleStatusEnum.DISABLED)) {
-      throw new SysException("rule.error.disable_invalid_state");
+    if (!current.canTransitionTo(RuleStatus.DISABLED)) {
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
-    setStatus(RuleStatusEnum.DISABLED.name());
+    setStatus(RuleStatus.DISABLED.name());
   }
 
   /**
@@ -212,14 +211,14 @@ public class RuleDefinition extends MpBaseEntity<String> {
    * @throws IllegalStateException 当当前状态不允许回退时
    */
   public void revertToDraft() {
-    RuleStatusEnum current = getStatusEnum();
+    RuleStatus current = getStatusEnum();
     if (current == null) {
       throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_INVALID);
     }
-    if (!current.canTransitTo(RuleStatusEnum.DRAFT)) {
+    if (!current.canTransitionTo(RuleStatus.DRAFT)) {
       throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
-    setStatus(RuleStatusEnum.DRAFT.name());
+    setStatus(RuleStatus.DRAFT.name());
     this.reviewedBy = null;
     this.reviewedAt = null;
     this.reviewComment = null;
@@ -233,8 +232,8 @@ public class RuleDefinition extends MpBaseEntity<String> {
    * @return true 表示可编辑
    */
   public boolean isEditable() {
-    RuleStatusEnum current = getStatusEnum();
-    return current == RuleStatusEnum.DRAFT || current == RuleStatusEnum.DISABLED;
+    RuleStatus current = getStatusEnum();
+    return current == RuleStatus.DRAFT || current == RuleStatus.DISABLED;
   }
 
   /**
@@ -265,7 +264,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
    * @return true 表示已发布且启用
    */
   public boolean isActive() {
-    return RuleStatusEnum.PUBLISHED.name().equals(getStatus()) && Boolean.TRUE.equals(isEnabled);
+    return RuleStatus.PUBLISHED.name().equals(getStatus()) && Boolean.TRUE.equals(isEnabled);
   }
 
   /**

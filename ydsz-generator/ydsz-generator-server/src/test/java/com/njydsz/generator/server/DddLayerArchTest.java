@@ -108,6 +108,8 @@ final class DddLayerArchTest {
         .matching("com.njydsz.generator.(*)..")
         .should().beFreeOfCycles()
         .because("YDIZ-DDD-001: DDD 分层必须单向依赖（web -> server -> domain <- infra），禁止循环引用。"
+
+
             + "注意 generator 的 repository/converter/config 包跨模块同名，切片按包聚合，"
             + "本规则实际校验的是顶层包之间无循环，不能替代上面四条精确到层的规则.");
 }

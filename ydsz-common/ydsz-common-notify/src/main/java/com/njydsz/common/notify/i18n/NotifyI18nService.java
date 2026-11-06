@@ -12,16 +12,15 @@ import org.slf4j.LoggerFactory;
 /**
  * 通知国际化服务（P3-14）
  *
- * <p>根据用户的语言偏好加载对应的通知文案，支持多语言邮件主题和内容模板。
+ * <p>根据用户的语言偏好加载对应的通知文案，支持邮件主题和内容模板的国际化。
  *
- * <p><b>资源文件结构：</b>
+ * <p><b>资源文件结构（项目仅支持中英文，YDIZ-I18N-007）：</b>
  *
  * <pre>
  * resources/
  *   i18n/
  *     notify_messages_zh_CN.properties
  *     notify_messages_en_US.properties
- *     notify_messages_ja_JP.properties
  * </pre>
  *
  * <p><b>使用示例：</b>

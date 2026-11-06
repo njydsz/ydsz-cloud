@@ -15,6 +15,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.safe.internal.RequireInternal;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
 
@@ -46,6 +47,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
 @RequestMapping("/internal")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "cronjob:internal:api")
+@RequireInternal
 public class InternalCronjobApiController {
 
   private final JobService jobService;

@@ -42,6 +42,9 @@ public class BytecodeInterpreter {
   /** 操作数栈最小初始容量 */
   private static final int MIN_STACK_CAPACITY = 16;
 
+  /** 每毫秒对应的纳秒数 */
+  private static final long NANOS_PER_MILLI = 1_000_000L;
+
   /**
    * P1-P3（26.09.23）：ThreadLocal 复用栈帧，避免每次 execute 都 new Object[]
    *
@@ -103,7 +106,7 @@ public class BytecodeInterpreter {
     int stepCount = 0;
 
     // P0-F2：计算墙上时钟截止时间（与 TreeInterpreter 行为一致）
-    long deadlineNanos = timeoutMs > 0 ? System.nanoTime() + timeoutMs * 1_000_000L : 0L;
+    long deadlineNanos = timeoutMs > 0 ? System.nanoTime() + timeoutMs * NANOS_PER_MILLI : 0L;
 
     // 操作数栈（使用数组 + 栈指针实现，避免 ArrayList 扩容开销）
     // P1-P3：从 ThreadLocal 获取栈帧（按需创建/扩容），减少 GC 压力

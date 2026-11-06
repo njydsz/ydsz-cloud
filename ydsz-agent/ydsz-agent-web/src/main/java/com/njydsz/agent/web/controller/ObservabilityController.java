@@ -17,6 +17,7 @@ import com.njydsz.agent.server.analytics.CostAnalysisService.BotMetricsDTO;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.DashboardOverviewDTO;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.ModelUsageDTO;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
@@ -40,6 +41,7 @@ import com.njydsz.common.core.response.YdszResponse;
 @ApiVersion("26.09.17")
 @RestController
 @RequestMapping("/agent/observability")
+@AuthApiPermission(apiCodes = "agt:observability:list")
 public class ObservabilityController {
 
   /** 统计天数上限 */
@@ -117,6 +119,7 @@ public class ObservabilityController {
    */
   @Operation(summary = "查询当前链路上下文")
   @PostMapping("/trace-context")
+  @AuthApiPermission(apiCodes = "agt:observability:add")
   public YdszResponse<Map<String, String>> getTraceContext() {
     log.info("[Observability-API] 查询当前链路上下文");
     Map<String, String> context = new HashMap<>(TRACE_CONTEXT_MAP_CAPACITY);

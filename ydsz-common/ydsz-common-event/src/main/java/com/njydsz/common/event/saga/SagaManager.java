@@ -1,9 +1,11 @@
 package com.njydsz.common.event.saga;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -87,8 +89,8 @@ public class SagaManager {
    *
    * @return 关联键集合
    */
-  public java.util.Set<String> getRegisteredAssociationKeys() {
-    return java.util.Collections.unmodifiableSet(sagaFactories.keySet());
+  public Set<String> getRegisteredAssociationKeys() {
+    return Collections.unmodifiableSet(sagaFactories.keySet());
   }
 
   /**

@@ -124,9 +124,12 @@ public class ScriptRule implements Rule {
       ExecutorUtils.newVirtualThreadExecutor("literule-script-exec");
   // CHECKSTYLE.ON: RegexpSinglelineJava
 
+  /** ScriptEngine 缓存最大条目数 */
+  private static final int ENGINE_CACHE_MAX_SIZE = 16;
+
   /** ScriptEngine 缓存（按语言名，全局共享，基于 ydsz-common-cache） */
   private static final Cache<String, ScriptEngine> ENGINE_CACHE =
-      YdszCache.<String, ScriptEngine>newBuilder().maximumSize(16).build();
+      YdszCache.<String, ScriptEngine>newBuilder().maximumSize(ENGINE_CACHE_MAX_SIZE).build();
 
   private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
 

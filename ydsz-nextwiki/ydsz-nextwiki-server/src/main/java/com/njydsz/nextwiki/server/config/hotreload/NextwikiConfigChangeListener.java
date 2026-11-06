@@ -49,6 +49,9 @@ public class NextwikiConfigChangeListener implements ConfigChangeListener {
   /** 安全相关配置前缀簇 */
   private static final String VIRUS_SCAN_PREFIX = "nextwiki.virus-scan.";
 
+  /** 监听器执行顺序（较低优先级，非核心入口组件） */
+  private static final int CONFIG_LISTENER_ORDER = 30;
+
   /**
    * 接收配置变更回调。
    *
@@ -81,6 +84,6 @@ public class NextwikiConfigChangeListener implements ConfigChangeListener {
    */
   @Override
   public int getOrder() {
-    return 30;
+    return CONFIG_LISTENER_ORDER;
   }
 }

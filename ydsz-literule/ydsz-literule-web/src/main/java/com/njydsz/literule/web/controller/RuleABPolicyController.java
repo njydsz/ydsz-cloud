@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -61,6 +62,7 @@ import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "AB Test 回滚", description = "AB Test 自动回滚策略配置与人工回滚")
+@AuthApiPermission(apiCodes = "rule:ab-policy:list")
 public class RuleABPolicyController {
 
   /** A/B 测试自动回滚服务（SPI，由 project 模块提供实现） */
@@ -105,6 +107,7 @@ public class RuleABPolicyController {
   @Operation(summary = "更新 AB Test 自动回滚策略", description = "更新指定规则的自动回滚策略配置，变更后下一轮 AB Test 评估将使用新策略")
   @ApiResponse(responseCode = "200", description = "成功")
   @PutMapping("/{ruleCode}/ab-policy")
+  @AuthApiPermission(apiCodes = "rule:ab-policy:edit")
   public YdszResponse<Void> updateABPolicy(
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleABPolicyDTO dto,
@@ -149,6 +152,7 @@ public class RuleABPolicyController {
   @Operation(summary = "主动触发 AB Test 评估", description = "立即执行一次 AB Test 评估，检查指标是否超过回滚阈值，不影响定时评估流程")
   @ApiResponse(responseCode = "200", description = "成功")
   @PostMapping("/{ruleCode}/ab-evaluate")
+  @AuthApiPermission(apiCodes = "rule:ab-policy:add")
   public YdszResponse<Boolean> evaluateAB(@PathVariable String ruleCode) {
     return YdszResponse.success(abTestAutoRollbackProvider.evaluateOne(ruleCode));
   }
@@ -172,6 +176,7 @@ public class RuleABPolicyController {
   @ApiResponse(responseCode = "200", description = "成功")
   @Parameter(name = "reason", description = "回滚原因", example = "MANUAL")
   @PostMapping("/{ruleCode}/ab-rollback")
+  @AuthApiPermission(apiCodes = "rule:ab-policy:add")
   public YdszResponse<RuleABRollbackVO> manualRollback(
       @PathVariable String ruleCode,
       @RequestParam(value = "reason", defaultValue = "MANUAL") String reason,

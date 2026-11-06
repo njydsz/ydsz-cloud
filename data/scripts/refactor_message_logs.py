@@ -22,7 +22,6 @@ PROPS = {
     "default": ROOT / r"ydsz-message-server/src/main/resources/i18n/message-messages.properties",
     "en": ROOT / r"ydsz-message-server/src/main/resources/i18n/message-messages_en_US.properties",
     "zh": ROOT / r"ydsz-message-server/src/main/resources/i18n/message-messages_zh_CN.properties",
-    "tw": ROOT / r"ydsz-message-server/src/main/resources/i18n/message-messages_zh_TW.properties",
 }
 SKIP_FILES = {"TcpPushChannel.java"}
 BACKUP_BASE = Path(r"D:/Code/open/ydsz-cloud/data/scripts/backup_logs")
@@ -33,15 +32,15 @@ IMPORT_LINE = "import com.njydsz.common.locales.util.I18n;"
 
 
 # ----------------------------------------------------------------------------
-# Manual i18n entries.  Key -> {"zh", "en", "tw", "default"}.
+# Manual i18n entries.  Key -> {"zh", "en", "default"}（项目仅支持中英文，YDIZ-I18N-007）.
 # Each entry is tried against literal zh via EXACT match on either the full literal or
 # via a "slug + body" match.
 # ----------------------------------------------------------------------------
 T: dict[str, dict[str, str]] = {}
 
 
-def e(key: str, zh: str, en: str, tw: str | None = None, default: str | None = None) -> None:
-    T[key] = {"zh": zh, "en": en, "tw": tw or zh, "default": default or en}
+def e(key: str, zh: str, en: str, default: str | None = None) -> None:
+    T[key] = {"zh": zh, "en": en, "default": default or en}
 
 
 # --- Frequently-occurring literal -> i18n key map (zh msg is unique) ---
@@ -692,7 +691,7 @@ def pick_key(literal: str) -> tuple[str, str, str]:
     cleaned = re.sub(r"\s+", "_", cleaned).strip("_")[:100]
     sig = hashlib.md5(literal.encode("utf-8")).hexdigest()[:6]
     k = f"message.log.other.{cleaned}.{sig}"
-    T.setdefault(k, {"zh": literal, "en": cleaned, "tw": literal, "default": cleaned})
+    T.setdefault(k, {"zh": literal, "en": cleaned, "default": cleaned})
     return k, T[k]["en"], T[k]["zh"]
 
 
@@ -892,7 +891,6 @@ def main():
         _merge_props(PROPS["default"], {k: v["default"] for k, v in T.items()})
         _merge_props(PROPS["en"], {k: v["en"] for k, v in T.items()})
         _merge_props(PROPS["zh"], {k: v["zh"] for k, v in T.items()})
-        _merge_props(PROPS["tw"], {k: v["tw"] for k, v in T.items()})
         print(f"T now has {len(T)} entries.")
         print("\nDone.")
 

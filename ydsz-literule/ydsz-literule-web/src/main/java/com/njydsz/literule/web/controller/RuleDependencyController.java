@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -54,6 +55,7 @@ import com.njydsz.literule.server.spi.RuleDependencyProvider;
 @RequestMapping("/literule/rules")
 @Validated
 @Tag(name = "规则依赖", description = "规则间依赖关系管理与级联禁用分析")
+@AuthApiPermission(apiCodes = "rule:dependency:list")
 public class RuleDependencyController {
 
   /** 规则依赖服务（SPI，由 project 模块提供实现，可选依赖） */
@@ -102,6 +104,7 @@ public class RuleDependencyController {
   @RateLimit(resource = "literule.rule_dependency.addDependency", threshold = 50)
   @Operation(summary = "添加规则依赖")
   @PostMapping("/{ruleCode}/dependencies")
+  @AuthApiPermission(apiCodes = "rule:dependency:add")
   public YdszResponse<RuleDependencyVO> addDependency(
       @PathVariable String ruleCode,
       @Valid @RequestBody RuleDependencyAddDTO dto,
@@ -133,6 +136,7 @@ public class RuleDependencyController {
   @RateLimit(resource = "literule.rule_dependency.removeDependency", threshold = 50)
   @Operation(summary = "删除规则依赖")
   @DeleteMapping("/{ruleCode}/dependencies/{dependsOnRuleCode}")
+  @AuthApiPermission(apiCodes = "rule:dependency:delete")
   public YdszResponse<Void> removeDependency(
       @PathVariable String ruleCode, @PathVariable String dependsOnRuleCode) {
     requireProvider().remove(ruleCode, dependsOnRuleCode);

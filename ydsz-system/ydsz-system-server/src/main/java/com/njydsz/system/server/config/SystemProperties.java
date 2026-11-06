@@ -135,11 +135,17 @@ public class SystemProperties {
      */
     private boolean isConsistencyRefreshEnabled = false;
 
-    /** 缓存一致性兜底刷新间隔（毫秒），默认 5 分钟（300000ms）。 */
-    private long consistencyRefreshIntervalMs = 300000L;
+    /** 缓存一致性兜底刷新间隔（毫秒），默认 5 分钟 */
+    private static final long DEFAULT_CONSISTENCY_REFRESH_INTERVAL_MS = 5L * 60L * 1000L;
 
-    /** 缓存一致性兜底刷新首次执行延迟（毫秒），默认 2 分钟（120000ms）。 */
-    private long consistencyRefreshInitialDelayMs = 120000L;
+    /** 缓存一致性兜底刷新首次执行延迟（毫秒），默认 2 分钟 */
+    private static final long DEFAULT_CONSISTENCY_REFRESH_INITIAL_DELAY_MS = 2L * 60L * 1000L;
+
+    /** 缓存一致性兜底刷新间隔（毫秒）。 */
+    private long consistencyRefreshIntervalMs = DEFAULT_CONSISTENCY_REFRESH_INTERVAL_MS;
+
+    /** 缓存一致性兜底刷新首次执行延迟（毫秒）。 */
+    private long consistencyRefreshInitialDelayMs = DEFAULT_CONSISTENCY_REFRESH_INITIAL_DELAY_MS;
   }
 
   /** 二次认证配置（{@code ydsz.system.secondary-auth.*}） */

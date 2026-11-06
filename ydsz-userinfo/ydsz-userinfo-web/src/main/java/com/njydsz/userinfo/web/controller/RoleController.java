@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
@@ -76,6 +77,7 @@ import com.njydsz.userinfo.server.service.RoleService;
 @RequestMapping("/role")
 @RequiredArgsConstructor
 @Tag(name = "角色管理", description = "角色 CRUD、权限分配")
+@AuthApiPermission(apiCodes = "sys:role:list")
 public class RoleController {
 
   private final RoleService service;
@@ -143,6 +145,7 @@ public class RoleController {
   @Idempotent(key = "ydsz:userinfo:RoleController:create:lock", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.Role.create", threshold = 50)
   @PostMapping
+  @AuthApiPermission(apiCodes = "sys:role:add")
   @Operation(summary = "创建角色")
   public YdszResponse<String> create(@Valid @RequestBody RoleDTO dto) {
     return YdszResponse.success(service.create(dto));
@@ -169,6 +172,7 @@ public class RoleController {
   @Idempotent(key = "ydsz:userinfo:RoleController:update:lock", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.Role.update", threshold = 50)
   @PutMapping
+  @AuthApiPermission(apiCodes = "sys:role:edit")
   @Operation(summary = "更新角色")
   public YdszResponse<Boolean> update(@Valid @RequestBody RoleDTO dto) {
     return YdszResponse.success(service.update(dto));
@@ -201,6 +205,7 @@ public class RoleController {
   @RateLimit(resource = "userinfo.Role.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:RoleController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
+  @AuthApiPermission(apiCodes = "sys:role:delete")
   @Operation(summary = "删除角色")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(service.removeById(id));
@@ -227,6 +232,7 @@ public class RoleController {
   @Idempotent(key = "ydsz:userinfo:RoleController:assignPermissions:lock", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.Role.assignPermissions", threshold = 50)
   @PostMapping("/{roleId}/permissions")
+  @AuthApiPermission(apiCodes = "sys:role:add")
   @Operation(summary = "分配角色权限")
   public YdszResponse<Boolean> assignPermissions(
       @PathVariable String roleId, @Valid @RequestBody AssignPermissionsDTO dto) {

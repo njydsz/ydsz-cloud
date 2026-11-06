@@ -2,13 +2,15 @@ package com.njydsz.common.queue.health;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -191,7 +193,7 @@ public class QueueHealthIndicator implements HealthIndicator {
       Class<?> stringSerializerClazz =
           Class.forName("org.apache.kafka.common.serialization.StringSerializer");
       Object props = Class.forName("java.util.Properties").getDeclaredConstructor().newInstance();
-      java.util.Properties p = (java.util.Properties) props;
+      Properties p = (Properties) props;
       p.put(
           configClazz.getField("BOOTSTRAP_SERVERS_CONFIG").get(null),
           queueProperties.getKafkaBootstrapServers());
@@ -213,7 +215,7 @@ public class QueueHealthIndicator implements HealthIndicator {
             "kafka-admin-describe-cluster");
       } finally {
         adminClazz.getMethod("close", long.class, java.util.concurrent.TimeUnit.class)
-            .invoke(admin, 1L, java.util.concurrent.TimeUnit.SECONDS);
+            .invoke(admin, 1L, TimeUnit.SECONDS);
       }
     } catch (Exception e) {
       return new ProtocolCheckResult(false, e.getMessage(), "kafka-admin-describe-cluster");

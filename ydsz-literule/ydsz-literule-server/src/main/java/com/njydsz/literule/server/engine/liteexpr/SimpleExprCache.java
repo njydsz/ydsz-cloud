@@ -32,6 +32,12 @@ public class SimpleExprCache implements ExprCache {
   /** 默认最大缓存条目数 */
   private static final int DEFAULT_MAX_SIZE = 2048;
 
+  /** 初始 ConcurrentHashMap 容量 */
+  private static final int INITIAL_MAP_CAPACITY = 256;
+
+  /** 组合 key 的哈希乘数（标准 hash 合并因子） */
+  private static final int HASH_MULTIPLIER = 31;
+
   private final ConcurrentHashMap<Integer, Boolean> store;
   private final int maxSize;
   private final LongAdder hitCount = new LongAdder();
@@ -49,7 +55,7 @@ public class SimpleExprCache implements ExprCache {
    */
   public SimpleExprCache(int maxSize) {
     this.maxSize = maxSize > 0 ? maxSize : DEFAULT_MAX_SIZE;
-    this.store = new ConcurrentHashMap<>(Math.min(this.maxSize, 256));
+    this.store = new ConcurrentHashMap<>(Math.min(this.maxSize, INITIAL_MAP_CAPACITY));
   }
 
   @Override
@@ -109,7 +115,7 @@ public class SimpleExprCache implements ExprCache {
   static int compositeKey(ExprNode ast, Map<String, Object> facts) {
     int astHash = System.identityHashCode(ast);
     int factsHash = facts.hashCode();
-    return astHash * 31 + factsHash;
+    return astHash * HASH_MULTIPLIER + factsHash;
   }
 
   /** 清空缓存（测试用） */

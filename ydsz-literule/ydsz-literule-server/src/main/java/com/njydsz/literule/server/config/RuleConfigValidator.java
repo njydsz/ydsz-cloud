@@ -3,13 +3,14 @@ package com.njydsz.literule.server.config;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.njydsz.common.locales.util.I18n;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 规则引擎配置启动校验器（P2-2：配置分组 + 启动校验）

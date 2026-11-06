@@ -102,11 +102,12 @@
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>
-    <!-- ydsz-common-thread（P0-1: CacheThreadPoolManager 委托替代自建线程池注册表，纳入 ThreadPoolRegistry 统一监控） -->
-    <dependency>
-      <groupId>com.njydsz</groupId>
-      <artifactId>ydsz-common-thread</artifactId>
-    </dependency>
+    <!--
+      ydsz-common-thread 已移除（26.11.06）：ydsz-common-cache 属 L1 工具层，按云顶编码规范
+      §22.2「L1 工具纯度」禁止依赖任何 L2+ 内部模块。CacheThreadPoolManager 改用本模块
+      自持的 CacheThreadFactory + JDK ThreadPoolExecutor，线程命名保持 ydsz-internal-cache-*。
+      如需纳入 ThreadPoolRegistry 统一监控，请在业务侧（L6）通过 Spring 事件注册。
+    -->
     <!-- 测试依赖 -->
     <dependency>
       <groupId>org.assertj</groupId>
@@ -122,6 +123,12 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <version>${spring-boot.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- ArchUnit：L1 工具纯度守护（YDIZ-ARCH-L1-PURITY 自动化验证） -->
+    <dependency>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit-junit5</artifactId>
       <scope>test</scope>
     </dependency>
     <!--

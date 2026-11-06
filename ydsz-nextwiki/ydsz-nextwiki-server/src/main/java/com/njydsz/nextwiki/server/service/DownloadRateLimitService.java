@@ -57,6 +57,12 @@ public class DownloadRateLimitService {
   /** 限流时间窗口：1 分钟 */
   private static final Duration RATE_WINDOW = Duration.ofMinutes(1);
 
+  /** 签名撤销标记最大 TTL：24 小时（秒） */
+  private static final long MAX_REVOKE_TTL_SECONDS = 86400;
+
+  /** 日志中签名前缀展示长度 */
+  private static final int SIGN_LOG_PREFIX_LENGTH = 8;
+
   /**
    * 域名匹配正则模板：精确匹配主域名及其子域名。
    *
@@ -224,10 +230,10 @@ public class DownloadRateLimitService {
         return; // 已过期，无需撤销
       }
       // 最大 TTL 24 小时，避免超长残留
-      ttl = Math.min(ttl, 86400);
+      ttl = Math.min(ttl, MAX_REVOKE_TTL_SECONDS);
       String revokeKey = "nextwiki:sign-revoke:" + sign;
       stringOps.set(revokeKey, "1", Duration.ofSeconds(ttl));
-      log.info("[DownloadRateLimitService] 签名已撤销: sign={}", sign.substring(0, Math.min(8, sign.length())));
+      log.info("[DownloadRateLimitService] 签名已撤销: sign={}", sign.substring(0, Math.min(SIGN_LOG_PREFIX_LENGTH, sign.length())));
     } catch (Exception e) {
       log.warn("[DownloadRateLimitService] 撤销签名异常: err={}", e.getMessage(), e);
     }

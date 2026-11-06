@@ -1,8 +1,12 @@
 package com.njydsz.common.queue.domain;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -161,7 +165,7 @@ public class QueueMessage implements Serializable {
   public static QueueMessage ofBytes(byte[] payloadBytes) {
     QueueMessage message = of(payloadBytes == null || payloadBytes.length == 0 ? "" : "");
     if (payloadBytes != null && payloadBytes.length > 0) {
-      message.setBody(java.util.Base64.getEncoder().withoutPadding().encodeToString(payloadBytes));
+      message.setBody(Base64.getEncoder().withoutPadding().encodeToString(payloadBytes));
       message.addHeader(HEADER_PAYLOAD_TYPE, PayloadType.BINARY.getCode());
     }
     return message;
@@ -212,10 +216,10 @@ public class QueueMessage implements Serializable {
       return new byte[0];
     }
     try {
-      return java.util.Base64.getDecoder().decode(b);
+      return Base64.getDecoder().decode(b);
     } catch (IllegalArgumentException e) {
       // 非 Base64 编码（普通文本消息）：返回 UTF-8 字节
-      return b.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+      return b.getBytes(StandardCharsets.UTF_8);
     }
   }
 
@@ -307,7 +311,7 @@ public class QueueMessage implements Serializable {
       // timestamp 但没有 epoch：尝试解析timestamp回填
       try {
         message.createdEpochMillis = LocalDateTime.parse(message.getTimestamp(), TIMESTAMP_FORMATTER)
-            .atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+            .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
       } catch (Exception ex) {
         // 解析失败：使用当前时间兜底，不影响业务
         message.createdEpochMillis = System.currentTimeMillis();
@@ -356,7 +360,7 @@ public class QueueMessage implements Serializable {
         // 反序列化得到的 timestamp -> 回填 epoch
         try {
           message.createdEpochMillis = LocalDateTime.parse(message.getTimestamp(), TIMESTAMP_FORMATTER)
-              .atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+              .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         } catch (Exception ex) {
           message.createdEpochMillis = System.currentTimeMillis();
           message.setTimestamp(formatEpoch(message.createdEpochMillis));
@@ -488,8 +492,8 @@ public class QueueMessage implements Serializable {
    * @return 格式化的时间字符串
    */
   private static String formatEpoch(long epochMillis) {
-    return LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(epochMillis),
-        java.time.ZoneId.systemDefault()).format(TIMESTAMP_FORMATTER);
+    return LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis),
+        ZoneId.systemDefault()).format(TIMESTAMP_FORMATTER);
   }
 
   @Override

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
@@ -72,6 +73,7 @@ import com.njydsz.userinfo.server.service.LanguageService;
 @RequestMapping("/language")
 @Tag(name = "语言管理", description = "语言 CRUD")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:language:list")
 public class LanguageController {
 
   private final LanguageService service;
@@ -140,6 +142,7 @@ public class LanguageController {
   @Idempotent(key = "ydsz:userinfo:LanguageController:create:lock", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.Language.create", threshold = 50)
   @PostMapping
+  @AuthApiPermission(apiCodes = "sys:language:add")
   @Operation(summary = "创建语言")
   public YdszResponse<String> create(@Valid @RequestBody LanguageDTO dto) {
     return YdszResponse.success(service.create(dto));
@@ -165,6 +168,7 @@ public class LanguageController {
   @Idempotent(key = "ydsz:userinfo:LanguageController:update:lock", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.Language.update", threshold = 50)
   @PutMapping
+  @AuthApiPermission(apiCodes = "sys:language:edit")
   @Operation(summary = "更新语言")
   public YdszResponse<Boolean> update(@Valid @RequestBody LanguageDTO dto) {
     return YdszResponse.success(service.update(dto));
@@ -188,6 +192,7 @@ public class LanguageController {
   @RateLimit(resource = "userinfo.Language.remove", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:LanguageController:remove:lock", ttlSeconds = 5)
   @DeleteMapping("/{id}")
+  @AuthApiPermission(apiCodes = "sys:language:delete")
   @Operation(summary = "删除语言")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(service.removeById(id));

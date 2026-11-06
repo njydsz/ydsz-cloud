@@ -1,55 +1,51 @@
 package com.njydsz.agent.infra.mcp;
 
-import java.util.Map;
-
 /**
- * MCP JSON-RPC 2.0 消息模型
+ * MCP JSON-RPC 2.0 消息模型（已废弃，兼容性别名）。
  *
- * <p>表示 MCP 协议中传输的 JSON-RPC 消息，涵盖请求、响应、错误和通知四种类型。
- * 字段结构严格对齐 JSON-RPC 2.0 规范与 MCP 扩展。
+ * <p><b>已废弃（26.11.06）</b>：协议契约已下沉至
+ * {@link com.njydsz.agent.domain.mcp.McpJsonRpcMessage}（domain 层），
+ * 原因是 web 层 Controller 直接引用 infra 包类型，违反 DDD 分层
+ * （web → server → domain，不应直接依赖 infra 实现包）。
  *
- * <p>使用静态工厂方法创建各类消息：
+ * <p>新代码请直接使用 domain 版本；本类保留仅为兼容存量引用，将在下个主版本移除。
  *
- * <ul>
- *   <li>{@link #success} — 成功响应
- *   <li>{@link #error} — 错误响应
- *   <li>{@link #notification} — 通知（无 id）
- * </ul>
- *
- * @param jsonrpc 协议版本常量 "2.0"
- * @param id 请求标识（通知和单向消息为 null）
- * @param method 方法名（请求/通知时使用）
- * @param params 方法参数（请求/通知时使用）
- * @param result 成功响应结果
- * @param error 错误信息
  * @author ydsz-team
  * @since 26.09.07
+ * @deprecated 使用 {@link com.njydsz.agent.domain.mcp.McpJsonRpcMessage}
  */
+@Deprecated(since = "26.11.06", forRemoval = true)
 public record McpJsonRpcMessage(
     String jsonrpc,
     Object id,
     String method,
-    Map<String, Object> params,
+    java.util.Map<String, Object> params,
     Object result,
-    Map<String, Object> error) {
+    java.util.Map<String, Object> error) {
 
   /** JSON-RPC 规范版本常量 */
-  public static final String JSONRPC_VERSION = "2.0";
+  public static final String JSONRPC_VERSION =
+      com.njydsz.agent.domain.mcp.McpJsonRpcMessage.JSONRPC_VERSION;
 
   /** MCP 标准错误码：解析错误 */
-  public static final int ERROR_PARSE_ERROR = -32700;
+  public static final int ERROR_PARSE_ERROR =
+      com.njydsz.agent.domain.mcp.McpJsonRpcMessage.ERROR_PARSE_ERROR;
 
   /** MCP 标准错误码：无效请求 */
-  public static final int ERROR_INVALID_REQUEST = -32600;
+  public static final int ERROR_INVALID_REQUEST =
+      com.njydsz.agent.domain.mcp.McpJsonRpcMessage.ERROR_INVALID_REQUEST;
 
   /** MCP 标准错误码：方法未找到 */
-  public static final int ERROR_METHOD_NOT_FOUND = -32601;
+  public static final int ERROR_METHOD_NOT_FOUND =
+      com.njydsz.agent.domain.mcp.McpJsonRpcMessage.ERROR_METHOD_NOT_FOUND;
 
   /** MCP 标准错误码：无效参数 */
-  public static final int ERROR_INVALID_PARAMS = -32602;
+  public static final int ERROR_INVALID_PARAMS =
+      com.njydsz.agent.domain.mcp.McpJsonRpcMessage.ERROR_INVALID_PARAMS;
 
   /** MCP 标准错误码：内部错误 */
-  public static final int ERROR_INTERNAL = -32603;
+  public static final int ERROR_INTERNAL =
+      com.njydsz.agent.domain.mcp.McpJsonRpcMessage.ERROR_INTERNAL;
 
   /**
    * 创建成功响应消息。
@@ -59,7 +55,8 @@ public record McpJsonRpcMessage(
    * @return 成功响应消息实例
    */
   public static McpJsonRpcMessage success(Object id, Object result) {
-    return new McpJsonRpcMessage(JSONRPC_VERSION, id, null, null, result, null);
+    return new McpJsonRpcMessage(
+        JSONRPC_VERSION, id, null, null, result, null);
   }
 
   /**
@@ -72,9 +69,7 @@ public record McpJsonRpcMessage(
    */
   public static McpJsonRpcMessage error(Object id, int code, String message) {
     return new McpJsonRpcMessage(
-        JSONRPC_VERSION, id, null, null, null, Map.of(
-            "code", code,
-            "message", message));
+        JSONRPC_VERSION, id, null, null, null, java.util.Map.of("code", code, "message", message));
   }
 
   /**
@@ -84,7 +79,7 @@ public record McpJsonRpcMessage(
    * @param params 通知参数
    * @return 通知消息实例
    */
-  public static McpJsonRpcMessage notification(String method, Map<String, Object> params) {
+  public static McpJsonRpcMessage notification(String method, java.util.Map<String, Object> params) {
     return new McpJsonRpcMessage(JSONRPC_VERSION, null, method, params, null, null);
   }
 

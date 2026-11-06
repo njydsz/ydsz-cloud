@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -54,6 +55,7 @@ import com.njydsz.literule.server.spi.RuleCategoryProvider;
 @RequestMapping("/literule/rules")
 @Validated
 @Tag(name = "规则目录树", description = "规则分类目录树与责任人管理")
+@AuthApiPermission(apiCodes = "rule:category:list")
 public class RuleCategoryController {
 
   /** 规则分类树服务（SPI，由 project 模块提供实现；不可用时降级为返回空树） */
@@ -158,6 +160,7 @@ public class RuleCategoryController {
   @Operation(summary = "设置规则责任人", description = "变更指定规则的责任人，原责任人自动失去管理权限")
   @ApiResponse(responseCode = "200", description = "成功")
   @PutMapping("/{ruleCode}/owner")
+  @AuthApiPermission(apiCodes = "rule:category:edit")
   public YdszResponse<Void> setOwner(
       @PathVariable String ruleCode,
       @RequestParam(value = "owner") String owner,
@@ -186,6 +189,7 @@ public class RuleCategoryController {
   @Operation(summary = "设置规则分类路径", description = "变更指定规则所属分类，路径采用斜杠分隔的树状结构")
   @ApiResponse(responseCode = "200", description = "成功")
   @PutMapping("/{ruleCode}/category-path")
+  @AuthApiPermission(apiCodes = "rule:category:edit")
   public YdszResponse<Void> setCategoryPath(
       @PathVariable String ruleCode,
       @RequestParam(value = "path") String path,

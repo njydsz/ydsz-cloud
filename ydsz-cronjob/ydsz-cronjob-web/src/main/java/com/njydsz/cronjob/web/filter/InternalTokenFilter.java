@@ -17,8 +17,13 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
 /**
  * 内部通信鉴权过滤器（P0-1 安全加固）。
  *
- * <p>拦截 {@code /api/cronjob/internal/**} 节点间派发端点，校验请求头
+ * <p>拦截 {@code /cronjob/internal/**} 节点间派发端点，校验请求头
  * {@code X-Ydsz-Internal-Token} 与配置 {@code ydsz.cronjob.remote.access-token} 是否一致。
+ *
+ * <p><b>路径说明</b>：本过滤器匹配的是 {@code request.getRequestURI()}（服务直连路径，
+ * 不含网关的 {@code /api} 前缀）。历史上此处误写为 {@code /api/cronjob/internal}，导致
+ * 匹配恒不命中、令牌校验从未生效；已由
+ * {@link com.njydsz.cronjob.web.filter.InternalApiPathConsistencyTest} 守护。
  *
  * <h3>行为约定</h3>
  *

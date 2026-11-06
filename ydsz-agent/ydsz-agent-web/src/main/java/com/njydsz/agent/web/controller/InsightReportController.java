@@ -25,6 +25,7 @@ import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.insight.InsightReportRequest;
 import com.njydsz.agent.domain.insight.InsightReportResult;
 import com.njydsz.agent.domain.insight.InsightReportService;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -53,6 +54,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 @RequestMapping("/agent/insight")
 @RequiredArgsConstructor
 @ConditionalOnBean(InsightReportService.class)
+@AuthApiPermission(apiCodes = "agt:insight-report:list")
 public class InsightReportController {
 
   /** 报告服务 */
@@ -82,6 +84,7 @@ public class InsightReportController {
    */
   @Operation(summary = "生成洞察报告")
   @PostMapping("/report")
+  @AuthApiPermission(apiCodes = "agt:insight-report:add")
   public YdszResponse<InsightReportResult> generateReport(
       @Valid @RequestBody InsightReportRequest request) {
     return YdszResponse.success(insightReportService.generateReport(request));
@@ -161,6 +164,7 @@ public class InsightReportController {
    */
   @Operation(summary = "删除报告")
   @DeleteMapping("/report/{reportId}")
+  @AuthApiPermission(apiCodes = "agt:insight-report:delete")
   public YdszResponse<Map<String, String>> deleteReport(@PathVariable String reportId) {
     insightReportService.deleteReport(reportId);
     return YdszResponse.success(Map.of("status", "deleted", "reportId", reportId));

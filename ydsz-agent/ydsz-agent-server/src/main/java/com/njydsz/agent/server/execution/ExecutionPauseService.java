@@ -32,10 +32,16 @@ public class ExecutionPauseService {
   /** 检查点默认 TTL：1 小时 */
   private static final Duration DEFAULT_TTL = Duration.ofHours(1);
 
+  /** 检查点缓存最大容量 */
+  private static final int CACHE_MAX_SIZE = 500;
+
+  /** 检查点缓存过期时间（小时） */
+  private static final int CACHE_EXPIRE_HOURS = 1;
+
   /** 检查点内存缓存（YdszCache 替代 ConcurrentHashMap，自动 TTL 清理） */
   private final Cache<String, ExecutionCheckpoint> checkpoints = YdszCache.<String, ExecutionCheckpoint>newBuilder()
-      .maximumSize(500)
-      .expireAfterWrite(1, TimeUnit.HOURS)
+      .maximumSize(CACHE_MAX_SIZE)
+      .expireAfterWrite(CACHE_EXPIRE_HOURS, TimeUnit.HOURS)
       .build();
 
   /** 可选的分布式状态存储（多副本部署时共享检查点） */

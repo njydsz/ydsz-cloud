@@ -11,7 +11,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Objects;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +31,7 @@ import com.njydsz.common.docs.preprocess.pipeline.PreprocessPipeline;
 import com.njydsz.common.docs.security.pii.PiiDetectionSummary;
 import com.njydsz.common.docs.security.pii.PiiDetector;
 import com.njydsz.common.docs.security.scanner.DocumentSecurityScanner;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.io.TempFileManager;
 
 /**

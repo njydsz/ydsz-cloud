@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
@@ -68,6 +69,7 @@ import com.njydsz.literule.server.config.RuleTraceQueryService;
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则执行追踪", description = "执行链路查询、历史回放与变更影响分析")
+@AuthApiPermission(apiCodes = "rule:trace:list")
 public class RuleTraceController {
     /** 集合初始容量 */
     private static final int COLLECTION_CAPACITY = 16;
@@ -130,6 +132,7 @@ public class RuleTraceController {
   @RateLimit(resource = "literule.rule_trace.replayTrace", threshold = 50)
   @Operation(summary = "执行回放")
   @PostMapping("/traces/{traceId}/replay")
+  @AuthApiPermission(apiCodes = "rule:trace:add")
   public YdszResponse<Map<String, Object>> replayTrace(@PathVariable String traceId) {
     List<RuleExecutionTraceVO> traces = ruleTraceQueryService.findByTraceId(traceId);
 
@@ -223,6 +226,7 @@ public class RuleTraceController {
   @RateLimit(resource = "literule.rule_trace.batchReplayTraces", threshold = 50)
   @Operation(summary = "批量历史数据回放")
   @PostMapping("/traces/batch-replay")
+  @AuthApiPermission(apiCodes = "rule:trace:add")
   public YdszResponse<Map<String, Object>> batchReplayTraces(
       @RequestBody Map<String, Object> request) {
     // 解析请求参数
@@ -342,6 +346,7 @@ boolean historicalTriggered = Boolean.TRUE.equals(trace.isTriggered());
   @RateLimit(resource = "literule.rule_trace.impactPreview", threshold = 50)
   @Operation(summary = "规则变更影响分析")
   @PostMapping("/{ruleCode}/impact-preview")
+  @AuthApiPermission(apiCodes = "rule:trace:add")
   public YdszResponse<Map<String, Object>> impactPreview(
       @PathVariable String ruleCode, @RequestBody Map<String, Object> request) {
     String conditionExpression = (String) request.get("conditionExpression");

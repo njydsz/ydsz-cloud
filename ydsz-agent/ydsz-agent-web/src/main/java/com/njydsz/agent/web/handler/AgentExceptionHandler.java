@@ -3,7 +3,6 @@ package com.njydsz.agent.web.handler;
 // JDK
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 // 第三方
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
@@ -53,7 +52,7 @@ public class AgentExceptionHandler extends BaseExceptionHandler {
   public Object handleLlmException(
       LlmException e, HttpServletRequest request, HttpServletResponse response) {
     recordMetrics(e);
-    log.warn(
+    getLog().warn(
         "{}LLM 调用异常 | 路径: {} | 错误类型: {} | 消息: {}",
         getLogPrefix(),
         request.getRequestURI(),

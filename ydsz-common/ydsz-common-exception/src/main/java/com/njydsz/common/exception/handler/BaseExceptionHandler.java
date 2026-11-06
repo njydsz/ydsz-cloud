@@ -3,6 +3,7 @@ package com.njydsz.common.exception.handler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
@@ -138,6 +139,18 @@ public abstract class BaseExceptionHandler {
    * @return 日志前缀字符串
    */
   protected abstract String getLogPrefix();
+
+  /**
+   * 返回子类可用的日志记录器。
+   *
+   * <p>本类通过 {@code @Slf4j} 生成的 {@code log} 字段是 {@code private static final}，
+   * 子类无法直接访问。为保持子类既有的 {@code log.xxx(...)} 调用写法，统一通过本方法获取。
+   *
+   * @return SLF4J 日志记录器
+   */
+  protected Logger getLog() {
+    return log;
+  }
 
   // ==================== 状态查询（子类可复用） ====================
 

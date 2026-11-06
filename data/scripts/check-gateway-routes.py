@@ -541,6 +541,10 @@ def rule_endpoints_routed(routes: list[Route], endpoints: list[Endpoint]) -> lis
             )
             continue
         if winner.service != endpoint.service:
+            # ydsz-common 是共享库（common-web 被所有 -web 模块依赖），其 Controller 会注册到
+            # 每个业务服务的 ApplicationContext，因此"命中任一部署服务的路由"即视为可达。
+            if endpoint.service == "ydsz-common" and winner.service != "ydsz-common":
+                continue
             if winner.route_id in KNOWN_ROUTE_SHADOWING:
                 continue
             failures.append(

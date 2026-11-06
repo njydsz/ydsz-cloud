@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import com.njydsz.common.locales.util.I18n;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -26,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.JsonNode;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.enums.NotifyChannel;

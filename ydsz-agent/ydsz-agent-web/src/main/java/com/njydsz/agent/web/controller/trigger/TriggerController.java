@@ -292,6 +292,7 @@ public class TriggerController {
    * <p>Excel 表头和列宽通过 {@link TriggerExportVO} 上的 {@code @ExcelProperty} 注解定义。
    */
   @Operation(summary = "导出触发器列表（Excel）")
+  @AuthApiPermission(apiCodes = PermissionCodes.AGENT_TRIGGER_EXPORT)
   @GetMapping("/export")
   public void exportTriggers(HttpServletResponse response) throws IOException {
     String fileName = "triggers_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";

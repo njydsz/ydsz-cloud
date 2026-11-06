@@ -15,6 +15,7 @@ import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 
 /**
  * 文件下载服务。
@@ -35,6 +36,9 @@ public class DownloadApplicationService {
   /** 下载限流服务（限流检查与签名 URL 生成/校验） */
   private final DownloadRateLimitService rateLimitService;
 
+  /** 模块指标采集（下载次数/耗时/失败），可选注入以兼容指标降级 */
+  private final NextwikiMetrics nextwikiMetrics;
+
   @Autowired(required = false)
   private IFileStorageProvider fileStorageProvider;
 
@@ -54,20 +58,28 @@ public class DownloadApplicationService {
    * @concurrency 限流基于 Redis 固定窗口，天然支持多实例；结果不可缓存
    */
   public DownloadContext prepareDownload(String nodeId, String userId, String ip) {
-    FileNodeVO node = fileNodeRepository.findById(nodeId).orElse(null);
-    if (node == null || !node.isFile()) {
-      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
-    }
+    long start = System.currentTimeMillis();
+    try {
+      FileNodeVO node = fileNodeRepository.findById(nodeId).orElse(null);
+      if (node == null || !node.isFile()) {
+        throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
+      }
 
-    DownloadRateLimitService.RateLimitResult rateResult =
-        rateLimitService.checkRateLimit(userId, ip, nodeId);
-    if (!rateResult.isAllowed()) {
-      throw BusinessException.of(NextwikiExceptionCode.RATE_LIMIT_EXCEEDED)
-          .data("message", rateResult.getMessage());
-    }
+      DownloadRateLimitService.RateLimitResult rateResult =
+          rateLimitService.checkRateLimit(userId, ip, nodeId);
+      if (!rateResult.isAllowed()) {
+        throw BusinessException.of(NextwikiExceptionCode.RATE_LIMIT_EXCEEDED)
+            .data("message", rateResult.getMessage());
+      }
 
-    IFileStorage storage = resolveStorage();
-    return DownloadContext.builder().node(node).storage(storage).build();
+      IFileStorage storage = resolveStorage();
+      nextwikiMetrics.recordDownload();
+      nextwikiMetrics.recordDownloadDuration(System.currentTimeMillis() - start);
+      return DownloadContext.builder().node(node).storage(storage).build();
+    } catch (BusinessException e) {
+      nextwikiMetrics.recordDownloadFailure();
+      throw e;
+    }
   }
 
   /**

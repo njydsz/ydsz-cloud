@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.literule.domain.vo.RuleDashboardDistributionVO;
@@ -44,6 +45,7 @@ import com.njydsz.literule.server.spi.DashboardDataProvider;
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则引擎监控大盘", description = "P1-6 规则引擎指标聚合 API：概览 / 趋势 / 分布 / Top 规则 / 实时指标")
+@AuthApiPermission(apiCodes = "rule:dashboard:list")
 public class RuleDashboardController {
 
   /**

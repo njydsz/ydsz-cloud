@@ -1,5 +1,6 @@
 package com.njydsz.common.feign.ratelimiter;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -117,7 +118,7 @@ public class FeignRateLimiterInterceptor implements RequestInterceptor {
       }
       String url = requestTemplate.url();
       if (url != null && url.startsWith("http")) {
-        return java.net.URI.create(url).getHost();
+        return URI.create(url).getHost();
       }
       return "default";
     } catch (Exception e) {

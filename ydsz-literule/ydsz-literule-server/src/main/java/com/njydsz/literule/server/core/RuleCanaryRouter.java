@@ -48,13 +48,19 @@ public class RuleCanaryRouter {
     /** 哈希取正掩码（0x7FFFFFFF） */
   private static final int HASH_POSITIVE_MASK = 0x7FFFFFFF;
 
+  /** 灰度桶计数缓存最大条目数 */
+  private static final int BUCKET_CACHE_MAX_SIZE = 10_000;
+
+  /** 灰度桶计数缓存过期时间（小时） */
+  private static final long BUCKET_CACHE_EXPIRE_HOURS = 24;
+
   private final ExpressionEngine evaluator;
 
   /** 灰度桶计数器：ruleCode -> {PRIMARY: count, CANARY: count}（基于 ydsz-common-cache YDIZ-COMMON-021） */
   private final Cache<String, AtomicLongArray> bucketCounts =
       YdszCache.<String, AtomicLongArray>newBuilder()
-          .maximumSize(10_000)
-          .expireAfterWrite(24, TimeUnit.HOURS)
+          .maximumSize(BUCKET_CACHE_MAX_SIZE)
+          .expireAfterWrite(BUCKET_CACHE_EXPIRE_HOURS, TimeUnit.HOURS)
           .recordStats()
           .build();
 

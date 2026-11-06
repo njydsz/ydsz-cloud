@@ -2,6 +2,7 @@ package com.njydsz.common.docs.spi;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 /**
  * 文件预览渲染器 SPI。
@@ -51,7 +52,7 @@ public interface PreviewRenderer {
    * @return 按页码排序的图片列表
    * @throws IOException PDF 解析失败或渲染失败
    */
-  java.util.List<PageImage> renderPdfToImages(InputStream pdfStream, String outputFormat)
+  List<PageImage> renderPdfToImages(InputStream pdfStream, String outputFormat)
       throws IOException;
 
   /**
@@ -66,7 +67,7 @@ public interface PreviewRenderer {
    * @throws IOException 文档解析失败或渲染失败
    * @throws UnsupportedOperationException 环境未安装 LibreOffice
    */
-  java.util.List<PageImage> renderOfficeToImages(InputStream officeStream, String outputFormat)
+  List<PageImage> renderOfficeToImages(InputStream officeStream, String outputFormat)
       throws IOException;
 
   /**

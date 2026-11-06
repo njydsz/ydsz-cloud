@@ -117,6 +117,9 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    */
   private volatile boolean conditionCacheEnabled = false;
 
+  /** 条件缓存默认最大条目数 */
+  private static final int DEFAULT_ALPHA_CACHE_MAX_SIZE = 2048;
+
   /**
    * P0-A1 条件缓存最大条目数（默认 2048）
    *
@@ -126,7 +129,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    *
    * @since 26.09.23
    */
-  private volatile int alphaCacheMaxSize = 2048;
+  private volatile int alphaCacheMaxSize = DEFAULT_ALPHA_CACHE_MAX_SIZE;
 
   /**
    * P0-A1：评估期内的条件结果子表达式缓存，跨规则共享
@@ -1247,7 +1250,7 @@ all.add(
    * @param alphaCacheMaxSize 最大条目数（<= 0 时重置为默认值 2048）
    */
   public void setAlphaCacheMaxSize(int alphaCacheMaxSize) {
-    this.alphaCacheMaxSize = alphaCacheMaxSize > 0 ? alphaCacheMaxSize : 2048;
+    this.alphaCacheMaxSize = alphaCacheMaxSize > 0 ? alphaCacheMaxSize : DEFAULT_ALPHA_CACHE_MAX_SIZE;
   }
 
   /** 获取条件缓存最大条目数 */

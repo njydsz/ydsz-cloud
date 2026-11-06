@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.agent.domain.runtime.RuntimeSession;
 import com.njydsz.agent.server.runtime.RuntimeManagementService;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
@@ -39,6 +40,7 @@ import com.njydsz.common.core.response.YdszResponse;
 @ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/agent/runtime")
+@AuthApiPermission(apiCodes = "agt:runtime:list")
 public class RuntimeController {
 
     private static final int DEFAULT_RECENT_LIMIT = 50;
@@ -121,6 +123,7 @@ public class RuntimeController {
      */
     @Operation(summary = "强制回收执行会话")
     @DeleteMapping("/sessions/{executionId}")
+    @AuthApiPermission(apiCodes = "agt:runtime:delete")
     public YdszResponse<Boolean> forceRecycle(@PathVariable String executionId) {
         log.info("收到强制回收请求: executionId={}", executionId);
         boolean result = runtimeManagementService.forceRecycle(executionId);

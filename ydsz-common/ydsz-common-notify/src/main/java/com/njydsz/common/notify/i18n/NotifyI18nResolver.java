@@ -135,12 +135,11 @@ public class NotifyI18nResolver {
         return lang + "_" + country;
       }
       if (!lang.isEmpty()) {
-        // 根据语言推断默认国家
+        // 根据语言推断默认国家；当前项目仅支持中英文（YDIZ-I18N-007），其余语言回退默认语言
         return switch (lang) {
           case "zh" -> "zh_CN";
           case "en" -> "en_US";
-          case "ja" -> "ja_JP";
-          default -> lang;
+          default -> DEFAULT_LOCALE;
         };
       }
     } catch (Exception e) {

@@ -3,9 +3,9 @@
 > **本文件为 Claude Code / Cursor / Windsurf / Aider 等 AI 编码工具的 `always` 规则。**
 > 任何 AI 编码助手在本项目中编程时，都必须遵守本文件中的规则。
 >
-> **规范版本**: v26.11.06-v2（199 条红线规则，P0=71 P1=97 P2=31）
+> **规范版本**: v26.11.06-v3（200 条红线规则，P0=71 P1=98 P2=31）
 > **完整规则源**: `docs/ai-rules/shared-rules.yaml`（单一权威源）
-> **编码规范参考**: `docs/云顶编码规范.md`（v1.0.16）
+> **编码规范参考**: `docs/云顶编码规范.md`（v1.0.17）
 
 ---
 
@@ -146,6 +146,7 @@ ydsz-cloud/
 |------|------|
 | I18N-001 | 资源文件**必须带模块前缀**（`{module}-messages*.properties`），禁止裸 `messages.properties` |
 | I18N-002 | **禁止 Service/Controller 层硬编码中文文案**，必须走 `I18n.message()` 或注入 `I18nMessages` |
+| I18N-007 | **项目仅支持中文（zh_CN）+ 英文（en_US）两种语言**，禁止新增繁体/日韩等其他语言资源文件，禁止在 `KnownLocaleTags` 登记其他 tag，非支持语言回退 `default-locale` |
 
 ---
 
@@ -275,11 +276,17 @@ public class Space extends MpBaseEntity<String> {
 
 ## i18n 编码规范
 
+### 支持语言集（强制，YDIZ-I18N-007）
+
+项目**仅支持中文（zh_CN）与英文（en_US）两种语言**，不支持繁体中文、日语、韩语及其他任何语言。
+新增文案只写两份资源文件；请求语言不在支持列表时回退 `ydsz.i18n.default-locale`（默认 `zh_CN`）。
+
 ### 资源文件命名
 ```
-{src}/resources/i18n/{module}-messages.properties        # 默认（中文）
-{src}/resources/i18n/{module}-messages_en_US.properties # 英文
-{src}/resources/i18n/{module}-messages_zh_CN.properties # 中文（可选覆盖）
+{src}/resources/i18n/{module}-messages.properties        # 默认（兜底）
+{src}/resources/i18n/{module}-messages_zh_CN.properties  # 简体中文
+{src}/resources/i18n/{module}-messages_en_US.properties  # 英文
+# 仅上述三种文件；禁止新增 _zh_TW / _ja_JP / _ko_KR 等其他语言文件
 ```
 
 ### 注入方式（按场景选择）
@@ -303,6 +310,9 @@ String msg = I18n.message("module.scenario.key", new Object[]{param1, param2});
 - 禁止直接使用 `MessageSource.getMessage()` 绕过 ydsz 封装
 - 禁止在静态方法/枚举中 new `ReloadableResourceBundleMessageSource`
 - **禁止硬编码中文/英文文案**（含异常消息、日志描述、注释中的 UI 文案）
+- **禁止新增非中英文资源文件**（`_zh_TW` / `_ja_JP` / `_ko_KR` / `_zh_HK` 等），见 YDIZ-I18N-007
+- **禁止在 `KnownLocaleTags` 登记其他 locale tag**，框架默认集合固定为 `[zh_CN, en_US]`
+- **禁止硬编码 `"zh_TW"` / `"ja_JP"` / `"ko_KR"` 等 locale 字面量**，应用 `KnownLocaleTags`
 
 ---
 

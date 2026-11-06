@@ -1,5 +1,7 @@
 package com.njydsz.message.web.controller;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -150,7 +152,7 @@ public class OpsController {
   @Operation(summary = "管线拓扑查询")
   @AuthApiPermission(apiCodes = "MESSAGE_LOG_VIEW")
   @GetMapping("/pipeline/topology")
-  public YdszResponse<java.util.List<PipelineTopologyVO>> getPipelineTopology() {
+  public YdszResponse<List<PipelineTopologyVO>> getPipelineTopology() {
     return YdszResponse.success(sendPipelineFacade.topology());
   }
 

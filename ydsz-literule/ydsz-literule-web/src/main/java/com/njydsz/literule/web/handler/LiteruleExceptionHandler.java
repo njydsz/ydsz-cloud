@@ -87,7 +87,7 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
     String message = e.getBindingResult().getFieldErrors().stream()
         .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
         .collect(Collectors.joining("; "));
-    log.warn("{} 参数校验失败: {}", getLogPrefix(), message);
+    getLog().warn("{} 参数校验失败: {}", getLogPrefix(), message);
     recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
@@ -104,7 +104,7 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
     String message = e.getBindingResult().getFieldErrors().stream()
         .map(this::formatFieldError)
         .collect(Collectors.joining("; "));
-    log.warn("{} 参数绑定失败: {}", getLogPrefix(), message);
+    getLog().warn("{} 参数绑定失败: {}", getLogPrefix(), message);
     recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
@@ -119,7 +119,7 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public YdszResponse<Void> handleMissingParam(MissingServletRequestParameterException e) {
     String message = "缺少必填参数: " + e.getParameterName() + " (" + e.getParameterType() + ")";
-    log.warn("{} {}", getLogPrefix(), message);
+    getLog().warn("{} {}", getLogPrefix(), message);
     recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
@@ -134,7 +134,7 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public YdszResponse<Void> handleMissingHeader(MissingRequestHeaderException e) {
     String message = "缺少必填请求头: " + e.getHeaderName();
-    log.warn("{} {}", getLogPrefix(), message);
+    getLog().warn("{} {}", getLogPrefix(), message);
     recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
@@ -149,7 +149,7 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public YdszResponse<Void> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
     String message = "请求体格式错误: " + e.getMessage();
-    log.warn("{} 请求体解析失败: {}", getLogPrefix(), e.getMessage());
+    getLog().warn("{} 请求体解析失败: {}", getLogPrefix(), e.getMessage());
     recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
@@ -166,7 +166,7 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
     String message =
         String.format("参数[%s]类型不匹配，期望=%s，实际值=%s",
             e.getName(), e.getRequiredType(), e.getValue());
-    log.warn("{} {}", getLogPrefix(), message);
+    getLog().warn("{} {}", getLogPrefix(), message);
     recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
@@ -181,7 +181,7 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
   public YdszResponse<Void> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
     String message = "不支持的请求方法: " + e.getMethod();
-    log.info("{} {}", getLogPrefix(), message);
+    getLog().info("{} {}", getLogPrefix(), message);
     recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
@@ -196,7 +196,7 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
   public YdszResponse<Void> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
     String message = "不支持的 Content-Type: " + e.getContentType();
-    log.info("{} {}", getLogPrefix(), message);
+    getLog().info("{} {}", getLogPrefix(), message);
     recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
@@ -211,7 +211,7 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public YdszResponse<Void> handleNoHandlerFound(NoHandlerFoundException e) {
     String message = "接口不存在: " + e.getHttpMethod() + " " + e.getRequestURL();
-    log.info("{} {}", getLogPrefix(), message);
+    getLog().info("{} {}", getLogPrefix(), message);
     recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
@@ -227,7 +227,7 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
   @ExceptionHandler(IllegalArgumentException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public YdszResponse<Void> handleIllegalArgument(IllegalArgumentException e) {
-    log.warn("{} 非法参数: {}", getLogPrefix(), e.getMessage());
+    getLog().warn("{} 非法参数: {}", getLogPrefix(), e.getMessage());
     recordMetrics(e);
     // 兜底 handler 无法区分业务异常与系统异常，不把 e.getMessage() 返回给客户端
     return YdszResponse.error(
@@ -243,7 +243,7 @@ public class LiteruleExceptionHandler extends BaseExceptionHandler {
   @ExceptionHandler(IllegalStateException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public YdszResponse<Void> handleIllegalState(IllegalStateException e) {
-    log.warn("{} 非法状态: {}", getLogPrefix(), e.getMessage());
+    getLog().warn("{} 非法状态: {}", getLogPrefix(), e.getMessage());
     recordMetrics(e);
     // 兜底 handler 无法区分业务异常与系统异常，不把 e.getMessage() 返回给客户端
     return YdszResponse.error(

@@ -96,7 +96,7 @@ public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
   /**
    * 是否为终态
    *
-   * <p>终态指流程已结束（无论正常完成、强制终止、驳回还是回滚）。 终态实例不允许再次变更状态（ROLLBACK 除外）。
+   终态实例不允许再次变更状态（撤销已完成实例除外，见 {@link #isTerminal()}）。
    *
    * @return true-终态（COMPLETED / TERMINATED / REJECTED / ROLLED_BACK）；false-非终态（RUNNING / SUSPENDED
    *     / ERROR / DRAFT）
@@ -108,13 +108,21 @@ public enum FlowInstanceStatus implements BaseStatusEnum<FlowInstanceStatus> {
   /**
    * {@inheritDoc}
    *
-   * <p>与 {@link #isFinished()} 语义对齐：终态包含已回滚（ROLLED_BACK）。
+   * <p><b>与 {@link #isFinished()} 的区别</b>：{@code isFinished()} 表示“流程已结束”
+   * （含正常完成 COMPLETED），被大量业务代码用于“能否再操作”判断；而
+   * {@code isTerminal()} 表示“<b>不可再流转</b>的终态”，必须与
+   * {@link #canTransitTo} 保持一致——因为 {@code canTransitTo} 允许
+   * {@code COMPLETED → ROLLED_BACK}（撤销已完成实例），所以 COMPLETED 不属于终态。
    *
-   * @return true 表示终态（COMPLETED / TERMINATED / REJECTED / ROLLED_BACK）；false-非终态
+   * <p>历史缺陷（26.11.06 修复）：本方法曾直接返回 {@code isFinished()}（含 COMPLETED），
+   * 与 {@code canTransitTo} 矛盾，会导致任何用 {@code isTerminal()} 短路的判断错误地
+   * 拒绝“撤销已完成实例”。
+   *
+   * @return true 表示终态（TERMINATED / REJECTED / ROLLED_BACK）；false-非终态（含 COMPLETED）
    */
   @Override
   public boolean isTerminal() {
-    return isFinished();
+    return this == TERMINATED || this == REJECTED || this == ROLLED_BACK;
   }
 
   /**

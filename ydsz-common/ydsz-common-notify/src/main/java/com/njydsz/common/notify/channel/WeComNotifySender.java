@@ -3,7 +3,6 @@ package com.njydsz.common.notify.channel;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.locales.util.I18n;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.JsonNode;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.template.TemplateEngine;

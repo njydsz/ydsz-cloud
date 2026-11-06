@@ -42,6 +42,9 @@ public class BatchOperationResult implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
+  /** 失败详情列表默认初始容量 */
+  private static final int FAILURE_LIST_INITIAL_CAPACITY = 8;
+
   /** 总操作数量 */
   private int totalCount;
 
@@ -126,7 +129,7 @@ public class BatchOperationResult implements Serializable {
    * @return 失败详情列表（可变，可 add 后传入 partial 工厂方法）
    */
   public static List<FailureDetail> newFailureList() {
-    return new ArrayList<>(8);
+    return new ArrayList<>(FAILURE_LIST_INITIAL_CAPACITY);
   }
 
   // ============================== 失败详情 ==============================

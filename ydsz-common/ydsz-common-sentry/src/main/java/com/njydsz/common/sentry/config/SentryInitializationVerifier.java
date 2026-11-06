@@ -1,6 +1,7 @@
 package com.njydsz.common.sentry.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -68,7 +69,7 @@ public class SentryInitializationVerifier implements ApplicationListener<Applica
 
     if (sentryProperties.isFailFast()) {
       log.error(msg);
-      throw new org.springframework.beans.factory.BeanCreationException(msg);
+      throw new BeanCreationException(msg);
     } else {
       log.error(msg);
     }

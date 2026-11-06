@@ -211,13 +211,19 @@ public class FlowInstanceStateMachine {
   }
 
   /**
-   * 获取所有终态状态集合。
+   * 返回真正不可再流转的终态集合。
    *
-   * @return 终态状态集合（不可变集合）
+   * <p><b>不含 COMPLETED</b>：{@code canTransitTo} 允许 {@code COMPLETED → ROLLED_BACK}
+   * （撤销已完成实例），因此 COMPLETED 不是终态。历史缺陷（26.11.06 修复）曾将
+   * COMPLETED 列入本集合，与 {@code canTransitTo} 矛盾，会导致归档 Job 误把
+   * 已完成实例当终态处理，与撤销逻辑冲突。
+   *
+   * <p>若需“流程已结束”语义（含正常完成），请用 {@link FlowInstanceStatus#isFinished()}。
+   *
+   * @return 终态集合（TERMINATED / REJECTED / ROLLED_BACK）
    */
   public Set<FlowInstanceStatus> getTerminalStatuses() {
     return Set.of(
-        FlowInstanceStatus.COMPLETED,
         FlowInstanceStatus.TERMINATED,
         FlowInstanceStatus.REJECTED,
         FlowInstanceStatus.ROLLED_BACK);

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.util.SecurityUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
@@ -43,6 +44,7 @@ import com.njydsz.system.server.service.ConfigApprovalService;
 @RestController
 @RequestMapping("/config/approval")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:config-approval:list")
 public class ConfigApprovalController {
 
   private final ConfigApprovalService approvalService;
@@ -123,6 +125,7 @@ public class ConfigApprovalController {
       content = "'提交配置变更审批: ' + #dto.resourceKey")
   @RateLimit(resource = "system.approval.submit", threshold = 20)
   @PostMapping("/submit")
+  @AuthApiPermission(apiCodes = "sys:config-approval:add")
   @Operation(summary = "提交配置变更审批")
   public YdszResponse<String> submit(@Valid @RequestBody ConfigApprovalSubmitDTO dto) {
     String userId = SecurityUtils.getCurrentUserId();
@@ -145,6 +148,7 @@ public class ConfigApprovalController {
       content = "'通过审批单: ' + #id")
   @RateLimit(resource = "system.approval.approve", threshold = 30)
   @PostMapping("/{id}/approve")
+  @AuthApiPermission(apiCodes = "sys:config-approval:add")
   @Operation(summary = "通过审批单")
   public YdszResponse<Boolean> approve(@PathVariable String id, @Valid @RequestBody(required = false) ApproveBody body) {
     String currentUserId = SecurityUtils.getCurrentUserId();
@@ -167,6 +171,7 @@ public class ConfigApprovalController {
       content = "'拒绝审批单: ' + #id")
   @RateLimit(resource = "system.approval.reject", threshold = 30)
   @PostMapping("/{id}/reject")
+  @AuthApiPermission(apiCodes = "sys:config-approval:add")
   @Operation(summary = "拒绝审批单")
   public YdszResponse<Boolean> reject(@PathVariable String id, @Valid @RequestBody RejectBody body) {
     String currentUserId = SecurityUtils.getCurrentUserId();
@@ -187,6 +192,7 @@ public class ConfigApprovalController {
       content = "'撤回审批单: ' + #id")
   @RateLimit(resource = "system.approval.withdraw", threshold = 30)
   @PostMapping("/{id}/withdraw")
+  @AuthApiPermission(apiCodes = "sys:config-approval:add")
   @Operation(summary = "撤回审批单")
   public YdszResponse<Boolean> withdraw(@PathVariable String id) {
     String currentUserId = SecurityUtils.getCurrentUserId();

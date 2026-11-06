@@ -69,6 +69,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/agent/dag")
+@AuthApiPermission(apiCodes = "agt:dag:list")
 public class DagController {
 
   /**

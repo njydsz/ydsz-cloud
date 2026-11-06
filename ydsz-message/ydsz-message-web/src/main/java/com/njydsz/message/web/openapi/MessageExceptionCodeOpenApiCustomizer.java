@@ -55,6 +55,9 @@ public class MessageExceptionCodeOpenApiCustomizer {
   /** OpenAPI extension key for error codes metadata */
   private static final String EXTENSION_KEY_ERROR_CODES = "x-error-codes";
 
+  /** Extensions Map 初始容量 */
+  private static final int EXTENSIONS_MAP_CAPACITY = 4;
+
   /** message module error code registry */
   private final MessageExceptionCodeRegistry errorCodeRegistry;
 
@@ -85,7 +88,7 @@ public class MessageExceptionCodeOpenApiCustomizer {
 
     Map<String, Object> extensions = openApi.getExtensions();
     if (extensions == null) {
-      extensions = new LinkedHashMap<>(4);
+      extensions = new LinkedHashMap<>(EXTENSIONS_MAP_CAPACITY);
       openApi.setExtensions(extensions);
     }
 

@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
@@ -78,6 +79,11 @@ import com.njydsz.userinfo.server.service.UserLifecycleService;
  *   <li>密码字段禁止出现在响应中（{@code @Sensitive(PASSWORD)} 脱敏）
  * </ul>
  *
+ * <p><b>权限模型：</b>类级 {@code sys:user:list} 覆盖全部读接口； 写接口在方法级覆写为
+ * {@code sys:user:add} / {@code sys:user:edit} / {@code sys:user:delete}。 权限码由
+ * {@code ApiPermissionServiceImpl} 启动时扫描注解自动注册到权限目录， 由管理员在「角色管理」
+ * 中分配给角色（超级管理员绕过全部校验）。
+ *
  * @author ydsz-team
  * @since 26.10.01
  * @see com.njydsz.userinfo.server.service.UserAccountService 用户业务逻辑
@@ -89,6 +95,7 @@ import com.njydsz.userinfo.server.service.UserLifecycleService;
 @RestController
 @RequestMapping("/user")
 @RequiredArgsConstructor
+@AuthApiPermission(apiCodes = "sys:user:list")
 public class UserAccountController {
 
   private final UserAccountService service;
@@ -161,6 +168,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccount.create", threshold = 50)
   @PostMapping
   @Operation(summary = "创建用户")
+  @AuthApiPermission(apiCodes = "sys:user:add")
   public YdszResponse<String> create(@Valid @RequestBody UserAccountDTO dto) {
     return YdszResponse.success(service.save(dto));
   }
@@ -186,6 +194,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccount.update", threshold = 50)
   @PutMapping
   @Operation(summary = "更新用户信息")
+  @AuthApiPermission(apiCodes = "sys:user:edit")
   public YdszResponse<String> update(@Valid @RequestBody UserAccountDTO dto) {
     return YdszResponse.success(service.save(dto));
   }
@@ -211,6 +220,7 @@ public class UserAccountController {
   @Idempotent(key = "ydsz:userinfo:user:remove", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   @Operation(summary = "删除用户")
+  @AuthApiPermission(apiCodes = "sys:user:delete")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(service.removeById(id));
   }
@@ -235,6 +245,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccount.changePassword", threshold = 50)
   @PostMapping("/change-password")
   @Operation(summary = "修改密码")
+  @AuthApiPermission(apiCodes = "sys:user:edit")
   public YdszResponse<Boolean> changePassword(@Valid @RequestBody ChangePasswordDTO dto) {
     return YdszResponse.success(service.changePassword(dto));
   }
@@ -256,6 +267,7 @@ public class UserAccountController {
   @Idempotent(key = "ydsz:userinfo:user:resetPassword", ttlSeconds = 5)
   @PostMapping("/reset-password")
   @Operation(summary = "重置密码（管理员）")
+  @AuthApiPermission(apiCodes = "sys:user:edit")
   public YdszResponse<Boolean> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
     sensitiveVerifyService.clearVerification();
     return YdszResponse.success(service.resetPassword(dto));
@@ -276,6 +288,7 @@ public class UserAccountController {
   @Idempotent(key = "ydsz:userinfo:user:assignRoles", ttlSeconds = 5)
   @PostMapping("/{userId}/roles")
   @Operation(summary = "分配用户角色")
+  @AuthApiPermission(apiCodes = "sys:user:assign-role")
   public YdszResponse<Boolean> assignRoles(
       @PathVariable String userId, @Valid @RequestBody AssignRolesDTO dto) {
     return YdszResponse.success(service.assignRoles(userId, dto.getRoleIds()));
@@ -316,6 +329,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccount.import", threshold = 10)
   @PostMapping("/import")
   @Operation(summary = "批量导入用户（Excel）")
+  @AuthApiPermission(apiCodes = "sys:user:add")
   public YdszResponse<UserImportResultDTO> importUsers(
       @RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
@@ -426,6 +440,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccount.batchRemove", threshold = 30)
   @PostMapping("/batch-remove")
   @Operation(summary = "批量删除用户")
+  @AuthApiPermission(apiCodes = "sys:user:delete")
   public YdszResponse<Integer> batchRemove(@Valid @RequestBody BatchUserStatusDTO dto) {
     return YdszResponse.success(service.batchRemoveByIds(dto.getIds()));
   }
@@ -447,6 +462,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccount.batchEnable", threshold = 30)
   @PostMapping("/batch-enable")
   @Operation(summary = "批量启用用户")
+  @AuthApiPermission(apiCodes = "sys:user:edit")
   public YdszResponse<Integer> batchEnable(@Valid @RequestBody BatchUserStatusDTO dto) {
     return YdszResponse.success(service.batchEnable(dto.getIds()));
   }
@@ -469,6 +485,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccount.batchDisable", threshold = 30)
   @PostMapping("/batch-disable")
   @Operation(summary = "批量禁用用户")
+  @AuthApiPermission(apiCodes = "sys:user:edit")
   public YdszResponse<Integer> batchDisable(@Valid @RequestBody BatchUserStatusDTO dto) {
     sensitiveVerifyService.clearVerification();
     return YdszResponse.success(service.batchDisable(dto.getIds()));
@@ -495,6 +512,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccount.suspend", threshold = 10)
   @PutMapping("/{userId}/lifecycle/suspend")
   @Operation(summary = "暂停用户账号", description = "将用户从 ENABLED 状态临时停用，可后续恢复")
+  @AuthApiPermission(apiCodes = "sys:user:edit")
   public YdszResponse<String> suspend(@PathVariable String userId) {
     return YdszResponse.success(lifecycleService.suspend(userId).name());
   }
@@ -516,6 +534,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccount.resume", threshold = 10)
   @PutMapping("/{userId}/lifecycle/resume")
   @Operation(summary = "恢复暂停用户", description = "将暂停状态的用户恢复到 ENABLED")
+  @AuthApiPermission(apiCodes = "sys:user:edit")
   public YdszResponse<String> resume(@PathVariable String userId) {
     return YdszResponse.success(lifecycleService.resume(userId).name());
   }
@@ -538,6 +557,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccount.disable", threshold = 10)
   @PutMapping("/{userId}/lifecycle/disable")
   @Operation(summary = "禁用用户账号", description = "长期禁用，后续可重新启用")
+  @AuthApiPermission(apiCodes = "sys:user:edit")
   public YdszResponse<String> disable(@PathVariable String userId) {
     sensitiveVerifyService.clearVerification();
     return YdszResponse.success(lifecycleService.disable(userId).name());
@@ -560,6 +580,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccount.enable", threshold = 10)
   @PutMapping("/{userId}/lifecycle/enable")
   @Operation(summary = "启用用户账号", description = "从 DISABLED 恢复到 ENABLED")
+  @AuthApiPermission(apiCodes = "sys:user:edit")
   public YdszResponse<String> enable(@PathVariable String userId) {
     return YdszResponse.success(lifecycleService.enable(userId).name());
   }
@@ -582,6 +603,7 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.UserAccount.resign", threshold = 5)
   @PutMapping("/{userId}/lifecycle/resign")
   @Operation(summary = "账号离职处理", description = "终态操作，永久不可再激活")
+  @AuthApiPermission(apiCodes = "sys:user:delete")
   public YdszResponse<String> resign(@PathVariable String userId) {
     sensitiveVerifyService.clearVerification();
     return YdszResponse.success(lifecycleService.resign(userId).name());

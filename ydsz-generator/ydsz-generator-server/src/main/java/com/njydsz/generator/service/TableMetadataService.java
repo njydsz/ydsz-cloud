@@ -49,7 +49,7 @@ public class TableMetadataService {
   private static final Pattern ENUM_PATTERN =
       Pattern.compile("\\(([^)]+)\\)");
   /** 基类审计字段集合（这些字段由 MpBaseAuditEntity / MpBaseIdEntity 提供）。 */
-  private static final java.util.Set<String> AUDIT_FIELD_COLUMNS = Set.of(
+  private static final Set<String> AUDIT_FIELD_COLUMNS = Set.of(
       "id", "tenant_id", "created_at", "updated_at", "created_by", "updated_by",
       "is_deleted", "deleted", "creator_id", "updater_id");
 

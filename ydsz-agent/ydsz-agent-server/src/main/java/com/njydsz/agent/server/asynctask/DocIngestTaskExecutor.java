@@ -3,13 +3,13 @@ package com.njydsz.agent.server.asynctask;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.entity.AsyncTask;
 import com.njydsz.agent.server.rag.DocumentIngestionService;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 文档摄入异步任务执行器。
@@ -40,6 +40,9 @@ public class DocIngestTaskExecutor implements AsyncTaskExecutor {
   private static final int PROGRESS_CHUNKED = 30;
   /** 任务驱动进度：向量化完成阶段 */
   private static final int PROGRESS_EMBEDDED = 70;
+
+  /** 错误消息截断最大长度 */
+  private static final int ERROR_MESSAGE_MAX_LENGTH = 200;
 
   private final DocumentIngestionService ingestionService;
 
@@ -95,7 +98,7 @@ public class DocIngestTaskExecutor implements AsyncTaskExecutor {
       log.info("[AsyncTask:DOC_INGEST] 执行完成: taskId={}, chunks={}", task.getId(), chunkCount);
     } catch (Exception e) {
       log.error("[AsyncTask:DOC_INGEST] 执行失败: taskId={}, error={}", task.getId(), e.getMessage(), e);
-      task.fail(I18n.message("agent.error.docingest.failed", new Object[]{truncate(e.getMessage(), 200)}));
+      task.fail(I18n.message("agent.error.docingest.failed", new Object[]{truncate(e.getMessage(), ERROR_MESSAGE_MAX_LENGTH)}));
     }
   }
 

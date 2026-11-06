@@ -19,9 +19,16 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  *     └──────────┴─────────────┘（重新编辑回到 DRAFT）
  * </pre>
  *
+ * <p><b>已废弃（26.11.06）</b>：本枚举与 {@link RuleStatus} 双轨并存，两者流转规则互不兼容
+ * （本枚举无 ARCHIVED、isTerminal() 恒 false、允许 PUBLISHED→DRAFT），而实体
+ * {@code RuleDefinition} 的状态操作已统一到 {@link RuleStatus}。
+ * 保留仅为兼容存量引用，新代码请勿使用。
+ *
  * @author ydsz-team
  * @since 26.10.01
+ * @deprecated 使用 {@link RuleStatus}（含完整多级审批流状态机）
  */
+@Deprecated(since = "26.11.06", forRemoval = true)
 public enum RuleStatusEnum implements BaseStatusEnum<RuleStatusEnum> {
 
   /** 草稿（编辑中，未发布） */

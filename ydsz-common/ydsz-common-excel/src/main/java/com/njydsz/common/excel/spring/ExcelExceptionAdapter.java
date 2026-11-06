@@ -1,5 +1,7 @@
 package com.njydsz.common.excel.spring;
 
+import java.util.Locale;
+
 import com.njydsz.common.excel.exception.ExcelException;
 import com.njydsz.common.excel.exception.ExcelExceptionCode;
 import com.njydsz.common.excel.exception.ExcelReadException;
@@ -67,7 +69,7 @@ public final class ExcelExceptionAdapter {
    * @param locale 请求 Locale（可为 null，此时使用系统默认）
    * @return 解析后的本地化消息；null 安全
    */
-  public static String resolveMessage(ExcelException ex, java.util.Locale locale) {
+  public static String resolveMessage(ExcelException ex, Locale locale) {
     if (ex == null) {
       return null;
     }

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.YdszResponse;
@@ -65,6 +66,7 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
 @RequestMapping("/workflow/categories")
 @RequiredArgsConstructor
 @Tag(name = "流程分类管理", description = "流程分类的增删改查")
+@AuthApiPermission(apiCodes = "flow:category:list")
 public class FlowCategoryController {
 
   /** 流程分类管理服务，负责分类的增删改查 */
@@ -130,6 +132,7 @@ public class FlowCategoryController {
   @Idempotent(key = "ydsz:workflow:category:create", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCategory.create", threshold = 50)
   @PostMapping
+  @AuthApiPermission(apiCodes = "flow:category:add")
   @Audit(
       module = "流程分类",
       type = AuditType.OPERATION,
@@ -160,6 +163,7 @@ public class FlowCategoryController {
   @Idempotent(key = "ydsz:workflow:category:update", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCategory.update", threshold = 50)
   @PutMapping
+  @AuthApiPermission(apiCodes = "flow:category:edit")
   @Audit(
       module = "流程分类",
       type = AuditType.OPERATION,
@@ -195,6 +199,7 @@ public class FlowCategoryController {
   @Idempotent(key = "ydsz:workflow:category:delete", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowCategory.delete", threshold = 50)
   @DeleteMapping("/{id}")
+  @AuthApiPermission(apiCodes = "flow:category:delete")
   @Audit(
       module = "流程分类",
       type = AuditType.OPERATION,

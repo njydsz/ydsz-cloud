@@ -5,7 +5,9 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -476,8 +478,8 @@ public class ExcelWriter implements AutoCloseable {
 
     // 构建 field -> colIndex 映射（显式 index 优先，否则用顺序位置）
     // 先处理显式 index 的字段
-    java.util.Map<Field, Integer> fieldToCol = new java.util.IdentityHashMap<>(orderedFields.size());
-    java.util.Set<Integer> claimedCols = new java.util.HashSet<>();
+    Map<Field, Integer> fieldToCol = new IdentityHashMap<>(orderedFields.size());
+    Set<Integer> claimedCols = new HashSet<>();
     for (Field f : orderedFields) {
       ExcelProperty prop = f.getAnnotation(ExcelProperty.class);
       if (prop != null && prop.index() >= 0) {
@@ -500,8 +502,8 @@ public class ExcelWriter implements AutoCloseable {
     }
 
     // 收集合并列和验证规则
-    final java.util.List<Integer> mergeCols = new java.util.ArrayList<>();
-    final java.util.List<DataValidation> validations = new java.util.ArrayList<>();
+    final List<Integer> mergeCols = new ArrayList<>();
+    final List<DataValidation> validations = new ArrayList<>();
 
     for (Field field : orderedFields) {
       Integer col = fieldToCol.get(field);

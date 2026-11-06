@@ -3,6 +3,7 @@ package com.njydsz.common.tenant.datasource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import javax.sql.DataSource;
 
@@ -155,7 +156,7 @@ public class SchemaInitializer {
       @Nonnull Connection conn, @Nonnull String templateSchema, @Nonnull String targetSchema)
       throws SQLException {
     // 查询模板 schema 中所有表
-    List<String> tables = new java.util.ArrayList<>(16);
+    List<String> tables = new ArrayList<>(16);
     try (var ps = conn.prepareStatement(
         "SELECT table_name FROM information_schema.tables "
             + "WHERE table_schema = ? AND table_type = 'BASE TABLE' ORDER BY table_name")) {

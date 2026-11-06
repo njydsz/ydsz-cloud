@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.YdszJson;
@@ -71,6 +73,7 @@ public class RuleImportExportController {
    * @return 全部规则定义的 JSON 格式数据（不含内部字段）
    */
   @Operation(summary = "导出全部规则为JSON")
+  @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EXPORT)
   @GetMapping("/export")
   public YdszResponse<Map<String, Object>> exportRules() {
     List<RuleDefinitionDTO> rules = ruleAdminService.listAll();
@@ -114,6 +117,7 @@ public class RuleImportExportController {
    * @return YAML 文本（Content-Type: text/plain）
    */
   @Operation(summary = "导出全部规则为YAML")
+  @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EXPORT)
   @GetMapping(value = "/export.yaml", produces = "text/plain;charset=UTF-8")
   public String exportRulesAsYaml() {
     List<RuleDefinitionDTO> rules = ruleAdminService.listAll();
@@ -197,6 +201,7 @@ public class RuleImportExportController {
       content = "'postmapping'")
   @RateLimit(resource = "literule.rule_import_export.importRules", threshold = 50)
   @Operation(summary = "导入规则JSON")
+  @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_IMPORT)
   @PostMapping("/import")
   public YdszResponse<Map<String, Object>> importRules(
       @Valid @RequestBody RuleImportDTO dto,

@@ -60,6 +60,12 @@ public class RuleChain {
   /** 纳秒到毫秒的换算系数 */
   private static final long NANOS_PER_MILLI = 1_000_000L;
 
+  /** 线程池最小核心线程数 */
+  private static final int MIN_CORE_POOL_SIZE = 2;
+
+  /** 线程池空闲线程存活时间（秒） */
+  private static final long KEEP_ALIVE_SECONDS = 60L;
+
   /**
    * WHEN 链专用守护线程池（P1-4）
    *
@@ -76,9 +82,9 @@ public class RuleChain {
   // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
   private static final ExecutorService WHEN_FALLBACK_EXECUTOR =
       ExecutorUtils.builder()
-          .corePoolSize(Math.max(2, Runtime.getRuntime().availableProcessors()))
-          .maxPoolSize(Math.max(2, Runtime.getRuntime().availableProcessors()))
-          .keepAliveTime(60L, TimeUnit.SECONDS)
+          .corePoolSize(Math.max(MIN_CORE_POOL_SIZE, Runtime.getRuntime().availableProcessors()))
+          .maxPoolSize(Math.max(MIN_CORE_POOL_SIZE, Runtime.getRuntime().availableProcessors()))
+          .keepAliveTime(KEEP_ALIVE_SECONDS, TimeUnit.SECONDS)
           .queueCapacity(QUEUE_CAPACITY)
           .threadNamePrefix("literule-when-fallback")
           .daemon(true)

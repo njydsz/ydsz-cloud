@@ -1,6 +1,7 @@
 package com.njydsz.common.excel.core;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -85,7 +86,7 @@ public class ExcelFacade {
    * @param file Excel 文件的 File 对象
    * @return ExcelReader 读取器实例
    */
-  public static ExcelReader read(java.io.File file) {
+  public static ExcelReader read(File file) {
     return read(file, null);
   }
 
@@ -122,7 +123,7 @@ public class ExcelFacade {
    * @param <T> 泛型参数
    * @return ExcelReader 读取器实例
    */
-  public static <T> ExcelReader read(java.io.File file, Class<T> clazz) {
+  public static <T> ExcelReader read(File file, Class<T> clazz) {
     ReadMetadata metadata = new ReadMetadata();
     metadata.setClazz(clazz);
     metadata.setFile(file);
@@ -219,7 +220,7 @@ public class ExcelFacade {
    * @param file 目标 Excel 文件的 File 对象
    * @return ExcelWriter 写入器实例
    */
-  public static ExcelWriter write(java.io.File file) {
+  public static ExcelWriter write(File file) {
     return write(file, null);
   }
 
@@ -273,7 +274,7 @@ public class ExcelFacade {
    * @param <T> 泛型参数
    * @return ExcelWriter 写入器实例
    */
-  public static <T> ExcelWriter write(java.io.File file, Class<T> clazz) {
+  public static <T> ExcelWriter write(File file, Class<T> clazz) {
     WriteMetadata metadata = new WriteMetadata();
     metadata.setClazz(clazz);
     metadata.setFile(file);

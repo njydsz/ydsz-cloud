@@ -28,6 +28,9 @@ public class ScannerConfig {
   /** 默认parallelDispatchPoolSize值（可被配置文件覆盖） */
   private static final int DEFAULT_PARALLEL_DISPATCH_POOL_SIZE = 8;
 
+  /** 默认自适应扫描最小间隔（毫秒） */
+  private static final long DEFAULT_MIN_INTERVAL_MS = 500L;
+
   /** 扫描间隔（毫秒，默认 5s） */
   private long intervalMs = DEFAULT_INTERVAL_MS;
 
@@ -64,7 +67,7 @@ public class ScannerConfig {
    *
    * <p>控制高负载时扫描频率上限（不低于此值），避免过度消耗 CPU/DB。 仅当 {@code adaptiveEnabled=true} 时生效。
    */
-  private long minIntervalMs = 500L;
+  private long minIntervalMs = DEFAULT_MIN_INTERVAL_MS;
 
   /**
    * P1-4: 是否启用自适应扫描频率（默认 true）。

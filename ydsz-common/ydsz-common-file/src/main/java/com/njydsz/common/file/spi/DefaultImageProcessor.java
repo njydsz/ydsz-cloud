@@ -10,6 +10,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Iterator;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -57,7 +58,7 @@ public class DefaultImageProcessor implements ImageProcessor {
   @Override
   public void scale(
       InputStream input,
-      java.io.OutputStream output,
+      OutputStream output,
       java.awt.Dimension targetSize,
       boolean keepAspectRatio)
       throws IOException {
@@ -85,7 +86,7 @@ public class DefaultImageProcessor implements ImageProcessor {
 
   @Override
   public void crop(
-      InputStream input, java.io.OutputStream output, int x, int y, int width, int height)
+      InputStream input, OutputStream output, int x, int y, int width, int height)
       throws IOException {
     BufferedImage src = ImageIO.read(input);
     if (src == null) {
@@ -106,7 +107,7 @@ public class DefaultImageProcessor implements ImageProcessor {
   @Override
   public void watermark(
       InputStream input,
-      java.io.OutputStream output,
+      OutputStream output,
       String watermarkText,
       float opacity,
       WatermarkPosition position)
@@ -200,7 +201,7 @@ public class DefaultImageProcessor implements ImageProcessor {
   }
 
   @Override
-  public void compress(InputStream input, java.io.OutputStream output, float quality)
+  public void compress(InputStream input, OutputStream output, float quality)
       throws IOException {
     BufferedImage src = ImageIO.read(input);
     if (src == null) {
@@ -220,7 +221,7 @@ public class DefaultImageProcessor implements ImageProcessor {
   }
 
   @Override
-  public void convert(InputStream input, java.io.OutputStream output, String targetFormat)
+  public void convert(InputStream input, OutputStream output, String targetFormat)
       throws IOException {
     BufferedImage src = ImageIO.read(input);
     if (src == null) {

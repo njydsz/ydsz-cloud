@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -14,6 +13,7 @@ import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
 import com.njydsz.agent.domain.asynctask.AsyncTaskType;
 import com.njydsz.agent.domain.entity.AsyncTask;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.util.id.IdGenerator;

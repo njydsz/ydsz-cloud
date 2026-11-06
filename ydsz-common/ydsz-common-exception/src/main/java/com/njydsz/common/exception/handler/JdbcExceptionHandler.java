@@ -122,7 +122,7 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
     }
 
     String message = resolveMessage(messageKey, null, messageKey);
-    log.error(
+    getLog().error(
         "{}数据完整性异常 | 路径: {} | SQLState: {} | 消息: {}",
         getLogPrefix(),
         request.getRequestURI(),
@@ -150,7 +150,7 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
   public YdszResponse<?> handleDataAccessException(
       DataAccessException e, HttpServletRequest request) {
     recordMetrics(e);
-    log.error(
+    getLog().error(
         "{}数据访问异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
     // 通过 MessageSource 按当前请求 Locale 解析 i18n 文案，避免向客户端暴露裸 key

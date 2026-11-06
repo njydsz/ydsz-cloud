@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
-import com.njydsz.common.locales.util.I18n;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**
