@@ -1,11 +1,5 @@
 package com.njydsz.cronjob.web.controller.audit;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +14,12 @@ import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.test.BaseControllerMockTest;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link AuditLogController} Smoke Test。

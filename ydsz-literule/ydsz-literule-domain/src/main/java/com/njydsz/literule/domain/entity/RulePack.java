@@ -9,9 +9,9 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
-import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 规则集实体（P2-14）。

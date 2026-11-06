@@ -1,9 +1,9 @@
 package com.njydsz.common.netty.session;
 
+import java.util.concurrent.CompletableFuture;
+
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-
-import java.util.concurrent.CompletableFuture;
 
 /**
  * 连接会话 — Channel 的业务抽象层。

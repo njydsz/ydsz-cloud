@@ -1,7 +1,7 @@
 package com.njydsz.message.server.config;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +12,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Configuration;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.message.server.channel.MessageChannel;

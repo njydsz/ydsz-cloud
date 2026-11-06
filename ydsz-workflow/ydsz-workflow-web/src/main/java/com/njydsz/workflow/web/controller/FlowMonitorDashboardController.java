@@ -24,13 +24,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
-import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
 import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
 import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
@@ -235,6 +235,7 @@ public class FlowMonitorDashboardController {
         try {
           item.put("userId", Long.parseLong(String.valueOf(row.get("assigneeId"))));
         } catch (NumberFormatException e) {
+          // 预期行为：数值解析失败时降级返回默认值，非异常场景
           item.put("userId", 0);
         }
         item.put("userName", row.get("assigneeName"));
@@ -718,6 +719,7 @@ public class FlowMonitorDashboardController {
     try {
       return DateUtils.parseLocalDateTime(str, DateUtils.DEFAULT_DATE_TIME_PATTERN);
     } catch (Exception e) {
+      log.warn("操作异常, 降级处理: reason={}", e.getMessage());
       try {
         return DateUtils.parseDateIso(str).atStartOfDay();
       } catch (Exception ex) {
@@ -743,6 +745,7 @@ public class FlowMonitorDashboardController {
     try {
       return Long.parseLong(String.valueOf(val).trim());
     } catch (NumberFormatException e) {
+      // 预期行为：数值解析失败时降级返回默认值，非异常场景
       return 0L;
     }
   }

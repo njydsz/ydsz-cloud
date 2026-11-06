@@ -14,11 +14,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.config.RuleAdminService;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * 规则压测服务

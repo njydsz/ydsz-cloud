@@ -1,10 +1,10 @@
 package com.njydsz.agent.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**

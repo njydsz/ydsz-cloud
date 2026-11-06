@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.chain;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.Comparator;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 

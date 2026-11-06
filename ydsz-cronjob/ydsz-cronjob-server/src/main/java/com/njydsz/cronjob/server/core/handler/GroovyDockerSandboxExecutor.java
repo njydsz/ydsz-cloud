@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -90,11 +91,11 @@ public class GroovyDockerSandboxExecutor {
     SandboxConfig sandboxConfig = cronjobProperties.getSandbox();
 
     if (!sandboxConfig.isEnabled() || !sandboxConfig.isGroovyDockerEnabled()) {
-      return new GroovySandboxResult(false, "Groovy Docker 沙箱未启用", -1, "");
+      return new GroovySandboxResult(false, I18n.message("cronjob.sandbox.groovy.not.enabled"), -1, "");
     }
 
     if (!isDockerAvailable()) {
-      return new GroovySandboxResult(false, "Docker 不可用，请检查 Docker 安装和权限", -1, "");
+      return new GroovySandboxResult(false, I18n.message("cronjob.sandbox.docker.unavailable"), -1, "");
     }
 
     Path scriptFile = null;
@@ -158,7 +159,7 @@ public class GroovyDockerSandboxExecutor {
           success, success ? "success" : "exit code: " + exitCode, exitCode, output);
     } catch (Exception e) {
       log.error("[GroovyDocker] 执行异常: reason={}", e.getMessage(), e);
-      return new GroovySandboxResult(false, "执行异常: " + e.getMessage(), -1, "");
+      return new GroovySandboxResult(false, I18n.message("cronjob.sandbox.execute.exception") + e.getMessage(), -1, "");
     } finally {
       // 清理临时文件
       if (scriptFile != null) {

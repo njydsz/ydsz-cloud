@@ -1,10 +1,5 @@
 package com.njydsz.literule.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +15,11 @@ import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.server.config.DecisionTableAdminService;
 import com.njydsz.literule.server.config.DecisionTableQueryService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link RuleDecisionTableController} Smoke Test。

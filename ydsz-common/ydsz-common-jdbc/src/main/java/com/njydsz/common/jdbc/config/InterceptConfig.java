@@ -30,15 +30,31 @@ public class InterceptConfig {
   private Set<String> tables = new HashSet<>(16);
   private String column = "";
 
-  public InterceptTableStrategy getInterceptTableStrategy() { return interceptTableStrategy; }
-  public void setInterceptTableStrategy(InterceptTableStrategy interceptTableStrategy) { this.interceptTableStrategy = interceptTableStrategy; }
+  public InterceptTableStrategy getInterceptTableStrategy() {
+      return interceptTableStrategy;
+  }
+  public void setInterceptTableStrategy(InterceptTableStrategy interceptTableStrategy) {
+      this.interceptTableStrategy = interceptTableStrategy;
+  }
 
-  public Boolean getIsEnabled() { return isEnabled; }
-  public void setIsEnabled(Boolean isEnabled) { this.isEnabled = isEnabled; }
+  public Boolean getIsEnabled() {
+      return isEnabled;
+  }
+  public void setIsEnabled(Boolean isEnabled) {
+      this.isEnabled = isEnabled;
+  }
 
-  public Set<String> getTables() { return tables; }
-  public void setTables(Set<String> tables) { this.tables = tables; }
+  public Set<String> getTables() {
+      return tables;
+  }
+  public void setTables(Set<String> tables) {
+      this.tables = tables;
+  }
 
-  public String getColumn() { return column; }
-  public void setColumn(String column) { this.column = column; }
+  public String getColumn() {
+      return column;
+  }
+  public void setColumn(String column) {
+      this.column = column;
+  }
 }

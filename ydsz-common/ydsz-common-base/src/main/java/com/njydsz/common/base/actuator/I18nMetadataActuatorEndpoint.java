@@ -4,13 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 
 import com.njydsz.common.locales.config.I18nProperties;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * i18n 元数据 Actuator 端点（L2 基础设施信息暴露）。

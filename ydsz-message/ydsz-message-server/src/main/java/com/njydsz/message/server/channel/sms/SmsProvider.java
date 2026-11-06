@@ -2,9 +2,9 @@ package com.njydsz.message.server.channel.sms;
 
 import java.util.List;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 
 /**

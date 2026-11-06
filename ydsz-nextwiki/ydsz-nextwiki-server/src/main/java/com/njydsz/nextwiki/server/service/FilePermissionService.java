@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.cache.spring.YdszCacheable;
-import com.njydsz.nextwiki.server.constant.NextwikiCacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.dto.FileAclDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -19,6 +18,7 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
 import com.njydsz.nextwiki.domain.vo.FileAclVO;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.server.constant.NextwikiCacheConstants;
 
 /**
  * 文件权限校验服务

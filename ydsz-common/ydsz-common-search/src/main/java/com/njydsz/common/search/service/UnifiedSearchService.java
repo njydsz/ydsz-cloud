@@ -34,7 +34,6 @@ import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
-import com.njydsz.common.search.service.ZeroResultHandler;
 import com.njydsz.common.search.service.ZeroResultHandler.ZeroResultGuide;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 

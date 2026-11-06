@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import com.njydsz.common.domain.query.PageQuery;
-
 import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
 
 /**

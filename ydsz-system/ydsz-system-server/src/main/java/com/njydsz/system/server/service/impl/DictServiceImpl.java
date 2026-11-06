@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.cache.spring.YdszCacheable;
-import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
@@ -20,6 +19,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.domain.vo.DictTypeVO;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.system.server.service.DictService;
 import com.njydsz.system.server.service.event.DictChangeEventConstants;
 import com.njydsz.system.server.service.event.DictChangeEventPublisher;

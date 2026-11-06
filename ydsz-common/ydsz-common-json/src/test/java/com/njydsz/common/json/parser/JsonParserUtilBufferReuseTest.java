@@ -1,11 +1,11 @@
 package com.njydsz.common.json.parser;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * {@link JsonParserUtil} 字符缓冲区复用测试。

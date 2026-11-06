@@ -20,15 +20,31 @@ public class FieldFillConfiguration {
   private InterceptConfig createAtIntercept = new InterceptConfig();
   private InterceptConfig updateAtIntercept = new InterceptConfig();
 
-  public InterceptConfig getCreatedByIntercept() { return createdByIntercept; }
-  public void setCreatedByIntercept(InterceptConfig createdByIntercept) { this.createdByIntercept = createdByIntercept; }
+  public InterceptConfig getCreatedByIntercept() {
+      return createdByIntercept;
+  }
+  public void setCreatedByIntercept(InterceptConfig createdByIntercept) {
+      this.createdByIntercept = createdByIntercept;
+  }
 
-  public InterceptConfig getUpdateByIntercept() { return updateByIntercept; }
-  public void setUpdateByIntercept(InterceptConfig updateByIntercept) { this.updateByIntercept = updateByIntercept; }
+  public InterceptConfig getUpdateByIntercept() {
+      return updateByIntercept;
+  }
+  public void setUpdateByIntercept(InterceptConfig updateByIntercept) {
+      this.updateByIntercept = updateByIntercept;
+  }
 
-  public InterceptConfig getCreateAtIntercept() { return createAtIntercept; }
-  public void setCreateAtIntercept(InterceptConfig createAtIntercept) { this.createAtIntercept = createAtIntercept; }
+  public InterceptConfig getCreateAtIntercept() {
+      return createAtIntercept;
+  }
+  public void setCreateAtIntercept(InterceptConfig createAtIntercept) {
+      this.createAtIntercept = createAtIntercept;
+  }
 
-  public InterceptConfig getUpdateAtIntercept() { return updateAtIntercept; }
-  public void setUpdateAtIntercept(InterceptConfig updateAtIntercept) { this.updateAtIntercept = updateAtIntercept; }
+  public InterceptConfig getUpdateAtIntercept() {
+      return updateAtIntercept;
+  }
+  public void setUpdateAtIntercept(InterceptConfig updateAtIntercept) {
+      this.updateAtIntercept = updateAtIntercept;
+  }
 }

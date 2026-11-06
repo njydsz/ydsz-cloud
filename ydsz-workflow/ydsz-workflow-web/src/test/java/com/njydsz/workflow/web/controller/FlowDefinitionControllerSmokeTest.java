@@ -1,15 +1,5 @@
 package com.njydsz.workflow.web.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +13,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.test.BaseControllerMockTest;
-import com.njydsz.workflow.web.controller.definition.FlowDefinitionController;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.server.service.FlowConditionExprService;
@@ -32,6 +21,17 @@ import com.njydsz.workflow.server.service.FlowDefinitionService;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 import com.njydsz.workflow.server.service.FlowSlaService;
 import com.njydsz.workflow.server.service.FlowTaskService;
+import com.njydsz.workflow.web.controller.definition.FlowDefinitionController;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link FlowDefinitionController} Smoke Test（P0-7 集成测试试点）。

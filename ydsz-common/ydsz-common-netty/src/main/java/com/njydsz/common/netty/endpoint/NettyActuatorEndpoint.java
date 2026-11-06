@@ -1,19 +1,20 @@
 package com.njydsz.common.netty.endpoint;
 
-import com.njydsz.common.netty.metric.NettyChannelMetrics;
-import com.njydsz.common.netty.pool.NettyEventLoopPool;
-import com.njydsz.common.netty.server.AbstractNettyServer;
-import com.njydsz.common.netty.session.SessionRepository;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.netty.channel.Channel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import com.njydsz.common.netty.metric.NettyChannelMetrics;
+import com.njydsz.common.netty.pool.NettyEventLoopPool;
+import com.njydsz.common.netty.server.AbstractNettyServer;
+import com.njydsz.common.netty.session.SessionRepository;
 
 /**
  * Netty Actuator 端点 — 暴露运行时诊断信息。

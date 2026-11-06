@@ -5,9 +5,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * SMTP 邮件告警通知渠道（P2 告警通知扩展）。

@@ -1,15 +1,15 @@
 package com.njydsz.agent.web.controller.trigger;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.agent.domain.trigger.TriggerType;
+import com.njydsz.agent.domain.vo.TriggerExportVO;
 import com.njydsz.agent.server.trigger.TriggerManagementService;
 import com.njydsz.agent.server.util.ExcelExportUtil;
-import com.njydsz.agent.domain.vo.TriggerExportVO;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -37,9 +37,9 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 触发器管理控制器。
@@ -293,7 +293,7 @@ public class TriggerController {
    */
   @Operation(summary = "导出触发器列表（Excel）")
   @GetMapping("/export")
-  public void exportTriggers(HttpServletResponse response) throws Exception {
+  public void exportTriggers(HttpServletResponse response) throws IOException {
     String fileName = "triggers_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType(CONTENT_TYPE_OOXML);
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, buildRfc5987ContentDisposition(fileName));

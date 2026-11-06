@@ -1,11 +1,5 @@
 package com.njydsz.literule.infra.repository.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +18,12 @@ import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link RuleDefinitionRepositoryImpl} 单元测试（管理端查询口径）。

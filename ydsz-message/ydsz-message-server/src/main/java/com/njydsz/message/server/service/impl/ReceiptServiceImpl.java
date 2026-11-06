@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.impl.receipt;
 
 
-import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -11,6 +11,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.message.domain.dto.ReceiptCallbackDTO;
 import com.njydsz.message.domain.query.MsgReceiptQuery;

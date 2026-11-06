@@ -15,8 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.userinfo.server.config.GeoIpProperties;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.userinfo.server.config.GeoIpProperties;
 
 /**
  * GeoIP 地理围栏服务（P3-3）。
@@ -250,12 +250,12 @@ public class GeoIpService {
 
     /** 功能未启用 */
     static GeoFenceResult disabled() {
-      return new GeoFenceResult(false, 0, "地理围栏未启用", null, null, 0);
+      return new GeoFenceResult(false, 0, I18n.message("userinfo.error.geofence.not.enabled"), null, null, 0);
     }
 
     /** 无数据 */
     static GeoFenceResult noData() {
-      return new GeoFenceResult(false, 0, "无地理位置数据", null, null, 0);
+      return new GeoFenceResult(false, 0, I18n.message("userinfo.error.geofence.no.data"), null, null, 0);
     }
 
     /** 正常 */

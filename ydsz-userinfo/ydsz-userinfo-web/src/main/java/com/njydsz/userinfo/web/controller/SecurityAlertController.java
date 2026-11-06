@@ -17,10 +17,10 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 import com.njydsz.userinfo.server.alert.SecurityAlertService;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 安全告警管理 Controller。

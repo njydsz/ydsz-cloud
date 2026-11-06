@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.event.UserAuthEventListener;
 import com.njydsz.userinfo.domain.event.auth.AccountBannedEvent;
 import com.njydsz.userinfo.domain.event.auth.AccountLockedEvent;
@@ -19,7 +20,6 @@ import com.njydsz.userinfo.domain.event.auth.MfaVerifiedEvent;
 import com.njydsz.userinfo.domain.event.auth.PasswordChangedEvent;
 import com.njydsz.userinfo.domain.event.auth.SessionEvictedEvent;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 认证指标事件监听器。

@@ -162,6 +162,7 @@ public class JobDiagnosisController {
     try {
       return InetAddress.getLocalHost().getHostName();
     } catch (Exception e) {
+      log.warn("操作异常, 降级处理: reason={}", e.getMessage());
       return "unknown";
     }
   }

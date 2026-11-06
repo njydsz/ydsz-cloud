@@ -3,6 +3,7 @@ package com.njydsz.literule.server.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.njydsz.common.locales.util.I18n;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -102,7 +103,7 @@ public class RuleConfigValidator {
 
   private void validateAnnotations() {
     for (ConstraintViolation<LiteRuleProperties> violation : validator.validate(properties)) {
-      addError("注解校验: " + violation.getPropertyPath() + " " + violation.getMessage());
+      addError(I18n.message("literule.error.annotation.validation", new Object[]{violation.getPropertyPath() + " " + violation.getMessage()}));
     }
   }
 
@@ -122,7 +123,7 @@ public class RuleConfigValidator {
           distributed.getHeartbeatIntervalMs(), distributed.getHeartbeatTimeoutMs()));
     }
     if (distributed.getRefreshIntervalMs() <= 0) {
-      addError("分布式配置: refreshIntervalMs 必须大于 0");
+      addError(I18n.message("literule.error.distributed.refreshInterval.invalid"));
     }
   }
 
@@ -177,7 +178,7 @@ public class RuleConfigValidator {
       return;
     }
     if (performance.getParallelPoolSize() <= 0) {
-      addError("并行配置: parallelPoolSize 必须大于 0");
+      addError(I18n.message("literule.error.parallel.poolSize.invalid"));
     }
     if (performance.getParallelThreshold() < 2) {
       addWarn(String.format(

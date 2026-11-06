@@ -1,7 +1,7 @@
 package com.njydsz.message.server.channel;
 
 
-import com.njydsz.common.locales.util.I18n;import java.time.Duration;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,12 +14,13 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.string.StringUtils;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.server.config.ChannelProperties;
 
 /**
@@ -97,12 +98,12 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
 
     String accessToken = getAccessToken(cfg);
     if (accessToken == null) {
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "获取钉钉 access_token 失败", "获取钉钉 access_token 失败", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.dingtalk.token.fetch.failed"), I18n.message("message.error.dingtalk.token.fetch.failed"), null);
     }
 
     String receiver = request.getReceiver();
     if (!StringUtils.hasText(receiver)) {
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "接收人(userId)不能为空", "接收人(userId)不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.receiver.userid.required"), I18n.message("message.error.receiver.userid.required"), null);
     }
 
     Map<String, Object> payload = buildPayload(request, cfg.getAgentId(), receiver);

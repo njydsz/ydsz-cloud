@@ -5,6 +5,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
@@ -12,10 +17,6 @@ import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 /**
  * 消息发送日志领域实体，全通道发送全量记录的事实表。

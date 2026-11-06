@@ -1,11 +1,12 @@
 package com.njydsz.generator.web.handler;
 
-import com.njydsz.common.exception.handler.BaseExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.njydsz.common.exception.handler.BaseExceptionHandler;
 
 /**
  * 代码生成器模块全局异常处理器。

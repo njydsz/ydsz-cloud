@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.receipt;
 
 
-import com.njydsz.common.locales.util.I18n;import java.time.Duration;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;

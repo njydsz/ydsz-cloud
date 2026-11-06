@@ -2,11 +2,14 @@ package com.njydsz.generator.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 
 /**
@@ -27,8 +30,11 @@ import lombok.experimental.SuperBuilder;
 public class GenTemplateGroup extends MpBaseEntity<String> {
 
   /** 分组名（UNIQUE，如 default、mybatis-plus）。 */
+  @NotBlank(message = "{generator.templateGroup.name.notblank}")
+  @Size(max = 64, message = "{generator.templateGroup.name.size}")
   private String name;
   /** 分组描述。 */
+  @Size(max = 255, message = "{generator.templateGroup.description.size}")
   private String description;
   /** 是否为系统分组（系统分组不可删除）。 */
   private Boolean isSystem;

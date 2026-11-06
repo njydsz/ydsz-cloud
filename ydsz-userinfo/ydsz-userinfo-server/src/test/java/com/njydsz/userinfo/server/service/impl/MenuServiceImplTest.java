@@ -1,10 +1,5 @@
 package com.njydsz.userinfo.server.service.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +17,11 @@ import com.njydsz.userinfo.domain.repository.RolePermissionRepository;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.server.auth.DbRolePermissionLoader;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link MenuServiceImpl} 单元测试。

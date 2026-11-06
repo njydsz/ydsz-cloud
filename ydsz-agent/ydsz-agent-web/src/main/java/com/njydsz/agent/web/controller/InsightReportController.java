@@ -4,6 +4,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -19,8 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.validation.Valid;
-
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.insight.InsightReportRequest;
 import com.njydsz.agent.domain.insight.InsightReportResult;
@@ -28,7 +28,6 @@ import com.njydsz.agent.domain.insight.InsightReportService;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
-import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * 洞察报告 REST 控制器。

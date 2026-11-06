@@ -183,6 +183,7 @@ public class RuleBatchController {
         ruleAdminService.save(def, operator, "[批量] " + (enabled ? "启用" : "停用"));
         success++;
       } catch (Exception e) {
+        log.warn("操作异常, 降级处理: reason={}", e.getMessage());
         failed.add(code + ": " + e.getMessage());
       }
     }
@@ -234,6 +235,7 @@ public class RuleBatchController {
         ruleAdminService.save(def, operator, "[批量] 优先级调整 " + (delta > 0 ? "+" : "") + delta);
         success++;
       } catch (Exception e) {
+        log.warn("操作异常, 降级处理: reason={}", e.getMessage());
         failed.add(code + ": " + e.getMessage());
       }
     }
@@ -279,6 +281,7 @@ public class RuleBatchController {
         ruleAdminService.save(def, operator, "[批量] 分类调整为 " + category);
         success++;
       } catch (Exception e) {
+        log.warn("操作异常, 降级处理: reason={}", e.getMessage());
         failed.add(code + ": " + e.getMessage());
       }
     }

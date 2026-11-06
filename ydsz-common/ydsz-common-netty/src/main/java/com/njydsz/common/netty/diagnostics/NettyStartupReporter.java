@@ -1,11 +1,12 @@
 package com.njydsz.common.netty.diagnostics;
 
+import io.netty.util.internal.PlatformDependent;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.common.netty.pool.NettyEventLoopPool;
 import com.njydsz.common.netty.transport.NativeTransportDetector.TransportType;
-import io.netty.util.internal.PlatformDependent;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Netty 启动环境检测报告器。

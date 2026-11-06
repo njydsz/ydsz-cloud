@@ -12,14 +12,15 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.lock.admin.DistributedLockAdmin;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.lock.admin.DistributedLockAdmin;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.system.domain.query.LockPageQuery;
@@ -84,6 +85,7 @@ public class LockAdminRestController {
    * @param query 分页 + 筛选参数
    * @return 分页锁列表
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_LOCK_VIEW)
   @GetMapping("/page")
   @Operation(summary = "获取活跃锁分页列表", description = "基于 Redis SCAN 渐进式遍历，支持 lockKey 模糊匹配和 owner 筛选")
   public YdszResponse<LockVO[]> page(LockPageQuery query) {
@@ -130,6 +132,7 @@ public class LockAdminRestController {
    *
    * @return 锁统计信息
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_LOCK_VIEW)
   @GetMapping("/stats")
   @Operation(summary = "锁统计快照", description = "活跃数/超时数/持有者分布")
   public YdszResponse<LockStatsVO> stats() {
@@ -157,6 +160,7 @@ public class LockAdminRestController {
    * @param lockKey 锁 key（不含 "lock:" 前缀）
    * @return 是否释放成功
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_LOCK_RELEASE)
   @DeleteMapping("/{lockKey}")
   @Operation(summary = "强制释放指定锁", description = "死锁恢复运维操作")
   public YdszResponse<Boolean> release(@PathVariable String lockKey) {

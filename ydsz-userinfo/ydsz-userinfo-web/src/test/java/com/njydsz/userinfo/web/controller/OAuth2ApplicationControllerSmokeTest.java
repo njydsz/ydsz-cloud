@@ -1,10 +1,5 @@
 package com.njydsz.userinfo.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +14,11 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
 import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationService;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link OAuth2ApplicationController} Smoke Test。

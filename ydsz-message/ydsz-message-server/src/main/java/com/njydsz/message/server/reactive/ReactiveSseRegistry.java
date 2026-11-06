@@ -1,11 +1,13 @@
 package com.njydsz.message.server.reactive;
 
 
-import com.njydsz.common.locales.util.I18n;import jakarta.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 响应式 SSE 事件注册表。

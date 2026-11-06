@@ -1,13 +1,14 @@
 package com.njydsz.message.server.template;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.Map;
+import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.dto.RichMediaContentDTO;
 
 /**

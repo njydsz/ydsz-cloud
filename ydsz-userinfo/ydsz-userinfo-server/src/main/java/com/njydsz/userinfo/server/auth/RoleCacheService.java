@@ -12,9 +12,9 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.repository.RoleRepository;
 import com.njydsz.userinfo.domain.repository.UserRoleRepository;
 import com.njydsz.userinfo.domain.vo.RoleVO;
+import com.njydsz.userinfo.server.cache.CacheKeyBuilder;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
-import com.njydsz.userinfo.server.cache.CacheKeyBuilder;
 
 /**
  * 用户角色缓存服务。

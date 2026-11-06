@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.locales.util.I18n;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
@@ -109,7 +110,7 @@ public interface NotifyChannelStrategy {
    */
   default NotifySendResult sendCard(String receiver, CardMessage card) {
     if (card == null) {
-      return NotifySendResult.failure("卡片消息为空", "unknown");
+      return NotifySendResult.failure(I18n.message("common.notify.error.card.null"), "unknown");
     }
     return send(receiver, card.getTitle(), card.getContent());
   }

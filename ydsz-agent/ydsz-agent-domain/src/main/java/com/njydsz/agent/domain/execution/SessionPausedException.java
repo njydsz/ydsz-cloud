@@ -1,11 +1,11 @@
 package com.njydsz.agent.domain.execution;
 
+import java.util.List;
+import java.util.Objects;
+
 import com.njydsz.agent.domain.model.ToolCall;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.locales.util.I18n;
-
-import java.util.List;
-import java.util.Objects;
 
 /**
  * 会话暂停异常 — 由工具审批门抛出，通知执行器暂停当前会话并保存检查点。

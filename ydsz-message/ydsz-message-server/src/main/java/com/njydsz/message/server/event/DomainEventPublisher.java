@@ -1,11 +1,12 @@
 package com.njydsz.message.server.event;
 
 
-import com.njydsz.common.locales.util.I18n;import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.event.MessageDomainEvent;
 
 /**

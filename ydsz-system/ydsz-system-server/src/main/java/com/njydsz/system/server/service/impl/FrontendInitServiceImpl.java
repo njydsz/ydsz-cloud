@@ -10,13 +10,13 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.vo.FrontendInitVO;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.service.ConfigService;
 import com.njydsz.system.server.service.DictItemService;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.server.service.FrontendInitService;
 
 

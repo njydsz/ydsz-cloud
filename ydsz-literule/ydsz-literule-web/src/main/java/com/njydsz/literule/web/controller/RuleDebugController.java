@@ -254,6 +254,7 @@ public class RuleDebugController {
     try {
       command = DebugCommand.valueOf(commandStr.toUpperCase());
     } catch (IllegalArgumentException e) {
+      log.warn("参数非法, 返回校验失败: reason={}", e.getMessage());
       return YdszResponse.error(
           "Invalid debug command: " + commandStr + ", valid values: RESUME / STEP_OVER / STEP_INTO / STEP_OUT / TERMINATE");
     }

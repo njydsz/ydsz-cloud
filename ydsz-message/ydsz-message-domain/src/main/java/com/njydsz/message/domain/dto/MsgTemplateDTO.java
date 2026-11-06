@@ -4,8 +4,9 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 消息模板 DTO（命令请求参数）。

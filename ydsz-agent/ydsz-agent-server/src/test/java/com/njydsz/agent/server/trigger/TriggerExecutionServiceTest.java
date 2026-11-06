@@ -1,13 +1,5 @@
 package com.njydsz.agent.server.trigger;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -24,6 +16,14 @@ import com.njydsz.agent.server.trigger.TriggerExecutionService.AgentExecutionDel
 import com.njydsz.agent.server.trigger.TriggerExecutionService.AgentExecutionRequest;
 import com.njydsz.agent.server.trigger.TriggerExecutionService.TriggerExecutionException;
 import com.njydsz.common.locales.util.I18nMessages;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * TriggerExecutionService 单元测试

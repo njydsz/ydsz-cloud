@@ -7,8 +7,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 
-import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.safe.idempotent.exception.IdempotentUnavailableException;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 基于 Redis SET NX EX 的幂等策略默认实现（P1-C：简单幂等场景专用）

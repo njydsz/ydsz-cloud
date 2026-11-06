@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
-import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**
  * NO-OP 默认 RuleConfigProvider 实现（兜底方案）。

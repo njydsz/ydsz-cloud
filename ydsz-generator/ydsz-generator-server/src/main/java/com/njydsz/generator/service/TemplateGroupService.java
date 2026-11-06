@@ -7,9 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.generator.entity.GenTemplateGroup;
 import com.njydsz.generator.repository.GenTemplateGroupRepository;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 模板分组领域服务。

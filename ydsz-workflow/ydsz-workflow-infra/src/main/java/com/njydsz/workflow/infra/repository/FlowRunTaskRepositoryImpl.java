@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.auth.util.SecurityUtils;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
@@ -20,7 +21,6 @@ import com.njydsz.workflow.domain.query.FlowTaskQuery;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
-import com.njydsz.common.auth.util.SecurityUtils;
 
 /**
  * 运行时任务仓储实现（Infra 层）。

@@ -9,11 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.locales.util.I18n;
-import com.njydsz.system.domain.entity.ConfigApproval;
 import com.njydsz.system.domain.approval.ConfigApprovalQuery;
 import com.njydsz.system.domain.approval.ConfigApprovalRepository;
 import com.njydsz.system.domain.approval.ConfigApprovalSubmitDTO;
 import com.njydsz.system.domain.approval.ConfigApprovalVO;
+import com.njydsz.system.domain.entity.ConfigApproval;
 import com.njydsz.system.server.exception.ConfigApprovalException;
 import com.njydsz.system.server.service.ConfigApprovalService;
 

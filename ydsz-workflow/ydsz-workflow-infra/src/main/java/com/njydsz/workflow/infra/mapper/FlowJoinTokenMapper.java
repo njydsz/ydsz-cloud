@@ -1,5 +1,6 @@
 package com.njydsz.workflow.infra.mapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -7,7 +8,6 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.njydsz.workflow.domain.entity.FlowJoinToken;
-import java.time.LocalDateTime;
 
 /**
  * 并行网关 join token Mapper

@@ -13,13 +13,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.common.util.http.RestTemplateUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.config.MessageProperties;
 

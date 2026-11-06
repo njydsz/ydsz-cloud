@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.locales.util.I18n;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +91,7 @@ public class NotifyFallbackManager {
   public NotifySendResult fallbackSend(
       NotifyChannel primaryChannel, String receiver, String title, String content) {
     if (!isFallbackEnabled()) {
-      return NotifySendResult.failure("降级未启用且主渠道发送失败", primaryChannel.getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.fallback.not.enabled"), primaryChannel.getName());
     }
 
     List<NotifyChannel> fallbackChain = properties.getFallback().getChains().get(primaryChannel);

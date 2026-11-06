@@ -11,10 +11,15 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.literule.domain.RuleEngine;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.enums.RuleStatus;
 import com.njydsz.literule.domain.repository.RuleVersionRepository;
 import com.njydsz.literule.domain.vo.RetirementSuggestionVO;
@@ -25,10 +30,6 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.server.config.LiteRuleProperties;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
-import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * 规则生命周期管理服务（P3-1）
@@ -432,7 +433,7 @@ public class RuleLifecycleService {
           .ruleCode(ruleCode)
           .targetVersion(version)
           .isRollbackAllowed(false)
-          .rollbackBlockedReason("版本仓库未配置，不支持回滚预览")
+          .rollbackBlockedReason(I18n.message("literule.error.rollback.repo.not.configured"))
           .build();
     }
 
@@ -442,7 +443,7 @@ public class RuleLifecycleService {
           .ruleCode(ruleCode)
           .targetVersion(version)
           .isRollbackAllowed(false)
-          .rollbackBlockedReason("规则不存在: " + ruleCode)
+          .rollbackBlockedReason(I18n.message("literule.error.rule.not.found") + ruleCode)
           .build();
     }
 
@@ -457,7 +458,7 @@ public class RuleLifecycleService {
           .currentVersion(current.getVersion())
           .targetVersion(version)
           .isRollbackAllowed(false)
-          .rollbackBlockedReason("目标版本不存在: v" + version)
+          .rollbackBlockedReason(I18n.message("literule.error.target.version.not.found") + version)
           .build();
     }
 
@@ -690,7 +691,7 @@ public class RuleLifecycleService {
     // 设置归档状态并禁用
     rule.setStatus(RuleStatus.ARCHIVED.name());
     rule.setEnabled(false);
-    rule.setReviewComment("退役原因: " + reason);
+    rule.setReviewComment(I18n.message("literule.error.retire.reason") + reason);
 
     RuleDefinitionDTO saved = ruleAdminService.save(rule, operator, "规则退役: " + reason);
     log.info("[Lifecycle] 规则已退役: code={}, operator={}, reason={}", ruleCode, operator, reason);

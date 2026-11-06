@@ -1,7 +1,7 @@
 package com.njydsz.message.server.template;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 模板变量校验器（P0-3）。

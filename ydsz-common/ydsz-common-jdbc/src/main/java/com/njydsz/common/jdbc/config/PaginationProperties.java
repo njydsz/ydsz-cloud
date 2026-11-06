@@ -43,15 +43,31 @@ public class PaginationProperties {
   private boolean isOptimizeCount = true;
   private boolean isOverflow = false;
 
-  public String getDbType() { return dbType; }
-  public void setDbType(String dbType) { this.dbType = dbType; }
+  public String getDbType() {
+      return dbType;
+  }
+  public void setDbType(String dbType) {
+      this.dbType = dbType;
+  }
 
-  public Long getMaxLimit() { return maxLimit; }
-  public void setMaxLimit(Long maxLimit) { this.maxLimit = maxLimit; }
+  public Long getMaxLimit() {
+      return maxLimit;
+  }
+  public void setMaxLimit(Long maxLimit) {
+      this.maxLimit = maxLimit;
+  }
 
-  public boolean isOptimizeCount() { return isOptimizeCount; }
-  public void setOptimizeCount(boolean isOptimizeCount) { this.isOptimizeCount = isOptimizeCount; }
+  public boolean isOptimizeCount() {
+      return isOptimizeCount;
+  }
+  public void setOptimizeCount(boolean isOptimizeCount) {
+      this.isOptimizeCount = isOptimizeCount;
+  }
 
-  public boolean isOverflow() { return isOverflow; }
-  public void setOverflow(boolean isOverflow) { this.isOverflow = isOverflow; }
+  public boolean isOverflow() {
+      return isOverflow;
+  }
+  public void setOverflow(boolean isOverflow) {
+      this.isOverflow = isOverflow;
+  }
 }

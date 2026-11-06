@@ -303,6 +303,7 @@ public class DownloadController {
         end = Long.parseLong(parts[1].trim());
       }
     } catch (NumberFormatException e) {
+      // 预期行为：Range 头格式非法时返回 416（RFC 7233），非异常场景，无需日志
       response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
       return;
     }

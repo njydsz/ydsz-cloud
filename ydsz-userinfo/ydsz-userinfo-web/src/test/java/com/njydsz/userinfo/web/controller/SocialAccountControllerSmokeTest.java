@@ -1,10 +1,5 @@
 package com.njydsz.userinfo.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +15,11 @@ import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.server.auth.SocialAuthService;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link SocialAccountController} Smoke Test。

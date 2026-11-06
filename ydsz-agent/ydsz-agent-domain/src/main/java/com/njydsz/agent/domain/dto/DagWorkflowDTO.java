@@ -1,10 +1,11 @@
 package com.njydsz.agent.domain.dto;
 
 
-import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * DAG 工作流保存 DTO。

@@ -31,6 +31,7 @@ import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.server.chat.ChatService;
 import com.njydsz.agent.server.execution.ExecutionPauseService;
 import com.njydsz.agent.server.harness.AgentHarness;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.thread.util.ExecutorUtils;
@@ -162,7 +163,7 @@ public class AgentFacadeImpl implements AgentFacade {
         } catch (Exception e) {
           // 单个任务失败时构造失败结果，不影响其他条目
           String itemId = items.get(i).getItemId();
-          results.add(BatchChatResult.BatchResultItem.failure(itemId, "获取结果异常: " + e.getMessage()));
+          results.add(BatchChatResult.BatchResultItem.failure(itemId, I18n.message("agent.error.batch.result.exception", new Object[]{e.getMessage()})));
         }
       }
 

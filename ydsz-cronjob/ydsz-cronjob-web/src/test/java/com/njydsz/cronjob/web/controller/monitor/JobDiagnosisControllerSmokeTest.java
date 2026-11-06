@@ -1,10 +1,5 @@
 package com.njydsz.cronjob.web.controller.monitor;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +19,11 @@ import com.njydsz.cronjob.server.config.ExecutorConfig;
 import com.njydsz.cronjob.server.config.LeaderConfig;
 import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
 import com.njydsz.cronjob.server.core.redis.CronjobRedisOps;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link JobDiagnosisController} Smoke Test。

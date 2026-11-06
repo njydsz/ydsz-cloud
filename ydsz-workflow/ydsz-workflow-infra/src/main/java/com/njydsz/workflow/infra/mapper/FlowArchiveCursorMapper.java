@@ -1,8 +1,8 @@
 package com.njydsz.workflow.infra.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.workflow.domain.entity.FlowArchiveCursor;
 
 /**

@@ -1,11 +1,5 @@
 package com.njydsz.agent.web.controller;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +14,12 @@ import com.njydsz.agent.domain.gateway.DagCheckpointStore;
 import com.njydsz.agent.server.agent.DagDslParser;
 import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
 import com.njydsz.common.test.BaseControllerMockTest;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link DagController} Smoke Test.

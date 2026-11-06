@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.impl.template;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.List;
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +11,8 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.dto.MsgTemplateDTO;
 import com.njydsz.message.domain.dto.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
@@ -20,6 +20,7 @@ import com.njydsz.message.domain.dto.TemplateTestSendDTO;
 import com.njydsz.message.domain.query.MsgTemplateVersionQuery;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.repository.MsgTemplateVersionRepository;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
 import com.njydsz.message.server.service.core.MessageService;

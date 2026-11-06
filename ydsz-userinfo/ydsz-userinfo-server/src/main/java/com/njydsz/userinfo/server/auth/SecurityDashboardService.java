@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -217,7 +218,7 @@ public class SecurityDashboardService {
     int otherFails = totalFails - accountedFails;
     if (otherFails > 0) {
       double percentage = (double) otherFails / totalFails;
-      result.add(new LoginFailDistributionVO("其他", otherFails, percentage));
+      result.add(new LoginFailDistributionVO(I18n.message("userinfo.error.login.fail.other"), otherFails, percentage));
     }
 
     return result;

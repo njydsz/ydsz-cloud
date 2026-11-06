@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.chain;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.Comparator;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.vo.PipelineTopologyVO;

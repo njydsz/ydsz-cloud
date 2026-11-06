@@ -1,12 +1,13 @@
 package com.njydsz.message.server.config;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.regex.Pattern;
+import java.util.regex.Pattern;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.common.util.mask.MaskUtils;
 

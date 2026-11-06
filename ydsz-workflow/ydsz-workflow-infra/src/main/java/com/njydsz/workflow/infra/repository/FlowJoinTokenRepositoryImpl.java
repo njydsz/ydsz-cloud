@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.workflow.domain.repository.FlowJoinTokenRepository;
-import com.njydsz.workflow.domain.entity.FlowJoinToken;
-import com.njydsz.workflow.infra.mapper.FlowJoinTokenMapper;
 import com.njydsz.common.auth.util.SecurityUtils;
 import com.njydsz.common.util.id.IdGenerator;
+import com.njydsz.workflow.domain.entity.FlowJoinToken;
+import com.njydsz.workflow.domain.repository.FlowJoinTokenRepository;
+import com.njydsz.workflow.infra.mapper.FlowJoinTokenMapper;
 
 /**
  * 并行网关 join token 仓储实现（Infra 层）。

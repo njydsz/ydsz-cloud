@@ -15,12 +15,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.JsonType;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.MessageProperties;
 
@@ -70,7 +71,7 @@ public class AlipayMiniChannel implements MessageChannel {
   @Override
   public MessageSendResultVO send(MessageItemRequestDTO request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "支付宝小程序接收人(UserID)不能为空", "支付宝小程序接收人(UserID)不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.receiver.alipay.required"), I18n.message("message.error.receiver.alipay.required"), null);
     }
 
     MessageProperties.AlipayMiniConfig config = messageProperties.getAlipayMini();
@@ -152,10 +153,10 @@ public class AlipayMiniChannel implements MessageChannel {
               request.getReceiver(),
               errCode,
               errMsg);
-          return MessageSendResultVO.fail(CHANNEL_TYPE, null, "支付宝小程序发送失败: " + errMsg, "支付宝小程序发送失败: " + errMsg, null);
+          return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.alipay.send.failed", new Object[]{errMsg}), I18n.message("message.error.alipay.send.failed", new Object[]{errMsg}), null);
         }
       }
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "支付宝返回空响应", "支付宝返回空响应", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.alipay.empty.response"), I18n.message("message.error.alipay.empty.response"), null);
     } catch (Exception e) {
       log.error(
           "[AlipayMiniChannel] 发送异常: receiver={} err={}", request.getReceiver(), e.getMessage(), e);

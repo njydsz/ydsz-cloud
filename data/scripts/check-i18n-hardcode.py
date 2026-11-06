@@ -59,8 +59,30 @@ U4_RE = re.compile(
     r"|String\s+\w*(?:[Tt]itle|[Nn]ame|[Ss]ummary|[Cc]ontent)\w*\s*=\s*\"[^\"]*[一-鿿][^\"]*\""
 )
 
+# U5：消息构造类方法调用的中文实参（如 failure("中文") / setComment("中文") / errorMessage("中文")）。
+# 覆盖 U1-U4 未命中的"任意方法第 N 个参数是中文"形态。
+U5_MSG_METHOD_RE = re.compile(
+    r"\b\w*(?:"
+    r"[Ff]ailure|[Ff]ail|[Ee]rror|[Ee]rrorMessage|[Mm]essage|[Mm]sg|"
+    r"[Rr]eason|[Cc]omment|[Rr]esult|[Cc]ontent"
+    r")\w*\s*\(\s*[^)\"\n]*\"[^\"]*[一-鿿][^\"]*\""
+)
+# U5 白名单：技术方法（非用户可见消息）
+U5_TECH_METHOD_RE = re.compile(
+    r"\b(?:requireNonNull|checkArgument|checkNotNull|checkState|"
+    r"Pattern\.compile|regex|Regex|matches|equals|contains|startsWith|endsWith|"
+    r"substring|split|replace|format|StringBuilder|append|"
+    r"Preconditions|Assert|assertThat|verify|description)\b"
+)
+# U5 行级白名单：整行是日志调用（log.xxx / LOG.xxx / logger.xxx）
+U5_LOG_LINE_RE = re.compile(
+    r"^\s*(?:log|LOG|logger|LOGGER)\s*\.\s*(?:info|warn|error|debug|trace)\s*\("
+)
+# U5 lambda 内日志：.doOnError(e -> log.error(...)) 等
+U5_LAMBDA_LOG_RE = re.compile(r"\(\s*\w+\s*->\s*(?:log|LOG|logger|LOGGER)\s*\.")
+
 # 白名单模式
-LOG_RE = re.compile(r"^\s*log\s*\.\s*(?:info|warn|error|debug|trace)\s*\(")
+LOG_RE = re.compile(r"^\s*(?:log|LOG|logger|LOGGER)\s*\.\s*(?:info|warn|error|debug|trace)\s*\(")
 COMMENT_RE = re.compile(r"^\s*(?://|\*|/\*)")
 ANNOTATION_RE = re.compile(
     r"^\s*@(Tag|Operation|ApiResponse|Parameter|Schema|Audit|RateLimit)\b"
@@ -106,6 +128,12 @@ def classify(line: str) -> str | None:
         return "U3"
     if U4_RE.search(line):
         return "U4"
+    if U5_MSG_METHOD_RE.search(line):
+        if U5_TECH_METHOD_RE.search(line):
+            return None
+        if U5_LOG_LINE_RE.match(line) or U5_LAMBDA_LOG_RE.search(line):
+            return None
+        return "U5"
     return None
 
 
@@ -194,6 +222,16 @@ def self_test() -> int:
     # --- U4 ---
     case("U4 通知标题判红", codes('String title = "您有一个新的审批待办";') == "U4")
     case("U4 模板名判红", codes('tpl.setTemplateName("请假审批");') == "U4")
+
+    # --- U5 ---
+    case("U5 failure 中文判红", codes('return failure("任务执行失败");') == "U5")
+    case("U5 setComment 中文判红", codes('vo.setComment("处理完成");') == "U5")
+    case("U5 errorMessage 中文判红", codes('result.errorMessage("参数不合法");') == "U5")
+    case("U5 拼接中文判红", codes('return fail("失败: " + reason);') == "U5")
+    case("U5 i18n 放过", codes('return failure(I18n.message("task.fail"));') is None)
+    case("U5 技术方法放过", codes('Objects.requireNonNull(x, "参数不能为空");') is None)
+    case("U5 正则中文放过", codes('Pattern.compile("[\u4e00-\u9fa5]+");') is None)
+    case("U5 无中文放过", codes('return failure("timeout");') is None)
 
     # --- 白名单 ---
     case("日志中文放过", codes('log.info("用户{}登录", userId);') is None)

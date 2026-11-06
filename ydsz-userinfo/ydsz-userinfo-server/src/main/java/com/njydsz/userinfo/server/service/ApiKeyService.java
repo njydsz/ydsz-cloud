@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.userinfo.domain.dto.ApiKeyCreateDTO;
 import com.njydsz.userinfo.domain.entity.ApiKey;
@@ -21,7 +22,6 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.ApiKeyPageQuery;
 import com.njydsz.userinfo.domain.repository.ApiKeyRepository;
 import com.njydsz.userinfo.domain.vo.ApiKeyVO;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * API Key 管理服务（P1-2 API Key 授权体系）。

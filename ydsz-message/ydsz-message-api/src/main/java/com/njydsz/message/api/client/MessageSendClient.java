@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.api.fallback.MessageSendClientFallback;
+import com.njydsz.message.domain.dto.MessageSendDTO;
 
 /**
  * 消息发送 Feign 客户端接口，声明跨服务远程调用能力。

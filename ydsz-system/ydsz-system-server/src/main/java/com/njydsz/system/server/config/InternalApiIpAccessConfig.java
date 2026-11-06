@@ -1,15 +1,17 @@
 package com.njydsz.system.server.config;
 
-import com.njydsz.common.safe.filter.IpAccessFilter;
-import com.njydsz.common.safe.ip.IpAccessService;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import java.util.ArrayList;
-import java.util.Arrays;
+
+import com.njydsz.common.safe.filter.IpAccessFilter;
+import com.njydsz.common.safe.ip.IpAccessService;
 
 /**
  * 内部 API IP 访问控制配置。

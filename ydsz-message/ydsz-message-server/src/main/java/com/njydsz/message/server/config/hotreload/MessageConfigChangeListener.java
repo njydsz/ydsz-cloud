@@ -1,10 +1,11 @@
 package com.njydsz.message.server.config.hotreload;
 
 
-import com.njydsz.common.locales.util.I18n;import lombok.extern.slf4j.Slf4j;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.config.hotreload.ConfigChangeListener;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 消息模块配置变更监听器（P1-B2：接入统一 ConfigChangeBridge）。

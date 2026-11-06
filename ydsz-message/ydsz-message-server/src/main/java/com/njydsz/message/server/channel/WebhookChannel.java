@@ -1,7 +1,7 @@
 package com.njydsz.message.server.channel;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.HashMap;
+import java.util.HashMap;
 import java.util.Map;
 
 import jakarta.annotation.PostConstruct;
@@ -15,12 +15,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.server.config.ChannelProperties;
 
 /**
@@ -107,7 +108,7 @@ public class WebhookChannel implements MessageChannel {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
       log.warn(I18n.message("message.log.server.webhook.warn.not.configured"), request.getReceiver());
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "Webhook URL 未配置", "Webhook URL 未配置", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.webhook.url.not.configured"), I18n.message("message.error.webhook.url.not.configured"), null);
     }
     Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     payload.put("text", request.getContent() == null ? "" : request.getContent());

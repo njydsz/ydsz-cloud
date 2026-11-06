@@ -11,9 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
@@ -207,7 +207,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         .actions(actions)
         .isCanRecall(canRecall)
         .isFinished(finished)
-        .message(finished ? "流程已结束" : "流程进行中")
+        .message(finished ? I18n.message("workflow.embedded.finished") : I18n.message("workflow.embedded.running"))
         .build();
   }
 

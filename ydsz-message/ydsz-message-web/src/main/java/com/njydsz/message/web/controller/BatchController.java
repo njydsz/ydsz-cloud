@@ -1,7 +1,7 @@
 package com.njydsz.message.web.controller.batch;
 
 
-import com.njydsz.common.locales.util.I18n;import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +24,7 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;

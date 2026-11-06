@@ -16,9 +16,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.sentry.SentryObservation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +24,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.generator.engine.CodeGenEngine;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;

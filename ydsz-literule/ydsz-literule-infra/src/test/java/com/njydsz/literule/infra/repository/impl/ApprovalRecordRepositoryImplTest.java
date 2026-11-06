@@ -1,7 +1,5 @@
 package com.njydsz.literule.infra.repository.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -11,6 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import com.njydsz.literule.domain.dto.ApprovalRecordDTO;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * {@link ApprovalRecordRepositoryImpl} 单元测试（审批记录二级存储）。

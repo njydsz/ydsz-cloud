@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.system.domain.dto.AppInfoDTO;
@@ -18,7 +19,6 @@ import com.njydsz.system.domain.repository.AppInfoRepository;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.server.service.AppInfoService;
 
 
@@ -190,11 +190,11 @@ public class AppInfoServiceImpl implements AppInfoService {
     // 3. DB 查询 + BCrypt 校验
     AppInfoVO app = appInfoRepository.findEnabledByAppKey(appKey).orElse(null);
     if (app == null) {
-      handleValidateFail(appKey, failKey, "不存在或未启用");
+      handleValidateFail(appKey, failKey, I18n.message("system.error.app.not.exists.or.disabled"));
       return false;
     }
     if (app.getAppSecret() == null || app.getAppSecret().isBlank()) {
-      handleValidateFail(appKey, failKey, "密钥为空");
+      handleValidateFail(appKey, failKey, I18n.message("system.error.app.key.empty"));
       return false;
     }
     boolean matched = passwordEncoder.matches(appSecret, app.getAppSecret());
@@ -204,7 +204,7 @@ public class AppInfoServiceImpl implements AppInfoService {
       redisStringOps.del(failKey);
       metrics.recordAppValidateSuccess();
     } else {
-      handleValidateFail(appKey, failKey, "密钥不匹配");
+      handleValidateFail(appKey, failKey, I18n.message("system.error.app.key.mismatch"));
     }
     return matched;
   }

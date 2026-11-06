@@ -1,10 +1,5 @@
 package com.njydsz.system.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +12,11 @@ import com.njydsz.common.lock.admin.DistributedLockAdmin;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.test.BaseControllerMockTest;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link LockAdminRestController} Smoke Test。

@@ -4,13 +4,14 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.trigger.AgentTrigger;
-import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.locales.util.I18nMessages;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 触发器执行服务。

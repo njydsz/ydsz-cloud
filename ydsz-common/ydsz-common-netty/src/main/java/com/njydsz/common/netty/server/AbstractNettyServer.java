@@ -24,28 +24,26 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.concurrent.ScheduledFuture;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.netty.config.NettyProperties;
+import com.njydsz.common.netty.diagnostics.NettyStartupReporter;
 import com.njydsz.common.netty.event.ChannelEventDispatcher;
 import com.njydsz.common.netty.handler.ChannelGroupManager;
 import com.njydsz.common.netty.handler.ConnectionEventHandler;
 import com.njydsz.common.netty.handler.ConnectionLimitHandler;
-import io.netty.handler.timeout.IdleStateHandler;
 import com.njydsz.common.netty.handler.TrafficMonitoringHandler;
 import com.njydsz.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.common.netty.pool.NettyEventLoopPool;
 import com.njydsz.common.netty.session.ChannelState;
-import com.njydsz.common.netty.session.ConnectionSession;
 import com.njydsz.common.netty.session.DefaultConnectionSession;
 import com.njydsz.common.netty.session.InMemorySessionRepository;
 import com.njydsz.common.netty.session.SessionRepository;
 import com.njydsz.common.netty.ssl.SslContextFactory;
 import com.njydsz.common.netty.transport.NativeTransportDetector;
-import com.njydsz.common.netty.diagnostics.NettyStartupReporter;
 
 /**
  * Netty TCP Server 抽象基类。

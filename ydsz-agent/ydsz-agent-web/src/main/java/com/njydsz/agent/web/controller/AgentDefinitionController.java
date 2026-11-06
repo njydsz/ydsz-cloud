@@ -1,5 +1,6 @@
 package com.njydsz.agent.web.controller;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -22,9 +23,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
+import com.njydsz.agent.domain.vo.AgentDefinitionExportVO;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.server.agent.AgentDefinitionService;
-import com.njydsz.agent.domain.vo.AgentDefinitionExportVO;
+import com.njydsz.agent.server.util.ExcelExportUtil;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -34,7 +36,6 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.domain.query.PageQuery;
-import com.njydsz.agent.server.util.ExcelExportUtil;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.date.DateUtils;
@@ -249,7 +250,7 @@ public class AgentDefinitionController {
    */
   @Operation(summary = "导出 Agent 定义列表（Excel）")
   @GetMapping("/export")
-  public void exportAgentDefinitions(HttpServletResponse response) throws Exception {
+  public void exportAgentDefinitions(HttpServletResponse response) throws IOException {
     String fileName = "agent_definitions_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType(CONTENT_TYPE_OOXML);
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, buildRfc5987ContentDisposition(fileName));

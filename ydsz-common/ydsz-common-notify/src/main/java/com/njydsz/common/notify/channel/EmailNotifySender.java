@@ -10,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
+import com.njydsz.common.locales.util.I18n;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetHeaders;
 import jakarta.mail.internet.MimeMessage;
@@ -152,14 +153,14 @@ public class EmailNotifySender implements NotifyChannelStrategy {
   @Override
   public NotifySendResult send(String receiver, String title, String content) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("邮件通知未启用", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.email.not.enabled"), getChannel().getName());
     }
     if (!isValidEmail(receiver)) {
-      return NotifySendResult.failure("收件人邮箱地址无效: " + receiver, getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.recipient.invalid") + receiver, getChannel().getName());
     }
     // P0-2：SMTP 健康检查
     if (!isSmtpHealthy()) {
-      return NotifySendResult.failure("SMTP 服务不健康", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.smtp.unhealthy"), getChannel().getName());
     }
     long startTime = System.nanoTime();
     boolean success = false;
@@ -196,10 +197,10 @@ public class EmailNotifySender implements NotifyChannelStrategy {
   public NotifySendResult sendTemplate(
       String receiver, String templateCode, Object templateParams) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("邮件通知未启用", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.email.not.enabled"), getChannel().getName());
     }
     if (!isValidEmail(receiver)) {
-      return NotifySendResult.failure("收件人邮箱地址无效: " + receiver, getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.recipient.invalid") + receiver, getChannel().getName());
     }
     try {
       Map<String, Object> params;
@@ -235,10 +236,10 @@ public class EmailNotifySender implements NotifyChannelStrategy {
   @Override
   public NotifySendResult batchSend(List<String> recipients, String title, String content) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("邮件通知未启用", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.email.not.enabled"), getChannel().getName());
     }
     if (recipients == null || recipients.isEmpty()) {
-      return NotifySendResult.failure("收件人列表为空", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.recipient.list.empty"), getChannel().getName());
     }
     // P0-4：虚拟线程并行批量发送
     List<CompletableFuture<NotifySendResult>> futures =
@@ -290,17 +291,17 @@ public class EmailNotifySender implements NotifyChannelStrategy {
    */
   public NotifySendResult sendEmail(EmailMessage message) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("邮件通知未启用", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.email.not.enabled"), getChannel().getName());
     }
     if (message == null || !StringUtils.hasText(message.getTo())) {
-      return NotifySendResult.failure("收件人地址为空", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.recipient.address.empty"), getChannel().getName());
     }
     if (!isValidEmailList(message.getTo())) {
-      return NotifySendResult.failure("收件人邮箱地址无效: " + message.getTo(), getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.recipient.invalid") + message.getTo(), getChannel().getName());
     }
     // P0-2：SMTP 健康检查
     if (!isSmtpHealthy()) {
-      return NotifySendResult.failure("SMTP 服务不健康", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.smtp.unhealthy"), getChannel().getName());
     }
     long startTime = System.nanoTime();
     boolean success = false;

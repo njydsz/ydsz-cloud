@@ -6,9 +6,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import lombok.Data;
+
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
-import lombok.Data;
 
 /**
  * 单条消息请求 DTO（ydz-message 模块内部契约）。

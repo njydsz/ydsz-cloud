@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -67,11 +68,11 @@ public class BatchChatTaskExecutor implements AsyncTaskExecutor {
       String model = getStringParam(params, "model", "gpt-4o-mini");
 
       if (conversations == null || conversations.isEmpty()) {
-        task.fail("conversations 不能为空");
+        task.fail(I18n.message("agent.error.batchchat.conversations.required"));
         return;
       }
       if (userMessage == null || userMessage.isBlank()) {
-        task.fail("userMessage 不能为空");
+        task.fail(I18n.message("agent.error.batchchat.usermessage.required"));
         return;
       }
 
@@ -119,7 +120,7 @@ public class BatchChatTaskExecutor implements AsyncTaskExecutor {
           task.getId(), total, successCount, failCount);
     } catch (Exception e) {
       log.error("[AsyncTask:BATCH_CHAT] 执行失败: taskId={}, error={}", task.getId(), e.getMessage(), e);
-      task.fail("批量对话失败: " + truncate(e.getMessage(), 200));
+      task.fail(I18n.message("agent.error.batchchat.failed", new Object[]{truncate(e.getMessage(), 200)}));
     }
   }
 

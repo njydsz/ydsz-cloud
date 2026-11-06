@@ -1,13 +1,5 @@
 package com.njydsz.workflow.web.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +10,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.test.BaseControllerMockTest;
-import com.njydsz.workflow.web.controller.instance.FlowInstanceController;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
@@ -26,6 +17,15 @@ import com.njydsz.workflow.server.service.DraftInstanceService;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
+import com.njydsz.workflow.web.controller.instance.FlowInstanceController;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link FlowInstanceController} Smoke Test。

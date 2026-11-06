@@ -2,10 +2,11 @@ package com.njydsz.workflow.server.engine;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.locales.util.I18n;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 流程定义缓存 CDC 失效监听器。

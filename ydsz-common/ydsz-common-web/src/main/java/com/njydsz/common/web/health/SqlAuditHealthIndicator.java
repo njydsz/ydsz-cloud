@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -13,7 +14,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.common.jdbc.interceptor.DataPermissionInnerInterceptor;
 

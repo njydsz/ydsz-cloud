@@ -22,9 +22,9 @@ import com.njydsz.agent.domain.skill.SkillDescriptor;
 import com.njydsz.agent.domain.skill.SkillExecutionContext;
 import com.njydsz.agent.domain.skill.SkillExecutionException;
 import com.njydsz.agent.domain.skill.SkillExecutionResult;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.agent.domain.skill.SkillExecutionTarget;
 import com.njydsz.agent.domain.skill.SkillRuntime;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * Docker 沙箱模式的 SkillRuntime 实现。

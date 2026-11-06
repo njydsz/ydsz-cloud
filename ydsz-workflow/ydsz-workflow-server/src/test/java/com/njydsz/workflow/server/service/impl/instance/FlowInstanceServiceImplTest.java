@@ -1,9 +1,5 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.Collection;
 import java.util.List;
 
@@ -22,6 +18,10 @@ import com.njydsz.workflow.server.service.impl.instance.FlowInstanceBatchOperato
 import com.njydsz.workflow.server.service.impl.instance.FlowInstanceLifecycleManager;
 import com.njydsz.workflow.server.service.impl.instance.FlowInstanceQueryService;
 import com.njydsz.workflow.server.service.impl.instance.FlowInstanceVariableManager;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class FlowInstanceServiceImplTest {

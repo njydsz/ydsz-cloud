@@ -1,7 +1,7 @@
 package com.njydsz.message.server.event;
 
 
-import com.njydsz.common.locales.util.I18n;import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
@@ -11,6 +11,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.event.MessageDomainEvent;
 
 /**

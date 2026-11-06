@@ -5,10 +5,11 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import lombok.Data;
+
 import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
-import lombok.Data;
 
 /**
  * 消息发送日志视图对象（VO）。

@@ -6,13 +6,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.UserLifecycleService;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户生命周期状态机服务实现（P2-3）。

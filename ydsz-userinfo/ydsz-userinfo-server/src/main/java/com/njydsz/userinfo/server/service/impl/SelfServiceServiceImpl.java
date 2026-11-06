@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.userinfo.domain.dto.AccountUnlockDTO;
 import com.njydsz.userinfo.domain.dto.ForgotPasswordDTO;
@@ -29,7 +30,6 @@ import com.njydsz.userinfo.server.auth.VerifyCodeService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.SelfServiceService;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 自助服务实现。

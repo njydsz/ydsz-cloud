@@ -9,6 +9,7 @@ import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -20,8 +21,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import com.njydsz.common.event.admin.OutboxAdminController;
@@ -39,15 +40,12 @@ import com.njydsz.common.event.gateway.NoopEventPublishGateway;
 import com.njydsz.common.event.gateway.OutboxObservationGateway;
 import com.njydsz.common.event.gateway.QueueEventPublishGateway;
 import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
-import com.njydsz.common.queue.queue.IMessageQueueProvider;
-
-import org.springframework.beans.factory.annotation.Value;
-
 import com.njydsz.common.event.health.OutboxHealthIndicator;
 import com.njydsz.common.event.processor.OutboxProcessor;
 import com.njydsz.common.event.repository.OutboxRepository;
 import com.njydsz.common.event.saga.SagaManager;
 import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**

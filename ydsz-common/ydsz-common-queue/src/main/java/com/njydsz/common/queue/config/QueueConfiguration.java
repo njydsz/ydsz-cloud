@@ -18,7 +18,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.queue.actuator.QueueEndpoint;
-import com.njydsz.common.queue.config.QueueEngines;
 import com.njydsz.common.queue.dedup.DedupCleanupScheduler;
 import com.njydsz.common.queue.dedup.MessageDeduplicator;
 import com.njydsz.common.queue.health.QueueHealthIndicator;

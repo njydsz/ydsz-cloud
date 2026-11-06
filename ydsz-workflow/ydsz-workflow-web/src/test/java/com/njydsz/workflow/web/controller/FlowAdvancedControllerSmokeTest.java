@@ -1,11 +1,5 @@
 package com.njydsz.workflow.web.controller;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.HashMap;
 import java.util.List;
 
@@ -29,6 +23,12 @@ import com.njydsz.workflow.server.service.FlowReportService;
 import com.njydsz.workflow.server.service.impl.instance.FlowAssigneeDedupService;
 import com.njydsz.workflow.server.service.impl.instance.FlowCountersignDynamicService;
 import com.njydsz.workflow.web.controller.instance.FlowAdvancedController;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link FlowAdvancedController} Smoke Test。

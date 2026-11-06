@@ -1,10 +1,5 @@
 package com.njydsz.nextwiki.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +13,11 @@ import com.njydsz.nextwiki.domain.vo.FileVersionVO;
 import com.njydsz.nextwiki.server.service.BatchTaskService;
 import com.njydsz.nextwiki.server.service.FileApplicationService;
 import com.njydsz.nextwiki.server.service.VersionDiffApplicationService;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link FileBatchController} Smoke Test。

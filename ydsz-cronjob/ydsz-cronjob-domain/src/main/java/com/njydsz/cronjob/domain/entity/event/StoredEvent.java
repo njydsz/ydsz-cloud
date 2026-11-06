@@ -4,10 +4,11 @@ import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * 存储事件实体（P3-1 Event Sourcing）。

@@ -1,7 +1,7 @@
 package com.njydsz.message.server.channel.impl;
 
 
-import com.njydsz.common.locales.util.I18n;import java.time.Duration;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,10 +17,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.MessageProperties;
 
@@ -79,7 +80,7 @@ public class WxMiniChannel implements MessageChannel {
   @Override
   public MessageSendResultVO send(MessageItemRequestDTO request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "微信小程序接收人(OpenID)不能为空", "微信小程序接收人(OpenID)不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.receiver.wxmini.required"), I18n.message("message.error.receiver.wxmini.required"), null);
     }
 
     MessageProperties.WxMiniConfig config = messageProperties.getWxMini();
@@ -93,7 +94,7 @@ public class WxMiniChannel implements MessageChannel {
     try {
       String accessToken = getAccessToken(config);
       if (accessToken == null) {
-        return MessageSendResultVO.fail(CHANNEL_TYPE, null, "获取微信 access_token 失败", "获取微信 access_token 失败", null);
+        return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.wxmini.token.fetch.failed"), I18n.message("message.error.wxmini.token.fetch.failed"), null);
       }
 
       String url =
@@ -138,7 +139,7 @@ public class WxMiniChannel implements MessageChannel {
             request.getReceiver(),
             resultBody != null ? resultBody.get("errcode") : "N/A",
             errMsg);
-        return MessageSendResultVO.fail(CHANNEL_TYPE, null, "微信小程序发送失败: " + errMsg, "微信小程序发送失败: " + errMsg, null);
+        return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.wxmini.send.failed", new Object[]{errMsg}), I18n.message("message.error.wxmini.send.failed", new Object[]{errMsg}), null);
       }
     } catch (Exception e) {
       log.error(

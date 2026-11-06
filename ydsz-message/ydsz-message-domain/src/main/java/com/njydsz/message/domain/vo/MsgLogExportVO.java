@@ -4,9 +4,9 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-import com.njydsz.common.excel.annotation.ExcelProperty;
-
 import lombok.Data;
+
+import com.njydsz.common.excel.annotation.ExcelProperty;
 
 /**
  * 消息投递日志 Excel 导出 VO

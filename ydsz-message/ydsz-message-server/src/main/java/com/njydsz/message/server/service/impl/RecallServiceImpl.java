@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.impl.receipt;
 
 
-import com.njydsz.common.locales.util.I18n;import java.time.Duration;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MsgNotificationDTO;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
@@ -317,7 +318,7 @@ public class RecallServiceImpl implements RecallService {
     if (minutesElapsed > RECALL_WINDOW_MINUTES) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
-          .message(label + "发送已超过 " + RECALL_WINDOW_MINUTES + " 分钟，不可撤回")
+          .message(I18n.message("message.error.recall.window.exceeded", new Object[]{label, RECALL_WINDOW_MINUTES}))
           .build();
     }
   }

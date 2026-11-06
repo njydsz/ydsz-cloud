@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
+import com.njydsz.common.locales.util.I18n;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -83,7 +84,7 @@ public class AsyncNotifyService {
                   receiver,
                   ex.getMessage(),
                   ex);
-              return NotifySendResult.failure("异步发送异常: " + ex.getMessage(), channel.getName());
+              return NotifySendResult.failure(I18n.message("common.notify.error.async.exception") + ex.getMessage(), channel.getName());
             });
   }
 
@@ -95,7 +96,7 @@ public class AsyncNotifyService {
    */
   public CompletableFuture<NotifySendResult> sendAsync(NotifyRequest request) {
     if (request == null) {
-      return CompletableFuture.completedFuture(NotifySendResult.failure("通知请求为空", "unknown"));
+      return CompletableFuture.completedFuture(NotifySendResult.failure(I18n.message("common.notify.error.request.null"), "unknown"));
     }
     String traceId = request.getTraceId() != null ? request.getTraceId() : resolveTraceId();
     return CompletableFuture.supplyAsync(
@@ -110,7 +111,7 @@ public class AsyncNotifyService {
                   ex.getMessage(),
                   ex);
               return NotifySendResult.failure(
-                  "异步发送异常: " + ex.getMessage(), request.getChannel().getName());
+                  I18n.message("common.notify.error.async.exception") + ex.getMessage(), request.getChannel().getName());
             });
   }
 
@@ -147,7 +148,7 @@ public class AsyncNotifyService {
         .exceptionally(
             ex -> {
               LOG.error("[AsyncNotify] 异步批量发送异常: {}", ex.getMessage(), ex);
-              return NotifySendResult.failure("异步批量发送异常: " + ex.getMessage(), channel.getName());
+              return NotifySendResult.failure(I18n.message("common.notify.error.batch.exception") + ex.getMessage(), channel.getName());
             });
   }
 
@@ -175,7 +176,7 @@ public class AsyncNotifyService {
       if (retryQueue != null) {
         retryQueue.offer(channel, receiver, title, content, e.getMessage());
       }
-      return NotifySendResult.failure("发送异常: " + e.getMessage(), channel.getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.send.exception") + e.getMessage(), channel.getName());
     }
   }
 
@@ -213,7 +214,7 @@ public class AsyncNotifyService {
             request.getContent() != null ? request.getContent() : "",
             e.getMessage());
       }
-      return NotifySendResult.failure("发送异常: " + e.getMessage(), request.getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.send.exception") + e.getMessage(), request.getChannel().getName());
     }
   }
 

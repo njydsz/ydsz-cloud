@@ -18,9 +18,9 @@ import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.exception.handler.BaseExceptionHandler;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 
 /**
  * 消息中心模块全局异常处理器。

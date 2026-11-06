@@ -4,8 +4,9 @@ import java.io.Serial;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 运行时任务命令 DTO（CUD 操作入参）。

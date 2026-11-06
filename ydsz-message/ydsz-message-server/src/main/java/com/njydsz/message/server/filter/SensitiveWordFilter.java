@@ -1,7 +1,7 @@
 package com.njydsz.message.server.filter;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.message.server.config.MessageProperties;
 

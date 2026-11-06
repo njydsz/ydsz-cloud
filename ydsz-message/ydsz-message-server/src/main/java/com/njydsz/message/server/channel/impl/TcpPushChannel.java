@@ -14,15 +14,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.netty.codec.LengthFieldCodec;
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.handler.AbstractJsonTcpHandler;
 import com.njydsz.common.netty.server.AbstractNettyServer;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.server.channel.MessageChannel;
 
 /**

@@ -1,5 +1,7 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,7 +16,6 @@ import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 import com.njydsz.nextwiki.server.cache.NextwikiCacheService;
-import java.util.List;
 
 /**
  * 配额应用服务。

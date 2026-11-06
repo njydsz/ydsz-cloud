@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -186,9 +187,9 @@ public class ServiceNodeExecuteService {
           triggerErrorBoundaryIfExists(instance, node, result.message());
       dto.setTaskStatus(FlowTaskStatus.TIMEOUT.name());
       if (errorBoundaryTriggered) {
-        dto.setComment("服务节点失败，error boundary 已触发: " + result.message());
+        dto.setComment(I18n.message("workflow.service.error.boundary.triggered") + result.message());
       } else {
-        dto.setComment("服务节点执行失败: " + result.message());
+        dto.setComment(I18n.message("workflow.service.execute.failed") + result.message());
       }
       saved = taskRepository.save(dto);
       archiveService.archiveToHistory(saved, FlowTaskStatus.TIMEOUT);
@@ -204,7 +205,7 @@ public class ServiceNodeExecuteService {
             instance.getId(),
             node.getNodeCode());
       } else {
-        support.audit(saved, "SERVICE_ERROR", null, null, "服务节点执行失败: " + result.message());
+        support.audit(saved, "SERVICE_ERROR", null, null, I18n.message("workflow.service.execute.failed") + result.message());
         instanceRepository.updateStatus(
             instance.getId(),
             FlowInstanceStatus.ERROR.name(),

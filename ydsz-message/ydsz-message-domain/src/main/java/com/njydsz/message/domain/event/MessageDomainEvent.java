@@ -3,6 +3,7 @@ package com.njydsz.message.domain.event;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
 import com.njydsz.common.util.id.IdGenerator;
 
 /**

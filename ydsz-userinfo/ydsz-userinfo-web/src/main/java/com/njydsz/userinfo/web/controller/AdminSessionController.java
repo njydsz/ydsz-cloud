@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -93,6 +95,7 @@ public class AdminSessionController {
       content = "'封禁用户: ' + #userId + ', 类型: ' + #dto.banType + ', 原因: ' + #dto.banReason")
   @Idempotent(key = "ydsz:userinfo:AdminSessionController:ban:lock:#{#userId}", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.admin.ban", threshold = 10)
+    @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_ADMIN_BAN)
   @PostMapping("/users/{userId}/ban")
   @Operation(summary = "封禁用户", description = "封禁指定用户，支持临时封禁和永久封禁")
   public YdszResponse<Boolean> banUser(
@@ -121,6 +124,7 @@ public class AdminSessionController {
       content = "'解封用户: ' + #userId")
   @Idempotent(key = "ydsz:userinfo:AdminSessionController:unban:lock:#{#userId}", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.admin.unban", threshold = 10)
+    @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_ADMIN_BAN)
   @PostMapping("/users/{userId}/unban")
   @Operation(summary = "解封用户", description = "解除用户的封禁状态")
   public YdszResponse<Boolean> unbanUser(@PathVariable String userId) {
@@ -134,6 +138,7 @@ public class AdminSessionController {
    * @param userId 用户 ID
    * @return 封禁信息 VO
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_ADMIN_BAN)
   @GetMapping("/users/{userId}/ban-info")
   @Operation(summary = "查询封禁信息", description = "查询指定用户的封禁状态详情")
   public YdszResponse<BanInfoVO> getBanInfo(@PathVariable String userId) {
@@ -146,6 +151,7 @@ public class AdminSessionController {
    * @param userId 用户 ID
    * @return 会话 VO 列表
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_ADMIN_SESSION)
   @GetMapping("/users/{userId}/sessions")
   @Operation(summary = "查询用户会话", description = "查询指定用户的活跃会话列表")
   public YdszResponse<List<UserSessionVO>> getUserSessions(@PathVariable String userId) {
@@ -167,6 +173,7 @@ public class AdminSessionController {
       content = "'强制下线会话: userId=' + #userId")
   @Idempotent(key = "ydsz:userinfo:AdminSessionController:forceLogout:lock:#{#userId}", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.admin.forceLogout", threshold = 10)
+    @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_ADMIN_SESSION)
   @DeleteMapping("/users/{userId}/sessions/{accessToken}")
   @Operation(summary = "强制下线指定会话", description = "吊销用户的指定会话 Token")
   public YdszResponse<Boolean> forceLogout(
@@ -184,6 +191,7 @@ public class AdminSessionController {
    * @param size 每页大小（默认 20）
    * @return 会话 VO 分页列表
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_ADMIN_SESSION)
   @GetMapping("/sessions")
   @Operation(summary = "查询所有在线会话", description = "查询全平台活跃会话（分页），当前需全局会话索引支持")
   public YdszResponse<List<UserSessionVO>> getAllActiveSessions(
@@ -197,6 +205,7 @@ public class AdminSessionController {
    *
    * @return 会话统计 record
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_ADMIN_SESSION_STATS)
   @GetMapping("/sessions/statistics")
   @Operation(summary = "查询会话统计", description = "查询全会话统计：总数/活跃用户数/分端分布")
   public YdszResponse<UserSessionStatisticsVO> getSessionStatistics() {

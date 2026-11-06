@@ -21,6 +21,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.MfaOperationDTO;
@@ -30,7 +31,6 @@ import com.njydsz.userinfo.domain.vo.MfaSetupVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.auth.MfaService;
 import com.njydsz.userinfo.server.service.UserAccountService;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户资料 Controller（个人中心）。

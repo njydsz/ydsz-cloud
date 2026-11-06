@@ -10,9 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.message.server.config.MessageProperties;
 

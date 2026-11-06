@@ -27,6 +27,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.annotation.SensitiveOperation;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -47,7 +48,6 @@ import com.njydsz.userinfo.server.service.LoginHistoryService;
 import com.njydsz.userinfo.server.service.UserAccountService;
 import com.njydsz.userinfo.server.service.UserExcelService;
 import com.njydsz.userinfo.server.service.UserLifecycleService;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户账号 Controller

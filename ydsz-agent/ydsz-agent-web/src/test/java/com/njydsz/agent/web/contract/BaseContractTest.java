@@ -1,10 +1,5 @@
 package com.njydsz.agent.web.contract;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.util.List;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
@@ -20,6 +15,11 @@ import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.web.controller.AgentController;
 import com.njydsz.common.json.spring.JsonHttpMessageConverter;
 import com.njydsz.common.socket.push.SsePushChannelFactory;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Spring Cloud Contract 生成测试的基类（`src/test/resources/contracts/*.yml` → 生成测试 → 继承本类）。

@@ -1,11 +1,5 @@
 package com.njydsz.userinfo.web.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +15,12 @@ import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 import com.njydsz.userinfo.server.alert.SecurityAlertService;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link SecurityAlertController} Smoke Test。

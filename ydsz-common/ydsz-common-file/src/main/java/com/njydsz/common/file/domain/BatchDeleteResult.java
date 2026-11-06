@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.message.MessageUtils;
 
 /**
@@ -86,7 +87,7 @@ public record BatchDeleteResult(List<String> successList, Map<String, String> fa
   /** 获取失败摘要信息 */
   public String getFailureSummary() {
     if (failedList.isEmpty()) {
-      return MessageUtils.getMessage(KEY_ALL_SUCCESS, "全部成功");
+      return MessageUtils.getMessage(KEY_ALL_SUCCESS, I18n.message("common.file.error.all.success"));
     }
     String separator = MessageUtils.getMessage(KEY_FAILURE_SEPARATOR, "; ");
     return failedList.entrySet().stream()

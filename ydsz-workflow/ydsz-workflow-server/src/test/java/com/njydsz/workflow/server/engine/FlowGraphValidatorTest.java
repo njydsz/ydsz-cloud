@@ -1,9 +1,5 @@
 package com.njydsz.workflow.server.engine;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +13,10 @@ import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 
 /**
  * {@link FlowGraphValidator} 单元测试。

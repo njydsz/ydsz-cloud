@@ -1,9 +1,9 @@
 package com.njydsz.workflow.server.excel.vo;
 
 
-import com.njydsz.common.excel.annotation.ExcelProperty;
-
 import lombok.Data;
+
+import com.njydsz.common.excel.annotation.ExcelProperty;
 
 /**
  * 办理人效率 Excel 导出 VO

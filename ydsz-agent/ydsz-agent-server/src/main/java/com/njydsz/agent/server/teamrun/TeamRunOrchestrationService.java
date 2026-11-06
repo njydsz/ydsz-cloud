@@ -25,8 +25,8 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.locales.util.Locales;
-import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * Team Run 编排服务。
@@ -389,7 +389,7 @@ public class TeamRunOrchestrationService {
     private TeamRunMember executeMemberSync(TeamRun teamRun, TeamRunMember member) {
         try {
             if (agentExecutionService == null) {
-                return member.withError("AgentExecutionService 不可用");
+                return member.withError(I18n.message("agent.error.teamrun.execution.service.unavailable"));
             }
             String result = agentExecutionService.execute(
                     member.getAgentCode(),

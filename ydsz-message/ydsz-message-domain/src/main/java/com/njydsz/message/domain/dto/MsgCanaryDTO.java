@@ -4,9 +4,10 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.njydsz.common.safe.annotation.Xss;
 import lombok.Builder;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 灰度实验 DTO（命令请求参数）。

@@ -1,10 +1,5 @@
 package com.njydsz.userinfo.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +14,11 @@ import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.userinfo.domain.vo.UserSessionVO;
 import com.njydsz.userinfo.server.auth.UserBanService;
 import com.njydsz.userinfo.server.auth.UserSessionAdminService;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link AdminSessionController} Smoke Test。

@@ -54,6 +54,20 @@ ydsz:
     llm:
       timeout-seconds: 60
 
+  # 异步线程池（P2-4：@Async 统一纳管，避免默认 SimpleAsyncTaskExecutor 不复用线程）
+  # Bean 名称 = poolName + "Executor"，供 @Async("agentAsyncExecutor") 引用
+  thread:
+    enabled: true
+    pools:
+      agentAsync:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 200
+        thread-name-prefix: ydsz-agent-async-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+        keep-alive-seconds: 60
+
 # SkyWalking 链路追踪（通过 Java Agent 方式启用，无需业务代码）
 # 启动示例：java -javaagent:/path/to/skywalking-agent.jar \
 #   -Dskywalking.agent.service_name=ydsz-agent \

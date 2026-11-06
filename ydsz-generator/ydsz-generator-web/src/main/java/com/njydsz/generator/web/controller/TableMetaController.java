@@ -22,9 +22,9 @@ import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.entity.GenTableMeta;
 import com.njydsz.generator.exception.GeneratorExceptionCode;
-import com.njydsz.generator.web.security.PermissionCodes;
 import com.njydsz.generator.service.DatasourceService;
 import com.njydsz.generator.service.TableMetadataService;
+import com.njydsz.generator.web.security.PermissionCodes;
 
 /**
  * 表元数据管理 REST 控制器。

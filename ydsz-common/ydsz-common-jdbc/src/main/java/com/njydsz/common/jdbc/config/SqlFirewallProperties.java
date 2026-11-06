@@ -40,29 +40,63 @@ public class SqlFirewallProperties {
   private boolean isBlockPermissionOps = true;
   private Set<String> allowTables = new HashSet<>(16);
 
-  public boolean isEnabled() { return isEnabled; }
-  public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+  public boolean isEnabled() {
+      return isEnabled;
+  }
+  public void setIsEnabled(boolean isEnabled) {
+      this.isEnabled = isEnabled;
+  }
   // Spring Boot 4.x relaxed binding
-  public void setEnabled(boolean enabled) { this.isEnabled = enabled; }
+  public void setEnabled(boolean enabled) {
+      this.isEnabled = enabled;
+  }
 
-  public boolean isBlockDropTable() { return isBlockDropTable; }
-  public void setBlockDropTable(boolean isBlockDropTable) { this.isBlockDropTable = isBlockDropTable; }
+  public boolean isBlockDropTable() {
+      return isBlockDropTable;
+  }
+  public void setBlockDropTable(boolean isBlockDropTable) {
+      this.isBlockDropTable = isBlockDropTable;
+  }
 
-  public boolean isBlockTruncate() { return isBlockTruncate; }
-  public void setBlockTruncate(boolean isBlockTruncate) { this.isBlockTruncate = isBlockTruncate; }
+  public boolean isBlockTruncate() {
+      return isBlockTruncate;
+  }
+  public void setBlockTruncate(boolean isBlockTruncate) {
+      this.isBlockTruncate = isBlockTruncate;
+  }
 
-  public boolean isBlockDeleteWithoutWhere() { return isBlockDeleteWithoutWhere; }
-  public void setBlockDeleteWithoutWhere(boolean isBlockDeleteWithoutWhere) { this.isBlockDeleteWithoutWhere = isBlockDeleteWithoutWhere; }
+  public boolean isBlockDeleteWithoutWhere() {
+      return isBlockDeleteWithoutWhere;
+  }
+  public void setBlockDeleteWithoutWhere(boolean isBlockDeleteWithoutWhere) {
+      this.isBlockDeleteWithoutWhere = isBlockDeleteWithoutWhere;
+  }
 
-  public boolean isBlockUpdateWithoutWhere() { return isBlockUpdateWithoutWhere; }
-  public void setBlockUpdateWithoutWhere(boolean isBlockUpdateWithoutWhere) { this.isBlockUpdateWithoutWhere = isBlockUpdateWithoutWhere; }
+  public boolean isBlockUpdateWithoutWhere() {
+      return isBlockUpdateWithoutWhere;
+  }
+  public void setBlockUpdateWithoutWhere(boolean isBlockUpdateWithoutWhere) {
+      this.isBlockUpdateWithoutWhere = isBlockUpdateWithoutWhere;
+  }
 
-  public boolean isBlockMultiStatement() { return isBlockMultiStatement; }
-  public void setBlockMultiStatement(boolean isBlockMultiStatement) { this.isBlockMultiStatement = isBlockMultiStatement; }
+  public boolean isBlockMultiStatement() {
+      return isBlockMultiStatement;
+  }
+  public void setBlockMultiStatement(boolean isBlockMultiStatement) {
+      this.isBlockMultiStatement = isBlockMultiStatement;
+  }
 
-  public boolean isBlockPermissionOps() { return isBlockPermissionOps; }
-  public void setBlockPermissionOps(boolean isBlockPermissionOps) { this.isBlockPermissionOps = isBlockPermissionOps; }
+  public boolean isBlockPermissionOps() {
+      return isBlockPermissionOps;
+  }
+  public void setBlockPermissionOps(boolean isBlockPermissionOps) {
+      this.isBlockPermissionOps = isBlockPermissionOps;
+  }
 
-  public Set<String> getAllowTables() { return allowTables; }
-  public void setAllowTables(Set<String> allowTables) { this.allowTables = allowTables; }
+  public Set<String> getAllowTables() {
+      return allowTables;
+  }
+  public void setAllowTables(Set<String> allowTables) {
+      this.allowTables = allowTables;
+  }
 }

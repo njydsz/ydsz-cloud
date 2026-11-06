@@ -1,7 +1,7 @@
 package com.njydsz.message.server.template;
 
 
-import com.njydsz.common.locales.util.I18n;import java.io.StringWriter;
+import java.io.StringWriter;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * FreeMarker 模板引擎实现。

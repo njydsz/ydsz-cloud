@@ -1,8 +1,9 @@
 package com.njydsz.agent.domain.dto;
 
 
-import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * AgentDefinition 统一请求 DTO。

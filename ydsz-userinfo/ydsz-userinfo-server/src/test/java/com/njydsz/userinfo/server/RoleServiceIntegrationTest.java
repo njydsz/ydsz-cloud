@@ -1,7 +1,5 @@
 package com.njydsz.userinfo.server;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.server.service.RoleService;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * {@link RoleService} 集成测试。

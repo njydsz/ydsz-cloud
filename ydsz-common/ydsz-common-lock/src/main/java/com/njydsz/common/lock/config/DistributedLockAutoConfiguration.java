@@ -18,22 +18,21 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
-import com.njydsz.common.lock.aspect.DistributedScheduledAspect;
-import com.njydsz.common.redis.config.RedisConfiguration;
-import com.njydsz.common.lock.aspect.YdszDistributedLockAspect;
 import com.njydsz.common.lock.annotation.LockType;
+import com.njydsz.common.lock.aspect.DistributedScheduledAspect;
+import com.njydsz.common.lock.aspect.YdszDistributedLockAspect;
 import com.njydsz.common.lock.core.LockEventListener;
 import com.njydsz.common.lock.core.LockTemplate;
 import com.njydsz.common.lock.core.LockWaitTimePolicy;
-import com.njydsz.common.lock.impl.FallbackDistributedLock;
-import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.lock.health.LockHealthIndicator;
+import com.njydsz.common.lock.impl.FallbackDistributedLock;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.notify.LockReleaseNotifier;
 import com.njydsz.common.lock.renewal.LockRenewalService;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
 import com.njydsz.common.lock.strategy.DefaultLockStrategy;
 import com.njydsz.common.lock.strategy.LockStrategy;
+import com.njydsz.common.redis.config.RedisConfiguration;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**

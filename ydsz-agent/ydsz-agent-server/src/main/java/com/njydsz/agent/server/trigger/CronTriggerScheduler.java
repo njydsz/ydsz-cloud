@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.agent.domain.trigger.TriggerRepository;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.agent.server.trigger.TriggerExecutionService;
 import com.njydsz.common.util.date.DateUtils;
 
 /**

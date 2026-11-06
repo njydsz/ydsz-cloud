@@ -1,11 +1,5 @@
 package com.njydsz.literule.server.cache;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +16,12 @@ import com.njydsz.literule.domain.entity.RuleDefinition;
 import com.njydsz.literule.domain.repository.RuleDefinitionConfigRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link DirectDbRuleConfigProvider} 单元测试。

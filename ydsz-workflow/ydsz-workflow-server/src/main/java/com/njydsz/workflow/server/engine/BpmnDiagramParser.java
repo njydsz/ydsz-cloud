@@ -6,11 +6,12 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.locales.util.I18n;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * BPMNDI 坐标解析器

@@ -1,5 +1,6 @@
 package com.njydsz.workflow.server.config;
 
+import com.njydsz.common.locales.util.I18n;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -22,7 +23,6 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.workflow.domain.gateway.NameServiceClient;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
-import com.njydsz.workflow.server.config.FlowAlertProperties;
 import com.njydsz.workflow.server.health.FlowHealthIndicator;
 import com.njydsz.workflow.server.message.FlowMessageListener;
 import com.njydsz.workflow.server.metrics.FlowMetrics;

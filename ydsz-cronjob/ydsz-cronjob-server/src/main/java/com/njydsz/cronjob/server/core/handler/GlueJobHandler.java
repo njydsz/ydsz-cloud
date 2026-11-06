@@ -17,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
-import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import groovy.lang.GroovyClassLoader;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.groovy.control.CompilerConfiguration;
@@ -29,6 +28,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
+import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;

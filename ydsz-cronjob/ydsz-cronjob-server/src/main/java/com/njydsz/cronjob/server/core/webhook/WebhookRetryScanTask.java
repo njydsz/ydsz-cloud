@@ -2,7 +2,6 @@ package com.njydsz.cronjob.server.core.webhook;
 
 import java.io.IOException;
 import java.net.URI;
-import jakarta.annotation.PostConstruct;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -11,19 +10,20 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.cronjob.domain.repository.WebhookRetryRepository;
@@ -130,7 +130,7 @@ public class WebhookRetryScanTask implements ScanTask {
       log.info("[WebhookRetry] 本次扫描到 {} 条待重试记录", pendingRetries.size());
 
       // 使用虚拟线程并发推送 HTTP（JDK 21 virtual threads），避免串行阻塞
-      ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+      ExecutorService executor = ExecutorUtils.newVirtualThreadExecutor("webhook-retry");
       try {
         List<Future<Boolean>> futures = new ArrayList<>();
         for (JobWebhookRetryVO retry : pendingRetries) {

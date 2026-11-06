@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.domain.expression.ExpressionEngine;
@@ -287,13 +288,13 @@ public class ExpressionValidationService {
     ExpressionPreviewResult result = new ExpressionPreviewResult();
     result.setExpression(expression);
     if (expression == null || expression.isBlank()) {
-      result.setError("表达式为空");
+      result.setError(I18n.message("literule.error.expression.empty"));
       return result;
     }
     // 先校验语法
     ExpressionValidationResult validation = evaluator.validateDetailed(expression);
     if (!validation.isValid()) {
-      result.setError("语法错误: " + validation.getErrorMessage());
+      result.setError(I18n.message("literule.error.syntax.invalid") + validation.getErrorMessage());
       return result;
     }
     // 求值
@@ -304,7 +305,7 @@ public class ExpressionValidationService {
       result.setJavaType(value == null ? "null" : value.getClass().getSimpleName());
       result.setBooleanValue(value instanceof Boolean b ? b : null);
     } catch (Exception e) {
-      result.setError("求值失败: " + e.getMessage());
+      result.setError(I18n.message("literule.error.evaluate.failed") + e.getMessage());
     }
     result.setElapsedMs((System.nanoTime() - start) / NANOS_PER_MILLI);
     return result;

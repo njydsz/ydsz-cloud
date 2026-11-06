@@ -80,7 +80,7 @@ public class RecallChannelRouter implements InitializingBean {
    */
   public RecallChannel.RecallResult routeAndRecall(MsgLogVO msgLog) {
     if (msgLog == null) {
-      return RecallChannel.RecallResult.failed("消息日志为空");
+      return RecallChannel.RecallResult.failed(I18n.message("message.error.recall.message.null"));
     }
     String channel = msgLog.getChannel();
     RecallChannel handler = channelMap.getOrDefault(channel, defaultRecallChannel);

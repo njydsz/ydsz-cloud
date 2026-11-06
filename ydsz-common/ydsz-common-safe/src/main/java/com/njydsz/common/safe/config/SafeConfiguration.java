@@ -23,7 +23,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.json.spring.boot.JsonAutoConfiguration;
 import com.njydsz.common.lock.spi.CurrentUserIdResolver;
@@ -33,8 +32,6 @@ import com.njydsz.common.safe.alert.SafeAlertProperties;
 import com.njydsz.common.safe.alert.SecurityEventAggregator;
 import com.njydsz.common.safe.alert.SecurityEventListener;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
-import com.njydsz.common.safe.spi.DefaultDesensitizeProvider;
-import com.njydsz.common.safe.spi.DesensitizeProvider;
 import com.njydsz.common.safe.cache.SafeCacheFactoryHelper;
 import com.njydsz.common.safe.captcha.CaptchaGenerator;
 import com.njydsz.common.safe.captcha.CaptchaProperties;
@@ -54,9 +51,6 @@ import com.njydsz.common.safe.filter.IpAccessFilter;
 import com.njydsz.common.safe.filter.SafeRequestBodyCacheFilter;
 import com.njydsz.common.safe.filter.SecurityHeaderFilter;
 import com.njydsz.common.safe.filter.XssFilter;
-import com.njydsz.common.safe.ip.IpAccessService;
-import com.njydsz.common.safe.metrics.SafeMetrics;
-import com.njydsz.common.safe.password.PasswordStrengthValidator;
 import com.njydsz.common.safe.idempotent.aspect.IdempotentAspect;
 import com.njydsz.common.safe.idempotent.aspect.RepeatSubmitAspect;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
@@ -64,10 +58,14 @@ import com.njydsz.common.safe.idempotent.strategy.ReactiveIdempotentStrategy;
 import com.njydsz.common.safe.idempotent.strategy.RedisIdempotentStrategy;
 import com.njydsz.common.safe.idempotent.strategy.RedisReactiveIdempotentStrategy;
 import com.njydsz.common.safe.idempotent.strategy.RepeatSubmitTokenService;
+import com.njydsz.common.safe.ip.IpAccessService;
+import com.njydsz.common.safe.metrics.SafeMetrics;
+import com.njydsz.common.safe.password.PasswordStrengthValidator;
 import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
 import com.njydsz.common.safe.sensitive.SensitiveDataProperties;
+import com.njydsz.common.safe.spi.DefaultDesensitizeProvider;
+import com.njydsz.common.safe.spi.DesensitizeProvider;
 import com.njydsz.common.safe.ssrf.HttpConnectionValidator;
-import com.njydsz.common.safe.ssrf.SsrfHttpRequestInterceptor;
 
 /**
  * 安全模块自动配置

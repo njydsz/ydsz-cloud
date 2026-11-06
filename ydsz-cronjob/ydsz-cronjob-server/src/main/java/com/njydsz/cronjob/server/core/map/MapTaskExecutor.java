@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.njydsz.common.locales.util.I18n;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -177,7 +178,7 @@ public class MapTaskExecutor {
           job.getHandler(),
           e.getMessage(),
           e);
-      return ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage());
+      return ProcessResult.failed(I18n.message("cronjob.map.processor.bean.failed") + e.getMessage());
     }
 
     // 2. 创建 ROOT TaskVO 记录，status=PENDING
@@ -299,7 +300,7 @@ public class MapTaskExecutor {
           logId,
           e.getMessage(),
           e);
-      return ProcessResult.failed("reduce 执行失败: " + e.getMessage());
+      return ProcessResult.failed(I18n.message("cronjob.map.reduce.failed") + e.getMessage());
     }
   }
 
@@ -440,7 +441,7 @@ public class MapTaskExecutor {
               semaphore.acquire();
             } catch (InterruptedException e) {
               Thread.currentThread().interrupt();
-              ProcessResult failResult = ProcessResult.failed("线程中断等待信号量");
+              ProcessResult failResult = ProcessResult.failed(I18n.message("cronjob.map.semaphore.interrupted"));
               updateTaskStatus(subTaskVO, failResult);
               return failResult;
             }
@@ -506,7 +507,7 @@ public class MapTaskExecutor {
             logId,
             e.getMessage(),
             e);
-        results.add(ProcessResult.failed("获取子任务结果异常: " + e.getMessage()));
+        results.add(ProcessResult.failed(I18n.message("cronjob.map.subtask.result.exception") + e.getMessage()));
       }
     }
     return results;
@@ -581,7 +582,7 @@ public class MapTaskExecutor {
     try {
       String responseJson = remoteTaskClient.dispatchSubTask(targetNode, request);
       if (responseJson == null) {
-        result = ProcessResult.failed("远程派发失败: 响应为空");
+        result = ProcessResult.failed(I18n.message("cronjob.map.dispatch.empty.response"));
       } else {
         // ProcessResult 使用 final 字段，手动解析避免反射问题
         ObjectNode jsonObj = YdszJson.parseObject(responseJson);
@@ -602,7 +603,7 @@ public class MapTaskExecutor {
           targetNode.getNodeId(),
           e.getMessage(),
           e);
-      result = ProcessResult.failed("远程派发异常: " + e.getMessage());
+      result = ProcessResult.failed(I18n.message("cronjob.map.dispatch.exception") + e.getMessage());
     }
 
     // 更新 TaskVO 状态

@@ -8,11 +8,11 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.common.feign.dto.BroadcastRequestDTO;
 import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.api.client.NotificationClient;
+import com.njydsz.message.domain.dto.MessageSendDTO;
 
 /**
  * {@link NotificationClient} 的降级工厂。

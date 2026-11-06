@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -150,7 +151,7 @@ public class LocalSandboxCodeExecutionService implements CodeExecutionService {
       }
       throw new CodeExecutionException(
           "代码执行被中断",
-          CodeExecutionResult.failure("执行被中断", duration, -1),
+          CodeExecutionResult.failure(I18n.message("agent.error.code.execution.interrupted"), duration, -1),
           e);
     } catch (Exception e) {
       long duration = System.currentTimeMillis() - startTime;

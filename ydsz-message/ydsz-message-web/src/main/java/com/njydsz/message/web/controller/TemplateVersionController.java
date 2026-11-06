@@ -23,12 +23,12 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.idempotent.annotation.IdempotentExempt;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.TemplateTestSendDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
 import com.njydsz.message.server.service.template.TemplateVersionService;
 

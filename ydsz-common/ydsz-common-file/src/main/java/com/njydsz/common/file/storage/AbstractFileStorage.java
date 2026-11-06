@@ -11,8 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
-
-import com.njydsz.common.util.security.DigestUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -48,6 +46,7 @@ import com.njydsz.common.file.service.FileDedupService;
 import com.njydsz.common.file.util.FileTypeValidator;
 import com.njydsz.common.file.virus.VirusScanner;
 import com.njydsz.common.util.id.IdGenerator;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.common.util.security.HexUtils;
 import com.njydsz.common.util.string.StringUtils;
 

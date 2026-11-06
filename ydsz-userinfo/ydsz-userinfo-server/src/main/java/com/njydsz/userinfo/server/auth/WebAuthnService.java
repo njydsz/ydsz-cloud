@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
@@ -39,7 +40,6 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.domain.vo.WebAuthnChallengeVO;
 import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
 import com.njydsz.userinfo.server.config.WebAuthnProperties;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * WebAuthn/Passkey 无密码认证服务（P3-2 通行 Key 增强）。

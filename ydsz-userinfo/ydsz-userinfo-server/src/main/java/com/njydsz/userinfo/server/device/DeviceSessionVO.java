@@ -2,8 +2,9 @@ package com.njydsz.userinfo.server.device;
 
 import java.time.LocalDateTime;
 
-import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Data;
+
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * 设备会话视图对象（P3-2）。

@@ -3,6 +3,7 @@ package com.njydsz.literule.web.controller.internal;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +18,6 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.literule.domain.RuleEngine;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;

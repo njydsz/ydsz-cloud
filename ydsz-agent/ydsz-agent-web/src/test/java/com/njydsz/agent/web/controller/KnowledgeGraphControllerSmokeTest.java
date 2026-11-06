@@ -1,10 +1,5 @@
 package com.njydsz.agent.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +11,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.njydsz.agent.server.knowledge.KnowledgeGraphService;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.test.BaseControllerMockTest;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link KnowledgeGraphController} Smoke Test.

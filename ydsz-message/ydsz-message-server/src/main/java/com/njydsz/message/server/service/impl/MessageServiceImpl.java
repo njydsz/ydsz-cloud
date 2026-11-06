@@ -1,11 +1,12 @@
 package com.njydsz.message.server.service.impl;
 
 
-import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -21,18 +22,16 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.code.YdszResultCode;
-import com.njydsz.common.locales.util.I18nContextPropagator;
-import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.publish.DomainEventPublisher;
-import com.njydsz.message.server.event.OutboxDomainEventPublisher;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nContextPropagator;
+import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.common.sentry.SentryObservation;
@@ -42,15 +41,18 @@ import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
 import com.njydsz.message.domain.dto.BatchSendResultDTO;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
+import com.njydsz.message.server.event.OutboxDomainEventPublisher;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.producer.MessageQueueOperations;
 import com.njydsz.message.server.service.batch.BatchService;
@@ -65,7 +67,6 @@ import com.njydsz.message.server.service.core.MessageSendService;
 import com.njydsz.message.server.service.core.MessageSendTxService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.core.MessageTraceService;
-import java.util.concurrent.CompletionException;
 
 /**
  * 消息服务实现（核心）。
@@ -177,7 +178,7 @@ public class MessageServiceImpl implements MessageService {
    */
   private MessageSendResultVO sendInternal(MessageItemRequestDTO request, int depth) {
     if (request == null) {
-      return MessageSendResultVO.fail(null, null, "消息请求为空", "消息请求为空", null);
+      return MessageSendResultVO.fail(null, null, I18n.message("message.error.request.null"), I18n.message("message.error.request.null"), null);
     }
     // P2-6: 级联深度保护(防御性,正常路径下 triggerCascade 已提前拦截)
     if (depth > MessageConstants.MAX_CASCADE_DEPTH) {
@@ -461,7 +462,7 @@ public class MessageServiceImpl implements MessageService {
   @Override
   public MessageSendResultVO sendDirect(MessageSendDTO dto) {
     if (dto == null) {
-      return MessageSendResultVO.fail(null, null, "发送参数为空", "发送参数为空", null);
+      return MessageSendResultVO.fail(null, null, I18n.message("message.error.send.params.null"), I18n.message("message.error.send.params.null"), null);
     }
     MessageItemRequestDTO request = new MessageItemRequestDTO();
     request.setChannel(dto.getChannel());
@@ -520,7 +521,7 @@ public class MessageServiceImpl implements MessageService {
   @Override
   public MessageSendResultVO cancelScheduledMessage(String msgId) {
     if (!StringUtils.hasText(msgId)) {
-      return MessageSendResultVO.fail(null, null, "消息 ID 不能为空", "消息 ID 不能为空", null);
+      return MessageSendResultVO.fail(null, null, I18n.message("message.error.message.id.required"), I18n.message("message.error.message.id.required"), null);
     }
     MessageLogQueryDTO query = new MessageLogQueryDTO();
     query.setMsgId(msgId);
@@ -528,7 +529,7 @@ public class MessageServiceImpl implements MessageService {
     query.setPageSize(1);
     MsgLogVO logVO = msgLogRepository.findOne(query).orElse(null);
     if (logVO == null) {
-      return MessageSendResultVO.fail(null, null, "消息不存在: " + msgId, "消息不存在: " + msgId, null);
+      return MessageSendResultVO.fail(null, null, I18n.message("message.error.message.not.found", new Object[]{msgId}), I18n.message("message.error.message.not.found", new Object[]{msgId}), null);
     }
     if (!MessageStatusEnum.SCHEDULED.name().equals(logVO.getStatus())) {
       String cancelErrMsg = "仅允许取消定时消息（当前状态: " + logVO.getStatus() + "）";
@@ -635,7 +636,7 @@ public class MessageServiceImpl implements MessageService {
   @Override
   public MessageSendResultVO sendAsync(MessageItemRequestDTO request) {
     if (request == null) {
-      return MessageSendResultVO.fail(null, null, "消息请求为空", "消息请求为空", null);
+      return MessageSendResultVO.fail(null, null, I18n.message("message.error.request.null"), I18n.message("message.error.request.null"), null);
     }
     // 确保有 messageId
     if (!StringUtils.hasText(request.getMessageId())) {

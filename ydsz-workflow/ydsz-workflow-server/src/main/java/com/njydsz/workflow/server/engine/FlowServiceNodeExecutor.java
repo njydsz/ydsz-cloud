@@ -162,10 +162,10 @@ public class FlowServiceNodeExecutor {
     return switch (serviceType) {
       case "HTTP" -> executeHttp(node, variables);
       case "SCRIPT" -> executeScript(node, variables);
-      case "AUTO_PASS" -> new ServiceExecutionResult(true, "自动通过");
+      case "AUTO_PASS" -> new ServiceExecutionResult(true, I18n.message("workflow.service.auto.pass"));
       default -> {
         log.warn(I18n.message("flow.service.node.unknown.type", new Object[]{serviceType, node.getNodeCode()}));
-        yield new ServiceExecutionResult(true, "未知服务类型(" + serviceType + ")，默认自动通过");
+        yield new ServiceExecutionResult(true, I18n.message("workflow.service.unknown.type.auto.pass", new Object[]{serviceType}));
       }
     };
   }
@@ -209,7 +209,7 @@ public class FlowServiceNodeExecutor {
     String url = FlowNodeExt.getServiceUrl(node.getExt());
     if (!StringUtils.hasText(url) || "null".equals(url)) {
       log.warn(I18n.message("flow.service.node.http.url.missing", new Object[]{node.getNodeCode()}));
-      return new ServiceExecutionResult(false, "HTTP 服务节点未配置 url");
+      return new ServiceExecutionResult(false, I18n.message("workflow.service.http.url.not.configured"));
     }
     // P0-2: SSRF 校验 — 拦截内网地址、元数据服务等敏感目标
     try {
@@ -265,7 +265,7 @@ public class FlowServiceNodeExecutor {
           node.getNodeCode(),
           url,
           e.getMessage());
-      return new ServiceExecutionResult(false, "HTTP 网络超时或连接失败，建议重试");
+      return new ServiceExecutionResult(false, I18n.message("workflow.service.http.timeout"));
     } catch (HttpClientErrorException e) {
       // 4xx 客户端错误：不可重试（请求本身有误）
       log.error(
@@ -285,7 +285,7 @@ public class FlowServiceNodeExecutor {
           url,
           e.getMessage(),
           e);
-      return new ServiceExecutionResult(false, "HTTP 调用未知异常: " + e.getMessage());
+      return new ServiceExecutionResult(false, I18n.message("workflow.service.http.exception") + e.getMessage());
     }
   }
 
@@ -311,7 +311,7 @@ public class FlowServiceNodeExecutor {
     String script = FlowNodeExt.getServiceScript(node.getExt());
     if (!StringUtils.hasText(script) || "null".equals(script)) {
       log.warn(I18n.message("flow.service.node.script.missing", new Object[]{node.getNodeCode()}));
-      return new ServiceExecutionResult(false, "SCRIPT 节点未配置 script");
+      return new ServiceExecutionResult(false, I18n.message("workflow.service.script.not.configured"));
     }
 
     try {
@@ -330,11 +330,11 @@ public class FlowServiceNodeExecutor {
       // 处理结果
       if (result == null) {
         log.info(I18n.message("flow.service.node.script.null.result", new Object[]{node.getNodeCode()}));
-        return new ServiceExecutionResult(true, "脚本执行完成");
+        return new ServiceExecutionResult(true, I18n.message("workflow.service.script.completed"));
       }
 
       if (result instanceof Boolean boolResult) {
-        String msg = "脚本结果: " + boolResult;
+        String msg = I18n.message("workflow.service.script.result") + boolResult;
         if (boolResult) {
           log.info(I18n.message("flow.service.node.script.success", new Object[]{node.getNodeCode(), result}));
         } else {
@@ -345,7 +345,7 @@ public class FlowServiceNodeExecutor {
 
       // 非 Boolean 结果视为成功
       log.info(I18n.message("flow.service.node.script.completed", new Object[]{node.getNodeCode(), result}));
-      return new ServiceExecutionResult(true, "脚本结果: " + result);
+      return new ServiceExecutionResult(true, I18n.message("workflow.service.script.result") + result);
     } catch (Exception e) {
       log.error(
           "[Flow-Service] 脚本执行异常: node={} script={} err={}",
@@ -353,7 +353,7 @@ public class FlowServiceNodeExecutor {
           script,
           e.getMessage(),
           e);
-      return new ServiceExecutionResult(false, "脚本执行异常: " + e.getMessage());
+      return new ServiceExecutionResult(false, I18n.message("workflow.service.script.exception") + e.getMessage());
     }
   }
 

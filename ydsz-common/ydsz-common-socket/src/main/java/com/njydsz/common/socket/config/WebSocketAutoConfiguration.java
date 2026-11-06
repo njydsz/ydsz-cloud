@@ -4,15 +4,10 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.common.thread.util.ExecutorUtils.BlockingQueueType;
-
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -22,6 +17,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,7 +26,10 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import com.njydsz.common.auth.token.TokenService;
+import com.njydsz.common.socket.acl.DefaultTopicAclPolicy;
+import com.njydsz.common.socket.acl.TopicAclPolicy;
 import com.njydsz.common.socket.admin.WebSocketAdminController;
+import com.njydsz.common.socket.audit.SensitiveFieldRedactor;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.auth.WebSocketAuthInterceptor;
 import com.njydsz.common.socket.cluster.WebSocketClusterMessage;
@@ -45,14 +45,11 @@ import com.njydsz.common.socket.lifecycle.WebSocketConnectionListener;
 import com.njydsz.common.socket.metric.WebSocketMetrics;
 import com.njydsz.common.socket.offline.OfflineMessageStore;
 import com.njydsz.common.socket.offline.RedisOfflineMessageStore;
+import com.njydsz.common.socket.presence.WebSocketPresenceService;
 import com.njydsz.common.socket.push.DefaultRealtimePushTemplate;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.common.socket.push.SsePushChannelFactory;
 import com.njydsz.common.socket.push.SsePushChannelMvcFactory;
-import com.njydsz.common.socket.presence.WebSocketPresenceService;
-import com.njydsz.common.socket.acl.DefaultTopicAclPolicy;
-import com.njydsz.common.socket.acl.TopicAclPolicy;
-import com.njydsz.common.socket.audit.SensitiveFieldRedactor;
 import com.njydsz.common.socket.ratelimit.ConnectionLimiter;
 import com.njydsz.common.socket.ratelimit.WebSocketHandshakeRateLimiter;
 import com.njydsz.common.socket.ratelimit.WebSocketRateLimiter;
@@ -67,6 +64,8 @@ import com.njydsz.common.socket.serialize.MessageSerializer;
 import com.njydsz.common.socket.session.LocalSessionRegistry;
 import com.njydsz.common.socket.session.OnlineUserService;
 import com.njydsz.common.socket.session.WebSocketSessionEventListener;
+import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.thread.util.ExecutorUtils.BlockingQueueType;
 
 /**
  * WebSocket 自动装配配置。

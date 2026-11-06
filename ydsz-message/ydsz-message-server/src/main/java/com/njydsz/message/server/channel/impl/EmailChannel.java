@@ -11,17 +11,16 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.locales.util.I18n;
-
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.notify.channel.EmailMessage;
-import com.njydsz.common.notify.channel.EmailNotifySender;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.notify.channel.EmailMessage;
+import com.njydsz.common.notify.channel.EmailNotifySender;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.server.channel.MessageChannel;
 
 /**
@@ -91,10 +90,10 @@ public class EmailChannel implements MessageChannel {
   @Override
   public MessageSendResultVO send(MessageItemRequestDTO request) {
     if (emailNotifySender == null || !emailNotifySender.isEnabled()) {
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "邮件通知未启用", "邮件通知未启用", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.email.not.enabled"), I18n.message("message.error.email.not.enabled"), null);
     }
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "收件人邮箱不能为空", "收件人邮箱不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.receiver.email.required"), I18n.message("message.error.receiver.email.required"), null);
     }
     try {
       return SentryObservation.<MessageSendResultVO>time("message.channel.email_send", "邮件通道发送", null, () -> {

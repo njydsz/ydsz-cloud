@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.enums.ExceptionCode;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.vo.ErrorCodeVO;
 
 /**

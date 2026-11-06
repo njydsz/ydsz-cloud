@@ -1,7 +1,7 @@
 package com.njydsz.message.server.channel;
 
 
-import com.njydsz.common.locales.util.I18n;import java.net.URLEncoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,11 +16,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.server.config.ChannelProperties;
 
 /**
@@ -95,14 +96,14 @@ public class DingTalkChannel implements MessageChannel {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
       log.warn(I18n.message("message.log.other.DINGTALK_access_token_receiver_{}.14a67e"), request.getReceiver());
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "钉钉 access_token 未配置", "钉钉 access_token 未配置", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.dingtalk.token.not.configured"), I18n.message("message.error.dingtalk.token.not.configured"), null);
     }
 
     String secret = channelProperties.getChannel().getDingtalk().getSecret();
     if (StringUtils.hasText(secret)) {
       String signedUrl = appendSign(webhookUrl, secret);
       if (signedUrl == null) {
-        return MessageSendResultVO.fail(CHANNEL_TYPE, null, "钉钉加签失败,请检查 secret 配置", "钉钉加签失败,请检查 secret 配置", null);
+        return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.dingtalk.sign.failed"), I18n.message("message.error.dingtalk.sign.failed"), null);
       }
       webhookUrl = signedUrl;
     }

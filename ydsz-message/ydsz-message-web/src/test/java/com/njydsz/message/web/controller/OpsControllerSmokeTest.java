@@ -1,10 +1,5 @@
 package com.njydsz.message.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,6 +12,11 @@ import com.njydsz.message.server.consumer.BloomFilterDeduplicator;
 import com.njydsz.message.server.service.chain.SendPipelineFacade;
 import com.njydsz.message.server.service.impl.ScheduledMessageScanner;
 import com.njydsz.message.server.template.cache.CachedMessageTemplateRenderer;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link OpsController} Smoke Test。

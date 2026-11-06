@@ -1,9 +1,5 @@
 package com.njydsz.nextwiki.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.io.ByteArrayInputStream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -12,11 +8,15 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.common.file.storage.IFileStorage;
+import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService.SignedDownloadContext;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link DownloadController} Smoke Test。

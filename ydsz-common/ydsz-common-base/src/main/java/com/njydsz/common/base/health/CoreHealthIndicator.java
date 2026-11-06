@@ -11,8 +11,8 @@ import java.util.Map;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.njydsz.common.locales.util.MessageSourceHolder;
 import com.njydsz.common.core.constant.PageConstants;
+import com.njydsz.common.locales.util.MessageSourceHolder;
 
 /**
  * 核心健康指标（CoreHealthIndicator）

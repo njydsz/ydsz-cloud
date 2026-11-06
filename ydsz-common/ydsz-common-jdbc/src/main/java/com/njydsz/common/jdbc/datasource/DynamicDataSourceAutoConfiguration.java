@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.sql.DataSource;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.aop.Advisor;
@@ -25,8 +27,6 @@ import com.njydsz.common.jdbc.config.MultiDataSourcePoolCustomizer;
 import com.njydsz.common.jdbc.config.YdszDataSourceProperties;
 import com.njydsz.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.common.jdbc.health.DynamicDataSourceHealthIndicator;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 
 /**
  * 动态数据源自动配置

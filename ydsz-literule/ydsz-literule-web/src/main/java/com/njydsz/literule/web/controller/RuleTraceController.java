@@ -33,13 +33,13 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.idempotent.annotation.IdempotentExempt;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.config.RuleTraceQueryService;
-import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 规则执行追踪 Controller
@@ -362,6 +362,7 @@ boolean historicalTriggered = Boolean.TRUE.equals(trace.isTriggered());
       try {
         defaultSeverity = RuleSeverity.valueOf(defaultSeverityStr);
       } catch (IllegalArgumentException e) {
+        log.warn("参数非法, 返回校验失败: reason={}", e.getMessage());
         return YdszResponse.error(
             YdszResultCode.VALIDATION_FAILED,
             "Invalid defaultSeverity: " + defaultSeverityStr + ", valid values: INFO / YELLOW / RED");

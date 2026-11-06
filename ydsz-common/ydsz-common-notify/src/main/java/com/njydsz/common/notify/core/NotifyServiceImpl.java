@@ -8,6 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.locales.util.I18n;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -233,7 +234,7 @@ public class NotifyServiceImpl implements NotifyService {
   @Override
   public NotifySendResult send(NotifyRequest request) {
     if (request == null) {
-      return NotifySendResult.failure("通知请求为空", "unknown");
+      return NotifySendResult.failure(I18n.message("common.notify.error.request.null"), "unknown");
     }
     NotifyChannel channel = request.getChannel();
 
@@ -248,7 +249,7 @@ public class NotifyServiceImpl implements NotifyService {
               "[NotifyServiceImpl] 用户偏好检查不通过，跳过发送: userId={}, channel={}",
               request.getUserId(),
               channel.getName());
-          return NotifySendResult.failure("用户通知偏好不允许此渠道", channel.getName());
+          return NotifySendResult.failure(I18n.message("common.notify.error.preference.not.allowed"), channel.getName());
         }
       } catch (Exception e) {
         LOG.debug("[NotifyServiceImpl] 偏好检查异常，继续发送: {}", e.getMessage());
@@ -311,17 +312,17 @@ public class NotifyServiceImpl implements NotifyService {
     // P1-1: 熔断检查
     if (!tryAcquireCircuitBreaker(channel)) {
       return NotifySendResult.failure(
-          "通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName());
+          I18n.message("common.notify.error.channel.circuit.broken") + channel.getName() + "]已熔断，请稍后重试", channel.getName());
     }
 
     if (!tryAcquireRateLimit(channel, null)) {
-      return NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.channel.rate.limited") + channel.getName(), channel.getName());
     }
 
     NotifyChannelStrategy strategy = channelStrategies.get(channel);
     if (strategy == null) {
       recordCircuitFailure(channel);
-      return NotifySendResult.failure("通知渠道未配置: " + channel.getName(), channel.getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.channel.not.configured") + channel.getName(), channel.getName());
     }
     NotifySendResult result = strategy.batchSend(receivers, title, content);
     recordCircuitResult(channel, result.isSuccess());
@@ -345,19 +346,19 @@ public class NotifyServiceImpl implements NotifyService {
     // P1-1: 熔断检查
     if (!tryAcquireCircuitBreaker(channel)) {
       return CompletableFuture.completedFuture(
-          NotifySendResult.failure("通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName()));
+          NotifySendResult.failure(I18n.message("common.notify.error.channel.circuit.broken") + channel.getName() + "]已熔断，请稍后重试", channel.getName()));
     }
 
     if (!tryAcquireRateLimit(channel, null)) {
       return CompletableFuture.completedFuture(
-          NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName()));
+          NotifySendResult.failure(I18n.message("common.notify.error.channel.rate.limited") + channel.getName(), channel.getName()));
     }
 
     NotifyChannelStrategy strategy = channelStrategies.get(channel);
     if (strategy == null) {
       recordCircuitFailure(channel);
       return CompletableFuture.completedFuture(
-          NotifySendResult.failure("通知渠道未配置: " + channel.getName(), channel.getName()));
+          NotifySendResult.failure(I18n.message("common.notify.error.channel.not.configured") + channel.getName(), channel.getName()));
     }
 
     if (parallelExecutor == null) {
@@ -416,18 +417,18 @@ public class NotifyServiceImpl implements NotifyService {
     if (!tryAcquireCircuitBreaker(channel)) {
       return CompletableFuture.completedFuture(
           buildBatchErrorResult(
-              receivers, "通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName()));
+              receivers, I18n.message("common.notify.error.channel.circuit.broken") + channel.getName() + "]已熔断，请稍后重试", channel.getName()));
     }
     if (!tryAcquireRateLimit(channel, null)) {
       return CompletableFuture.completedFuture(
           buildBatchErrorResult(
-              receivers, "通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName()));
+              receivers, I18n.message("common.notify.error.channel.rate.limited") + channel.getName(), channel.getName()));
     }
     NotifyChannelStrategy strategy = channelStrategies.get(channel);
     if (strategy == null) {
       recordCircuitFailure(channel);
       return CompletableFuture.completedFuture(
-          buildBatchErrorResult(receivers, "通知渠道未配置: " + channel.getName(), channel.getName()));
+          buildBatchErrorResult(receivers, I18n.message("common.notify.error.channel.not.configured") + channel.getName(), channel.getName()));
     }
     if (parallelExecutor == null) {
       NotifySendResult batchResult = strategy.batchSend(receivers, title, content);
@@ -730,7 +731,7 @@ public class NotifyServiceImpl implements NotifyService {
     }
     return ctx.withResult(
         NotifySendResult.failure(
-            "通知渠道[" + ctx.channel().getName() + "]已熔断，请稍后重试", ctx.channel().getName()));
+            I18n.message("common.notify.error.channel.circuit.broken") + ctx.channel().getName() + "]已熔断，请稍后重试", ctx.channel().getName()));
   }
 
   /** 限流检查步骤 */
@@ -741,7 +742,7 @@ public class NotifyServiceImpl implements NotifyService {
     }
     return ctx.withResult(
         NotifySendResult.failure(
-            "通知渠道限流触发，请稍后重试: " + ctx.channel().getName(), ctx.channel().getName()));
+            I18n.message("common.notify.error.channel.rate.limited") + ctx.channel().getName(), ctx.channel().getName()));
   }
 
   /** 执行渠道文本发送步骤 */
@@ -750,7 +751,7 @@ public class NotifyServiceImpl implements NotifyService {
     if (strategy == null) {
       recordCircuitFailure(ctx.channel());
       return ctx.withResult(
-          NotifySendResult.failure("通知渠道未配置: " + ctx.channel().getName(), ctx.channel().getName()));
+          NotifySendResult.failure(I18n.message("common.notify.error.channel.not.configured") + ctx.channel().getName(), ctx.channel().getName()));
     }
 
     long startTime = System.nanoTime();
@@ -771,7 +772,7 @@ public class NotifyServiceImpl implements NotifyService {
     if (strategy == null) {
       recordCircuitFailure(ctx.channel());
       return ctx.withResult(
-          NotifySendResult.failure("通知渠道未配置: " + ctx.channel().getName(), ctx.channel().getName()));
+          NotifySendResult.failure(I18n.message("common.notify.error.channel.not.configured") + ctx.channel().getName(), ctx.channel().getName()));
     }
 
     long startTime = System.nanoTime();

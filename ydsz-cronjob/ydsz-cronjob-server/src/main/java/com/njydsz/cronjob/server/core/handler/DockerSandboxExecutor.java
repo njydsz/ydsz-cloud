@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -106,12 +107,12 @@ public class DockerSandboxExecutor {
       String scriptContent, String language, int timeoutSeconds, Map<String, String> envVars) {
     SandboxConfig sandboxConfig = cronjobProperties.getSandbox();
     if (!sandboxConfig.isEnabled() || !sandboxConfig.isDockerEnabled()) {
-      return new SandboxResult(false, "Docker 沙箱未启用", -1, "");
+      return new SandboxResult(false, I18n.message("cronjob.sandbox.docker.not.enabled"), -1, "");
     }
 
     // P2-11: Docker 可用性检查（带缓存）
     if (!isDockerAvailable()) {
-      return new SandboxResult(false, "Docker 不可用，请检查 Docker 安装和权限", -1, "");
+      return new SandboxResult(false, I18n.message("cronjob.sandbox.docker.unavailable"), -1, "");
     }
 
     String image = resolveImage(language, sandboxConfig);
@@ -180,7 +181,7 @@ public class DockerSandboxExecutor {
           success, success ? "success" : "exit code: " + exitCode, exitCode, output);
     } catch (Exception e) {
       log.error("[DockerSandbox] 执行异常: reason={}", e.getMessage(), e);
-      return new SandboxResult(false, "执行异常: " + e.getMessage(), -1, "");
+      return new SandboxResult(false, I18n.message("cronjob.sandbox.execute.exception") + e.getMessage(), -1, "");
     }
   }
 

@@ -8,13 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.alert.SecurityAlertRepository;
 import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 安全告警服务。

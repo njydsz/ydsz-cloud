@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
 
 /**
  * 身份供给连接器注册表（P0-1 Identity Provisioning 管道）。

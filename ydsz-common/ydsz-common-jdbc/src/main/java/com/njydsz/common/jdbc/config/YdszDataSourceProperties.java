@@ -36,23 +36,47 @@ public class YdszDataSourceProperties {
   /** 数据源类型 */
   private String type;
 
-  public String getUrl() { return url; }
-  public void setUrl(String url) { this.url = url; }
+  public String getUrl() {
+      return url;
+  }
+  public void setUrl(String url) {
+      this.url = url;
+  }
 
-  public String getUsername() { return username; }
-  public void setUsername(String username) { this.username = username; }
+  public String getUsername() {
+      return username;
+  }
+  public void setUsername(String username) {
+      this.username = username;
+  }
 
-  public String getPassword() { return password; }
-  public void setPassword(String password) { this.password = password; }
+  public String getPassword() {
+      return password;
+  }
+  public void setPassword(String password) {
+      this.password = password;
+  }
 
-  public String getDriverClassName() { return driverClassName; }
-  public void setDriverClassName(String driverClassName) { this.driverClassName = driverClassName; }
+  public String getDriverClassName() {
+      return driverClassName;
+  }
+  public void setDriverClassName(String driverClassName) {
+      this.driverClassName = driverClassName;
+  }
 
-  public Hikari getHikari() { return hikari; }
-  public void setHikari(Hikari hikari) { this.hikari = hikari; }
+  public Hikari getHikari() {
+      return hikari;
+  }
+  public void setHikari(Hikari hikari) {
+      this.hikari = hikari;
+  }
 
-  public String getType() { return type; }
-  public void setType(String type) { this.type = type; }
+  public String getType() {
+      return type;
+  }
+  public void setType(String type) {
+      this.type = type;
+  }
 
   /**
    * HikariCP 连接池参数。
@@ -70,37 +94,81 @@ public class YdszDataSourceProperties {
     private int initialSize = 10;
     private Map<String, String> dataSourceProperties = new HashMap<>();
 
-    public String getPoolName() { return poolName; }
-    public void setPoolName(String poolName) { this.poolName = poolName; }
+    public String getPoolName() {
+        return poolName;
+    }
+    public void setPoolName(String poolName) {
+        this.poolName = poolName;
+    }
 
-    public int getMinimumIdle() { return minimumIdle; }
-    public void setMinimumIdle(int minimumIdle) { this.minimumIdle = minimumIdle; }
+    public int getMinimumIdle() {
+        return minimumIdle;
+    }
+    public void setMinimumIdle(int minimumIdle) {
+        this.minimumIdle = minimumIdle;
+    }
 
-    public int getMaximumPoolSize() { return maximumPoolSize; }
-    public void setMaximumPoolSize(int maximumPoolSize) { this.maximumPoolSize = maximumPoolSize; }
+    public int getMaximumPoolSize() {
+        return maximumPoolSize;
+    }
+    public void setMaximumPoolSize(int maximumPoolSize) {
+        this.maximumPoolSize = maximumPoolSize;
+    }
 
-    public long getConnectionTimeout() { return connectionTimeout; }
-    public void setConnectionTimeout(long connectionTimeout) { this.connectionTimeout = connectionTimeout; }
+    public long getConnectionTimeout() {
+        return connectionTimeout;
+    }
+    public void setConnectionTimeout(long connectionTimeout) {
+        this.connectionTimeout = connectionTimeout;
+    }
 
-    public long getIdleTimeout() { return idleTimeout; }
-    public void setIdleTimeout(long idleTimeout) { this.idleTimeout = idleTimeout; }
+    public long getIdleTimeout() {
+        return idleTimeout;
+    }
+    public void setIdleTimeout(long idleTimeout) {
+        this.idleTimeout = idleTimeout;
+    }
 
-    public long getMaxLifetime() { return maxLifetime; }
-    public void setMaxLifetime(long maxLifetime) { this.maxLifetime = maxLifetime; }
+    public long getMaxLifetime() {
+        return maxLifetime;
+    }
+    public void setMaxLifetime(long maxLifetime) {
+        this.maxLifetime = maxLifetime;
+    }
 
-    public String getConnectionTestQuery() { return connectionTestQuery; }
-    public void setConnectionTestQuery(String connectionTestQuery) { this.connectionTestQuery = connectionTestQuery; }
+    public String getConnectionTestQuery() {
+        return connectionTestQuery;
+    }
+    public void setConnectionTestQuery(String connectionTestQuery) {
+        this.connectionTestQuery = connectionTestQuery;
+    }
 
-    public long getValidationTimeout() { return validationTimeout; }
-    public void setValidationTimeout(long validationTimeout) { this.validationTimeout = validationTimeout; }
+    public long getValidationTimeout() {
+        return validationTimeout;
+    }
+    public void setValidationTimeout(long validationTimeout) {
+        this.validationTimeout = validationTimeout;
+    }
 
-    public long getLeakDetectionThreshold() { return leakDetectionThreshold; }
-    public void setLeakDetectionThreshold(long leakDetectionThreshold) { this.leakDetectionThreshold = leakDetectionThreshold; }
+    public long getLeakDetectionThreshold() {
+        return leakDetectionThreshold;
+    }
+    public void setLeakDetectionThreshold(long leakDetectionThreshold) {
+        this.leakDetectionThreshold = leakDetectionThreshold;
+    }
 
-    public int getInitialSize() { return initialSize; }
-    public void setInitialSize(int initialSize) { this.initialSize = initialSize; }
+    public int getInitialSize() {
+        return initialSize;
+    }
+    public void setInitialSize(int initialSize) {
+        this.initialSize = initialSize;
+    }
 
-    public Map<String, String> getDataSourceProperties() { return dataSourceProperties; }
-    public void setDataSourceProperties(Map<String, String> dataSourceProperties) { this.dataSourceProperties = dataSourceProperties; }
+    public Map<String, String> getDataSourceProperties() {
+        return dataSourceProperties;
+    }
+    public void setDataSourceProperties(Map<String, String> dataSourceProperties) {
+        this.dataSourceProperties = dataSourceProperties;
+    }
   }
 }

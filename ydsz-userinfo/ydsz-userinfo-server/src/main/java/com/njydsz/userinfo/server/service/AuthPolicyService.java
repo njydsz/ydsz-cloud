@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.dto.AuthPolicyDTO;
 import com.njydsz.userinfo.domain.query.AuthPolicyPageQuery;
 import com.njydsz.userinfo.domain.repository.AuthPolicyRepository;
 import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 认证策略服务（P3-1 多租户认证域隔离）。

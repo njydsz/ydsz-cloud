@@ -1,9 +1,5 @@
 package com.njydsz.generator.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +14,10 @@ import org.mockito.MockitoAnnotations;
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.repository.GenDatasourceRepository;
 import com.njydsz.generator.vo.GenDatasourceRespVO;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class DatasourceServiceTest {
 

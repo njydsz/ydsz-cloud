@@ -11,6 +11,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Objects;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -222,7 +223,7 @@ public class DocumentProcessorPipeline {
             result.setParseResult(
                 DocumentParseResult.builder()
                     .isSuccess(false)
-                    .errorMessage("文档存在高危安全风险(" + scanResult.getSecurityLevel() + ")，已被安全策略阻止")
+                    .errorMessage(I18n.message("common.docs.error.security.high.risk") + scanResult.getSecurityLevel() + ")，已被安全策略阻止")
                     .fileName(fileName)
                     .build());
             return result;

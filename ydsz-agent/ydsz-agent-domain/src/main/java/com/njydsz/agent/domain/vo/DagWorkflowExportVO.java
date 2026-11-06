@@ -1,9 +1,9 @@
 package com.njydsz.agent.domain.vo;
 
 
-import com.njydsz.common.excel.annotation.ExcelProperty;
-
 import lombok.Data;
+
+import com.njydsz.common.excel.annotation.ExcelProperty;
 
 /**
  * DAG 工作流 Excel 导出 VO。

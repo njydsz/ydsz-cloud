@@ -1,7 +1,7 @@
 package com.njydsz.message.server.channel;
 
 
-import com.njydsz.common.locales.util.I18n;import java.nio.charset.StandardCharsets;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -21,11 +21,12 @@ import org.springframework.web.client.RestClient;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.server.config.ChannelProperties;
 
 /**
@@ -108,7 +109,7 @@ public class FeishuChannel implements MessageChannel {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
       log.warn(I18n.message("message.log.other.FEISHU_hook_receiver_{}.e8658c"), request.getReceiver());
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "飞书 hook 未配置", "飞书 hook 未配置", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.feishu.hook.not.configured"), I18n.message("message.error.feishu.hook.not.configured"), null);
     }
 
     try {

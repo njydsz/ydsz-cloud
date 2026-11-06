@@ -7056,107 +7056,127 @@ COMMENT ON COLUMN "public"."ydsz_system_config_approval"."updated_at" IS '更新
 CREATE INDEX "idx_ydsz_system_config_approval_submitter" ON "public"."ydsz_system_config_approval" USING btree ("submitter_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_system_config_approval_tenant_status" ON "public"."ydsz_system_config_approval" USING btree ("tenant_id" ASC NULLS LAST, "status" ASC NULLS LAST, "is_deleted" ASC NULLS LAST);
 
-DROP TABLE IF EXISTS "public"."ydzs_search_idx_part_0" CASCADE;
+DROP TABLE IF EXISTS "public"."ydsz_search_idx_part_0" CASCADE;
 
-CREATE TABLE "public"."ydzs_search_idx_part_0" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 0);
+CREATE TABLE "public"."ydsz_search_idx_part_0" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 0);
+COMMENT ON TABLE "public"."ydsz_search_idx_part_0" IS '搜索全文索引 HASH 分区 0（tenant_id hash remainder 0）';
 
-DROP TABLE IF EXISTS "public"."ydzs_search_idx_part_1" CASCADE;
+DROP TABLE IF EXISTS "public"."ydsz_search_idx_part_1" CASCADE;
 
-CREATE TABLE "public"."ydzs_search_idx_part_1" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 1);
+CREATE TABLE "public"."ydsz_search_idx_part_1" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 1);
+COMMENT ON TABLE "public"."ydsz_search_idx_part_1" IS '搜索全文索引 HASH 分区 1（tenant_id hash remainder 1）';
 
-DROP TABLE IF EXISTS "public"."ydzs_search_idx_part_2" CASCADE;
+DROP TABLE IF EXISTS "public"."ydsz_search_idx_part_2" CASCADE;
 
-CREATE TABLE "public"."ydzs_search_idx_part_2" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 2);
+CREATE TABLE "public"."ydsz_search_idx_part_2" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 2);
+COMMENT ON TABLE "public"."ydsz_search_idx_part_2" IS '搜索全文索引 HASH 分区 2（tenant_id hash remainder 2）';
 
-DROP TABLE IF EXISTS "public"."ydzs_search_idx_part_3" CASCADE;
+DROP TABLE IF EXISTS "public"."ydsz_search_idx_part_3" CASCADE;
 
-CREATE TABLE "public"."ydzs_search_idx_part_3" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 3);
+CREATE TABLE "public"."ydsz_search_idx_part_3" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 3);
+COMMENT ON TABLE "public"."ydsz_search_idx_part_3" IS '搜索全文索引 HASH 分区 3（tenant_id hash remainder 3）';
 
-DROP TABLE IF EXISTS "public"."ydzs_search_idx_part_4" CASCADE;
+DROP TABLE IF EXISTS "public"."ydsz_search_idx_part_4" CASCADE;
 
-CREATE TABLE "public"."ydzs_search_idx_part_4" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 4);
+CREATE TABLE "public"."ydsz_search_idx_part_4" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 4);
+COMMENT ON TABLE "public"."ydsz_search_idx_part_4" IS '搜索全文索引 HASH 分区 4（tenant_id hash remainder 4）';
 
-DROP TABLE IF EXISTS "public"."ydzs_search_idx_part_5" CASCADE;
+DROP TABLE IF EXISTS "public"."ydsz_search_idx_part_5" CASCADE;
 
-CREATE TABLE "public"."ydzs_search_idx_part_5" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 5);
+CREATE TABLE "public"."ydsz_search_idx_part_5" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 5);
+COMMENT ON TABLE "public"."ydsz_search_idx_part_5" IS '搜索全文索引 HASH 分区 5（tenant_id hash remainder 5）';
 
-DROP TABLE IF EXISTS "public"."ydzs_search_idx_part_6" CASCADE;
+DROP TABLE IF EXISTS "public"."ydsz_search_idx_part_6" CASCADE;
 
-CREATE TABLE "public"."ydzs_search_idx_part_6" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 6);
+CREATE TABLE "public"."ydsz_search_idx_part_6" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 6);
+COMMENT ON TABLE "public"."ydsz_search_idx_part_6" IS '搜索全文索引 HASH 分区 6（tenant_id hash remainder 6）';
 
-DROP TABLE IF EXISTS "public"."ydzs_search_idx_part_7" CASCADE;
+DROP TABLE IF EXISTS "public"."ydsz_search_idx_part_7" CASCADE;
 
-CREATE TABLE "public"."ydzs_search_idx_part_7" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 7);
+CREATE TABLE "public"."ydsz_search_idx_part_7" PARTITION OF "public"."ydsz_comm_search_index_partitioned" FOR VALUES WITH (modulus 8, remainder 7);
+COMMENT ON TABLE "public"."ydsz_search_idx_part_7" IS '搜索全文索引 HASH 分区 7（tenant_id hash remainder 7）';
 
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log_2026_10" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log_2026_10" PARTITION OF "public"."ydsz_flow_audit_log" FOR VALUES FROM ('2026-10-01 00:00:00') TO ('2026-11-01 00:00:00');
+COMMENT ON TABLE "public"."ydsz_flow_audit_log_2026_10" IS '流程审计日志 2026年10月分区（按月分区，只追加）';
 CREATE INDEX "idx_ydsz_flow_audit_log_2026_10_operator" ON "public"."ydsz_flow_audit_log_2026_10" USING btree ("operator_id" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_flow_audit_log_2026_10_tenant_del_at" ON "public"."ydsz_flow_audit_log_2026_10" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log_2026_11" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log_2026_11" PARTITION OF "public"."ydsz_flow_audit_log" FOR VALUES FROM ('2026-11-01 00:00:00') TO ('2026-12-01 00:00:00');
+COMMENT ON TABLE "public"."ydsz_flow_audit_log_2026_11" IS '流程审计日志 2026年11月分区（按月分区，只追加）';
 CREATE INDEX "idx_ydsz_flow_audit_log_2026_11_operator" ON "public"."ydsz_flow_audit_log_2026_11" USING btree ("operator_id" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_flow_audit_log_2026_11_tenant_del_at" ON "public"."ydsz_flow_audit_log_2026_11" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log_2026_12" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log_2026_12" PARTITION OF "public"."ydsz_flow_audit_log" FOR VALUES FROM ('2026-12-01 00:00:00') TO ('2027-01-01 00:00:00');
+COMMENT ON TABLE "public"."ydsz_flow_audit_log_2026_12" IS '流程审计日志 2026年12月分区（按月分区，只追加）';
 CREATE INDEX "idx_ydsz_flow_audit_log_2026_12_operator" ON "public"."ydsz_flow_audit_log_2026_12" USING btree ("operator_id" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_flow_audit_log_2026_12_tenant_del_at" ON "public"."ydsz_flow_audit_log_2026_12" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log_2027_01" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log_2027_01" PARTITION OF "public"."ydsz_flow_audit_log" FOR VALUES FROM ('2027-01-01 00:00:00') TO ('2027-02-01 00:00:00');
+COMMENT ON TABLE "public"."ydsz_flow_audit_log_2027_01" IS '流程审计日志 2027年01月分区（按月分区，只追加）';
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_01_operator" ON "public"."ydsz_flow_audit_log_2027_01" USING btree ("operator_id" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_01_tenant_del_at" ON "public"."ydsz_flow_audit_log_2027_01" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log_2027_02" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log_2027_02" PARTITION OF "public"."ydsz_flow_audit_log" FOR VALUES FROM ('2027-02-01 00:00:00') TO ('2027-03-01 00:00:00');
+COMMENT ON TABLE "public"."ydsz_flow_audit_log_2027_02" IS '流程审计日志 2027年02月分区（按月分区，只追加）';
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_02_operator" ON "public"."ydsz_flow_audit_log_2027_02" USING btree ("operator_id" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_02_tenant_del_at" ON "public"."ydsz_flow_audit_log_2027_02" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log_2027_03" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log_2027_03" PARTITION OF "public"."ydsz_flow_audit_log" FOR VALUES FROM ('2027-03-01 00:00:00') TO ('2027-04-01 00:00:00');
+COMMENT ON TABLE "public"."ydsz_flow_audit_log_2027_03" IS '流程审计日志 2027年03月分区（按月分区，只追加）';
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_03_operator" ON "public"."ydsz_flow_audit_log_2027_03" USING btree ("operator_id" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_03_tenant_del_at" ON "public"."ydsz_flow_audit_log_2027_03" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log_2027_04" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log_2027_04" PARTITION OF "public"."ydsz_flow_audit_log" FOR VALUES FROM ('2027-04-01 00:00:00') TO ('2027-05-01 00:00:00');
+COMMENT ON TABLE "public"."ydsz_flow_audit_log_2027_04" IS '流程审计日志 2027年04月分区（按月分区，只追加）';
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_04_operator" ON "public"."ydsz_flow_audit_log_2027_04" USING btree ("operator_id" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_04_tenant_del_at" ON "public"."ydsz_flow_audit_log_2027_04" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log_2027_05" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log_2027_05" PARTITION OF "public"."ydsz_flow_audit_log" FOR VALUES FROM ('2027-05-01 00:00:00') TO ('2027-06-01 00:00:00');
+COMMENT ON TABLE "public"."ydsz_flow_audit_log_2027_05" IS '流程审计日志 2027年05月分区（按月分区，只追加）';
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_05_operator" ON "public"."ydsz_flow_audit_log_2027_05" USING btree ("operator_id" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_05_tenant_del_at" ON "public"."ydsz_flow_audit_log_2027_05" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log_2027_06" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log_2027_06" PARTITION OF "public"."ydsz_flow_audit_log" FOR VALUES FROM ('2027-06-01 00:00:00') TO ('2027-07-01 00:00:00');
+COMMENT ON TABLE "public"."ydsz_flow_audit_log_2027_06" IS '流程审计日志 2027年06月分区（按月分区，只追加）';
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_06_operator" ON "public"."ydsz_flow_audit_log_2027_06" USING btree ("operator_id" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_06_tenant_del_at" ON "public"."ydsz_flow_audit_log_2027_06" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log_2027_07" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log_2027_07" PARTITION OF "public"."ydsz_flow_audit_log" FOR VALUES FROM ('2027-07-01 00:00:00') TO ('2027-08-01 00:00:00');
+COMMENT ON TABLE "public"."ydsz_flow_audit_log_2027_07" IS '流程审计日志 2027年07月分区（按月分区，只追加）';
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_07_operator" ON "public"."ydsz_flow_audit_log_2027_07" USING btree ("operator_id" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_07_tenant_del_at" ON "public"."ydsz_flow_audit_log_2027_07" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log_2027_08" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log_2027_08" PARTITION OF "public"."ydsz_flow_audit_log" FOR VALUES FROM ('2027-08-01 00:00:00') TO ('2027-09-01 00:00:00');
+COMMENT ON TABLE "public"."ydsz_flow_audit_log_2027_08" IS '流程审计日志 2027年08月分区（按月分区，只追加）';
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_08_operator" ON "public"."ydsz_flow_audit_log_2027_08" USING btree ("operator_id" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_08_tenant_del_at" ON "public"."ydsz_flow_audit_log_2027_08" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 
 DROP TABLE IF EXISTS "public"."ydsz_flow_audit_log_2027_09" CASCADE;
 
 CREATE TABLE "public"."ydsz_flow_audit_log_2027_09" PARTITION OF "public"."ydsz_flow_audit_log" FOR VALUES FROM ('2027-09-01 00:00:00') TO ('2027-10-01 00:00:00');
+COMMENT ON TABLE "public"."ydsz_flow_audit_log_2027_09" IS '流程审计日志 2027年09月分区（按月分区，只追加）';
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_09_operator" ON "public"."ydsz_flow_audit_log_2027_09" USING btree ("operator_id" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 CREATE INDEX "idx_ydsz_flow_audit_log_2027_09_tenant_del_at" ON "public"."ydsz_flow_audit_log_2027_09" USING btree ("tenant_id" ASC NULLS LAST, "is_deleted" ASC NULLS LAST, "operated_at" ASC NULLS LAST);
 

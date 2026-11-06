@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.chain.handler;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.Map;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,10 +9,11 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.chain.SendContext;
@@ -46,7 +47,7 @@ public class ChannelResolveHandler implements SendHandler {
   public boolean handle(MessageItemRequestDTO request, SendContext ctx) {
     String channel = request.getChannel();
     if (!StringUtils.hasText(channel)) {
-      ctx.setErrorResult(MessageSendResultVO.fail(null, null, "消息通道不能为空", "消息通道不能为空", null));
+      ctx.setErrorResult(MessageSendResultVO.fail(null, null, I18n.message("message.error.channel.required"), I18n.message("message.error.channel.required"), null));
       return false;
     }
     if (!isChannelEnabled(channel)) {

@@ -1,9 +1,11 @@
 package com.njydsz.generator.service;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.VelocityContext;
@@ -18,7 +20,6 @@ import com.njydsz.generator.entity.GenTemplate;
 import com.njydsz.generator.repository.GenTemplateRepository;
 import com.njydsz.generator.vo.DiffLineVO;
 import com.njydsz.generator.vo.TemplateValidateVO;
-import java.io.StringWriter;
 
 /**
  * 模板领域服务。
@@ -187,7 +188,7 @@ public class TemplateService {
     if (content == null || content.isBlank()) {
       return TemplateValidateVO.builder()
           .isValid(false)
-          .errorMessage("模板内容不能为空")
+          .errorMessage(I18n.message("generator.error.template.content.required"))
           .errorLine(null)
           .build();
     }

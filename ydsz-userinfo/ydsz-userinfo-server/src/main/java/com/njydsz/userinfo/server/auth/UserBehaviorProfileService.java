@@ -11,10 +11,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户行为画像服务（P1-1 UEBA 自适应风险引擎）。

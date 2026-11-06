@@ -5,9 +5,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 文档转换服务。

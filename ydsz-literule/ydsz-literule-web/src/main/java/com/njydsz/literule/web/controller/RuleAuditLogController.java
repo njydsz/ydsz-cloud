@@ -21,10 +21,10 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.diff.FieldDiff;
 import com.njydsz.literule.domain.vo.AuditLogEntryVO;
 import com.njydsz.literule.server.audit.RuleAuditLogService;
-import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 规则审计日志查询接口（P3-5）
@@ -145,6 +145,7 @@ public class RuleAuditLogController {
               .map(this::toAuditLogVO)
               .toList());
     } catch (IllegalArgumentException e) {
+      log.warn("参数非法, 返回校验失败: reason={}", e.getMessage());
       return YdszResponse.error(
           YdszResultCode.VALIDATION_FAILED,
           "Invalid action type: "

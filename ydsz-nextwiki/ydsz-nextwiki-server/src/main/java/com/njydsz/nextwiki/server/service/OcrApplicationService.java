@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -56,11 +57,11 @@ public class OcrApplicationService {
         case "tesseract" -> recognizeByTesseract(imageStream);
         case "aliyun" -> recognizeByAliyun(imageStream);
         case "tencent" -> recognizeByTencent(imageStream);
-        default -> OcrResult.error("不支持的 OCR 提供商: " + provider);
+        default -> OcrResult.error(I18n.message("nextwiki.error.ocr.provider.unsupported") + provider);
       };
     } catch (Exception e) {
       log.error("[OcrApplicationService] OCR 识别失败", e);
-      return OcrResult.error("OCR 识别失败: " + e.getMessage());
+      return OcrResult.error(I18n.message("nextwiki.error.ocr.failed") + e.getMessage());
     }
   }
 

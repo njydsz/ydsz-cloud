@@ -1,9 +1,5 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -19,11 +15,15 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.server.cache.CacheKeyBuilder;
 import com.njydsz.workflow.server.service.FlowTaskService;
-import com.njydsz.workflow.WorkflowFacade;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class FlowInstanceMergeServiceImplTest {

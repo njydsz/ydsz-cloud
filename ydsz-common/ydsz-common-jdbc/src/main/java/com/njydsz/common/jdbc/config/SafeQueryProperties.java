@@ -30,13 +30,27 @@ public class SafeQueryProperties {
   private boolean isStrictMode = false;
   private Set<String> orderByWhitelist;
 
-public boolean isEnabled() { return isEnabled; }
-public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
-public void setEnabled(boolean enabled) { this.isEnabled = enabled; }
+public boolean isEnabled() {
+    return isEnabled;
+}
+public void setIsEnabled(boolean isEnabled) {
+    this.isEnabled = isEnabled;
+}
+public void setEnabled(boolean enabled) {
+    this.isEnabled = enabled;
+}
 
-  public boolean isStrictMode() { return isStrictMode; }
-  public void setStrictMode(boolean isStrictMode) { this.isStrictMode = isStrictMode; }
+  public boolean isStrictMode() {
+      return isStrictMode;
+  }
+  public void setStrictMode(boolean isStrictMode) {
+      this.isStrictMode = isStrictMode;
+  }
 
-  public Set<String> getOrderByWhitelist() { return orderByWhitelist; }
-  public void setOrderByWhitelist(Set<String> orderByWhitelist) { this.orderByWhitelist = orderByWhitelist; }
+  public Set<String> getOrderByWhitelist() {
+      return orderByWhitelist;
+  }
+  public void setOrderByWhitelist(Set<String> orderByWhitelist) {
+      this.orderByWhitelist = orderByWhitelist;
+  }
 }

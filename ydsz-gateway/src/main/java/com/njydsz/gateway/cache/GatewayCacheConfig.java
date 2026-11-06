@@ -1,9 +1,11 @@
 package com.njydsz.gateway.cache;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,9 +15,6 @@ import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.cache.spring.SpringYdszCache;
 import com.njydsz.common.cache.spring.YdszCacheManager;
 import com.njydsz.common.cache.spring.YdszCacheProperties;
-
-import lombok.Data;
-import java.util.List;
 
 /**
  * 网关缓存统一配置（P2-4 P3-1 整改：缓存实例纳入 YdszCacheManager 统一治理，接入 CacheActuator 指标采集）。

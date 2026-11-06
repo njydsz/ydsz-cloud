@@ -1,15 +1,16 @@
 package com.njydsz.common.netty.rpc;
 
-import com.njydsz.common.netty.client.AbstractNettyClient;
-import com.njydsz.common.netty.config.NettyProperties;
-import io.netty.channel.socket.SocketChannel;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
+
+import io.netty.channel.socket.SocketChannel;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.netty.client.AbstractNettyClient;
+import com.njydsz.common.netty.config.NettyProperties;
 
 /**
  * 支持 Request-Response RPC 语义的 Netty Client。

@@ -2,6 +2,7 @@ package com.njydsz.common.notify.core;
 
 import java.util.Map;
 
+import com.njydsz.common.locales.util.I18n;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,7 +157,7 @@ public class SendChain {
     }
     return ctx.withResult(
         NotifySendResult.failure(
-            "通知渠道[" + ctx.channel().getName() + "]已熔断，请稍后重试", ctx.channel().getName()));
+            I18n.message("common.notify.error.channel.circuit.broken") + ctx.channel().getName() + "]已熔断，请稍后重试", ctx.channel().getName()));
   }
 
   /** 限流检查步骤 */
@@ -167,7 +168,7 @@ public class SendChain {
     }
     return ctx.withResult(
         NotifySendResult.failure(
-            "通知渠道限流触发，请稍后重试: " + ctx.channel().getName(), ctx.channel().getName()));
+            I18n.message("common.notify.error.channel.rate.limited") + ctx.channel().getName(), ctx.channel().getName()));
   }
 
   /** 执行文本发送步骤 */
@@ -176,7 +177,7 @@ public class SendChain {
     if (strategy == null) {
       recordCircuitFailure(ctx.channel());
       return ctx.withResult(
-          NotifySendResult.failure("通知渠道未配置: " + ctx.channel().getName(), ctx.channel().getName()));
+          NotifySendResult.failure(I18n.message("common.notify.error.channel.not.configured") + ctx.channel().getName(), ctx.channel().getName()));
     }
 
     long startTime = System.nanoTime();
@@ -197,7 +198,7 @@ public class SendChain {
     if (strategy == null) {
       recordCircuitFailure(ctx.channel());
       return ctx.withResult(
-          NotifySendResult.failure("通知渠道未配置: " + ctx.channel().getName(), ctx.channel().getName()));
+          NotifySendResult.failure(I18n.message("common.notify.error.channel.not.configured") + ctx.channel().getName(), ctx.channel().getName()));
     }
 
     long startTime = System.nanoTime();

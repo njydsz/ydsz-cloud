@@ -1,11 +1,12 @@
 package com.njydsz.cronjob.domain.query;
 
-import com.njydsz.common.domain.query.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.domain.query.PageQuery;
 
 import static lombok.AccessLevel.PROTECTED;
 

@@ -1,8 +1,6 @@
 package com.njydsz.common.file.domain;
 
 import java.time.LocalDateTime;
-
-import com.njydsz.common.util.security.DigestUtils;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -10,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import com.njydsz.common.json.annotation.JsonIgnore;
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 分片上传检查点信息

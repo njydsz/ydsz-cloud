@@ -1,7 +1,8 @@
 package com.njydsz.userinfo.domain.vo;
 
-import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Data;
+
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * 用户偏好 VO

@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.locales.util.I18n;
-import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.api.client.MessageSendClient;
+import com.njydsz.message.domain.dto.MessageSendDTO;
 
 /**
  * {@link MessageSendClient} 的 FallbackFactory。

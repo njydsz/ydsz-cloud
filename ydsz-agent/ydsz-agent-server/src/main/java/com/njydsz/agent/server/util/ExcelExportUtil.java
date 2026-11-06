@@ -41,10 +41,10 @@ public final class ExcelExportUtil {
    * @param voClass      ExportVO 类型（提供 {@code @ExcelProperty} 注解映射）
    * @param sheetName    Sheet 名称
    * @param <T>          ExportVO 类型
-   * @throws Exception 写入失败
+   * @throws com.njydsz.common.excel.exception.ExcelWriteException 写入失败（由 ExcelWriter 内部包装）
    */
   public static <T> void write(OutputStream outputStream, List<T> dataList,
-      Class<T> voClass, String sheetName) throws Exception {
+      Class<T> voClass, String sheetName) {
     try (ExcelWriter writer = ExcelFacade.write(outputStream, voClass).sheet(sheetName)) {
       writer.doWrite(dataList);
     }

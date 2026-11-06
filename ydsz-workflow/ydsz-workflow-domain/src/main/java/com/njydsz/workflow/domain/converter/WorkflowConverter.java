@@ -59,10 +59,10 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
-import com.njydsz.workflow.domain.vo.SlaConfigVO;
 import com.njydsz.workflow.domain.vo.FlowTemplateVO;
 import com.njydsz.workflow.domain.vo.FlowTimerVO;
 import com.njydsz.workflow.domain.vo.FlowUserVO;
+import com.njydsz.workflow.domain.vo.SlaConfigVO;
 import com.njydsz.workflow.domain.vo.StringVO;
 
 /**

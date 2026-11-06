@@ -1,14 +1,5 @@
 package com.njydsz.userinfo.server.service.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +25,15 @@ import com.njydsz.userinfo.domain.repository.UserRoleRepository;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.server.auth.DbRolePermissionLoader;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class RoleServiceImplTest {
 

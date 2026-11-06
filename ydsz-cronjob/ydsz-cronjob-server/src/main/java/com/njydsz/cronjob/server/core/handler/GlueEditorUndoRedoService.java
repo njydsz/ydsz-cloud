@@ -5,12 +5,11 @@ import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * GLUE 编辑器 undo/redo 会话管理（P3-3）。

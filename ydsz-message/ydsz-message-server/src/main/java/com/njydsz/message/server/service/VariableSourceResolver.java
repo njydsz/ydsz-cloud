@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service;
 
 
-import com.njydsz.common.locales.util.I18n;import java.lang.reflect.Method;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.domain.query.MsgVariableSourceQuery;
 import com.njydsz.message.domain.repository.MsgVariableSourceRepository;

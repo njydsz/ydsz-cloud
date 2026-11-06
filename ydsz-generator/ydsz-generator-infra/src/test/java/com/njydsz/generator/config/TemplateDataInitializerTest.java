@@ -1,13 +1,5 @@
 package com.njydsz.generator.config;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +10,14 @@ import com.njydsz.generator.entity.GenTemplate;
 import com.njydsz.generator.entity.GenTemplateGroup;
 import com.njydsz.generator.repository.GenTemplateGroupRepository;
 import com.njydsz.generator.repository.GenTemplateRepository;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link TemplateDataInitializer} 的补齐语义测试。

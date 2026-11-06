@@ -1,7 +1,7 @@
 package com.njydsz.message.server.consumer;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.List;
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,10 +12,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
+import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.server.service.core.MessageService;
 
 /**

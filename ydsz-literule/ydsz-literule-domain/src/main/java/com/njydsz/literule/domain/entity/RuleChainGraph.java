@@ -7,10 +7,10 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * 规则链画布（P0-1）

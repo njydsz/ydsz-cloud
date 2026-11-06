@@ -98,7 +98,9 @@ public enum WorkflowExceptionCode implements ExceptionCode {
   SLA_OVERDUE("B75002", "workflow.sla.overdue"),
   /** Urge too frequent */
   URGE_TOO_FREQUENT("B75003", "workflow.urge.too.frequent", 429) {
-    @Override public String actionHintKey() { return "action.wait_and_retry"; }
+    @Override public String actionHintKey() {
+        return "action.wait_and_retry";
+    }
   },
 
   // ==================== B76001-B76099 AI 审批 ====================

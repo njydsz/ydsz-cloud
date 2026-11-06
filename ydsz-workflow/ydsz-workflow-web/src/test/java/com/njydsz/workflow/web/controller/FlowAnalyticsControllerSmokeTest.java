@@ -1,12 +1,5 @@
 package com.njydsz.workflow.web.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.HashMap;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +17,13 @@ import com.njydsz.workflow.server.service.FlowAnalyticsService;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 import com.njydsz.workflow.server.service.FlowI18nService;
 import com.njydsz.workflow.web.controller.analytics.FlowAnalyticsController;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link FlowAnalyticsController} Smoke Test。

@@ -1,9 +1,10 @@
 package com.njydsz.agent.domain.dto;
 
 
-import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 语义 Tool 搜索请求 DTO

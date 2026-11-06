@@ -49,7 +49,12 @@ KNOWN_ROUTE_SHADOWING = {
         "ydsz-system 的 SecondaryAuthController(@RequestMapping \"/auth/secondary-auth\") 与 "
         "ydsz-userinfo 的 AuthController(@PostMapping \"/secondary-auth\" 等 3 个端点) 同名；"
         "路由现归 ydsz-system，userinfo 侧 secondary-auth / secondary-auth/webauthn[/challenge] "
-        "经网关不可达。待决策：一侧改名（如 /auth/2fa/**）后删除本条 —— 见报告 B0-9 未决项"
+        "经网关不可达。两侧契约不兼容（system 返回 {token,expiresIn,expiresAt} 令牌；"
+        "userinfo 返回 {scene,level,ttlSeconds} Redis 标记），且**两个前端均在调用**："
+        "apps/system-web/src/api/secondary-auth.ts 调 system 侧、"
+        "apps/userinfo-web/src/api/auth.ts 调 userinfo 侧 —— 单侧改名会造成跨仓库破坏性变更，"
+        "必须与前端协同改造。待决策：确定唯一权威实现后另一侧改名（如 /auth/2fa/**）并同步前端，"
+        "然后删除本条 —— 见报告 B0-9 未决项 / coding-standards-deep-audit-2026-11-06.md F3"
     ),
 }
 
@@ -59,6 +64,13 @@ KNOWN_UNROUTED_PATHS = {
         "MonitorReportController 的双路径别名（与 /monitor/sourcemaps 同一实现）。"
         "P0-A2 已改为 X-Api-Version 头协商，网关不路由 /api/v1/**；"
         "规范路径 /api/monitor/sourcemaps 可用，调用方应改用它"
+    ),
+    "/internal/api-permissions/register": (
+        "userinfo InternalApiController 的权限码注册端点。system 模块启动时扫描"
+        " @AuthApiPermission 后，通过 @FeignClient(name=\"ydsz-userinfo\") 直连"
+        " Nacos 服务发现调用（ApiPermissionRegistrationClient），不经网关；"
+        "网关的 ydsz-userinfo-internal 路由只覆盖 /api/internal/user|role|dept|company|post/**。"
+        "删除条件：若改为经网关调用，则在 application.yml 补 /api/internal/api-permissions/** 并删除本条"
     ),
 }
 

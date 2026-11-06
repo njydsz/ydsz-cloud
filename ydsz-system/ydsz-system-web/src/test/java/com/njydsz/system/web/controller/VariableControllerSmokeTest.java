@@ -1,11 +1,5 @@
 package com.njydsz.system.web.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +19,12 @@ import com.njydsz.common.exception.handler.MvcExceptionHandler;
 import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.system.domain.query.VariablePageQuery;
 import com.njydsz.system.server.service.VariableService;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link VariableController} Smoke Test。

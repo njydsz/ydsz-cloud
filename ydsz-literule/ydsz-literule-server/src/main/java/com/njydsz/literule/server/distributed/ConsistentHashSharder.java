@@ -10,9 +10,9 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 一致性 Hash 分片器（P2-16 分布式执行）

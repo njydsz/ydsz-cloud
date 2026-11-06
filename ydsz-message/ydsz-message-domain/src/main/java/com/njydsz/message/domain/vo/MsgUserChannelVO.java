@@ -4,9 +4,10 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import lombok.Data;
+
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
-import lombok.Data;
 
 /**
  * 用户通道绑定视图对象（VO）。

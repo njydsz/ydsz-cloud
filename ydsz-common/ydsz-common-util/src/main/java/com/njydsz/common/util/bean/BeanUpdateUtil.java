@@ -1,11 +1,11 @@
 package com.njydsz.common.util.bean;
 
-import com.njydsz.common.util.bean.BeanUpdateException;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.HashSet;
 import java.util.Set;
+
 
 /**
  * Bean 动态更新工具类。

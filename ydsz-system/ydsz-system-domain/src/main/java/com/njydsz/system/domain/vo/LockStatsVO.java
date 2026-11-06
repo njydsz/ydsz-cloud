@@ -1,9 +1,10 @@
 package com.njydsz.system.domain.vo;
 
-import com.njydsz.common.json.annotation.JsonProperty;
+import java.util.Map;
+
 import lombok.Data;
 
-import java.util.Map;
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * 分布式锁统计视图对象（ydsz-system-domain）。

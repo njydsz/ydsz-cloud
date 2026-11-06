@@ -1,9 +1,10 @@
 package com.njydsz.workflow.domain.dto;
 
-import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 流程自动触发规则创建请求体 DTO

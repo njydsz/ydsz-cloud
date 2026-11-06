@@ -3,10 +3,11 @@ package com.njydsz.agent.domain.entity;
 import java.io.Serial;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * RAG 文档分块向量实体。

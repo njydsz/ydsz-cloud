@@ -7,9 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.njydsz.common.locales.util.I18n;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 一致性哈希分片策略（P1 增强）。

@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.server.auth.LdapOrgSyncService;
@@ -59,6 +61,7 @@ public class LdapSyncController {
    *
    * @return 同步结果（包含处理总数、新增、更新、停用、失败数）
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_ADMIN_LDAP)
   @PostMapping
   @Operation(summary = "手动触发 LDAP 同步")
   public YdszResponse<SyncResultVO> triggerSync() {
@@ -93,6 +96,7 @@ public class LdapSyncController {
    *
    * @return 同步状态（IDLE/RUNNING/COMPLETED/FAILED + 时间戳）
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_ADMIN_LDAP)
   @GetMapping("/status")
   @Operation(summary = "查询同步状态")
   public YdszResponse<SyncStatusVO> getStatus() {
@@ -106,6 +110,7 @@ public class LdapSyncController {
    *
    * @return 同步历史列表
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.USERINFO_ADMIN_LDAP)
   @GetMapping("/logs")
   @Operation(summary = "查询同步历史")
   public YdszResponse<List<SyncLogVO>> getLogs() {

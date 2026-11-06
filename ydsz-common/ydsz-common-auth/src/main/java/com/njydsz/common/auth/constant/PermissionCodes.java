@@ -459,4 +459,60 @@ public final class PermissionCodes {
 
   /** AGENT_TEAMRUN_VIEW */
   public static final String AGENT_TEAMRUN_VIEW = "agent:teamrun:view";
+
+  // ==================== 内部/管理端点权限码 ====================
+
+  /** USERINFO_INTERNAL_API — userinfo 模块内部服务间调用（/api/internal/**） */
+  public static final String USERINFO_INTERNAL_API = "userinfo:internal:api";
+
+  /** USERINFO_ADMIN_LDAP — LDAP 组织架构同步管理（触发同步/状态/日志） */
+  public static final String USERINFO_ADMIN_LDAP = "userinfo:admin:ldap";
+
+  /** USERINFO_ADMIN_BAN — 管理员封禁/解封用户 */
+  public static final String USERINFO_ADMIN_BAN = "userinfo:admin:ban";
+
+  /** USERINFO_ADMIN_SESSION — 管理员会话治理（查询/强制下线） */
+  public static final String USERINFO_ADMIN_SESSION = "userinfo:admin:session";
+
+  /** USERINFO_ADMIN_SESSION_STATS — 管理员会话统计 */
+  public static final String USERINFO_ADMIN_SESSION_STATS = "userinfo:admin:session:stats";
+
+  /** I18N_ADMIN_VIEW — i18n 管理端点查看（配置/翻译/缺失/语言/覆盖） */
+  public static final String I18N_ADMIN_VIEW = "i18n:admin:view";
+
+  /** I18N_ADMIN_EDIT — i18n 管理端点修改（运行时覆盖/移除/重载） */
+  public static final String I18N_ADMIN_EDIT = "i18n:admin:edit";
+
+  /** LITERULE_VARIABLE_VIEW — 规则变量查看 */
+  public static final String LITERULE_VARIABLE_VIEW = "literule:variable:view";
+
+  /** LITERULE_VARIABLE_EDIT — 规则变量编辑（新增/修改/删除/刷新） */
+  public static final String LITERULE_VARIABLE_EDIT = "literule:variable:edit";
+
+  /** LITERULE_RULE_VIEW — 规则定义查看（列表/版本/差异/校验/统计） */
+  public static final String LITERULE_RULE_VIEW = "literule:rule:view";
+
+  /** LITERULE_RULE_EDIT — 规则定义管理（保存/回滚/AB 测试/dry-run/评估） */
+  public static final String LITERULE_RULE_EDIT = "literule:rule:edit";
+
+  /** NEXTWIKI_INTERNAL_API — nextwiki 模块内部服务间调用 */
+  public static final String NEXTWIKI_INTERNAL_API = "nextwiki:internal:api";
+
+  /** SOCKET_ADMIN_VIEW — WebSocket 管理端点查看 */
+  public static final String SOCKET_ADMIN_VIEW = "socket:admin:view";
+
+  /** SOCKET_ADMIN_CONTROL — WebSocket 管理端点控制（踢下线/主动推送） */
+  public static final String SOCKET_ADMIN_CONTROL = "socket:admin:control";
+
+  /** SYSTEM_LOCK_VIEW — 分布式锁管理查看 */
+  public static final String SYSTEM_LOCK_VIEW = "system:lock:view";
+
+  /** SYSTEM_LOCK_RELEASE — 分布式锁强制释放 */
+  public static final String SYSTEM_LOCK_RELEASE = "system:lock:release";
+
+  /** EVENT_OUTBOX_VIEW — 事件发件箱查看 */
+  public static final String EVENT_OUTBOX_VIEW = "event:outbox:view";
+
+  /** EVENT_OUTBOX_MANAGE — 事件发件箱管理（重发/清理） */
+  public static final String EVENT_OUTBOX_MANAGE = "event:outbox:manage";
 }

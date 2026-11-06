@@ -6,9 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * Userinfo module Micrometer metrics.

@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.function.Supplier;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +15,6 @@ import com.njydsz.common.excel.api.validator.RowRule;
 import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.core.reader.ColumnMetadata;
 import com.njydsz.common.excel.core.reader.SimpleCell;
-import com.njydsz.common.excel.core.reader.sax.ExcelDateConverter;
 
 /**
  * Sheet XML 数据读取器 — 纯手工 XML 解析。
@@ -440,6 +438,11 @@ public class SheetXmlReader {
           } else {
             state = IN_ROW_CONTENT;
           }
+          break;
+
+        default:
+          // 防御：状态机新增枚举未同步本 switch 时，退回扫描态避免死循环
+          state = SCAN;
           break;
       }
       pos++;

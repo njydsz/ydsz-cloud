@@ -2,8 +2,9 @@ package com.njydsz.agent.domain.dto;
 
 import java.time.LocalDateTime;
 
-import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * Agent 人工审批请求 DTO。

@@ -3,10 +3,12 @@ package com.njydsz.cronjob.server.core.dag;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.cronjob.domain.dag.DagNodeStatus;
 import com.njydsz.cronjob.domain.repository.DagInstanceRepository;
 import com.njydsz.cronjob.domain.repository.DagNodeInstanceRepository;
@@ -15,7 +17,6 @@ import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.server.core.maintenance.ScanTask;
-import com.njydsz.common.util.date.DateUtils;
 
 /**
  * P2-4: 审批节点超时扫描任务。
@@ -193,7 +194,7 @@ public class ApprovalTimeoutScanTask implements ScanTask {
     node.setNodeStatus(DagNodeStatus.APPROVAL_REJECTED.name());
     node.setFinishedAt(now);
     node.setDurationMs(waitedMs);
-    node.setErrorMessage("审批超时自动拒绝: 等待 " + (waitedMs / MILLIS_PER_MINUTE) + " 分钟未审批");
+    node.setErrorMessage(I18n.message("cronjob.dag.approval.timeout") + (waitedMs / MILLIS_PER_MINUTE) + " 分钟未审批");
     dagNodeInstanceRepository.updateById(node);
 
     log.info(

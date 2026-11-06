@@ -6,9 +6,9 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.config.hotreload.ConfigChangeListener;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 
 /**
  * 系统模块配置变更监听器（P0-1：接入统一 ConfigChangeBridge）

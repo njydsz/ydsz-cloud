@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -142,7 +143,7 @@ public class PdfJsDetector implements DocumentSecurityScanner {
           .securityLevel(SecurityLevel.SAFE)
           .findings(List.of())
           .isSuccess(false)
-          .errorMessage("PDF 解析失败: " + e.getMessage())
+          .errorMessage(I18n.message("common.docs.error.pdf.parse") + e.getMessage())
           .build();
     } finally {
       tempFileManager.deleteTracked(tempFile);

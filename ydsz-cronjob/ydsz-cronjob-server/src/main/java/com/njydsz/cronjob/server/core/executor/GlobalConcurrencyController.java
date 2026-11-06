@@ -149,6 +149,7 @@ public class GlobalConcurrencyController {
     try {
       return cronjobRedisOps.getLong(GLOBAL_CONCURRENT_SEGMENT);
     } catch (Exception e) {
+      log.warn("操作异常, 降级处理: reason={}", e.getMessage());
       return -1;
     }
   }

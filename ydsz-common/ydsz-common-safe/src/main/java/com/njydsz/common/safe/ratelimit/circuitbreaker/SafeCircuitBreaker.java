@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

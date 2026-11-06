@@ -3,6 +3,7 @@ package com.njydsz.agent.server.asynctask;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
@@ -68,11 +69,11 @@ public class ReportGenerateTaskExecutor implements AsyncTaskExecutor {
       String reportFormat = getStringParam(params, "reportFormat", "html");
 
       if (userId == null || userId.isBlank()) {
-        task.fail("userId 不能为空");
+        task.fail(I18n.message("agent.error.report.userid.required"));
         return;
       }
       if (reportTitle == null || reportTitle.isBlank()) {
-        task.fail("reportTitle 不能为空");
+        task.fail(I18n.message("agent.error.report.title.required"));
         return;
       }
 
@@ -96,7 +97,7 @@ public class ReportGenerateTaskExecutor implements AsyncTaskExecutor {
     } catch (Exception e) {
       log.error("[AsyncTask:REPORT_GENERATE] 执行失败: taskId={}, error={}",
           task.getId(), e.getMessage(), e);
-      task.fail("报告生成失败: " + truncate(e.getMessage(), 200));
+      task.fail(I18n.message("agent.error.report.generate.failed", new Object[]{truncate(e.getMessage(), 200)}));
     }
   }
 

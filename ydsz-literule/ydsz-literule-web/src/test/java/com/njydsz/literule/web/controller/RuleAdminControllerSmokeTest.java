@@ -1,11 +1,5 @@
 package com.njydsz.literule.web.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -25,6 +19,12 @@ import com.njydsz.literule.server.config.ABTestService;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link RuleAdminController} Smoke Test。

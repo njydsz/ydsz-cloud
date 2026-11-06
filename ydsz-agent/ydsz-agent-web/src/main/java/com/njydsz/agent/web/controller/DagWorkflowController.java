@@ -1,5 +1,6 @@
 package com.njydsz.agent.web.controller;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -22,9 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.agent.domain.dto.DagWorkflowDTO;
 import com.njydsz.agent.domain.service.DagWorkflowService;
+import com.njydsz.agent.domain.vo.DagWorkflowExportVO;
 import com.njydsz.agent.domain.vo.DagWorkflowVO;
 import com.njydsz.agent.server.util.ExcelExportUtil;
-import com.njydsz.agent.domain.vo.DagWorkflowExportVO;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.util.date.DateUtils;
@@ -136,7 +137,7 @@ public class DagWorkflowController {
   @GetMapping("/export")
   public void exportDagWorkflows(
       HttpServletResponse response,
-      @RequestParam(required = false) String category) throws Exception {
+      @RequestParam(required = false) String category) throws IOException {
     String fileName = "dag_workflows_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType(CONTENT_TYPE_OOXML);
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, buildRfc5987ContentDisposition(fileName));

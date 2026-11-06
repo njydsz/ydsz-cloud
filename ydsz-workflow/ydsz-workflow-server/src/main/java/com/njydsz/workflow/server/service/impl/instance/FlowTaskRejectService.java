@@ -12,6 +12,7 @@ import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +37,6 @@ import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 流程任务驳回服务实现。

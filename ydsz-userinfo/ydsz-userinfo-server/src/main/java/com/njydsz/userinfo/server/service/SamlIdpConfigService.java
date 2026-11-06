@@ -6,11 +6,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.dto.SamlIdpDTO;
 import com.njydsz.userinfo.domain.query.SamlIdpPageQuery;
 import com.njydsz.userinfo.domain.repository.SamlIdpConfigRepository;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * SAML 身份提供者配置服务（P2-1 多租户）。

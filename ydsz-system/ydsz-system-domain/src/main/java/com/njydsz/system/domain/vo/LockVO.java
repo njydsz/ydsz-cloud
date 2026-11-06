@@ -1,7 +1,8 @@
 package com.njydsz.system.domain.vo;
 
-import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Data;
+
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * 分布式锁视图对象（ydsz-system-domain）。

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -315,7 +316,7 @@ public class DocumentService {
             scanResult.getSecurityLevel());
         return DocumentParseResult.builder()
             .isSuccess(false)
-            .errorMessage("文档存在高危安全风险(" + scanResult.getSecurityLevel() + ")，已被安全策略阻止")
+            .errorMessage(I18n.message("common.docs.error.security.high.risk") + scanResult.getSecurityLevel() + ")，已被安全策略阻止")
             .fileName(fileName)
             .elapsed(Duration.ZERO)
             .build();
@@ -345,7 +346,7 @@ public class DocumentService {
           .securityLevel(SecurityLevel.SAFE)
           .findings(List.of())
           .isSuccess(false)
-          .errorMessage("输入流为空")
+          .errorMessage(I18n.message("common.docs.error.input.stream.null"))
           .build();
     }
 
@@ -396,7 +397,7 @@ public class DocumentService {
           .securityLevel(SecurityLevel.SAFE)
           .findings(List.of())
           .isSuccess(false)
-          .errorMessage("IO 错误: " + e.getMessage())
+          .errorMessage(I18n.message("common.docs.error.io") + e.getMessage())
           .build();
     } finally {
       tempFileManager.deleteTracked(tempFile);

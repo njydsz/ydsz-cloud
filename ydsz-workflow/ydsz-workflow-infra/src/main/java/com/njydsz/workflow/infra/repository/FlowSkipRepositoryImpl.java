@@ -7,12 +7,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.auth.util.SecurityUtils;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.repository.FlowSkipRepository;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
-import com.njydsz.common.auth.util.SecurityUtils;
 
 /**
  * 节点跳转仓储实现（Infra 层）。

@@ -1,8 +1,5 @@
 package com.njydsz.common.jdbc.interceptor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.statement.Statement;
@@ -10,6 +7,8 @@ import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.update.Update;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.jdbc.monitor.SqlAstCache;
 

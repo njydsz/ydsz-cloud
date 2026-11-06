@@ -2,6 +2,7 @@ package com.njydsz.nextwiki.server.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;

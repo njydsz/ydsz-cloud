@@ -1,7 +1,7 @@
 package com.njydsz.message.server.config;
 
 
-import com.njydsz.common.locales.util.I18n;import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -12,11 +12,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
-import com.njydsz.message.server.config.ChannelProperties.FeishuConfig;
-import com.njydsz.message.server.config.ChannelProperties.WebhookConfig;
 import com.njydsz.message.server.health.MessageHealthIndicator;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.template.MessageTemplateRenderer;

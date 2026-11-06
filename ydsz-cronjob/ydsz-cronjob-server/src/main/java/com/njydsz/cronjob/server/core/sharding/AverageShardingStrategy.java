@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.njydsz.common.locales.util.I18n;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 平均分片策略（默认实现，P3 阶段引入）。

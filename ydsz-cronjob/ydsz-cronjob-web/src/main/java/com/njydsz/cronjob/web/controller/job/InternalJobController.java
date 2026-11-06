@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.njydsz.common.locales.util.I18n;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -13,8 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import jakarta.validation.Valid;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -216,7 +216,7 @@ public class InternalJobController {
             request.getHandler(),
             e.getMessage());
         return YdszResponse.success(
-            ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage()));
+            ProcessResult.failed(I18n.message("cronjob.map.processor.bean.failed") + e.getMessage()));
       }
       // 构造子任务上下文并执行
       MapContext context = new MapContext();

@@ -13,13 +13,13 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchFilter.Operator;
 import com.njydsz.common.search.api.SearchHit;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.core.SearchEngineRegistry;
-import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.service.SuggestionService;
 import com.njydsz.common.search.service.UnifiedSearchService;
 import com.njydsz.nextwiki.domain.dto.NextwikiDto;

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -150,7 +151,7 @@ public class AsyncTaskWorkerService {
     Optional<AsyncTaskExecutor> executorOpt = executorRegistry.findExecutor(taskType);
     if (executorOpt.isEmpty()) {
       log.error("[AsyncTask-Worker] 未找到任务类型的执行器: id={}, type={}", taskId, taskType);
-      task.fail("未找到任务类型 " + taskType + " 对应的执行器");
+      task.fail(I18n.message("agent.error.task.type.not.found", new Object[]{taskType}));
       taskStore.save(task);
       // 系统告警：执行器缺失属于运维问题
       sendSystemAlertOrLog(taskId, taskType, task.getUserId(), "执行器缺失");
@@ -182,7 +183,7 @@ public class AsyncTaskWorkerService {
     } catch (Exception e) {
       log.error("[AsyncTask-Worker] 任务执行异常: id={}, error={}", taskId, e.getMessage(), e);
       taskStore.findById(taskId).ifPresent(t -> {
-        t.fail("执行异常: " + e.getMessage());
+        t.fail(I18n.message("agent.error.task.execution.exception", new Object[]{e.getMessage()}));
         taskStore.save(t);
         // 异常导致失败时发送通知
         sendTaskCompletionNotification(t);

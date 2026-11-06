@@ -5,14 +5,15 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.type.JsonType;
 import com.njydsz.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.template.TemplateEngine;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 
 /**
  * 通道策略适配器：将消息服务的 {@link MessageChannel} 适配为 common-notify 的 {@link NotifyChannelStrategy}。
@@ -53,7 +54,7 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
   @Override
   public NotifySendResult send(String receiver, String title, String content) {
     if (!enabled) {
-      return NotifySendResult.failure("通道已禁用", notifyChannel.getName());
+      return NotifySendResult.failure(I18n.message("message.error.channel.disabled"), notifyChannel.getName());
     }
     MessageItemRequestDTO request = new MessageItemRequestDTO();
     request.setChannel(delegate.channelType());
@@ -80,7 +81,7 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
   public NotifySendResult sendTemplate(
       String receiver, String templateCode, Object templateParams) {
     if (!enabled) {
-      return NotifySendResult.failure("通道已禁用", notifyChannel.getName());
+      return NotifySendResult.failure(I18n.message("message.error.channel.disabled"), notifyChannel.getName());
     }
     MessageItemRequestDTO request = new MessageItemRequestDTO();
     request.setChannel(delegate.channelType());
@@ -110,7 +111,7 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
   @Override
   public NotifySendResult batchSend(List<String> receivers, String title, String content) {
     if (!enabled) {
-      return NotifySendResult.failure("通道已禁用", notifyChannel.getName());
+      return NotifySendResult.failure(I18n.message("message.error.channel.disabled"), notifyChannel.getName());
     }
     int success = 0;
     int failure = 0;

@@ -18,10 +18,10 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.Text2SQLService;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * Text2SQL 基础实现（Schema-Aware Prompt + LLM 生成 SQL + 安全护栏 + JDBC 执行）。

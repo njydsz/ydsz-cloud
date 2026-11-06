@@ -9,6 +9,7 @@ import java.util.zip.ZipOutputStream;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -28,11 +29,11 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.enums.ConflictStrategyEnum;
-import com.njydsz.generator.web.security.PermissionCodes;
 import com.njydsz.generator.query.GenCodeGenerateQuery;
 import com.njydsz.generator.service.CodeGenService;
 import com.njydsz.generator.vo.CodePreviewVO;
 import com.njydsz.generator.vo.GenResultVO;
+import com.njydsz.generator.web.security.PermissionCodes;
 
 /**
  * 代码生成 REST 控制器。
@@ -145,7 +146,7 @@ public class CodeGenController {
   @Operation(summary = "正式生成代码到输出目录")
   @Audit(module = "代码生成", action = AuditAction.CREATE, content = "'生成代码:' + #query.tableName", recordRequest = false)
   @PostMapping("/generate")
-  public YdszResponse<GenResultVO> generate(@RequestBody GenCodeGenerateQuery query) {
+  public YdszResponse<GenResultVO> generate(@Valid @RequestBody GenCodeGenerateQuery query) {
     log.info("生成代码 ds={} group={} table={} dir={} strategy={}",
         query.getDatasourceId(), query.getTemplateGroupId(), query.getTableName(),
         query.getOutputDir(), query.getConflictStrategy());

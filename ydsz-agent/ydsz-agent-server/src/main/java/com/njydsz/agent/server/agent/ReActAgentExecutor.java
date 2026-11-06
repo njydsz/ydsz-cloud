@@ -40,6 +40,7 @@ import com.njydsz.agent.server.execution.ExecutionPauseService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.core.feature.FeatureFlagService;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.locales.util.Locales;
@@ -529,7 +530,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       emitToolCallStarted(allowedCalls, eventConsumer);
       for (ToolCall toolCall : allowedCalls) {
         chunkConsumer.accept(
-            ChatChunk.content(responseId, model, "\n\n[工具调用] " + toolCall.getName() + "...")
+            ChatChunk.content(responseId, model, "\n\n" + I18n.message("agent.stream.tool.call", new Object[]{toolCall.getName()}) + "...")
                 .withSource(ChatChunk.SOURCE_MAIN));
       }
       ToolBatchOutcome outcome = executeToolBatch(mwContext, traceId, allowedCalls);
@@ -540,7 +541,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
         notifyObservation(mwContext);
         emitToolCallCompleted(toolCall, result, outcome.durations(), eventConsumer);
         chunkConsumer.accept(
-            ChatChunk.content(responseId, model, "\n[工具结果] " + truncateResult(result))
+            ChatChunk.content(responseId, model, "\n" + I18n.message("agent.stream.tool.result", new Object[]{truncateResult(result)}))
                 .withSource(ChatChunk.SOURCE_MAIN));
         messages.add(ChatMessage.tool(toolCall.getId(), result, convId));
       }
@@ -551,7 +552,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
     mwContext.setFinished(true);
     notifyAgentEnd(mwContext);
     chunkConsumer.accept(
-        ChatChunk.content(responseId, model, "\n\n抱歉，我已达到最大推理次数限制，无法完成此任务。")
+        ChatChunk.content(responseId, model, I18n.message("agent.error.max.iterations.reached"))
             .withSource(ChatChunk.SOURCE_MAIN));
     chunkConsumer.accept(ChatChunk.finish(responseId, model, "max_iterations", totalUsage));
   }

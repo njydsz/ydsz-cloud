@@ -3,6 +3,7 @@ package com.njydsz.userinfo.web.controller;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,15 +19,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
-import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.CasService;
 import com.njydsz.userinfo.server.config.CasProperties;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * CAS 协议控制器。
@@ -178,6 +178,7 @@ public class CasController {
 
       return ResponseEntity.ok(xmlResponse);
     } catch (Exception e) {
+      // CAS 2.0 协议要求：ticket 校验失败必须返回 authenticationFailure XML，属预期分支
       // 构建 CAS 2.0 失败响应
       String xmlResponse = """
           <cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
@@ -215,6 +216,7 @@ public class CasController {
 
       return ResponseEntity.ok(YdszResponse.success(validateResponse));
     } catch (Exception e) {
+      // CAS 协议要求：校验异常返回 403 + INVALID_TICKET，属预期分支
       return ResponseEntity.status(HttpStatus.FORBIDDEN)
           .body(YdszResponse.error("INVALID_TICKET", "Ticket not recognized"));
     }

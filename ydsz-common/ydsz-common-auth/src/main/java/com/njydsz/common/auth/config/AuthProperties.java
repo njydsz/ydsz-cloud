@@ -1,6 +1,5 @@
 package com.njydsz.common.auth.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
@@ -34,7 +33,6 @@ public class AuthProperties {
    * <p>设为 false 时，所有权限校验将被跳过，适用于开发/测试环境。
    * 字段名 enabled（非 isEnabled）以兼容 Lombok @Data 的 getter 命名（避免生成 isIsEnabled）。
    */
-  @JsonProperty("is-enabled")
   private boolean enabled = true;
 
   /**
@@ -42,7 +40,6 @@ public class AuthProperties {
    *
    * <p>启用后，权限码支持通配符模式（如 {@code sys:user:*}）， 可匹配 {@code sys:user:add}、{@code sys:user:edit} 等具体权限。
    */
-  @JsonProperty("is-wildcard-enabled")
   private boolean wildcardEnabled = true;
 
   /**
@@ -159,7 +156,6 @@ public class AuthProperties {
    * <p>单实例场景无需启用，避免不必要的 Redis 订阅开销。
    * 集群部署时启用，确保权限变更即时同步到所有节点的本地缓存。
    */
-  @JsonProperty("is-cross-instance-enabled")
   private boolean crossInstanceEnabled = false;
 
   /** 降级策略枚举。 */
@@ -174,7 +170,6 @@ public class AuthProperties {
   @Data
   public static class TokenBlacklistProperties {
     /** 是否启用 Token 黑名单 */
-    @JsonProperty("is-enabled")
     private boolean enabled = true;
 
     /** 黑名单过期时间（秒），应与 Token 有效期一致 */
@@ -250,7 +245,6 @@ public class AuthProperties {
   @Data
   public static class LoginDefenseProperties {
     /** 是否启用登录防护 */
-    @JsonProperty("is-enabled")
     private boolean enabled = true;
 
     /** 最大连续失败次数（达到后锁定账号），默认 5 */
@@ -287,7 +281,6 @@ public class AuthProperties {
   @Data
   public static class SessionProperties {
     /** 是否启用会话注册表 */
-    @JsonProperty("is-enabled")
     private boolean enabled = false;
 
     /** 同账号最大并发会话数，默认 5 */
@@ -334,7 +327,6 @@ public class AuthProperties {
   @Data
   public static class ApiKeyProperties {
     /** 是否启用 API Key 认证通道，默认 false（显式开启） */
-    @JsonProperty("is-enabled")
     private boolean enabled = false;
 
     /** API Key 过期时间（秒），0 表示永不过期，默认 30 天 */

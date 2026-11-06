@@ -10,8 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.workflow.server.engine.FlowEventContext;
 
 /**
  * 全局监听器执行器。

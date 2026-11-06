@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.config;
 
 
-import com.njydsz.common.locales.util.I18n;import java.time.Duration;
+import java.time.Duration;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.domain.repository.MsgTenantConfigRepository;
 import com.njydsz.message.domain.vo.MsgTenantConfigVO;

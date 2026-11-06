@@ -19,12 +19,12 @@ import org.springframework.web.util.pattern.PathPattern;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.ApiPermissionDTO;
 import com.njydsz.system.domain.enums.ApiPermissionStatus;
 import com.njydsz.system.domain.query.ApiPermissionQuery;
 import com.njydsz.system.domain.repository.ApiPermissionRepository;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.vo.ApiPermissionVO;
 import com.njydsz.system.server.service.ApiPermissionService;
 

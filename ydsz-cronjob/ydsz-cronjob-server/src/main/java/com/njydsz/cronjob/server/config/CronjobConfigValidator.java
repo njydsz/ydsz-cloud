@@ -6,14 +6,14 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
-
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 
 /**
  * P1-12: 配置启动校验器。

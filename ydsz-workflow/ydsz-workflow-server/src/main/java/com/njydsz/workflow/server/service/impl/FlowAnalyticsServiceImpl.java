@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,6 @@ import com.njydsz.workflow.domain.vo.FlowTrendVO;
 import com.njydsz.workflow.server.excel.vo.FlowApproverEfficiencyExportVO;
 import com.njydsz.workflow.server.excel.vo.FlowEfficiencyExportVO;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
-import java.util.stream.Collectors;
 
 /**
  * 审批数据分析服务实现

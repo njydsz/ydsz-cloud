@@ -22,11 +22,11 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.service.UnifiedSearchService;
 import com.njydsz.userinfo.domain.dto.UserSearchQuery;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户搜索 Controller

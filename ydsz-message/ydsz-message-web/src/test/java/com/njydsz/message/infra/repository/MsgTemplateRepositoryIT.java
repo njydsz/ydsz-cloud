@@ -1,7 +1,5 @@
 package com.njydsz.message.infra.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,12 +15,14 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.test.TestcontainersBase;
 import com.njydsz.common.jdbc.config.MybatisPlusConfiguration;
+import com.njydsz.common.test.TestcontainersBase;
 import com.njydsz.message.domain.dto.MsgTemplateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * 消息模板 Repository 集成测试（*IT.java，Failsafe 执行）。

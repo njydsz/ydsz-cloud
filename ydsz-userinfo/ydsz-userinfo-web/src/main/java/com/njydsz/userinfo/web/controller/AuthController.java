@@ -35,6 +35,7 @@ import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -54,7 +55,6 @@ import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.MfaService;
 import com.njydsz.userinfo.server.auth.SecondaryAuthService;
 import com.njydsz.userinfo.server.auth.WebAuthnService;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 认证 Controller

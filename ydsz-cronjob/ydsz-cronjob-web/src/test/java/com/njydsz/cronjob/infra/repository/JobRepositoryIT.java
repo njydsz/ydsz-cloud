@@ -1,7 +1,5 @@
 package com.njydsz.cronjob.infra.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,14 +15,16 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.test.TestcontainersBase;
 import com.njydsz.common.jdbc.config.MybatisPlusConfiguration;
+import com.njydsz.common.test.TestcontainersBase;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.infra.repository.impl.JobRepositoryImpl;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Job 定时任务 Repository 集成测试（*IT.java，Failsafe 执行）。

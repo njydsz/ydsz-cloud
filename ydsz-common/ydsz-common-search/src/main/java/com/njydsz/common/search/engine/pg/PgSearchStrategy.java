@@ -17,11 +17,8 @@ import java.util.stream.Collectors;
 import javax.sql.DataSource;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-
-import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.api.SearchAggregation;
@@ -36,6 +33,7 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.IndexStrategy;
 import com.njydsz.common.search.core.SearchStrategy;
 import com.njydsz.common.search.core.SuggestStrategy;
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
  * 基于 PostgreSQL tsvector 的搜索策略实现。

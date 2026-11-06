@@ -2,6 +2,7 @@ package com.njydsz.agent.web.controller;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +24,6 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
-import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Human-in-the-Loop 人工审批 REST API Controller。

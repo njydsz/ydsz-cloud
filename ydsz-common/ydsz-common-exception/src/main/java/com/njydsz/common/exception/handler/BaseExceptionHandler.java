@@ -1,7 +1,5 @@
 package com.njydsz.common.exception.handler;
 
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.custom.SysException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +20,8 @@ import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.custom.AbstractYdszException;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
@@ -584,6 +584,7 @@ public abstract class BaseExceptionHandler {
       case INFO -> log.info(format, args);
       case WARN -> log.warn(format, args);
       case ERROR, FATAL -> log.error(format, args);
+      default -> log.error(format, args);
     }
   }
 

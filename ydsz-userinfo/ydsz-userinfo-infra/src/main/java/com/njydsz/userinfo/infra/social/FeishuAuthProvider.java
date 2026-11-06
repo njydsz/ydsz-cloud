@@ -3,10 +3,10 @@ package com.njydsz.userinfo.infra.social;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.social.SocialAccessToken;
 import com.njydsz.userinfo.domain.social.SocialAuthException;

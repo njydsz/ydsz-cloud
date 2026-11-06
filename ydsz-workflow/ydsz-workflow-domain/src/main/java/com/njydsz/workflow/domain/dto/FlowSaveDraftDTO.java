@@ -4,9 +4,10 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
 
-import com.njydsz.common.safe.annotation.Xss;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 保存流程草稿 DTO

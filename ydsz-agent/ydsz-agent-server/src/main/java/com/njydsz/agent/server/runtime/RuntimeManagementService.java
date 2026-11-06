@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -313,7 +314,7 @@ public class RuntimeManagementService {
                 .startTime(existing.getStartTime())
                 .lastActiveTime(LocalDateTime.now())
                 .source(existing.getSource())
-                .errorMessage("强制回收: 管理员手动取消")
+                .errorMessage(I18n.message("agent.error.runtime.force.recycle"))
                 .build();
         sessionStore.save(cancelled);
         executionThreads.remove(executionId);

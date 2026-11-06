@@ -76,6 +76,17 @@ jobs:
           python3 data/scripts/check-file-encoding.py --self-test
           python3 data/scripts/check-file-encoding.py
 
+      # Step 2a: 规则源 → AI 规则副本同步门禁
+      # shared-rules.yaml 是单一权威源；CatPaw/WorkBuddy 加载的 Markdown 副本必须由
+      # sync-ai-rules.py 生成。历史问题：规则源 YAML 语法错误 + 同步脚本缺失，导致副本
+      # 停留在旧版本（缺 75 条规则，含 P0），AI 会话实际未受新规则约束。
+      # 判据：规则源解析失败/计数不自洽/副本过期或缺失规则 → 判红。
+      - name: 规则源同步门禁（shared-rules.yaml → AI 规则副本）
+        working-directory: ydsz-cloud
+        run: |
+          python3 data/scripts/sync-ai-rules.py --self-test
+          python3 data/scripts/sync-ai-rules.py --check
+
       # Step 3a: 网关路由一致性门禁（B0-9）
       # 放在 Checkstyle/Maven 之前：这两步历史上会失败，路由缺陷不能被它们的红遮挡。
       # R1–R10 断言「路由清单 ↔ application.yml 生成块 ↔ Controller 实际路径 ↔ 服务名/端口 ↔ nginx/vite 代理」互相咬合。

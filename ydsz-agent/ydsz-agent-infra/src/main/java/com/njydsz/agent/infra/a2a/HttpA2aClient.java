@@ -17,7 +17,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.config.properties.A2aProperties;
-import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.agent.domain.gateway.A2aClient;
 import com.njydsz.agent.domain.gateway.A2aException;
 import com.njydsz.agent.domain.model.a2a.A2aAgentCard;
@@ -26,6 +25,7 @@ import com.njydsz.agent.domain.model.a2a.A2aTask.A2aTaskStatus;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * A2A 协议的 HTTP JSON-RPC 客户端实现。

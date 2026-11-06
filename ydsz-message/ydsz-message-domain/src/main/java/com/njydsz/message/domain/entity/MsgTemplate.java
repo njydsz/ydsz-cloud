@@ -4,14 +4,15 @@ import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-import com.njydsz.message.domain.enums.core.MessageChannelEnum;
-import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
-import com.njydsz.message.domain.enums.template.TemplateStatusEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.message.domain.enums.core.MessageChannelEnum;
+import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
+import com.njydsz.message.domain.enums.template.TemplateStatusEnum;
 
 /**
  * 消息模板领域实体，支持 var 嵌套占位符、多语言 i18n、版本、审核、分类与场景。

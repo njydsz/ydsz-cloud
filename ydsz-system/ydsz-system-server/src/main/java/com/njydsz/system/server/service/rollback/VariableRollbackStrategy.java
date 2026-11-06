@@ -5,7 +5,6 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.locales.util.I18n;
@@ -14,6 +13,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.repository.VariableRepository;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 
 
 

@@ -4,8 +4,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +31,6 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.engine.FlowNodeExt;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 流程任务操作服务实现。
@@ -427,7 +428,7 @@ public class FlowTaskOperateService {
     FlowHisTaskVO update = new FlowHisTaskVO();
     update.setId(hisTaskId);
     update.setTaskStatus("RETRACTED");
-    update.setComment("已取回" + (StringUtils.hasText(comment) ? "：" + comment : ""));
+    update.setComment(I18n.message("workflow.task.recalled") + (StringUtils.hasText(comment) ? "：" + comment : ""));
     hisTaskRepository.save(update);
   }
 

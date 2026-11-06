@@ -1,13 +1,5 @@
 package com.njydsz.agent.server.cache;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
@@ -28,6 +20,14 @@ import com.njydsz.agent.infra.llm.SemanticLlmCache;
 import com.njydsz.agent.infra.llm.SemanticLlmCache.CachedLlmResponse;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link SemanticLlmCache} 单元测试（P1-1 Agent 模块测试补充）。

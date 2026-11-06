@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,13 +26,12 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.server.auth.SamlService;
 import com.njydsz.userinfo.server.service.SamlIdpConfigService;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * SAML 2.0 Service Provider 端点 Controller（P2-1 多租户 IdP 路由）。

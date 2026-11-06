@@ -16,8 +16,6 @@ import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 
 /**
  * 流程任务超时服务实现。

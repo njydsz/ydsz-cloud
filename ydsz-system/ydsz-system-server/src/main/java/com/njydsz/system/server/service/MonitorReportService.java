@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.domain.FileStorage;
+import com.njydsz.common.file.storage.AdaptiveMultipartFile;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.sentry.SentryObservation;
@@ -23,7 +24,6 @@ import com.njydsz.system.domain.dto.MonitorErrorDTO;
 import com.njydsz.system.domain.dto.MonitorWebVitalBatchDTO;
 import com.njydsz.system.domain.dto.MonitorWebVitalDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
-import com.njydsz.common.file.storage.AdaptiveMultipartFile;
 
 /**
  * 前端监控上报处理服务。

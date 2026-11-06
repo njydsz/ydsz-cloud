@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.cronjob.domain.dag.DagInstanceStatus;
 import com.njydsz.cronjob.domain.dag.DagNodeStatus;
 import com.njydsz.cronjob.domain.repository.DagInstanceRepository;
@@ -34,7 +36,6 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.core.TaskCompletedEvent;
 import com.njydsz.cronjob.server.core.dag.join.DagJoinCounterRedisBridge;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
-import com.njydsz.common.util.date.DateUtils;
 
 /**
  * DAG 实例执行器。
@@ -153,7 +154,7 @@ public class DagInstanceExecutor {
       doExecute(dagInstanceId);
     } catch (Exception e) {
       log.error("[DagInstance] 执行异常: instanceId={} reason={}", dagInstanceId, e.getMessage(), e);
-      markInstanceFailed(dagInstanceId, "DAG 执行异常: " + e.getMessage());
+      markInstanceFailed(dagInstanceId, I18n.message("cronjob.dag.execute.exception") + e.getMessage());
     }
   }
 
@@ -241,7 +242,7 @@ public class DagInstanceExecutor {
     }
     JobDagVO dag = jobDagRepository.findById(instance.getDagId()).orElse(null);
     if (dag == null) {
-      markInstanceFailed(dagInstanceId, "DAG 定义不存在");
+      markInstanceFailed(dagInstanceId, I18n.message("cronjob.dag.definition.not.found"));
       return;
     }
 

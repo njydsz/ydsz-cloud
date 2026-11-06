@@ -7,13 +7,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.expression.ExpressionFunctionDef;
 import com.njydsz.literule.domain.expression.ExpressionTraceNode;
 import com.njydsz.literule.domain.expression.ExpressionValidationResult;
 import com.njydsz.literule.domain.vo.RuleContextVO;
-import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * LiteExpr 自研表达式求值器
@@ -291,7 +292,7 @@ public class LiteExprEngine implements ExpressionEngine {
     if (expression == null || expression.isBlank()) {
       long elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
       return ExpressionValidationResult.fail(
-          expression, ExpressionValidationResult.ErrorType.EMPTY, "表达式为空", elapsed);
+          expression, ExpressionValidationResult.ErrorType.EMPTY, I18n.message("literule.error.expression.empty"), elapsed);
     }
 
     // 2. 编译校验（Lexer + Parser）
@@ -343,7 +344,7 @@ public class LiteExprEngine implements ExpressionEngine {
               .nodeType(ExpressionTraceNode.NodeType.ROOT)
               .expression(expression)
               .result(false)
-              .error("表达式为空")
+              .error(I18n.message("literule.error.expression.empty"))
               .build();
       return new TraceResult(false, root);
     }
@@ -375,7 +376,7 @@ public class LiteExprEngine implements ExpressionEngine {
               .nodeType(ExpressionTraceNode.NodeType.ROOT)
               .expression(expression)
               .result(false)
-              .error("沙箱拦截: " + e.getMessage())
+              .error(I18n.message("literule.error.sandbox.intercepted") + e.getMessage())
               .elapsedNanos(elapsed)
               .build();
       return new TraceResult(false, root);
@@ -386,7 +387,7 @@ public class LiteExprEngine implements ExpressionEngine {
               .nodeType(ExpressionTraceNode.NodeType.ROOT)
               .expression(expression)
               .result(false)
-              .error("求值异常: " + e.getMessage())
+              .error(I18n.message("literule.error.evaluate.exception") + e.getMessage())
               .elapsedNanos(elapsed)
               .build();
       return new TraceResult(false, root);

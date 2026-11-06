@@ -2,6 +2,7 @@ package com.njydsz.userinfo.web.controller;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
-import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.scim.ScimConverter;

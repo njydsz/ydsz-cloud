@@ -1,14 +1,13 @@
 package com.njydsz.common.json;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * {@link YdszJson} 跨调用数据隔离测试。

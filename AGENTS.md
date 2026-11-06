@@ -19,7 +19,7 @@
 | 文件 | 作用 | 何时查阅 |
 |------|------|---------|
 | `CLAUDE.md` | 核心编码红线规则（always 规则）| 所有编码任务 |
-| `docs/ai-rules/shared-rules.yaml` | 红线规则完整定义（单一权威源；`total_rules: 197`）| 违规判定时 |
+| `docs/ai-rules/shared-rules.yaml` | 红线规则完整定义（单一权威源；`total_rules: 199`）| 违规判定时 |
 | `docs/云顶编码规范.md` | 完整编码规范文档（v1.0.16）| CLAUDE.md 未覆盖的场景 |
 | `docs/checkstyle.xml` | Checkstyle 规则配置（注意：无 phase 绑定，构建期不执行）| checkstyle 相关查询 |
 | `data/checkstyle-baseline.json` | error 级违规存量棘轮基线 | 门禁报"存量上涨"时 |
@@ -32,7 +32,7 @@
 > 4 条缺失 severity（COMMON-014~017）、10 条用 `level:` 而非 `severity:`，导致各文档声明 190 条与实际不符。
 > 现已修复：重复条目重编号为 COMMON-062~068 / CONFIG-005~006，字段统一为 `severity`；
 > 并新增 YDIZ-CONC-006（定时任务集群单点执行）。
-> 当前权威计数：**197 条（P0=71 P1=95 P2=31）**，与 `meta.total_rules` / `summary` 一致。
+> 当前权威计数：**199 条（P0=71 P1=97 P2=31）**，与 `meta.total_rules` / `summary` 一致（2026-11-06 校准：补入 JDIZ-JDBC-001/002 两条 P1）。
 
 ### 1.2 目录功能速查
 

@@ -14,10 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
 import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO.MigrationDetail;
@@ -326,7 +326,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
       if (newNodeCode == null) {
         detail.setStatus("SKIPPED");
         detail.setNewNodeCode(oldNodeCode);
-        detail.setReason("当前节点 [" + oldNodeCode + "] 在目标定义中不存在且无映射，已跳过");
+        detail.setReason(I18n.message("workflow.migration.node.not.mapped") + oldNodeCode + "] 在目标定义中不存在且无映射，已跳过");
         counters.skippedCount++;
         details.add(detail);
         return;
@@ -339,12 +339,12 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
       }
 
       detail.setStatus("MIGRATED");
-      detail.setReason(dryRun ? "试运行：可迁移" : "迁移成功");
+      detail.setReason(dryRun ? I18n.message("workflow.migration.dryrun.ok") : I18n.message("workflow.migration.success"));
       counters.migratedCount++;
     } catch (Exception e) {
       detail.setStatus("FAILED");
       detail.setNewNodeCode(instance.getCurrentNodeCode());
-      detail.setReason("迁移异常: " + e.getMessage());
+      detail.setReason(I18n.message("workflow.migration.exception") + e.getMessage());
       counters.failedCount++;
       log.error("[Flow-Migrate] 实例迁移失败: instanceId={} err={}", instance.getId(), e.getMessage(), e);
     }

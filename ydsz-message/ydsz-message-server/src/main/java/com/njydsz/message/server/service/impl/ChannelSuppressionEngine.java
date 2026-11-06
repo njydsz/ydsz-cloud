@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.cache.CacheKeyBuilder;
+import com.njydsz.message.server.config.MessageProperties;
 
 /**
  * P2-13: 跨渠道抑制引擎。

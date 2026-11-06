@@ -9,6 +9,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -41,7 +42,6 @@ import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.util.id.IdGenerator;
-import java.util.concurrent.CompletionException;
 
 /**
  * Supervisor 多 Agent 协作执行器
@@ -398,7 +398,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
     if (ex instanceof TimeoutException) {
       reason = "执行超时";
     } else if (ex instanceof InterruptedException) {
-      reason = "执行被中断";
+      reason = I18n.message("agent.error.code.execution.interrupted");
     } else {
       reason = "执行异常: " + ex.getMessage();
     }
@@ -497,7 +497,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
     }
 
     // 3. 流式汇总（PII 脱敏已在 synthesizeResultsStreaming 内部处理）
-    chunkConsumer.accept(ChatChunk.content(responseId, model, "\n\n[汇总中]\n"));
+    chunkConsumer.accept(ChatChunk.content(responseId, model, "\n\n" + I18n.message("agent.stream.summary.start") + "\n"));
     synthesizeResultsStreaming(
         userInput, results, convId, responseId, model, streamingMasker, chunkConsumer);
 

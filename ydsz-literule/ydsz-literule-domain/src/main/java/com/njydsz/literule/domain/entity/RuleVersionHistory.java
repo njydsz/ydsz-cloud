@@ -2,12 +2,12 @@ package com.njydsz.literule.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**

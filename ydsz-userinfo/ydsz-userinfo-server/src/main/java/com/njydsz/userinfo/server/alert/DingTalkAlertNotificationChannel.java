@@ -13,9 +13,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.notify.signature.DingTalkSignUtil;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 钉钉机器人告警通知渠道（P2 告警通知扩展）。

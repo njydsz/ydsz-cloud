@@ -1,8 +1,8 @@
 package com.njydsz.common.netty.reliable;
 
-import lombok.Data;
-
 import java.util.concurrent.atomic.AtomicLong;
+
+import lombok.Data;
 
 /**
  * 可靠投递消息 — 业务消息的 ACK 协议封装。

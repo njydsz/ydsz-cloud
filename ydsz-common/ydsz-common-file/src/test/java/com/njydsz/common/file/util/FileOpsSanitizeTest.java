@@ -1,7 +1,5 @@
 package com.njydsz.common.file.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.nio.file.Path;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -9,6 +7,8 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * {@link FileOps#sanitizeFileName(String)} 与 {@link FileOps#extractSuffix(String)} 的行为钉住测试。

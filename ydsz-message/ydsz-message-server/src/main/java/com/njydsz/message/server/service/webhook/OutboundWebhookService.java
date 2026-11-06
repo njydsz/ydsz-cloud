@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.webhook;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.HashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.webhook.WebhookDispatcher;
 import com.njydsz.common.webhook.WebhookSubscription;
 import com.njydsz.message.domain.vo.MsgLogVO;

@@ -245,15 +245,9 @@ public class LocalesAutoConfiguration {
   }
 
   // ==================== 管理端点 ====================
-
-  /** i18n 管理 REST Controller（ydsz.i18n.admin-api-enabled=true 时注册）。 */
-  @Bean
-  @ConditionalOnProperty(prefix = "ydsz.i18n", name = "admin-api-enabled", havingValue = "true")
-  @ConditionalOnClass(I18nAdminController.class)
-  @ConditionalOnMissingBean(I18nAdminController.class)
-  public I18nAdminController i18nAdminController() {
-    return new I18nAdminController(i18nProperties);
-  }
+  // I18nAdminController 已迁移至 ydsz-common-web（com.njydsz.common.web.i18n），
+  // 因其需要 @AuthApiPermission（common-auth，L4），而本模块为 L2 无法依赖 L4。
+  // 注册逻辑见 WebCoreAutoConfiguration#i18nAdminController。
 
   // ==================== 辅助方法 ====================
 

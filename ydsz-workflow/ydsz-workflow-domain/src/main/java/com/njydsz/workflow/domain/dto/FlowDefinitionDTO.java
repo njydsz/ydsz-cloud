@@ -3,8 +3,9 @@ package com.njydsz.workflow.domain.dto;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 流程定义命令 DTO（CUD 操作入参）。

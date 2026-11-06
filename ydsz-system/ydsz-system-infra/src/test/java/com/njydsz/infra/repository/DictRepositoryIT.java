@@ -1,7 +1,5 @@
 package com.njydsz.infra.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +13,8 @@ import com.njydsz.infra.AbstractContainerTestBase;
 import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.domain.vo.DictTypeVO;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * {@link DictRepository} 集成测试。

@@ -1,11 +1,5 @@
 package com.njydsz.message.server.service.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +30,12 @@ import com.njydsz.message.server.service.core.MessageRenderService;
 import com.njydsz.message.server.service.core.MessageSendService;
 import com.njydsz.message.server.service.core.MessageSendTxService;
 import com.njydsz.message.server.service.core.MessageTraceService;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MessageServiceImplTest {

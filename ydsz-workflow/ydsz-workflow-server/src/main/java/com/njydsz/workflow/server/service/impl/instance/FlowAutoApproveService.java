@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -301,7 +302,7 @@ public class FlowAutoApproveService {
     String ruleDesc =
         ruleCfg != null ? String.valueOf(ruleCfg.getOrDefault("type", "UNKNOWN")) : "LEGACY";
     if ("REJECT".equals(action)) {
-      autoDto.setComment("P0-4 自动审批规则[" + ruleDesc + "]命中，自动驳回");
+      autoDto.setComment(I18n.message("workflow.auto.approve.rule.matched") + ruleDesc + "]命中，自动驳回");
       try {
         flowTaskCoreService.reject(autoDto);
         log.info(
@@ -318,7 +319,7 @@ public class FlowAutoApproveService {
             e.getMessage());
       }
     } else {
-      autoDto.setComment("P0-4 自动审批规则[" + ruleDesc + "]命中，自动通过");
+      autoDto.setComment(I18n.message("workflow.auto.approve.rule.matched") + ruleDesc + "]命中，自动通过");
       autoDto.setVariables(variables);
       try {
         flowTaskCoreService.pass(autoDto);

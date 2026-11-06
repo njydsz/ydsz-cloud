@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.core.assembler.NameAssembler;
 import com.njydsz.common.core.assembler.NameAssemblerProperties;
-
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.api.client.OrgQueryClient;
 

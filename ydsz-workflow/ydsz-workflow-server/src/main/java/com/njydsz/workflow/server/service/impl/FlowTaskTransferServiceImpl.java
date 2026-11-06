@@ -116,7 +116,7 @@ public class FlowTaskTransferServiceImpl implements FlowTaskTransferService {
         dto.setUserName(task.getAssigneeName());
         dto.setAction("TRANSFER");
         dto.setTargetUserId(transferToUserId);
-        dto.setComment("用户禁用自动转交");
+        dto.setComment(I18n.message("workflow.task.transfer.user.disabled"));
         dto.setTenantId(task.getTenantId());
 
         taskOperateService.transfer(dto);

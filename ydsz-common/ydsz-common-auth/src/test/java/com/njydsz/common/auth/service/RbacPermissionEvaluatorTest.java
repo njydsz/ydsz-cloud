@@ -1,16 +1,5 @@
 package com.njydsz.common.auth.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anySet;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,6 +24,17 @@ import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.core.context.RequestCacheHolder;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link RbacPermissionEvaluator} 判定语义单元测试 —— 接口鉴权的 fail-closed 契约。

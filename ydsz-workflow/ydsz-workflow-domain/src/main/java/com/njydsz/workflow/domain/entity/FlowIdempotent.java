@@ -5,9 +5,10 @@ import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 工作流全链路幂等记录实体。

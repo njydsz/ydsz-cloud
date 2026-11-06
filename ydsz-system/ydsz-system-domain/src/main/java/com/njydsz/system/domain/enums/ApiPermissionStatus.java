@@ -1,8 +1,8 @@
 package com.njydsz.system.domain.enums;
 
-import com.njydsz.common.domain.enums.BaseStatusEnum;
-
 import java.util.List;
+
+import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 接口权限状态枚举

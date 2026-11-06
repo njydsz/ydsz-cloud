@@ -1,7 +1,7 @@
 package com.njydsz.message.server.producer;
 
 
-import com.njydsz.common.locales.util.I18n;import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 
 /**

@@ -99,9 +99,13 @@ public class MfaService {
     this.verifyCodeService = verifyCodeService;
     this.mfaSecretEncryptor = encryptorProvider.getIfAvailable(() -> new MfaSecretEncryptor() {
       @Override
-      public String encrypt(String plainSecret) { return plainSecret; }
+      public String encrypt(String plainSecret) {
+          return plainSecret;
+      }
       @Override
-      public String decrypt(String cipherSecret) { return cipherSecret; }
+      public String decrypt(String cipherSecret) {
+          return cipherSecret;
+      }
     });
   }
 

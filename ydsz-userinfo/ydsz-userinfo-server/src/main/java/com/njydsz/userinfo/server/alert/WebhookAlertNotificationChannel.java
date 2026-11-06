@@ -13,9 +13,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * Webhook 告警通知渠道（P2 告警通知扩展）。

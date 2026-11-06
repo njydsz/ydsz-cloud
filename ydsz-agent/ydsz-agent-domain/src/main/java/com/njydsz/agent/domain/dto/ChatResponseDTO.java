@@ -2,11 +2,11 @@ package com.njydsz.agent.domain.dto;
 
 import java.time.LocalDateTime;
 
-import com.njydsz.common.json.annotation.JsonView;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
+import com.njydsz.common.json.annotation.JsonView;
 
 /**
  * 对话响应 DTO

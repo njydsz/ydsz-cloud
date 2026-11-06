@@ -1,10 +1,5 @@
 package com.njydsz.userinfo.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +19,11 @@ import com.njydsz.userinfo.server.service.PostService;
 import com.njydsz.userinfo.server.service.RoleService;
 import com.njydsz.userinfo.server.service.UserAccountService;
 import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link InternalApiController} Smoke Test。

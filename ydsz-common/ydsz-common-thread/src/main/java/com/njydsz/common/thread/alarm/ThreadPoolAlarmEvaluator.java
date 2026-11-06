@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.thread.alarm.AlarmEvent.AlarmDimension;

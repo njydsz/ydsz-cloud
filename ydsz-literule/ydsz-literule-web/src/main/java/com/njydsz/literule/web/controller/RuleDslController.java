@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.Rule;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
@@ -151,6 +151,7 @@ public class RuleDslController {
       return YdszResponse.success(result);
 
     } catch (IllegalArgumentException e) {
+      log.warn("参数非法, 返回校验失败: reason={}", e.getMessage());
       result.put("valid", false);
       result.put("errors", List.of("格式不合法"));
       result.put("ruleCount", 0);
@@ -252,6 +253,7 @@ public class RuleDslController {
           r.put("description", result.getDescription());
           results.add(r);
         } catch (Exception e) {
+          log.warn("操作异常, 降级处理: reason={}", e.getMessage());
           Map<String, Object> r = new LinkedHashMap<>(COLLECTION_CAPACITY);
           r.put("ruleCode", rule.getCode());
           r.put("triggered", false);

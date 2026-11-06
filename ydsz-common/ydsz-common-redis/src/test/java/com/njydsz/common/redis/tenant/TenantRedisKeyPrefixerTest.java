@@ -1,9 +1,9 @@
 package com.njydsz.common.redis.tenant;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * {@link TenantRedisKeyPrefixer} 的租户隔离语义测试。

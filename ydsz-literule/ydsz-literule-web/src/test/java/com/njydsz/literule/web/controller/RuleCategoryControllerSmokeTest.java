@@ -1,11 +1,5 @@
 package com.njydsz.literule.web.controller;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -21,6 +15,12 @@ import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.spi.CategoryTreeNode;
 import com.njydsz.literule.server.spi.RuleCategoryProvider;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link RuleCategoryController} Smoke Test。

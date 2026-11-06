@@ -1,11 +1,5 @@
 package com.njydsz.message.web.controller.config;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +13,12 @@ import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.message.domain.dto.UnsubscribeQueryDTO;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;
 import com.njydsz.message.server.service.config.UnsubscribeService;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link UnsubscribeController} Smoke Test。

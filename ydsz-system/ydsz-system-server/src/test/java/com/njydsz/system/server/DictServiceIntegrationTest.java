@@ -1,7 +1,5 @@
 package com.njydsz.system.server;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.server.service.DictService;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * {@link DictService} 集成测试。

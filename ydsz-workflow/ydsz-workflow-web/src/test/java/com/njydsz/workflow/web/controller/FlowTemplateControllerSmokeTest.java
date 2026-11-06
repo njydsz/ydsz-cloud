@@ -1,13 +1,5 @@
 package com.njydsz.workflow.web.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -23,9 +15,17 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.auth.model.LoginUser;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.test.BaseControllerMockTest;
-import com.njydsz.workflow.web.controller.definition.FlowTemplateController;
 import com.njydsz.workflow.server.service.FlowTemplateRecommendService;
 import com.njydsz.workflow.server.service.FlowTemplateService;
+import com.njydsz.workflow.web.controller.definition.FlowTemplateController;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link FlowTemplateController} Smoke Test。

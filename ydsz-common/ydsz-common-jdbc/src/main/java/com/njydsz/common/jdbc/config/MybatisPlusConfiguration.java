@@ -5,12 +5,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.type.JdbcType;
-import org.apache.ibatis.type.TypeHandlerRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.core.config.GlobalConfig;
@@ -18,7 +12,13 @@ import com.baomidou.mybatisplus.core.toolkit.GlobalConfigUtils;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
-import com.njydsz.common.jdbc.handler.BooleanSmallintTypeHandler;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.MeterBinder;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.type.JdbcType;
+import org.apache.ibatis.type.TypeHandlerRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
 
 import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
+import com.njydsz.common.jdbc.handler.BooleanSmallintTypeHandler;
 import com.njydsz.common.jdbc.handler.CreatedAtHandler;
 import com.njydsz.common.jdbc.handler.CreatedByHandler;
 import com.njydsz.common.jdbc.handler.FieldFillHandler;
@@ -47,8 +48,6 @@ import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.common.jdbc.permission.DataScopeIdExpander;
 import com.njydsz.common.jdbc.permission.NoopDataScopeIdExpander;
 import com.njydsz.common.jdbc.spi.InnerInterceptorProvider;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.binder.MeterBinder;
 
 /**
  * MyBatis Plus 配置类

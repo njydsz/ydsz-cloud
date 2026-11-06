@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
 
 /**
  * 身份供给连接器自动注册配置（P0-1 Identity Provisioning 管道）。

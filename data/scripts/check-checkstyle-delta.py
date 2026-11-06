@@ -125,6 +125,45 @@ def load_baseline(path: Path) -> dict:
     return data
 
 
+def resolve_base_ref(root: Path, requested: str) -> str:
+    """把 `--base auto` 解析为具体 ref，规避"本地 origin/main 落后 N 提交"的误报。
+
+    背景（2026-11-06 全仓审查 F11）：本地 `origin/main` 可能长期落后 `dev` 几十上百提交，
+    此时 `--base origin/main` 会把整段 dev 历史当成"本次增量"，C1 报出几百个文件的
+    历史违规，与 CI（用 PR base 分支）口径完全不一致，门禁失去意义。
+
+    解析顺序：
+      1. 若指定 ref 是 HEAD 的祖先 → 用它（口径正确，本地与 CI 一致）
+      2. 否则回退到 HEAD~1（只度量最近一次提交的增量，本地快速自查用）
+      3. HEAD~1 也不可用（单提交仓库）→ HEAD，此时 C1 为空集
+    """
+    if requested != "auto":
+        return requested
+
+    def is_ancestor(ref: str) -> bool:
+        proc = subprocess.run(
+            ["git", "-C", str(root), "merge-base", "--is-ancestor", ref, "HEAD"],
+            capture_output=True,
+            check=False,
+        )
+        return proc.returncode == 0
+
+    candidates = []
+    # 优先用 CI 的默认基准 origin/main（若它确实是祖先）
+    for env_ref in ("origin/main", "origin/master", "main", "master"):
+        candidates.append(env_ref)
+    for ref in candidates:
+        if is_ancestor(ref):
+            print(f"ℹ️ --base auto：{ref} 是 HEAD 祖先，采用它作为增量基准")
+            return ref
+    if is_ancestor("HEAD~1"):
+        print("ℹ️ --base auto：本地主分支基准不是 HEAD 祖先（本地 origin/main 落后），"
+              "回退到 HEAD~1 只度量最近一次提交的增量")
+        return "HEAD~1"
+    print("ℹ️ --base auto：仓库无可用历史提交，C1 将只度量工作区未提交改动")
+    return "HEAD"
+
+
 def changed_java_files(root: Path, base_ref: str) -> set[str]:
     """取 base...HEAD、HEAD 与工作区两段、以及未跟踪新文件的并集，保证 C1 覆盖"刚写还没 add"的代码。"""
     files: set[str] = set()
@@ -438,8 +477,9 @@ def main() -> int:
 
     changed: set[str] = set()
     if args.base:
-        changed = changed_java_files(root, args.base)
-        print(f"C1 增量范围：{args.base}...工作区，涉及 {len(changed)} 个 .java 文件")
+        base_ref = resolve_base_ref(root, args.base)
+        changed = changed_java_files(root, base_ref)
+        print(f"C1 增量范围：{base_ref}...工作区，涉及 {len(changed)} 个 .java 文件")
     else:
         print("⚠️ 未传 --base，本次只执行 C2 存量棘轮，增量红线（C1）未执行")
 

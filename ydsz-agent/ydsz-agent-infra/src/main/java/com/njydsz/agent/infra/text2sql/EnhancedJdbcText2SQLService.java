@@ -22,16 +22,16 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.Text2SQLService;
-import com.njydsz.common.json.parser.TolerantJsonUtils;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.text2sql.SchemaRecallService;
 import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.agent.domain.text2sql.TableSchema;
 import com.njydsz.agent.domain.text2sql.Text2SQLEnhancedResult;
 import com.njydsz.agent.domain.text2sql.Text2SqlStateContext;
+import com.njydsz.common.json.parser.TolerantJsonUtils;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * Text2SQL 增强实现（StateGraph 五步编排）。

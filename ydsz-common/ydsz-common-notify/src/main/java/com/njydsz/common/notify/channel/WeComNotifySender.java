@@ -3,6 +3,7 @@ package com.njydsz.common.notify.channel;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.locales.util.I18n;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,7 +68,7 @@ public class WeComNotifySender implements NotifyChannelStrategy {
   @Override
   public NotifySendResult send(String receiver, String title, String content) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("企业微信通知未启用", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.wecom.not.enabled"), getChannel().getName());
     }
     try {
       Map<String, Object> body =

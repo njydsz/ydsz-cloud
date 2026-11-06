@@ -1,11 +1,5 @@
 package com.njydsz.message.web.controller.batch;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +13,12 @@ import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.server.service.batch.AggregateService;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link AggregateController} Smoke Test。

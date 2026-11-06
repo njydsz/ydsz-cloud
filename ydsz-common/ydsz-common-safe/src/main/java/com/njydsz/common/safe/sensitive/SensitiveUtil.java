@@ -10,9 +10,9 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.njydsz.common.util.mask.MaskUtils;
-
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.util.mask.MaskUtils;
 
 /**
  * 敏感数据脱敏工具类

@@ -1,8 +1,9 @@
 package com.njydsz.agent.domain.dto;
 
 
-import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * Prompt 模板版本 DTO。

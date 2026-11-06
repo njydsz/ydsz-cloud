@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.common.auth.security.CsrfTokenValidator;
 import com.njydsz.common.auth.apikey.ApiKeyAuthService;
+import com.njydsz.common.auth.security.CsrfTokenValidator;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**

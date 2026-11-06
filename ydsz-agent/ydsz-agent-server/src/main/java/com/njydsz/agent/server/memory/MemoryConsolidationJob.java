@@ -6,9 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.lock.annotation.DistributedScheduled;
-
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 
 /**
  * 记忆整合定时任务（Dreaming 机制）。

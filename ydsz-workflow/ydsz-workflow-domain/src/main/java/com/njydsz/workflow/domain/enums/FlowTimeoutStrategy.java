@@ -1,5 +1,6 @@
 package com.njydsz.workflow.domain.enums;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.Getter;
 
 /**
@@ -21,7 +22,7 @@ import lombok.Getter;
 public enum FlowTimeoutStrategy {
 
   /** 自动通过（标记超时自动审批） */
-  AUTO_PASS("AUTO_PASS", "自动通过"),
+  AUTO_PASS("AUTO_PASS", I18n.message("workflow.service.auto.pass")),
 
   /** 转交管理员 */
   TRANSFER_ADMIN("TRANSFER_ADMIN", "转交管理员"),

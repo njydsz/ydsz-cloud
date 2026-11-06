@@ -16,8 +16,8 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.generator.web.security.PermissionCodes;
 import com.njydsz.generator.service.EntityReverseService;
+import com.njydsz.generator.web.security.PermissionCodes;
 
 /**
  * 实体类反向生成 REST 控制器。

@@ -8,8 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.locales.util.I18n;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 流程变量替换器

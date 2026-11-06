@@ -68,25 +68,55 @@ public class JdbcProperties {
   /** HikariCP 连接池指标采集配置 */
   private HikariMetricsProperties metrics = new HikariMetricsProperties();
 
-public boolean isEnabled() { return isEnabled; }
-public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
-public void setEnabled(boolean enabled) { this.isEnabled = enabled; }
+public boolean isEnabled() {
+    return isEnabled;
+}
+public void setIsEnabled(boolean isEnabled) {
+    this.isEnabled = isEnabled;
+}
+public void setEnabled(boolean enabled) {
+    this.isEnabled = enabled;
+}
 
-  public IdType getIdType() { return idType; }
-  public void setIdType(IdType idType) { this.idType = idType; }
+  public IdType getIdType() {
+      return idType;
+  }
+  public void setIdType(IdType idType) {
+      this.idType = idType;
+  }
 
-  public List<String> getMapperScanPackages() { return mapperScanPackages; }
-  public void setMapperScanPackages(List<String> mapperScanPackages) { this.mapperScanPackages = mapperScanPackages; }
+  public List<String> getMapperScanPackages() {
+      return mapperScanPackages;
+  }
+  public void setMapperScanPackages(List<String> mapperScanPackages) {
+      this.mapperScanPackages = mapperScanPackages;
+  }
 
-  public SlowSqlProperties getSlowSql() { return slowSql; }
-  public void setSlowSql(SlowSqlProperties slowSql) { this.slowSql = slowSql; }
+  public SlowSqlProperties getSlowSql() {
+      return slowSql;
+  }
+  public void setSlowSql(SlowSqlProperties slowSql) {
+      this.slowSql = slowSql;
+  }
 
-  public SqlAuditProperties getSqlAudit() { return sqlAudit; }
-  public void setSqlAudit(SqlAuditProperties sqlAudit) { this.sqlAudit = sqlAudit; }
+  public SqlAuditProperties getSqlAudit() {
+      return sqlAudit;
+  }
+  public void setSqlAudit(SqlAuditProperties sqlAudit) {
+      this.sqlAudit = sqlAudit;
+  }
 
-  public SafeQueryProperties getSafeQuery() { return safeQuery; }
-  public void setSafeQuery(SafeQueryProperties safeQuery) { this.safeQuery = safeQuery; }
+  public SafeQueryProperties getSafeQuery() {
+      return safeQuery;
+  }
+  public void setSafeQuery(SafeQueryProperties safeQuery) {
+      this.safeQuery = safeQuery;
+  }
 
-  public HikariMetricsProperties getMetrics() { return metrics; }
-  public void setMetrics(HikariMetricsProperties metrics) { this.metrics = metrics; }
+  public HikariMetricsProperties getMetrics() {
+      return metrics;
+  }
+  public void setMetrics(HikariMetricsProperties metrics) {
+      this.metrics = metrics;
+  }
 }

@@ -1,16 +1,17 @@
 package com.njydsz.message.server.channel.impl;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.Map;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.service.core.NotificationService;
 
@@ -58,7 +59,7 @@ public class InAppChannel implements MessageChannel {
   @Override
   public MessageSendResultVO send(MessageItemRequestDTO request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "站内信接收人不能为空", "站内信接收人不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.receiver.inapp.required"), I18n.message("message.error.receiver.inapp.required"), null);
     }
     String traceId = "INAPP-" + String.valueOf(snowflakeIdGenerator.nextId());
     try {
@@ -69,7 +70,7 @@ public class InAppChannel implements MessageChannel {
             "[INAPP] 站内信发送未落库: receiver={} bizType={}",
             request.getReceiver(),
             request.getBizType());
-        return MessageSendResultVO.fail(CHANNEL_TYPE, null, "站内信发送失败：未落库", "站内信发送失败：未落库", null);
+        return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.inapp.persist.failed"), I18n.message("message.error.inapp.persist.failed"), null);
       }
       log.info(
           "[INAPP] 站内信发送成功: receiver={} bizType={} count={} traceId={}",
@@ -80,7 +81,7 @@ public class InAppChannel implements MessageChannel {
       return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
     } catch (Exception e) {
       log.error(I18n.message("message.log.server.inapp.error.send.exception"), request.getReceiver(), e.getMessage(), e);
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "站内信发送异常: " + e.getMessage(), "站内信发送异常: " + e.getMessage(), null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.inapp.send.exception", new Object[]{e.getMessage()}), I18n.message("message.error.inapp.send.exception", new Object[]{e.getMessage()}), null);
     }
   }
 

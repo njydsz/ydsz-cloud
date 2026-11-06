@@ -1,10 +1,5 @@
 package com.njydsz.cronjob.server.service.impl.job;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -20,14 +15,19 @@ import org.springframework.scheduling.TaskScheduler;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
-import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.JobLockManager;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
 import com.njydsz.cronjob.server.core.scheduler.NextFireTimeCalculator;
 import com.njydsz.cronjob.server.service.job.JobHistoryService;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class JobServiceImplTest {

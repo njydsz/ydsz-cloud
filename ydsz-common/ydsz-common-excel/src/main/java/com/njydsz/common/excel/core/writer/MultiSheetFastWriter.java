@@ -12,10 +12,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
-import com.njydsz.common.excel.core.util.ColumnOrderResolver;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 
-import static com.njydsz.common.excel.core.writer.OoxmlPackShared.*;
+import static com.njydsz.common.excel.core.writer.OoxmlPackShared.SHEET_FOOTER;
+import static com.njydsz.common.excel.core.writer.OoxmlPackShared.SHEET_HEADER;
 
 /**
  * 多 Sheet 快速写入器 — 一次生成包含多个 Sheet 的 xlsx 工作簿。

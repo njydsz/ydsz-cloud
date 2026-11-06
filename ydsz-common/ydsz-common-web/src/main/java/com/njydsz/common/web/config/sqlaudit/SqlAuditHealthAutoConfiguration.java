@@ -1,5 +1,6 @@
 package com.njydsz.common.web.config.sqlaudit;
 
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -9,7 +10,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
-import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.common.jdbc.config.MybatisPlusConfiguration;
 import com.njydsz.common.web.health.SqlAuditHealthIndicator;

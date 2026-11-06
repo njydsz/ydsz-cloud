@@ -3,6 +3,7 @@ package com.njydsz.common.queue.health;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
@@ -208,7 +209,7 @@ public class QueueHealthIndicator implements HealthIndicator {
         Object cluster = adminClazz.getMethod("describeCluster").invoke(admin);
         String clusterId = (String) cluster.getClass().getMethod("clusterId").invoke(cluster);
         boolean ok = clusterId != null && !clusterId.isEmpty();
-        return new ProtocolCheckResult(ok, ok ? null : "broker clusterId 为空",
+        return new ProtocolCheckResult(ok, ok ? null : I18n.message("common.queue.error.clusterid.empty"),
             "kafka-admin-describe-cluster");
       } finally {
         adminClazz.getMethod("close", long.class, java.util.concurrent.TimeUnit.class)

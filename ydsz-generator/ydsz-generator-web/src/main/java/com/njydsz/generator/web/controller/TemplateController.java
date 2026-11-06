@@ -1,9 +1,11 @@
 package com.njydsz.generator.web.controller;
 
+
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,11 +24,11 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.entity.GenTemplate;
 import com.njydsz.generator.entity.GenTemplateGroup;
-import com.njydsz.generator.web.security.PermissionCodes;
 import com.njydsz.generator.service.TemplateGroupService;
 import com.njydsz.generator.service.TemplateService;
 import com.njydsz.generator.vo.DiffLineVO;
 import com.njydsz.generator.vo.TemplateValidateVO;
+import com.njydsz.generator.web.security.PermissionCodes;
 
 /**
  * 模板管理 REST 控制器（含分组管理）。
@@ -103,7 +105,7 @@ public class TemplateController {
   @Operation(summary = "创建模板分组")
   @PostMapping("/groups")
   @Audit(module = "模板管理", action = AuditAction.CREATE, content = "'创建模板分组:' + #group.name")
-  public YdszResponse<GenTemplateGroup> createGroup(@RequestBody GenTemplateGroup group) {
+  public YdszResponse<GenTemplateGroup> createGroup(@Valid @RequestBody GenTemplateGroup group) {
     return YdszResponse.success(groupService.create(group));
   }
 
@@ -166,7 +168,7 @@ public class TemplateController {
   @Operation(summary = "更新模板内容")
   @PostMapping("/templates/update")
   @Audit(module = "模板管理", action = AuditAction.UPDATE, content = "'更新模板:' + #template.id")
-  public YdszResponse<GenTemplate> updateTemplate(@RequestBody GenTemplate template) {
+  public YdszResponse<GenTemplate> updateTemplate(@Valid @RequestBody GenTemplate template) {
     return YdszResponse.success(templateService.updateContent(template));
   }
 

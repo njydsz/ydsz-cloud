@@ -13,6 +13,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+
 import com.njydsz.common.locales.util.I18n;
 
 /**

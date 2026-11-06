@@ -1,9 +1,5 @@
 package com.njydsz.workflow.server.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.within;
-
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
@@ -12,6 +8,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.njydsz.workflow.domain.exception.WorkflowException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 
 /**
  * {@link DateRangeValidator} 单元测试。

@@ -1,10 +1,5 @@
 package com.njydsz.agent.server.agent;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +17,11 @@ import com.njydsz.agent.domain.repository.AgentDefinitionRepository;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AgentDefinitionServiceImplTest {

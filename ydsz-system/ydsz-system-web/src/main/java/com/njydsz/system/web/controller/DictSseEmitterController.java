@@ -1,5 +1,6 @@
 package com.njydsz.system.web.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -9,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.njydsz.common.base.api.ApiVersion;
-import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.system.server.config.DictSseEmitterRegistry;
 
 /**

@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.socket.handler.WebSocketMessageDispatcher;
@@ -71,6 +73,7 @@ public class WebSocketAdminController {
    *
    * @return Map 形式统计数据，直接序列化为 JSON 返回
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.SOCKET_ADMIN_VIEW)
   @GetMapping("/stats")
   @Operation(summary = "模块实时统计")
   public YdszResponse<Map<String, Object>> stats() {
@@ -99,6 +102,7 @@ public class WebSocketAdminController {
    * @param userId 目标用户 ID
    * @return 本地 Session 快照映射
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.SOCKET_ADMIN_VIEW)
   @GetMapping("/sessions")
   @Operation(summary = "查询指定用户本地 Session")
   public YdszResponse<Map<String, Object>> sessions(@RequestParam String userId) {
@@ -114,6 +118,7 @@ public class WebSocketAdminController {
    * @param sessionId STOMP Session ID
    * @return 操作结果
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.SOCKET_ADMIN_CONTROL)
   @DeleteMapping("/sessions/{sessionId}")
   @Operation(summary = "强制断开指定 Session")
   public YdszResponse<Map<String, Object>> killSession(@PathVariable String sessionId) {
@@ -145,6 +150,7 @@ public class WebSocketAdminController {
    * @param payload 消息体（JSON 字符串）
    * @return 推送结果
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.SOCKET_ADMIN_CONTROL)
   @PostMapping("/push/direct")
   @Operation(summary = "管理端强制推送到指定用户")
   public YdszResponse<Map<String, Object>> directPush(

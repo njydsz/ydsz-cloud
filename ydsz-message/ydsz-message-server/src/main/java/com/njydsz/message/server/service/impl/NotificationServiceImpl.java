@@ -12,12 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.dto.MsgNotificationDTO;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;

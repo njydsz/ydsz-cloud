@@ -1,7 +1,7 @@
 package com.njydsz.message.server.channel.impl;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.HashMap;
+import java.util.HashMap;
 import java.util.Map;
 
 import jakarta.annotation.PostConstruct;
@@ -14,10 +14,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.ChannelProperties;
 
@@ -93,7 +94,7 @@ public class WechatWorkChannel implements MessageChannel {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
       log.warn(I18n.message("message.log.server.wecom.warn.not.configured"), request.getReceiver());
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "企业微信 key 未配置", "企业微信 key 未配置", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.wecom.key.not.configured"), I18n.message("message.error.wecom.key.not.configured"), null);
     }
 
     Map<String, Object> payload = buildPayload(request);

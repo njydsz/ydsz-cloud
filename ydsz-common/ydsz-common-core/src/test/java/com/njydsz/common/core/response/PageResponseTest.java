@@ -1,7 +1,5 @@
 package com.njydsz.common.core.response;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -9,6 +7,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.njydsz.common.core.code.YdszResultCode;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * {@link PageResponse} 与 {@link YdszResponse} 的契约钉住测试。

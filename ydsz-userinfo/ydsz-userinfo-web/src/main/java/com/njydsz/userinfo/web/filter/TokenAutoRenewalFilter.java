@@ -16,8 +16,8 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
  * Token 自动续签过滤器（P1-2）。

@@ -2,12 +2,15 @@ package com.njydsz.generator.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 
 /**
@@ -29,16 +32,24 @@ import lombok.experimental.SuperBuilder;
 public class GenDatasource extends MpBaseEntity<String> {
 
   /** 数据源名称。 */
+  @NotBlank(message = "{generator.datasource.name.notblank}")
+  @Size(max = 64, message = "{generator.datasource.name.size}")
   private String name;
   /** JDBC URL。 */
+  @NotBlank(message = "{generator.datasource.jdbcUrl.notblank}")
+  @Size(max = 512, message = "{generator.datasource.jdbcUrl.size}")
   private String jdbcUrl;
   /** 用户名。 */
+  @NotBlank(message = "{generator.datasource.username.notblank}")
+  @Size(max = 64, message = "{generator.datasource.username.size}")
   private String username;
   /** 密码（加密存储，不序列化到外向响应）。 */
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
+  @Size(max = 128, message = "{generator.datasource.password.size}")
   private String password;
   /** 数据库方言。 */
+  @Size(max = 32, message = "{generator.datasource.dialect.size}")
   private String dialect;
   /** 是否默认数据源。 */
   @TableField("is_default")

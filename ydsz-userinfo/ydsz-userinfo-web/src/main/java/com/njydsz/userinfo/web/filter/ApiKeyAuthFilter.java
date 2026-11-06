@@ -16,10 +16,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.ApiKeyVO;
 import com.njydsz.userinfo.server.service.ApiKeyService;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * API Key 认证过滤器（P1-2 API Key 授权体系）。

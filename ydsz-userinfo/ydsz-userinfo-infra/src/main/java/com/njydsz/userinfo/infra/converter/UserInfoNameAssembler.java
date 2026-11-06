@@ -15,10 +15,10 @@ import org.springframework.beans.factory.ObjectProvider;
 
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheBuilder;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.core.assembler.NameAssembler;
 import com.njydsz.common.core.assembler.NameAssemblerProperties;
 import com.njydsz.common.core.assembler.NameType;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.api.client.OrgQueryClient;
 

@@ -3,6 +3,7 @@ package com.njydsz.userinfo.web.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,7 +14,6 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * SSO 指标控制器。

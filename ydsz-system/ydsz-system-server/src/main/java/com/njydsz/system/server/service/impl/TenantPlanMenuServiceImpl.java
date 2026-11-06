@@ -6,10 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
 import com.njydsz.system.domain.repository.TenantPlanMenuRepository;
 import com.njydsz.system.domain.vo.TenantPlanMenuVO;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.server.service.TenantPlanMenuService;
 
 

@@ -1,9 +1,5 @@
 package com.njydsz.workflow.server.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import java.util.List;
 import java.util.Set;
 
@@ -18,6 +14,10 @@ import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 import com.njydsz.workflow.domain.statemachine.FlowInstanceStateMachine;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * {@link FlowInstanceStateMachine} 状态机单元测试。

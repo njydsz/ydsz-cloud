@@ -12,8 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;
-import com.njydsz.common.file.domain.ChunkedUploadResult;
 import com.njydsz.common.file.config.FileUploadProperties;
+import com.njydsz.common.file.domain.ChunkedUploadResult;
 import com.njydsz.common.file.exception.FileExceptionCode;
 import com.njydsz.common.file.metrics.FileMetrics;
 import com.njydsz.common.file.service.FileDedupService;

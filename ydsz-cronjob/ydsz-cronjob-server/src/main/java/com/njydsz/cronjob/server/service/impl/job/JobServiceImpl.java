@@ -16,17 +16,16 @@ import java.util.concurrent.ScheduledFuture;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationContext;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -37,6 +36,7 @@ import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.dto.BatchResultDTO;
@@ -887,7 +887,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         ScheduleType type = ScheduleType.parse(j.getScheduleType());
         if (type != ScheduleType.CRON) {
           details.add(
-              BatchResultDTO.ItemResult.failure(jobId, "仅 CRON 类型任务支持修改 Cron 表达式"));
+              BatchResultDTO.ItemResult.failure(jobId, I18n.message("cronjob.job.cron.type.only")));
           continue;
         }
         // 更新 Cron 并重新计算下次触发时间

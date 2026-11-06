@@ -8,7 +8,6 @@ import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
-import com.njydsz.system.domain.entity.ConfigApproval;
 import com.njydsz.system.domain.approval.ConfigApprovalVO;
 import com.njydsz.system.domain.dto.ApiPermissionDTO;
 import com.njydsz.system.domain.dto.AppInfoDTO;
@@ -22,6 +21,7 @@ import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.entity.ApiPermission;
 import com.njydsz.system.domain.entity.AppInfo;
 import com.njydsz.system.domain.entity.Config;
+import com.njydsz.system.domain.entity.ConfigApproval;
 import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.entity.DictType;
 import com.njydsz.system.domain.entity.EntityVersion;

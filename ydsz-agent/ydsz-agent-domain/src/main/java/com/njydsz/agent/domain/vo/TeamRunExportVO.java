@@ -1,9 +1,9 @@
 package com.njydsz.agent.domain.vo;
 
 
-import com.njydsz.common.excel.annotation.ExcelProperty;
-
 import lombok.Data;
+
+import com.njydsz.common.excel.annotation.ExcelProperty;
 
 /**
  * Team Run 多 Agent 协作列表 Excel 导出 VO。

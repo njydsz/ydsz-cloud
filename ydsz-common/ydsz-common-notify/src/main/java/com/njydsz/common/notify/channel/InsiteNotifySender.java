@@ -6,6 +6,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,15 +115,15 @@ public class InsiteNotifySender implements NotifyChannelStrategy {
   @Override
   public NotifySendResult send(String receiver, String title, String content) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("站内信渠道未启用", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.insite.not.enabled"), getChannel().getName());
     }
     if (receiver == null || receiver.isBlank()) {
-      return NotifySendResult.failure("接收者 ID 为空", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.receiver.id.empty"), getChannel().getName());
     }
     try {
       StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
       if (redisTemplate == null) {
-        return NotifySendResult.failure("Redis 不可用，无法发送站内信", getChannel().getName());
+        return NotifySendResult.failure(I18n.message("common.notify.error.redis.unavailable"), getChannel().getName());
       }
 
       InsiteMessage message = new InsiteMessage();
@@ -180,10 +181,10 @@ public class InsiteNotifySender implements NotifyChannelStrategy {
   @Override
   public NotifySendResult batchSend(List<String> receivers, String title, String content) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("站内信渠道未启用", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.insite.not.enabled"), getChannel().getName());
     }
     if (receivers == null || receivers.isEmpty()) {
-      return NotifySendResult.failure("接收者列表为空", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.receivers.empty"), getChannel().getName());
     }
     // P0-4：虚拟线程并行批量存储
     List<CompletableFuture<NotifySendResult>> futures =

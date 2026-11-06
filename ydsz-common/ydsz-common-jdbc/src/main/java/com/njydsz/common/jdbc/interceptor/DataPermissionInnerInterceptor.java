@@ -1,12 +1,8 @@
 package com.njydsz.common.jdbc.interceptor;
 
 import java.sql.Connection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import net.sf.jsqlparser.schema.Table;
@@ -17,6 +13,8 @@ import net.sf.jsqlparser.statement.update.Update;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.domain.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;

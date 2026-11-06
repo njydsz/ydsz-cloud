@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.impl.template;
 
 
-import com.njydsz.common.locales.util.I18n;import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +15,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.MsgTemplateDTO;

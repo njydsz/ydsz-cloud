@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.chain.handler;
 
 
-import com.njydsz.common.locales.util.I18n;import java.time.Duration;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -11,10 +11,11 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
-import com.njydsz.message.domain.vo.MessageSendResultVO;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -113,8 +114,8 @@ public class UserPreferenceHandler implements SendHandler {
     ctx.setErrorResult(MessageSendResultVO.fail(
         channel,
         MessageExceptionCode.DND_PERIOD_ACTIVE.getCode(),
-        "当前为免打扰时段",
-        "当前为免打扰时段",
+        I18n.message("message.error.dnd.period"),
+        I18n.message("message.error.dnd.period"),
         null));
     return false;
   }
@@ -146,7 +147,7 @@ public class UserPreferenceHandler implements SendHandler {
     LocalTime end = parseTimeSafely(pref.getDndEnd());
     if (start == null || end == null) {
       messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
-      ctx.setErrorResult(MessageSendResultVO.fail(channel, null, "当前为免打扰时段", "当前为免打扰时段", null));
+      ctx.setErrorResult(MessageSendResultVO.fail(channel, null, I18n.message("message.error.dnd.period"), I18n.message("message.error.dnd.period"), null));
       return false;
     }
     LocalDateTime now = LocalDateTime.now();

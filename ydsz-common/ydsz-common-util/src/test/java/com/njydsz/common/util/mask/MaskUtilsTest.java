@@ -1,12 +1,12 @@
 package com.njydsz.common.util.mask;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * {@link MaskUtils} 的行为钉住测试。

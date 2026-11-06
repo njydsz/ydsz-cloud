@@ -1,13 +1,14 @@
 package com.njydsz.message.server.service.impl;
 
 
-import com.njydsz.common.locales.util.I18n;import java.nio.charset.StandardCharsets;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.MsgCanaryDTO;
 import com.njydsz.message.domain.repository.MsgCanaryRepository;

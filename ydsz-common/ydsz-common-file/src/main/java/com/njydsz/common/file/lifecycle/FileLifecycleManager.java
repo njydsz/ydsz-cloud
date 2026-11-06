@@ -4,6 +4,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -110,7 +111,7 @@ public class FileLifecycleManager {
 
     IFileStorage storage = resolveStorage();
     if (storage == null) {
-      return CleanupResult.failed("无法获取文件存储实例");
+      return CleanupResult.failed(I18n.message("common.file.error.storage.instance.unavailable"));
     }
 
     String bucketName = lifecycleProperties.getBucket();

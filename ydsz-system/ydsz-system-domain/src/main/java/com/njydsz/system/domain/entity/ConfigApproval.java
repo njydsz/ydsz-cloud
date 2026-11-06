@@ -4,9 +4,10 @@ import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 配置变更审批单实体（持久化）。

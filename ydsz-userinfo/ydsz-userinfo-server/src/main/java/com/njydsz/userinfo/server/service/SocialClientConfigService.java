@@ -10,12 +10,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.dto.SocialClientDTO;
 import com.njydsz.userinfo.domain.query.SocialClientPageQuery;
 import com.njydsz.userinfo.domain.repository.SocialClientRepository;
 import com.njydsz.userinfo.domain.vo.SocialClientVO;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 社交平台客户端配置服务（P1-1 DB+YAML 混合配置）。

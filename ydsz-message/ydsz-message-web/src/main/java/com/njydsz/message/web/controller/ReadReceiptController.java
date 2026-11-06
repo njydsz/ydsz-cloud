@@ -1,7 +1,7 @@
 package com.njydsz.message.web.controller.receipt;
 
 
-import com.njydsz.common.locales.util.I18n;import java.io.IOException;
+import java.io.IOException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.server.service.receipt.ReadReceiptService;
 
 /**

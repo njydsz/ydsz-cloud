@@ -1,11 +1,5 @@
 package com.njydsz.literule.infra.repository.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +16,12 @@ import com.njydsz.literule.domain.dto.DecisionTableDTO;
 import com.njydsz.literule.domain.entity.DecisionTable;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.infra.mapper.DecisionTableMapper;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link DecisionTableRepositoryImpl} 单元测试。

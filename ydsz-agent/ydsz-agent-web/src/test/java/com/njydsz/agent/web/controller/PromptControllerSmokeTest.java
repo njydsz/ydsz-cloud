@@ -1,10 +1,5 @@
 package com.njydsz.agent.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -17,6 +12,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.njydsz.agent.server.prompt.PromptEvaluationService;
 import com.njydsz.agent.server.prompt.PromptEvaluationService.PromptEvaluationResult;
 import com.njydsz.common.test.BaseControllerMockTest;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link PromptController} Smoke Test.

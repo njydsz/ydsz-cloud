@@ -33,12 +33,24 @@ public class SlowSqlProperties {
   @Min(1)
   private long alertThresholdMillis = 3000L;
 
-  public boolean isEnabled() { return isEnabled; }
-  public void setEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+  public boolean isEnabled() {
+      return isEnabled;
+  }
+  public void setEnabled(boolean isEnabled) {
+      this.isEnabled = isEnabled;
+  }
 
-  public long getThresholdMillis() { return thresholdMillis; }
-  public void setThresholdMillis(long thresholdMillis) { this.thresholdMillis = thresholdMillis; }
+  public long getThresholdMillis() {
+      return thresholdMillis;
+  }
+  public void setThresholdMillis(long thresholdMillis) {
+      this.thresholdMillis = thresholdMillis;
+  }
 
-  public long getAlertThresholdMillis() { return alertThresholdMillis; }
-  public void setAlertThresholdMillis(long alertThresholdMillis) { this.alertThresholdMillis = alertThresholdMillis; }
+  public long getAlertThresholdMillis() {
+      return alertThresholdMillis;
+  }
+  public void setAlertThresholdMillis(long alertThresholdMillis) {
+      this.alertThresholdMillis = alertThresholdMillis;
+  }
 }

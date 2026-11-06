@@ -4,14 +4,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.agent.domain.entity.AsyncTask;
 import com.njydsz.agent.domain.code.CodeExecutionRequest;
 import com.njydsz.agent.domain.code.CodeExecutionResult;
 import com.njydsz.agent.domain.code.CodeExecutionService;
+import com.njydsz.agent.domain.entity.AsyncTask;
 import com.njydsz.common.json.YdszJson;
 
 /**
@@ -63,11 +64,11 @@ public class CodeExecutionTaskExecutor implements AsyncTaskExecutor {
       String inputJson = getStringParam(params, "inputJson");
 
       if (code == null || code.isBlank()) {
-        task.fail("code 不能为空");
+        task.fail(I18n.message("agent.error.codeexecution.code.required"));
         return;
       }
       if (code.length() > MAX_CODE_LENGTH) {
-        task.fail("代码长度超过限制（最大 " + MAX_CODE_LENGTH + " 字符）");
+        task.fail(I18n.message("agent.error.codeexecution.length.exceeded", new Object[]{MAX_CODE_LENGTH}));
         return;
       }
 
@@ -111,7 +112,7 @@ public class CodeExecutionTaskExecutor implements AsyncTaskExecutor {
           task.getId(), result.success());
     } catch (Exception e) {
       log.error("[AsyncTask:CODE_EXECUTION] 执行失败: taskId={}, error={}", task.getId(), e.getMessage(), e);
-      task.fail("代码执行异常: " + truncate(e.getMessage(), 200));
+      task.fail(I18n.message("agent.error.codeexecution.exception", new Object[]{truncate(e.getMessage(), 200)}));
     }
   }
 

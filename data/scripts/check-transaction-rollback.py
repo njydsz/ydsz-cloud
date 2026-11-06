@@ -6,6 +6,8 @@
 
 用法：
   python3 data/scripts/check-transaction-rollback.py --roots ydsz-system,ydsz-userinfo
+  python3 data/scripts/check-transaction-rollback.py --all
+  python3 data/scripts/check-transaction-rollback.py --all --baseline data/transaction-baseline.json
   python3 data/scripts/check-transaction-rollback.py --self-test
 """
 
@@ -132,9 +134,48 @@ def self_test() -> int:
     return 0 if not failures else 1
 
 
+def scan_all() -> list[str]:
+    """扫描全仓业务模块 + common 的 @Transactional 缺失。"""
+    findings: list[str] = []
+    checked = 0
+    skip = {"target", "node_modules", "backup_logs", "src/test"}
+    for path in sorted(REPO_ROOT.rglob("*.java")):
+        p = path.as_posix()
+        if any(s in p for s in skip):
+            continue
+        if "/src/main/" not in p:
+            continue
+        checked += 1
+        findings.extend(check_file(path, REPO_ROOT))
+    print(f"实测：{checked} 个 Java 文件（全仓）")
+    return findings
+
+
+def load_baseline(path: Path) -> set[str]:
+    """加载 baseline 文件（JSON 数组），不存在时返回空集。"""
+    import json
+    if not path.exists():
+        return set()
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return set(data.get("findings", []))
+
+
+def save_baseline(path: Path, findings: list[str]) -> None:
+    """保存 baseline 快照（JSON）。"""
+    import json
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"findings": sorted(findings)}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="事务回滚边界门禁")
     parser.add_argument("--roots", default="ydsz-system,ydsz-userinfo", help="逗号分隔的模块目录")
+    parser.add_argument("--all", action="store_true", help="扫描全仓")
+    parser.add_argument("--baseline", help="baseline JSON 路径（存量只减不增）")
+    parser.add_argument("--update-baseline", action="store_true", help="更新 baseline 快照")
     parser.add_argument("--self-test", action="store_true", help="运行反例夹具自检")
     args = parser.parse_args()
 
@@ -148,10 +189,35 @@ def main() -> int:
         return self_test()
 
     try:
-        findings = collect([item.strip() for item in args.roots.split(",") if item.strip()])
+        if args.all:
+            findings = scan_all()
+        else:
+            findings = collect([item.strip() for item in args.roots.split(",") if item.strip()])
     except GateError as exc:
         print(f"❌ {exc}", file=sys.stderr)
         return 2
+
+    if args.baseline:
+        baseline_path = REPO_ROOT / args.baseline
+        existing = load_baseline(baseline_path)
+        current = set(findings)
+        if args.update_baseline:
+            save_baseline(baseline_path, findings)
+            print(f"✅ baseline 已更新：{len(findings)} 条存量（{args.baseline}）")
+            return 0
+        new_issues = current - existing
+        if new_issues:
+            print(
+                f"❌ 发现 {len(new_issues)} 处新增事务回滚问题（存量 {len(existing)} 条）：",
+                file=sys.stderr,
+            )
+            for item in sorted(new_issues)[:50]:
+                print(f"   {item}", file=sys.stderr)
+            return 1
+        print(
+            f"✅ 事务回滚边界门禁通过（新增 0 处，存量 {len(existing)} 条）"
+        )
+        return 0
 
     if findings:
         print(f"❌ 发现 {len(findings)} 处事务回滚边界问题：", file=sys.stderr)

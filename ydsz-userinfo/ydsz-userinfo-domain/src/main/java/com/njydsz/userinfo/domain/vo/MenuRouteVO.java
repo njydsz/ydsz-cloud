@@ -2,8 +2,9 @@ package com.njydsz.userinfo.domain.vo;
 
 import java.util.List;
 
-import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Data;
+
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * 前端动态路由 VO（vben 路由形态）

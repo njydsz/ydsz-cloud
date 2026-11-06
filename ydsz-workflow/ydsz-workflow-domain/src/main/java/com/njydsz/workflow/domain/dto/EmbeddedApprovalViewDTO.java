@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -74,7 +75,7 @@ public class EmbeddedApprovalViewDTO implements Serializable {
   /** 流程是否已结束 */
   private boolean isFinished;
 
-  /** 友好提示（如"未发起流程"/"流程已结束"） */
+  /** 友好提示（如"未发起流程"/I18n.message("workflow.embedded.finished")） */
   private String message;
 
   /** 当前待办视图（嵌入式场景下需要判定"我是否可操作"） */

@@ -1,4 +1,4 @@
-﻿# Start all 10 backend services in local dev mode (without Nacos)
+# Start all 10 backend services in local dev mode (without Nacos)
 # Each service uses the local-dev profile and imports config from docs/nacos-config/
 #
 # 启动方式：顺序启动 + 端口就绪门控，未就绪的服务会被抓线程栈并回收，避免堆积。

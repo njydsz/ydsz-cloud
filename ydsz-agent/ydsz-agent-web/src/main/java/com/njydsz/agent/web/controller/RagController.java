@@ -5,8 +5,10 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,7 +27,6 @@ import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.server.rag.DocumentIngestionService;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.agent.server.search.HybridSearchService;
-import org.springframework.beans.factory.ObjectProvider;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -36,7 +37,6 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * RAG 知识库管理 REST API Controller。

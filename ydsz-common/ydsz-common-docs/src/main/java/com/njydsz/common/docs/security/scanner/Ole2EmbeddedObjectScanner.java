@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.poifs.filesystem.DirectoryEntry;
 import org.apache.poi.poifs.filesystem.DocumentEntry;
@@ -98,7 +99,7 @@ public class Ole2EmbeddedObjectScanner implements DocumentSecurityScanner {
           .securityLevel(SecurityLevel.SAFE)
           .findings(List.of())
           .isSuccess(false)
-          .errorMessage("OLE2 容器解析失败: " + e.getMessage())
+          .errorMessage(I18n.message("common.docs.error.ole2.parse") + e.getMessage())
           .build();
     } catch (IllegalArgumentException e) {
       // 输入流不符合 OLE2 规范时抛此异常，属于预期中的"非 OLE2 文件"场景

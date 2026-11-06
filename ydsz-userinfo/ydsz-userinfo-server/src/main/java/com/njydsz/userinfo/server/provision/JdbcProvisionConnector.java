@@ -15,13 +15,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.jdbc.datasource.DynamicDataSourceContextHolder;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
 import com.njydsz.userinfo.domain.provision.ProvisionException;
 import com.njydsz.userinfo.domain.provision.ProvisionRecord;
 import com.njydsz.userinfo.domain.provision.ProvisionRecordPage;
 import com.njydsz.userinfo.server.config.JdbcProvisionProperties;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * JDBC 身份供给连接器（P0-1 Identity Provisioning 管道）。

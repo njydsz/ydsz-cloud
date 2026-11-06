@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import com.njydsz.common.locales.util.I18n;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -104,10 +105,10 @@ public class SmsNotifySender implements NotifyChannelStrategy {
   @Override
   public NotifySendResult send(String receiver, String title, String content) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("短信通知未启用", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.sms.not.enabled"), getChannel().getName());
     }
     if (receiver == null || receiver.isEmpty()) {
-      return NotifySendResult.failure("手机号为空", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.phone.empty"), getChannel().getName());
     }
     Map<String, Object> templateParam = new HashMap<>(16);
     templateParam.put("content", content);
@@ -130,10 +131,10 @@ public class SmsNotifySender implements NotifyChannelStrategy {
   public NotifySendResult sendTemplate(
       String receiver, String templateCode, Object templateParams) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("短信通知未启用", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.sms.not.enabled"), getChannel().getName());
     }
     if (receiver == null || receiver.isEmpty()) {
-      return NotifySendResult.failure("手机号为空", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.phone.empty"), getChannel().getName());
     }
     Map<String, Object> params = extractParams(templateParams);
 
@@ -153,10 +154,10 @@ public class SmsNotifySender implements NotifyChannelStrategy {
   @Override
   public NotifySendResult batchSend(List<String> receivers, String title, String content) {
     if (!isEnabled()) {
-      return NotifySendResult.failure("短信通知未启用", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.sms.not.enabled"), getChannel().getName());
     }
     if (receivers == null || receivers.isEmpty()) {
-      return NotifySendResult.failure("手机号为空", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.phone.empty"), getChannel().getName());
     }
     Map<String, Object> templateParam = new HashMap<>(16);
     templateParam.put("content", content);
@@ -204,7 +205,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
    */
   private NotifySendResult directSend(String phone, Map<String, Object> params) {
     if (!StringUtils.hasText(smsConfig.getEndpoint())) {
-      return NotifySendResult.failure("短信 API endpoint 未配置", getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.sms.endpoint.not.configured"), getChannel().getName());
     }
     try {
       HttpHeaders headers = buildAuthHeaders();
@@ -225,7 +226,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
       return NotifySendResult.failure(root.path("Message").asText(code), getChannel().getName());
     } catch (Exception e) {
       LOG.error("[SmsNotifySender] 直接发送失败：phone={}, error={}", phone, e.getMessage(), e);
-      return NotifySendResult.failure("发送异常: " + e.getMessage(), getChannel().getName());
+      return NotifySendResult.failure(I18n.message("common.notify.error.send.exception") + e.getMessage(), getChannel().getName());
     }
   }
 

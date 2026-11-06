@@ -2,7 +2,6 @@ package com.njydsz.cronjob.server.service.query;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import com.sun.management.OperatingSystemMXBean;
 import java.net.InetAddress;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import com.sun.management.OperatingSystemMXBean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;

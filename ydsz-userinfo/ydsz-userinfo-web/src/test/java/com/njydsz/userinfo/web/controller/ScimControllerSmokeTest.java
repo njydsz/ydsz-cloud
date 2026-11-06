@@ -1,9 +1,5 @@
 package com.njydsz.userinfo.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +13,10 @@ import com.njydsz.common.test.BaseControllerMockTest;
 import com.njydsz.userinfo.server.auth.ScimPatchHandler;
 import com.njydsz.userinfo.server.config.ScimProperties;
 import com.njydsz.userinfo.server.service.UserAccountService;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link ScimController} Smoke Test。

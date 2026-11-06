@@ -37,30 +37,66 @@ public class DataPermissionConfiguration {
   private String regionColumn = "region_id";
   private String spaceColumn = "space_id";
 
-  public Boolean getIsEnabled() { return isEnabled; }
-  public void setIsEnabled(Boolean isEnabled) { this.isEnabled = isEnabled; }
+  public Boolean getIsEnabled() {
+      return isEnabled;
+  }
+  public void setIsEnabled(Boolean isEnabled) {
+      this.isEnabled = isEnabled;
+  }
 
-  public InterceptTableStrategy getInterceptTableStrategy() { return interceptTableStrategy; }
-  public void setInterceptTableStrategy(InterceptTableStrategy interceptTableStrategy) { this.interceptTableStrategy = interceptTableStrategy; }
+  public InterceptTableStrategy getInterceptTableStrategy() {
+      return interceptTableStrategy;
+  }
+  public void setInterceptTableStrategy(InterceptTableStrategy interceptTableStrategy) {
+      this.interceptTableStrategy = interceptTableStrategy;
+  }
 
-  public Set<String> getTables() { return tables; }
-  public void setTables(Set<String> tables) { this.tables = tables; }
+  public Set<String> getTables() {
+      return tables;
+  }
+  public void setTables(Set<String> tables) {
+      this.tables = tables;
+  }
 
-  public String getCompanyColumn() { return companyColumn; }
-  public void setCompanyColumn(String companyColumn) { this.companyColumn = companyColumn; }
+  public String getCompanyColumn() {
+      return companyColumn;
+  }
+  public void setCompanyColumn(String companyColumn) {
+      this.companyColumn = companyColumn;
+  }
 
-  public String getDeptColumn() { return deptColumn; }
-  public void setDeptColumn(String deptColumn) { this.deptColumn = deptColumn; }
+  public String getDeptColumn() {
+      return deptColumn;
+  }
+  public void setDeptColumn(String deptColumn) {
+      this.deptColumn = deptColumn;
+  }
 
-  public String getUserColumn() { return userColumn; }
-  public void setUserColumn(String userColumn) { this.userColumn = userColumn; }
+  public String getUserColumn() {
+      return userColumn;
+  }
+  public void setUserColumn(String userColumn) {
+      this.userColumn = userColumn;
+  }
 
-  public String getProjectColumn() { return projectColumn; }
-  public void setProjectColumn(String projectColumn) { this.projectColumn = projectColumn; }
+  public String getProjectColumn() {
+      return projectColumn;
+  }
+  public void setProjectColumn(String projectColumn) {
+      this.projectColumn = projectColumn;
+  }
 
-  public String getRegionColumn() { return regionColumn; }
-  public void setRegionColumn(String regionColumn) { this.regionColumn = regionColumn; }
+  public String getRegionColumn() {
+      return regionColumn;
+  }
+  public void setRegionColumn(String regionColumn) {
+      this.regionColumn = regionColumn;
+  }
 
-  public String getSpaceColumn() { return spaceColumn; }
-  public void setSpaceColumn(String spaceColumn) { this.spaceColumn = spaceColumn; }
+  public String getSpaceColumn() {
+      return spaceColumn;
+  }
+  public void setSpaceColumn(String spaceColumn) {
+      this.spaceColumn = spaceColumn;
+  }
 }

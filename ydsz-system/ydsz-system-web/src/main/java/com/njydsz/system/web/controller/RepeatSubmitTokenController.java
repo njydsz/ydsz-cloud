@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,9 +14,8 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.locales.util.I18n;
-import com.njydsz.common.safe.idempotent.strategy.RepeatSubmitTokenService;
 import com.njydsz.common.lock.spi.CurrentUserIdResolver;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import com.njydsz.common.safe.idempotent.strategy.RepeatSubmitTokenService;
 
 /**
  * 表单重复提交 Token 控制器（ydsz-system-web）

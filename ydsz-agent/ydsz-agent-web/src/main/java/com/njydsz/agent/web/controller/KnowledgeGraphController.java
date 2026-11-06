@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,6 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
-import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * 知识图谱 REST API Controller。

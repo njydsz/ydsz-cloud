@@ -2,12 +2,13 @@ package com.njydsz.nextwiki.domain.query;
 
 import java.io.Serializable;
 
-import com.njydsz.common.domain.query.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * 文件节点分页查询 Query

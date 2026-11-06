@@ -1,7 +1,7 @@
 package com.njydsz.message.server.service.impl;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.message.domain.dto.UserReachProfileDTO;
 import com.njydsz.message.server.service.core.ReachStrategyService;

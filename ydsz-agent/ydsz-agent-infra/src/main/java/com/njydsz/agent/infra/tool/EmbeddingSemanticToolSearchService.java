@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import com.njydsz.common.cache.api.Cache;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +13,7 @@ import com.njydsz.agent.domain.model.ToolDefinition;
 import com.njydsz.agent.domain.tool.SemanticToolSearchService;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 
 /**
  * 基于 Embedding 向量相似度的语义 Tool 搜索服务实现

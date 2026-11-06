@@ -2,6 +2,7 @@ package com.njydsz.agent.infra.code;
 
 import java.util.List;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.code.CodeExecutionException;
@@ -40,7 +41,7 @@ public class NoopCodeExecutionService implements CodeExecutionService {
     log.debug("[NoopCodeExecution] 代码执行功能未启用，拒绝执行");
     throw new CodeExecutionException(
         "代码执行功能未启用（ydsz.agent.code-execution.enabled=false 或非 docker/local 模式）",
-        CodeExecutionResult.failure("代码执行功能未启用", 0, -1));
+        CodeExecutionResult.failure(I18n.message("agent.error.code.execution.not.enabled"), 0, -1));
   }
 
   @Override

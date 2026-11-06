@@ -20,10 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;

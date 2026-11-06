@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.auth.util.SecurityUtils;
 import com.njydsz.workflow.domain.converter.WorkflowRepositoryConverter;
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.entity.FlowInstance;
@@ -21,7 +22,6 @@ import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.common.auth.util.SecurityUtils;
 
 /**
  * 流程实例仓储实现（Infra 层）。

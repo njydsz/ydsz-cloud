@@ -2,8 +2,9 @@ package com.njydsz.common.jdbc.datasource.hint;
 
 import java.util.Optional;
 
-import com.njydsz.common.locales.util.I18n;
 import org.springframework.core.NamedThreadLocal;
+
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 强制数据源路由管理器——对标 ShardingSphere 的 HintManager。

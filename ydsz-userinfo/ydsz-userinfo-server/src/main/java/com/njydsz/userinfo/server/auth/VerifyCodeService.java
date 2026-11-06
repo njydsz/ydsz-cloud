@@ -9,9 +9,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 验证码服务（手机/邮箱验证码发送与校验）。

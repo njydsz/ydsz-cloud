@@ -6,8 +6,8 @@ import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.lock.core.LockTemplate;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.lock.core.LockTemplate;
 
 /**
  * P0-2: 工作流集群调度分布式锁辅助工具（P0-C2：委托 LockTemplate 消除 try-finally 样板代码）

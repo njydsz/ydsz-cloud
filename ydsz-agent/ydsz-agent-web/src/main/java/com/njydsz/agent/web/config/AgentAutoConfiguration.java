@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.thread.util.ExecutorUtils;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -31,7 +29,6 @@ import com.njydsz.agent.domain.config.properties.MemoryProperties;
 import com.njydsz.agent.domain.config.properties.ProviderProperties;
 import com.njydsz.agent.domain.config.properties.RagProperties;
 import com.njydsz.agent.domain.config.properties.RerankerProperties;
-import com.njydsz.agent.infra.cache.CacheKeyBuilder;
 import com.njydsz.agent.domain.context.ContextCompressor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.DagCheckpointStore;
@@ -63,6 +60,7 @@ import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.AgentSpanExporter;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.domain.workspace.AgentWorkspaceStore;
+import com.njydsz.agent.infra.cache.CacheKeyBuilder;
 import com.njydsz.agent.infra.code.NoopCodeExecutionService;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
@@ -121,6 +119,7 @@ import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * Agent 模块自动配置（DDD 分层：由 web 层负责依赖注入编排）。

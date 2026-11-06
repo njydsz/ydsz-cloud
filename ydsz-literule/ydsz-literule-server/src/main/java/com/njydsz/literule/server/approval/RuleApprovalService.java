@@ -17,18 +17,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.domain.dto.ApprovalRecordDTO;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.enums.RuleStatus;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
-import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * 规则审批流服务（P1-3 多级审批流）
@@ -321,7 +322,7 @@ public class RuleApprovalService {
               .level(1)
               .approver(operator)
               .action(ApprovalLog.ACTION_SUBMIT)
-              .comment("提交" + flow.getName())
+              .comment(I18n.message("literule.approval.comment.submit") + flow.getName())
               .timestamp(LocalDateTime.now())
               .build());
 
@@ -641,7 +642,7 @@ public class RuleApprovalService {
               .level(record.getCurrentLevel())
               .approver(operator)
               .action(ApprovalLog.ACTION_CANCEL)
-              .comment("撤回审核")
+              .comment(I18n.message("literule.approval.comment.withdraw"))
               .timestamp(LocalDateTime.now())
               .build());
       record.setCurrentStatus(ApprovalRecord.STATUS_CANCELLED);
@@ -651,7 +652,7 @@ public class RuleApprovalService {
       RuleDefinitionDTO def = loadRule(ruleCode);
       RuleStatus currentStatus = parseStatus(def.getStatus());
       if (currentStatus.canTransitionTo(RuleStatus.DRAFT)) {
-        updateRuleStatus(def, RuleStatus.DRAFT, operator, "撤回审核");
+        updateRuleStatus(def, RuleStatus.DRAFT, operator, I18n.message("literule.approval.comment.withdraw"));
       }
 
       saveRecord(record);

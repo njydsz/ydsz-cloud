@@ -4,8 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Data;
+
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * Skill 执行结果视图对象

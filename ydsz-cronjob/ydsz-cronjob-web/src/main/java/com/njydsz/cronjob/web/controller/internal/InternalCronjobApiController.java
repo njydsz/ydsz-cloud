@@ -1,5 +1,6 @@
 package com.njydsz.cronjob.web.controller.internal;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +15,6 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
 

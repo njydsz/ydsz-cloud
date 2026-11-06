@@ -10,12 +10,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-import com.njydsz.common.jdbc.handler.JsonTypeHandler;
-import com.njydsz.literule.domain.enums.RuleStatusEnum;
-import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.literule.domain.enums.RuleStatusEnum;
 
 /**
  * LiteRule 规则定义

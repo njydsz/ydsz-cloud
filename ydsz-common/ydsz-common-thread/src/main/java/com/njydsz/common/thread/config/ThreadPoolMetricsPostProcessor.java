@@ -1,5 +1,8 @@
 package com.njydsz.common.thread.config;
 
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -10,9 +13,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.thread.metrics.MeteredRejectedHandler;
 import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
-
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * 线程池指标装配后处理器。

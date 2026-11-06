@@ -1,10 +1,5 @@
 package com.njydsz.literule.infra.repository.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -23,6 +18,11 @@ import com.njydsz.literule.domain.repository.RuleDefinitionConfigRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.infra.config.LiteruleInfraAutoConfiguration;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link RuleDefinitionConfigRepositoryImpl} 单元测试。

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -250,7 +251,7 @@ public class RuleLifecycleController {
     def.setStatus(RuleStatus.ARCHIVED.name());
     def.setReviewedBy(operator);
     def.setReviewedAt(LocalDateTime.now());
-    def.setReviewComment("[驳回] " + reason);
+    def.setReviewComment(I18n.message("literule.approval.comment.reject", new Object[]{reason}));
     def.setEnabled(false);
 
     String changeDesc =

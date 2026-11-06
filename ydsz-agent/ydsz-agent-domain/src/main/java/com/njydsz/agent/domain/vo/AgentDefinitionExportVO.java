@@ -1,9 +1,9 @@
 package com.njydsz.agent.domain.vo;
 
 
-import com.njydsz.common.excel.annotation.ExcelProperty;
-
 import lombok.Data;
+
+import com.njydsz.common.excel.annotation.ExcelProperty;
 
 /**
  * Agent 定义 Excel 导出 VO。

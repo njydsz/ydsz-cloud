@@ -1,10 +1,10 @@
 package com.njydsz.cronjob.web.controller.topology;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.njydsz.common.base.api.ApiVersion;
-import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * 任务全局拓扑页面视图 Controller（P2-3）。

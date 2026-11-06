@@ -1,10 +1,10 @@
 package com.njydsz.cronjob.web.controller.glue;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.njydsz.common.base.api.ApiVersion;
-import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * GLUE 编辑器页面视图 Controller（P2-1）。

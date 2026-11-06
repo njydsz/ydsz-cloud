@@ -6,9 +6,9 @@ import java.util.concurrent.Semaphore;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -17,18 +17,17 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.common.file.health.FileHealthIndicator;
 import com.njydsz.common.file.lifecycle.FileLifecycleManager;
 import com.njydsz.common.file.metrics.FileMetrics;
 import com.njydsz.common.file.service.FileDedupService;
-import com.njydsz.common.file.storage.CheckpointService;
-import com.njydsz.common.file.storage.CheckpointStore;
-
 import com.njydsz.common.file.spi.DefaultImageProcessor;
 import com.njydsz.common.file.spi.ImageProcessor;
+import com.njydsz.common.file.storage.CheckpointService;
+import com.njydsz.common.file.storage.CheckpointStore;
 import com.njydsz.common.file.storage.DefaultCheckpointService;
 import com.njydsz.common.file.storage.DefaultStorageFactory;
 import com.njydsz.common.file.storage.DelegatingCheckpointStore;

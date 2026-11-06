@@ -1,9 +1,10 @@
 package com.njydsz.generator.exception;
 
-import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.registry.YdszExceptionCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import com.njydsz.common.exception.enums.ExceptionCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 /**
  * 代码生成器模块异常码枚举。

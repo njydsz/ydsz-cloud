@@ -82,3 +82,9 @@ dist/
 # ===== Python 门禁脚本运行产生的字节码缓存 =====
 __pycache__/
 *.pyc
+
+# ===== 构建过程产物（javac 参数快照） =====
+*.args
+
+# ===== 本地代码备份快照（历史遗留，不再入库） =====
+data/scripts/backup_logs/

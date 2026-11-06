@@ -13,18 +13,18 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.11.03-v1"  # v29: 修复 9 条 ID 重复（COMMON-062~068 / CONFIG-005~006 重编号）+ 补齐 COMMON-014~017 severity + level→severity 字段统一 + 新增 YDIZ-CONC-006
+  version: "26.11.06-v2"  # v30: YAML 语法修复（9 处非法转义 + 2 处缩进错乱 + stats 块归位）+ 计数校准 199 条
   source: "docs/云顶编码规范.md v1.0.16"
-  last_synced: "2026-11-03"
-  last_updated: "26.11.03-v1（规则源结构治理：9 条 ID 重复已重编号、4 条缺失 severity 已补齐、level 字段统一为 severity；新增 YDIZ-CONC-006 定时任务集群单点执行；总规则 197 条）"
-  total_rules: 197
+  last_synced: "2026-11-06"
+  last_updated: "26.11.06-v2（规则源可解析性修复：9 处双引号标量非法转义改为单引号、YDIZ-FLYWAY-001/YDIZ-FE-001 两条目缩进归位、stats 块从 rules 序列中移出至顶层；JDIZ-JDBC-001/002 两条 P1 已计入；总规则 199 条 P0=71 P1=97 P2=31）"
+  total_rules: 199
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
     P0: 71
-    P1: 95
+    P1: 97
     P2: 31
 
 rules:
@@ -223,7 +223,7 @@ rules:
       - 数据库列本身为全小写单词（如 `id`、`name`、`code`）无需转换，Java 字段与列名相同
       - `@ConfigurationProperties` 配置类字段名与 YAML 属性键一一对应的场景（已标注 OOP-006-EXEMPT）
       - 第三方系统固定 API 返回的 JSON key 不做 ORM 映射时，可用 `@JsonProperty` 保持原始 key
-    pattern: "@TableField\(\"[a-z]+_[a-z_]+\"\) 对应的 Java 字段名为全小写无驼峰形式"
+    pattern: '@TableField\("[a-z]+_[a-z_]+"\) 对应的 Java 字段名为全小写无驼峰形式'
     fix: |
       1. 将 Java 字段名中的下划线去掉，每个下划线后的字母改为大写
       例：`private String lifecycle;` → `private String lifeCycle;`
@@ -3572,6 +3572,7 @@ rules:
   # P6: 新增 4 条 YDIZ-COMMON 规则，收敛业务模块对 common-json/cache/excel/util 的自实现
   # 编号 014~017：001~013 已被 P0-1/P0-2/P0-3 批次占用（文件存储/Excel/Seata/缓存等 P0 规则）
   - id: "YDIZ-COMMON-014"
+    title: "缓存防穿透/防击穿/防雪崩必须使用 ydsz-common-cache 的 Cache#getWithProtection"
     severity: "P1"
     description: |
       缓存防穿透/防击穿/防雪崩场景必须使用 ydsz-common-cache 提供的 {@code Cache#getWithProtection}（封装 CacheProtectionGuard），
@@ -3595,9 +3596,10 @@ rules:
       3. 调用 cache.getWithProtection(key, loader, minMs, maxMs) 替代手写逻辑
       4. 删除原 ConcurrentHashMap + Future 相关字段
     source: "编码规范附录新增（YDIZ-COMMON-014，P1，26.09.25 公共模块利用率修复）"
-    severity: "P1"
 
   - id: "YDIZ-COMMON-015"
+    title: "JSON 操作必须使用 ydsz-common-json 的 YdszJson，禁止手写字段提取"
+    severity: "P1"
     description: |
       JSON 操作必须使用 ydsz-common-json 提供的 {@code YdszJson.toJson / YdszJson.fromJson / JsonMapper}，
       禁止在业务模块中手写 {@code extractDoubleField}、{@code extractIntField}、字符串拼接 {@code "{\"field\":" + value + "}"} 等解析逻辑。
@@ -3624,9 +3626,10 @@ rules:
       3. 反序列化替换为 YdszJson.fromJson(json, TargetClass.class)
       4. 删除所有 extract*Field 方法
     source: "编码规范附录新增（YDIZ-COMMON-015，P2，26.09.25 公共模块利用率修复）"
-    severity: "P1"
 
   - id: "YDIZ-COMMON-016"
+    title: "密码哈希与验证必须使用 ydsz-common-util 的 PwdUtils，禁止直接 new BCryptPasswordEncoder"
+    severity: "P2"
     description: |
       密码哈希与验证必须使用 ydsz-common-util 提供的 {@code PwdUtils.hashPasswordBCrypt / PwdUtils.verifyPasswordBCrypt}，
       禁止业务模块直接 {@code new BCryptPasswordEncoder()} 或注入 Spring Security 的 BCryptPasswordEncoder Bean 用于非安全框架场景。
@@ -3638,9 +3641,9 @@ rules:
       3. 校验替换为 PwdUtils.verifyPasswordBCrypt(rawPassword, hashedPassword)
       4. 移除原 BCryptPasswordEncoder Bean 注册
     source: "编码规范附录新增（YDIZ-COMMON-016，P1，26.09.25 公共模块利用率修复）"
-    severity: "P2"
 
   - id: "YDIZ-COMMON-017"
+    title: "分布式场景业务主键生成必须使用 SnowflakeIdGenerator，禁止 AtomicLong 自增"
     category: "common-reuse"
     severity: "P2"
     description: |
@@ -3671,7 +3674,7 @@ rules:
       - {@code value.length() <= 4 ? "****" : ...} 类似的 if-else 手写脱敏
 
       **适用场景**：日志打印脱敏、前端展示脱敏、审计报告导出脱敏、告警消息脱敏等
-    pattern: "substring.*\+.*\".*\\*.*\".*\\+.*substring|maskSensitive.*substring"
+    pattern: 'substring.*\+.*\".*\\*.*\".*\\+.*substring|maskSensitive.*substring'
     fix: |
       1. 引入 MaskUtils：import com.njydsz.common.util.mask.MaskUtils
       2. 确定保留位数（前缀保留几位、后缀保留几位）
@@ -3780,7 +3783,7 @@ rules:
       **推荐模式**：
       - 字节数组摘要：{@code DigestUtils.md5Hex(data)} / {@code DigestUtils.sha256Hex(data)}
       - 流式摘要：{@code DigestUtils.digest(inputStream, "MD5")}
-    pattern: "MessageDigest\.getInstance|java\.security\.SecureRandom"
+    pattern: 'MessageDigest\.getInstance|java\.security\.SecureRandom'
     fix: |
       1. 引入 DigestUtils：import com.njydsz.common.util.security.DigestUtils
       2. 使用 DigestUtils.md5Hex(byte[]) / sha256Hex(byte[]) / digest(InputStream, String)
@@ -3814,7 +3817,7 @@ rules:
       **推荐模式**：
       - 完整堆栈：{@code ExceptionUtils.getStackTrace(t)}（替代 commons-lang3）
       - 根因消息：{@code ExceptionUtils.getRootCauseMessage(t)}
-    pattern: "org\.apache\.commons\.lang3\.exception\.ExceptionUtils"
+    pattern: 'org\.apache\.commons\.lang3\.exception\.ExceptionUtils'
     fix: |
       1. 移除 commons-lang3 的 ExceptionUtils 依赖（若非其他用途）
       2. 替换为 import com.njydsz.common.util.exception.ExceptionUtils
@@ -4105,53 +4108,53 @@ rules:
     fix: "在对应模块的 db/migration/ 目录下新建 V{YYMMDD}__{description}.sql，确保幂等并包含回滚说明"
     source: "全维度深度分析（YDIZ-TEST-005，P0，26.09.27）"
 
-- id: "YDIZ-FLYWAY-001"
-  severity: "P1"
-  category: "database"
-  title: "Flyway 脚本版本号日期不得超过当前日期，同一字段/对象的变更只能在唯一脚本中出现"
-  description: |
-    Flyway 脚本版本号（V{YY.MM.DD} 或 V{YY.MM.DD.N}）的日期部分不得超过脚本提交当天的日期，
-    禁止预写未来日期的占位脚本。同一数据库字段或对象的 DDL 变更只能在唯一脚本中出现，
-    禁止在多个脚本中重复执行相同的 ALTER COLUMN / ADD COLUMN 操作。
+  - id: "YDIZ-FLYWAY-001"
+    severity: "P1"
+    category: "database"
+    title: "Flyway 脚本版本号日期不得超过当前日期，同一字段/对象的变更只能在唯一脚本中出现"
+    description: |
+      Flyway 脚本版本号（V{YY.MM.DD} 或 V{YY.MM.DD.N}）的日期部分不得超过脚本提交当天的日期，
+      禁止预写未来日期的占位脚本。同一数据库字段或对象的 DDL 变更只能在唯一脚本中出现，
+      禁止在多个脚本中重复执行相同的 ALTER COLUMN / ADD COLUMN 操作。
 
-    **为什么**：
-    - 未来日期脚本会破坏 Flyway 校验机制，可能导致 checksum 冲突或校验失败
-    - 同一变更重复执行会触发 PG 类型转换报错或冗余 DDL 锁表
-    - 多人协作时预占未来日期容易造成版本号冲突（如两人同日提交 V26.10.09）
+      **为什么**：
+      - 未来日期脚本会破坏 Flyway 校验机制，可能导致 checksum 冲突或校验失败
+      - 同一变更重复执行会触发 PG 类型转换报错或冗余 DDL 锁表
+      - 多人协作时预占未来日期容易造成版本号冲突（如两人同日提交 V26.10.09）
 
-    **强制要求**：
-    - 脚本版本号日期必须 ≤ 当前日期
-    - 同一天多个脚本使用 V{date}.1 / V{date}.2 子版本号区分
-    - 同一字段/对象的变更在同一版本周期内只出现一次
-    - 合并去重时保留净唯一变更，删除冗余脚本
+      **强制要求**：
+      - 脚本版本号日期必须 ≤ 当前日期
+      - 同一天多个脚本使用 V{date}.1 / V{date}.2 子版本号区分
+      - 同一字段/对象的变更在同一版本周期内只出现一次
+      - 合并去重时保留净唯一变更，删除冗余脚本
 
-    **违反判据**：
-    - 脚本文件名中的日期超过 git commit 日期
-    - 同一 ALTER TABLE ... ALTER COLUMN 在 2 个或以上脚本中出现
-    - 同一版本号对应多个不同内容的脚本文件
-  rule: "Flyway 脚本版本号日期不得超过当前日期，同一变更只能出现在唯一脚本中"
-  fix: "合并去重：提取净唯一变更到同一日期脚本，删除冗余文件；同一天多脚本使用 V{date}.N 子版本号"
-  source: "Flyway 脚本专项整改（YDIZ-FLYWAY-001，P1，26.10.08）"
+      **违反判据**：
+      - 脚本文件名中的日期超过 git commit 日期
+      - 同一 ALTER TABLE ... ALTER COLUMN 在 2 个或以上脚本中出现
+      - 同一版本号对应多个不同内容的脚本文件
+      rule: "Flyway 脚本版本号日期不得超过当前日期，同一变更只能出现在唯一脚本中"
+      fix: "合并去重：提取净唯一变更到同一日期脚本，删除冗余文件；同一天多脚本使用 V{date}.N 子版本号"
+      source: "Flyway 脚本专项整改（YDIZ-FLYWAY-001，P1，26.10.08）"
 
-- id: "YDIZ-FE-001"
-  severity: "P1"
-  category: "engineering"
-  title: "gen-contract.py 更新后必须重新生成全部子应用 API 文件并提交"
-  description: |
-    前端 API 层封装由 gen-contract.py 自动生成。当生成器逻辑发生变更（如新增 FormData 文件上传支持、
-    路径前缀修正、返回类型推导优化等）后，必须对所有子应用重新生成并提交，确保实际文件与生成器逻辑一致。
+  - id: "YDIZ-FE-001"
+    severity: "P1"
+    category: "engineering"
+    title: "gen-contract.py 更新后必须重新生成全部子应用 API 文件并提交"
+    description: |
+      前端 API 层封装由 gen-contract.py 自动生成。当生成器逻辑发生变更（如新增 FormData 文件上传支持、
+      路径前缀修正、返回类型推导优化等）后，必须对所有子应用重新生成并提交，确保实际文件与生成器逻辑一致。
 
-    **为什么**：
-    - 曾出现 gen-contract.py 已支持 MultipartFile → FormData 转换，但 nextwiki-web/src/api/file.ts
-      的 upload 函数仍发送 JSON 而非 FormData（实际文件为旧版生成）
-    - 生成器修复与实际文件脱节会导致 P0 阻断级 Bug 遗留在线上
+      **为什么**：
+      - 曾出现 gen-contract.py 已支持 MultipartFile → FormData 转换，但 nextwiki-web/src/api/file.ts
+        的 upload 函数仍发送 JSON 而非 FormData（实际文件为旧版生成）
+      - 生成器修复与实际文件脱节会导致 P0 阻断级 Bug 遗留在线上
 
-    **违反判据**：
-    - git log 显示 bash/gen-contract.py 有变更但 apps/*/src/api/ 下文件未同步更新
-    - 前端 API 请求参数与后端 Controller 实际 @RequestParam / @RequestBody 声明不一致
-  rule: "gen-contract.py 变更后必须重新运行 python bash/gen-contract.py <module> 并提交全部受影响文件"
-  fix: "执行统一生成脚本，提交所有 apps/*/src/api/ 目录下变更的自动生成文件"
-  source: "全维度深度分析（YDIZ-FE-001，P1，26.09.27）"
+      **违反判据**：
+      - git log 显示 bash/gen-contract.py 有变更但 apps/*/src/api/ 下文件未同步更新
+      - 前端 API 请求参数与后端 Controller 实际 @RequestParam / @RequestBody 声明不一致
+      rule: "gen-contract.py 变更后必须重新运行 python bash/gen-contract.py <module> 并提交全部受影响文件"
+      fix: "执行统一生成脚本，提交所有 apps/*/src/api/ 目录下变更的自动生成文件"
+      source: "全维度深度分析（YDIZ-FE-001，P1，26.09.27）"
 
   - id: "YDIZ-FE-002"
     category: "engineering"
@@ -4163,9 +4166,9 @@ rules:
 
       **正确做法**：
       - 如需统一排序字段命名（如 sortOrder → sort），应修改后端 DTO/Entity + 数据库 DDL，
-        再触发 schema.d.ts 重新生成，使类型定义自动对齐
+          再触发 schema.d.ts 重新生成，使类型定义自动对齐
       - 如果后端暂时无法变更，可以通过前端 models.ts 定义兼容层（type alias 或 mapper），
-        而非直接修改生成的 schema.d.ts
+          而非直接修改生成的 schema.d.ts
 
       **违反判据**：
       - schema.d.ts 中出现与后端 DTO 字段不一致的手动修改（如 sort → sortOrder 反向改名）
@@ -4573,7 +4576,7 @@ rules:
 
       **例外场景**（需注释说明理由）：
       - 动态拼接的 key（如来自外部系统），应使用 BusinessException.builder().errorCode(...) 并注明来源
-    pattern: "new BusinessException\\("[a-z][a-z0-9_]*[\\.][a-z]|new SysException\\("[a-z][a-z0-9_]*[\\.]"
+    pattern: 'new BusinessException\\("[a-z][a-z0-9_]*[\\.][a-z]|new SysException\\("[a-z][a-z0-9_]*[\\.]'
     fix: |
       1. 定位对应模块的 *ExceptionCode 枚举类
       2. 找到语义匹配的枚举常量（如 MESSAGE_TEMPLATE_NOT_FOUND）
@@ -4748,7 +4751,7 @@ rules:
       **违反判据**：
       - `void batchDelete(List<String> ids)` — 无返回值，失败时全部回滚
       - 批量操作返回简单 `int successCount` 不含明细
-    pattern: "void\\s+batch\w+\\(|int\\s+batch\w+\\("
+    pattern: 'void\\s+batch\w+\\(|int\\s+batch\w+\\('
     fix: |
       1. 返回类型改为 BatchResultDTO&lt;T&gt;
       2. 逐条处理，捕获单条异常后继续处理剩余条目
@@ -5035,7 +5038,7 @@ rules:
       2. 提取英文 key（格式 module.submodule.action_description）
       3. 追加 key 到三份 properties 文件（default/en_US/zh_CN）
       4. 调用点改引用英文 key
-    pattern: `I18n\.message\(\s*"[^a-zA-Z_\.].*I18nMessages\.message\(\s*"[^a-zA-Z_\.]`
+    pattern: 'I18n\.message\(\s*"[^a-zA-Z_\.].*I18nMessages\.message\(\s*"[^a-zA-Z_\.]'
     fix: |
       1. 全局搜索定位伪 i18n 调用
       2. 创建英文 key 并追加到三份 properties 文件
@@ -5072,7 +5075,7 @@ rules:
       2. 确认用于 request header 设置/获取场景
       3. 替换为 `HeaderConstants.XXX`
       4. 添加 import `com.njydsz.common.core.constant.HeaderConstants`
-    pattern: `"(Authorization|X-Trace-Id|Idempotency-Key|X-Forwarded-For)"(?:\s*[,)]|\s*\))`
+    pattern: '"(Authorization|X-Trace-Id|Idempotency-Key|X-Forwarded-For)"(?:\s*[,)]|\s*\))'
     fix: |
       1. 全局 grep 定位硬编码请求头字符串
       2. 替换为 `HeaderConstants.XXX`
@@ -5484,7 +5487,7 @@ rules:
       - 需要非阻塞式获取锁并获取锁值（如通过锁值传递调度信息）的场景保留 DistributedLocker 直用
       - 需要异步获取锁（返回 CompletableFuture）的场景
 
-    pattern: "discreteLocker\.tryLock.*finally.*discreteLocker\.unlock|DistributedLocker.*tryLock.*finally"
+    pattern: 'discreteLocker\.tryLock.*finally.*discreteLocker\.unlock|DistributedLocker.*tryLock.*finally'
     fix: |
       1. 注入 LockTemplate（Spring 自动装配提供 Bean）
       2. 替换 try-finally 样板代码：`lockTemplate.execute(key, leaseTime, SECONDS, () -> { ... })`
@@ -5538,7 +5541,7 @@ rules:
       - 代码中出现反射调用 setIfAbsent / getAndSet 等 Redis 方法
       - Outbox 幂等中使用 ConcurrentHashMap 作为集群安全的幂等存储
 
-    pattern: "getClass\(\)\.getMethod.*opsForValue|newInstance.*setIfAbsent|ConcurrentHashMap.*idempotent"
+    pattern: 'getClass\(\)\.getMethod.*opsForValue|newInstance.*setIfAbsent|ConcurrentHashMap.*idempotent'
     fix: |
       1. 移除反射逻辑，直接注入 StringOps（或 RedisStringOps）
       2. 幂等获取：`stringOps.setIfAbsent(key, "1", Duration.ofSeconds(ttl))`
@@ -5592,7 +5595,7 @@ rules:
       - 框架层 ydzs-common-* 封装自身的 Bean 定义与内部实现
       - 需要执行自定义 INFO/SLOWLOG/CLUSTER 等运维命令的场景
 
-    pattern: "import org\.springframework\.data\.redis\.core\.StringRedisTemplate|import org\.springframework\.data\.redis\.core\.RedisTemplate"
+    pattern: 'import org\.springframework\.data\.redis\.core\.StringRedisTemplate|import org\.springframework\.data\.redis\.core\.RedisTemplate'
     fix: |
       1. 替换 `StringRedisTemplate` 注入为 `RedisStringOps` 注入
       2. 替换 `RedisTemplate<String, String>` 注入为对应 Ops 组件（StringOps/HashOps/CollectionOps）
@@ -5648,7 +5651,7 @@ rules:
       - 框架层 ydzs-common-* 内部（如 RepeatSubmitTokenService）可接受直连
       - 全局共享的 Redis Key 常量（无租户维度、框架级约定）可通过专门的 RedisKeysEnum 管理
 
-    pattern: "static final String [A-Z_]+_PREFIX\s*=\s*\"(ydsz|flow|msg|agent):"
+    pattern: 'static final String [A-Z_]+_PREFIX\s*=\s*\"(ydsz|flow|msg|agent):'
     fix: |
       1. 在本模块 cache 包下新建或定位现有 CacheKeyBuilder
       2. 为当前业务场景添加语义化 key 方法（如 `quotaConcurrent(String tenantId)`）
@@ -5681,7 +5684,7 @@ rules:
       （如将 .jsp/.exe 伪装成 .jpg 上传）。必须使用 ydsz-common-file 提供的
       FileTypeValidator（Spring Bean，结合后缀白名单 + Magic Number 校验）
       或 FileTypeDetector（纯检测工具，返回实际 MIME 类型）进行真实类型校验。
-    pattern: "endsWith\(\"\.jpg\"\)|endsWith\(\"\.png\"\)|endsWith\(\"\.pdf\"\)|endsWith\(\"\.mp4\"\)"
+    pattern: 'endsWith\(\"\.jpg\"\)|endsWith\(\"\.png\"\)|endsWith\(\"\.pdf\"\)|endsWith\(\"\.mp4\"\)'
     fix: |
       1. 注入 FileTypeValidator 或 FileTypeDetector（Spring 自动配置已注册为 Bean）
       2. 上传时在 sanitizeFileName/suffix 校验之后，调用 fileTypeValidator.validate()
@@ -5785,7 +5788,7 @@ rules:
 
       **现状**：ydsz-system 的 FeatureFlagController 已改为注入 FeatureFlagService（26.09.30）。
       8 业务引擎其他模块如新增特性开关读取需求，一律通过 FeatureFlagService 访问。
-    pattern: "ConfigService.*[Ff]eatureFlag|configService\.getFeatureFlags"
+    pattern: 'ConfigService.*[Ff]eatureFlag|configService\.getFeatureFlags'
     fix: |
       1. 注入 FeatureFlagService 或通过 FeatureFlagContext.isEnabled(name) 静态调用
       2. 移除对 ConfigService.getFeatureFlags() 的直接引用
@@ -5858,7 +5861,7 @@ rules:
       - Nacos 远程配置 + 本地 override → 合并配置
 
       **当前状态**：工具类已储备就绪，待首个多层 JSON 配置合并场景落地。
-    pattern: "JSONObject.*putAll|JsonUtils\.toJson.*putAll"
+    pattern: 'JSONObject.*putAll|JsonUtils\.toJson.*putAll'
     fix: |
       1. import com.njydsz.common.config.hotreload.ConfigMergeUtils;
       2. 双配置合并：ConfigMergeUtils.merge(baseConfig, overrideConfig)
@@ -5890,7 +5893,7 @@ rules:
       **ENC() 自动解密**：Spring 配置属性中声明为 {@code property.name=ENC(xxx)} 的值由
       jasypt-spring-boot-starter 在 PropertySource 加载时自动解密，注入到 @ConfigurationProperties
       中的值已是明文，无需手动处理。
-    pattern: "new PooledPBEStringEncryptOR|StandardPBEStringEncryptor|setAlgorithm\("
+    pattern: 'new PooledPBEStringEncryptOR|StandardPBEStringEncryptor|setAlgorithm\('
     fix: |
       1. import com.njydsz.common.config.cli.ConfigCliTool;
       2. 使用 ConfigCliTool.decrypt(encryptedValue, masterPassword) 解密
@@ -5905,44 +5908,6 @@ rules:
     source: "ydsz-common-config 全局引用分析整改（YDIZ-CONFIG-006，P2，26.10.01 Jasypt 统一解密入口）"
     exception: "ydsz-common-config 模块内部的 ConfigCliTool.createEncryptor 方法（属于框架自身实现）"
 
-# ============================================
-  # 附录：按 category 统计（26.09.30-v3 common-util 利用率专项：+5 规则，YDIZ-COMMON-052~056）
-  # ============================================
-stats:
-  encoding: 1
-  import: 5
-  naming: 4
-  oop: 5
-  database: 2
-  logging: 3
-  datetime: 2
-  collection: 2
-  ddd: 7
-  concurrency: 3
-  performance: 2
-  common-reuse: 35  # +1: YDIZ-CORE-003 特性开关必须通过 FeatureFlagService
-  security: 2
-  architecture: 6
-  engineering: 5
-  warnings: 1
-  api: 2
-  exception: 5  # +1: ExceptionCode 自动推导优先(YDIZ-CORE-002 P1)
-  audit: 1
-  event: 3
-  tx: 5
-  testing: 5
-  resilience: 1
-  config: 3
-  errcode: 2
-  i18n: 9  # +2: @EnableYdszI18n 全覆盖(YDIZ-CORE-001 P0) + KnownLocaleTags 不可替代(YDIZ-LOCALE-003 P1)
-  tenant: 1
-  safe: 1
-  queue: 1
-  search: 1
-  util: 1
-  common: 7  # +2: Excel Web 流式导出(YDIZ-COMMON-033 P1) + 禁 ByteArrayOutputStream 中转(YDIZ-COMMON-034 P2)
-  domain: 3  # +3: OrderItem 收敛(YDIZ-DOMAIN-001 P1) + TreeNode 已删除-升 P0(YDIZ-DOMAIN-002 P0) + 深度分页主动感知(YDIZ-DOMAIN-003 P1)
-  total: 155
 
   # ============================================
   # 九、Domain 能力域利用率（3 条，P1×3，26.09.30 ydzs-common-domain 全局引用分析专项）
@@ -6830,6 +6795,45 @@ stats:
   #
   # 禁止出现 vo/ / dto/ / assembler/ / security/ / util/ 子包
   # ============================================
+
+# ============================================
+# 附录：按 category 统计（26.09.30-v3 common-util 利用率专项：+5 规则，YDIZ-COMMON-052~056）
+# ============================================
+stats:
+  encoding: 1
+  import: 5
+  naming: 4
+  oop: 5
+  database: 2
+  logging: 3
+  datetime: 2
+  collection: 2
+  ddd: 7
+  concurrency: 3
+  performance: 2
+  common-reuse: 35  # +1: YDIZ-CORE-003 特性开关必须通过 FeatureFlagService
+  security: 2
+  architecture: 6
+  engineering: 5
+  warnings: 1
+  api: 2
+  exception: 5  # +1: ExceptionCode 自动推导优先(YDIZ-CORE-002 P1)
+  audit: 1
+  event: 3
+  tx: 5
+  testing: 5
+  resilience: 1
+  config: 3
+  errcode: 2
+  i18n: 9  # +2: @EnableYdszI18n 全覆盖(YDIZ-CORE-001 P0) + KnownLocaleTags 不可替代(YDIZ-LOCALE-003 P1)
+  tenant: 1
+  safe: 1
+  queue: 1
+  search: 1
+  util: 1
+  common: 7  # +2: Excel Web 流式导出(YDIZ-COMMON-033 P1) + 禁 ByteArrayOutputStream 中转(YDIZ-COMMON-034 P2)
+  domain: 3  # +3: OrderItem 收敛(YDIZ-DOMAIN-001 P1) + TreeNode 已删除-升 P0(YDIZ-DOMAIN-002 P0) + 深度分页主动感知(YDIZ-DOMAIN-003 P1)
+  total: 155
 
   # ============================================
   # 版本标记：shared-rules.yaml v26.10.01-v23

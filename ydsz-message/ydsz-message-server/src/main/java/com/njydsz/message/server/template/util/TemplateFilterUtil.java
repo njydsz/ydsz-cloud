@@ -1,7 +1,7 @@
 package com.njydsz.message.server.template.util;
 
 
-import com.njydsz.common.locales.util.I18n;import java.math.BigDecimal;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.time.Instant;
@@ -15,6 +15,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.string.StringUtils;
 

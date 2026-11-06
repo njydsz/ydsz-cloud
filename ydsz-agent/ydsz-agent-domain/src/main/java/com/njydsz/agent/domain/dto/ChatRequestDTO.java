@@ -2,10 +2,11 @@ package com.njydsz.agent.domain.dto;
 
 import java.util.List;
 
-import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 对话请求 DTO

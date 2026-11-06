@@ -7,11 +7,11 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 import com.njydsz.common.safe.idempotent.annotation.RepeatSubmit;
 import com.njydsz.common.safe.idempotent.strategy.RepeatSubmitTokenService;
@@ -147,7 +147,7 @@ public class RepeatSubmitAspect {
    */
   private BusinessException wrapCheckedException(Throwable cause) {
     BusinessException wrapped = new BusinessException(CoreExceptionCode.FAIL, cause);
-    wrapped.setMessage("接口执行异常: " + cause.getMessage());
+    wrapped.setMessage(I18n.message("common.safe.error.api.exception") + cause.getMessage());
     return wrapped;
   }
 

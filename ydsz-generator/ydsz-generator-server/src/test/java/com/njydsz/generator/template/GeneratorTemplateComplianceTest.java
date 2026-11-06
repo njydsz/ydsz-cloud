@@ -1,7 +1,5 @@
 package com.njydsz.generator.template;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -14,6 +12,8 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * 生成器模板的"不生成违规代码"门禁。

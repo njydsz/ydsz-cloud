@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.vo.JwksEndpointVO;
 import com.njydsz.userinfo.domain.vo.OidcDiscoveryEndpointVO;
 import com.njydsz.userinfo.server.config.OidcProperties;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * OIDC（OpenID Connect）协议端点 Controller

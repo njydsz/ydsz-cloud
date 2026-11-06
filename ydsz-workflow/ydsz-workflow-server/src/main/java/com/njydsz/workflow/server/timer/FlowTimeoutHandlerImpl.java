@@ -5,11 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.enums.FlowTimeoutStrategy;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.server.service.FlowTaskService;
 
 /**
@@ -18,7 +18,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * <p>执行任务超时后的具体策略逻辑：
  *
  * <ul>
- *   <li>AUTO_PASS — 标记"超时自动通过"，调用审批通过逻辑
+ *   <li>AUTO_PASS — 标记I18n.message("workflow.timeout.auto.pass")，调用审批通过逻辑
  *   <li>TRANSFER_ADMIN — 转交管理员（adminUserId）
  *   <li>TRANSFER_SUPERIOR — 转交上级（预留，转交默认管理员）
  *   <li>REMIND — 发送催办通知
@@ -79,7 +79,7 @@ public class FlowTimeoutHandlerImpl implements FlowTimeoutHandler {
       dto.setTaskId(task.getId());
       dto.setUserId("SYSTEM_TIMEOUT");
       dto.setUserName("系统超时");
-      dto.setComment("超时自动通过");
+      dto.setComment(I18n.message("workflow.timeout.auto.pass"));
       taskService.timeoutAutoPass(dto);
       log.info(I18n.message("workflow.timeout.auto.pass", new Object[]{task.getId()}));
       return I18n.message("workflow.timeout.result.auto_passed");
@@ -104,7 +104,7 @@ public class FlowTimeoutHandlerImpl implements FlowTimeoutHandler {
       dto.setUserName("系统超时");
       dto.setTargetUserId(adminUserId);
       dto.setTargetUserName("管理员");
-      dto.setComment("超时自动转交管理员");
+      dto.setComment(I18n.message("workflow.timeout.auto.transfer"));
       taskService.timeoutTransfer(dto);
         log.info(I18n.message("workflow.timeout.transfer.admin", new Object[]{task.getId(), adminUserId}));
       return I18n.message("workflow.timeout.result.transferred", new Object[]{adminUserId});

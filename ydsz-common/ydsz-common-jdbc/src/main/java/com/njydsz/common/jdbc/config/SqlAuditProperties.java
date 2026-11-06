@@ -44,32 +44,70 @@ public class SqlAuditProperties {
   private List<String> excludeTables;
   private List<String> excludeMethods;
 
-  public boolean isEnabled() { return isEnabled; }
-  public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+  public boolean isEnabled() {
+      return isEnabled;
+  }
+  public void setIsEnabled(boolean isEnabled) {
+      this.isEnabled = isEnabled;
+  }
   // Spring Boot 4.x relaxed binding: Java bean property "enabled" → setter setEnabled()
-  public void setEnabled(boolean enabled) { this.isEnabled = enabled; }
+  public void setEnabled(boolean enabled) {
+      this.isEnabled = enabled;
+  }
 
-  public boolean isAuditSelect() { return isAuditSelect; }
-  public void setAuditSelect(boolean isAuditSelect) { this.isAuditSelect = isAuditSelect; }
+  public boolean isAuditSelect() {
+      return isAuditSelect;
+  }
+  public void setAuditSelect(boolean isAuditSelect) {
+      this.isAuditSelect = isAuditSelect;
+  }
 
-  public boolean isAuditInsert() { return isAuditInsert; }
-  public void setAuditInsert(boolean isAuditInsert) { this.isAuditInsert = isAuditInsert; }
+  public boolean isAuditInsert() {
+      return isAuditInsert;
+  }
+  public void setAuditInsert(boolean isAuditInsert) {
+      this.isAuditInsert = isAuditInsert;
+  }
 
-  public boolean isAuditUpdate() { return isAuditUpdate; }
-  public void setAuditUpdate(boolean isAuditUpdate) { this.isAuditUpdate = isAuditUpdate; }
+  public boolean isAuditUpdate() {
+      return isAuditUpdate;
+  }
+  public void setAuditUpdate(boolean isAuditUpdate) {
+      this.isAuditUpdate = isAuditUpdate;
+  }
 
-  public boolean isAuditDelete() { return isAuditDelete; }
-  public void setAuditDelete(boolean isAuditDelete) { this.isAuditDelete = isAuditDelete; }
+  public boolean isAuditDelete() {
+      return isAuditDelete;
+  }
+  public void setAuditDelete(boolean isAuditDelete) {
+      this.isAuditDelete = isAuditDelete;
+  }
 
-  public boolean isLogParameters() { return isLogParameters; }
-  public void setLogParameters(boolean isLogParameters) { this.isLogParameters = isLogParameters; }
+  public boolean isLogParameters() {
+      return isLogParameters;
+  }
+  public void setLogParameters(boolean isLogParameters) {
+      this.isLogParameters = isLogParameters;
+  }
 
-  public int getMaxParameterLength() { return maxParameterLength; }
-  public void setMaxParameterLength(int maxParameterLength) { this.maxParameterLength = maxParameterLength; }
+  public int getMaxParameterLength() {
+      return maxParameterLength;
+  }
+  public void setMaxParameterLength(int maxParameterLength) {
+      this.maxParameterLength = maxParameterLength;
+  }
 
-  public List<String> getExcludeTables() { return excludeTables; }
-  public void setExcludeTables(List<String> excludeTables) { this.excludeTables = excludeTables; }
+  public List<String> getExcludeTables() {
+      return excludeTables;
+  }
+  public void setExcludeTables(List<String> excludeTables) {
+      this.excludeTables = excludeTables;
+  }
 
-  public List<String> getExcludeMethods() { return excludeMethods; }
-  public void setExcludeMethods(List<String> excludeMethods) { this.excludeMethods = excludeMethods; }
+  public List<String> getExcludeMethods() {
+      return excludeMethods;
+  }
+  public void setExcludeMethods(List<String> excludeMethods) {
+      this.excludeMethods = excludeMethods;
+  }
 }

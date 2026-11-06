@@ -4,16 +4,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.trigger.AgentTrigger;
-import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.agent.domain.trigger.TriggerRepository;
 import com.njydsz.agent.domain.trigger.TriggerType;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.locales.util.I18nMessages;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 触发器管理服务。

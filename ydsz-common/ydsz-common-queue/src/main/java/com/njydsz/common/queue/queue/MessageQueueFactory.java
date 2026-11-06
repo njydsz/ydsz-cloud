@@ -13,7 +13,6 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.mq.kafka.KafkaMQ;
-
 import com.njydsz.common.queue.mq.kafka.KafkaQueueProperties;
 import com.njydsz.common.queue.mq.rabbit.RabbitMQ;
 import com.njydsz.common.queue.mq.rabbit.RabbitMQProperties;

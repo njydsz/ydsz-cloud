@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.locales.util.KnownLocaleTags;
 import com.njydsz.common.locales.util.MessageSourceHolder;
 
@@ -57,6 +59,7 @@ public class I18nAdminController {
    *
    * @return 配置属性的安全视图
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.I18N_ADMIN_VIEW)
   @GetMapping("/config")
   @Operation(summary = "回显当前 i18n 配置")
   public Map<String, Object> getConfig() {
@@ -77,6 +80,7 @@ public class I18nAdminController {
    * @param key 要查询的 i18n 消息键
    * @return key 及其在各 Locale 下的翻译结果
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.I18N_ADMIN_VIEW)
   @GetMapping("/translate")
   @Operation(summary = "查询 key 在所有已知 Locale 下的翻译值")
   public Map<String, Object> translate(@RequestParam String key) {
@@ -107,6 +111,7 @@ public class I18nAdminController {
    * @param localeTag 语言标签（如 en_US）；缺失则返回空集合
    * @return 默认 Locale 存在而目标 Locale 缺失的 key 清单（最多 500 个）
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.I18N_ADMIN_VIEW)
   @GetMapping("/missing")
   @Operation(summary = "列出指定 Locale 缺失的 key")
   public Map<String, Object> findMissing(@RequestParam(required = false) String localeTag) {
@@ -136,6 +141,7 @@ public class I18nAdminController {
    *
    * @return 已知 locale tags
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.I18N_ADMIN_VIEW)
   @GetMapping("/languages")
   @Operation(summary = "查询已知语言标签集合")
   public Map<String, Object> getLanguages() {
@@ -150,6 +156,7 @@ public class I18nAdminController {
    *
    * @return 当前覆盖层的所有条目
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.I18N_ADMIN_VIEW)
   @GetMapping("/overrides")
   @Operation(summary = "查询运行时覆盖快照")
   public Map<String, Object> getOverrides() {
@@ -165,6 +172,7 @@ public class I18nAdminController {
    * @param request body 包含 key / locale / translatedText
    * @return 操作结果（including 前一覆盖值，首次为 null）
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.I18N_ADMIN_EDIT)
   @PutMapping("/override")
   @Operation(summary = "写入/更新运行时覆盖翻译")
   public Map<String, Object> putOverride(@RequestBody OverrideRequest request) {
@@ -190,6 +198,7 @@ public class I18nAdminController {
    * @param locale 语言标签
    * @return 操作结果
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.I18N_ADMIN_EDIT)
   @PostMapping("/override/remove")
   @Operation(summary = "移除运行时覆盖")
   public Map<String, Object> removeOverride(
@@ -207,6 +216,7 @@ public class I18nAdminController {
    *
    * @return 操作摘要
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.I18N_ADMIN_EDIT)
   @PostMapping("/reload")
   @Operation(summary = "清空所有 i18n 缓存")
   public Map<String, Object> reload() {

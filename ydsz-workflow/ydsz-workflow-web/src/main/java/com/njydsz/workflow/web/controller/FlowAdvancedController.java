@@ -444,6 +444,7 @@ public class FlowAdvancedController {
     try {
       instanceIdLong = Long.parseLong(instanceId);
     } catch (NumberFormatException e) {
+      // 预期行为：数值解析失败时降级返回默认值，非异常场景
       return 0;
     }
     List<Long> ttls = urgeLimiter.getCooldownSeconds(userId, List.of(instanceIdLong), "INSTANCE");

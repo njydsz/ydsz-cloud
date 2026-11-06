@@ -1,5 +1,7 @@
 package com.njydsz.system.web.controller;
 
+import java.util.Map;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +14,6 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.feature.FeatureFlagService;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-
-import java.util.Map;
 
 /**
  * 远程特性开关 Controller。

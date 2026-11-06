@@ -7,9 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.dto.UserChannelBindingDTO;
 import com.njydsz.message.domain.query.MsgUserChannelQuery;
 import com.njydsz.message.domain.repository.MsgUserChannelRepository;

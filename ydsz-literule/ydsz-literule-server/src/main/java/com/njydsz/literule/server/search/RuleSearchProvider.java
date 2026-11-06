@@ -9,13 +9,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 

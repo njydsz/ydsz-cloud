@@ -3,8 +3,9 @@ package com.njydsz.message.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 
-import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 多租户消息配置 DTO（命令请求参数）。

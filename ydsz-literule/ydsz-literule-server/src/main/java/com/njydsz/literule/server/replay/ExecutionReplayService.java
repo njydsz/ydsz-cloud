@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -114,15 +115,15 @@ public class ExecutionReplayService {
    */
   public ReplayResult replayByTraceId(String traceId) {
     if (traceId == null || traceId.isBlank()) {
-      return ReplayResult.error(traceId, "traceId 不能为空");
+      return ReplayResult.error(traceId, I18n.message("literule.error.traceid.required"));
     }
     if (traceRecorder == null) {
-      return ReplayResult.error(traceId, "TraceRecorder 未配置，无法加载历史轨迹");
+      return ReplayResult.error(traceId, I18n.message("literule.error.trace.recorder.not.configured"));
     }
 
     List<RuleExecutionTraceVO> traces = traceRecorder.getByTraceId(traceId);
     if (traces == null || traces.isEmpty()) {
-      return ReplayResult.error(traceId, "未找到 traceId=" + traceId + " 的执行记录");
+      return ReplayResult.error(traceId, I18n.message("literule.error.trace.not.found") + traceId + " 的执行记录");
     }
 
     // 取第一条 trace 的 factsSnapshot 作为回放输入
@@ -251,17 +252,17 @@ public class ExecutionReplayService {
    */
   public ReplayResult replayWithVersion(String traceId, String ruleCode, int version) {
     if (traceId == null || traceId.isBlank()) {
-      return ReplayResult.error(traceId, "traceId 不能为空");
+      return ReplayResult.error(traceId, I18n.message("literule.error.traceid.required"));
     }
     if (versionRepository == null) {
-      return ReplayResult.error(traceId, "版本仓库未配置，不支持版本回放");
+      return ReplayResult.error(traceId, I18n.message("literule.error.replay.repo.not.configured"));
     }
 
     // 加载历史 trace
     List<RuleExecutionTraceVO> traces =
         traceRecorder != null ? traceRecorder.getByTraceId(traceId) : Collections.emptyList();
     if (traces.isEmpty()) {
-      return ReplayResult.error(traceId, "未找到 traceId=" + traceId + " 的执行记录");
+      return ReplayResult.error(traceId, I18n.message("literule.error.trace.not.found") + traceId + " 的执行记录");
     }
 
     // 查找目标规则的 trace
@@ -276,13 +277,13 @@ public class ExecutionReplayService {
 
     Map<String, Object> facts = targetTrace.getFactsSnapshot();
     if (facts == null || facts.isEmpty()) {
-      return ReplayResult.error(traceId, "事实快照为空，无法回放");
+      return ReplayResult.error(traceId, I18n.message("literule.error.replay.snapshot.empty"));
     }
 
     // 加载指定版本的规则定义
     Optional<RuleDefinitionVO> versionOpt = versionRepository.rollback(ruleCode, version, "REPLAY");
     if (versionOpt.isEmpty()) {
-      return ReplayResult.error(traceId, "未找到规则 " + ruleCode + " 的版本 " + version);
+      return ReplayResult.error(traceId, I18n.message("literule.error.replay.rule.not.found") + ruleCode + " 的版本 " + version);
     }
 
     // 将 VO 转换回 RuleDefinitionDTO 用于评估

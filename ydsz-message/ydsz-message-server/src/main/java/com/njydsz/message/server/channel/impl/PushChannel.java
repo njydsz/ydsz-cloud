@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
@@ -44,7 +45,7 @@ public class PushChannel implements MessageChannel {
   @Override
   public MessageSendResultVO send(MessageItemRequestDTO request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "推送目标不能为空", "推送目标不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, I18n.message("message.error.receiver.push.required"), I18n.message("message.error.receiver.push.required"), null);
     }
     PushProvider provider = selectProvider();
     MessageSendResultVO result = provider.send(request, null);

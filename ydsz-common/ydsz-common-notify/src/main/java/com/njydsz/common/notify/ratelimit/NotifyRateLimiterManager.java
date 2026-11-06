@@ -9,8 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.notify.core.NotifyCircuitBreakerRegistry;
 import com.njydsz.common.notify.enums.NotifyChannel;
-import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
 import com.njydsz.common.redis.service.RedisRateLimiter;
+import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
 
 /**
  * 通知渠道限流管理器

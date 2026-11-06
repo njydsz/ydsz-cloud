@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
  * 鉴权路径排除服务（P1-3 路径排除配置化）。

@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.common.feign.dto.BroadcastRequestDTO;
 import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
 import com.njydsz.message.api.fallback.NotificationClientFallbackFactory;
+import com.njydsz.message.domain.dto.MessageSendDTO;
 
 /**
  * 通知中心 Feign 客户端（通用通知能力）。

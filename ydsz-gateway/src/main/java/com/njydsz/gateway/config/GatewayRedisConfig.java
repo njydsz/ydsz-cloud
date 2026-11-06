@@ -2,6 +2,7 @@ package com.njydsz.gateway.config;
 
 import java.time.Duration;
 
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +14,6 @@ import org.springframework.data.redis.connection.lettuce.LettucePoolingClientCon
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.metrics.RedisMetricsCollector;
@@ -143,9 +143,17 @@ public class GatewayRedisConfig {
 
   /** 永远返回 null 的 ObjectProvider 实现。 */
   private static class NullObjectProvider implements ObjectProvider<Object> {
-    @Override public Object getObject(Object... args) { return null; }
-    @Override public Object getObject() { return null; }
-    @Override public Object getIfUnique() { return null; }
-    @Override public Object getIfAvailable() { return null; }
+    @Override public Object getObject(Object... args) {
+        return null;
+    }
+    @Override public Object getObject() {
+        return null;
+    }
+    @Override public Object getIfUnique() {
+        return null;
+    }
+    @Override public Object getIfAvailable() {
+        return null;
+    }
   }
 }

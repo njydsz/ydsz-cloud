@@ -185,6 +185,38 @@ def source_suffix_of(path: str) -> str:
     return posix[idx + len(MAIN_SOURCE_MARKER) :] if idx > 0 else posix
 
 
+# DDD 分层标识（ydsz-cloud 模块目录约定）
+LAYER_MARKERS = (
+    ("-domain", "domain"),
+    ("-infra", "infra"),
+    ("-server", "server"),
+    ("-web", "web"),
+    ("-app", "app"),
+    ("-api", "api"),
+)
+
+
+def layer_of(path: str) -> str:
+    """按模块目录判定 DDD 分层；common 子模块返回 common:<name>。
+
+    ydsz-a/ydsz-a-server/src/main/java/... → server
+    ydsz-common/ydsz-common-json/src/main/java/... → common:json
+    其他 → unknown
+    """
+    posix = path.replace("\\", "/")
+    idx = posix.find(MAIN_SOURCE_MARKER)
+    module_dir = posix[:idx] if idx > 0 else posix
+    for marker, name in LAYER_MARKERS:
+        if marker in module_dir:
+            return name
+    if module_dir.startswith("ydsz-common/"):
+        tail = module_dir[len("ydsz-common/"):]
+        if tail.startswith("ydsz-common-"):
+            tail = tail[len("ydsz-common-"):]
+        return f"common:{tail}" if tail else "common"
+    return "unknown"
+
+
 # ---------------------------------------------------------------- 覆盖率索引
 
 
@@ -310,6 +342,43 @@ def enforce(result: dict, fail_under: float) -> list[str]:
 def diff_range_label(base_ref: str) -> str:
     """门禁输出里的区间标签：实测范围是 merge-base → 工作区，不是 → HEAD。"""
     return f"{base_ref}...工作区"
+
+
+def print_by_layer(result: dict) -> None:
+    """按 DDD 分层汇总增量覆盖率，暴露"web 层高、domain/infra 层空洞"式偏斜。
+
+    背景（2026-11-06 全仓审查）：测试文件 77% 集中在 -web 层，9 个业务模块
+    domain 层零测试。只看全局覆盖率会被 web 层拉高，掩盖 domain/infra 的空洞。
+    本输出把分层数据显式暴露，供 CI summary 与人工评审参考。
+    """
+    buckets: dict[str, dict[str, int]] = {}
+    for file_path, stat in result["files"].items():
+        layer = layer_of(file_path)
+        b = buckets.setdefault(layer, {"executable": 0, "covered": 0, "files": 0})
+        b["executable"] += stat["executable"]
+        b["covered"] += stat["covered"]
+        b["files"] += 1
+
+    if not buckets:
+        return
+
+    print("\n分层增量覆盖率（DDD layer breakdown）：")
+    order = ["domain", "infra", "server", "web", "api", "app", "unknown"]
+    layers = sorted(
+        buckets.items(),
+        key=lambda kv: (order.index(kv[0]) if kv[0] in order else len(order), kv[0]),
+    )
+    for layer, b in layers:
+        total = b["executable"]
+        if not total:
+            continue
+        ratio = b["covered"] / total * 100.0
+        flag = ""
+        if ratio < 40.0:
+            flag = "  ⚠️ 低于 40%"
+        print(
+            f"   {layer:<24} {ratio:6.1f}%  ({b['covered']}/{total} 行, {b['files']} 文件){flag}"
+        )
 
 
 # ---------------------------------------------------------------- git
@@ -459,6 +528,16 @@ def self_test() -> int:
     case("模块与包内路径可还原", module_of("m/src/main/java/com/x/A.java") == "m"
          and source_suffix_of("m/src/main/java/com/x/A.java") == "com/x/A.java")
 
+    # ---- DDD 分层判定（--by-layer 依赖）
+    case("业务模块分层：domain", layer_of("ydsz-a/ydsz-a-domain/src/main/java/com/x/A.java") == "domain")
+    case("业务模块分层：infra", layer_of("ydsz-a/ydsz-a-infra/src/main/java/com/x/A.java") == "infra")
+    case("业务模块分层：server", layer_of("ydsz-a/ydsz-a-server/src/main/java/com/x/A.java") == "server")
+    case("业务模块分层：web", layer_of("ydsz-a/ydsz-a-web/src/main/java/com/x/A.java") == "web")
+    case("业务模块分层：api", layer_of("ydsz-a/ydsz-a-api/src/main/java/com/x/A.java") == "api")
+    case("业务模块分层：app", layer_of("ydsz-a/ydsz-a-app/src/main/java/com/x/A.java") == "app")
+    case("common 子模块带名字", layer_of("ydsz-common/ydsz-common-json/src/main/java/com/x/A.java") == "common:json")
+    case("网关单模块归 unknown", layer_of("ydsz-gateway/src/main/java/com/x/A.java") == "unknown")
+
     # ---- 非可执行行免核验（不能把"没法测的 import"读成"没测的业务代码"，也不能反过来）
     with_text = parse_added_lines_with_text(diff)
     case("带文本解析出行号与内容",
@@ -586,6 +665,11 @@ def main() -> int:
     )
     parser.add_argument("--self-test", action="store_true", help="运行反例夹具自检")
     parser.add_argument("--show-files", action="store_true", help="打印每个文件的可执行新增行明细")
+    parser.add_argument(
+        "--by-layer",
+        action="store_true",
+        help="按 DDD 分层（domain/infra/server/web/api/app/common:*）输出增量覆盖率，暴露层间偏斜",
+    )
     args = parser.parse_args()
 
     if args.self_test:
@@ -641,6 +725,9 @@ def main() -> int:
         f"增量行覆盖率：{ratio_text}（{result['covered']}/{result['total']} 行可执行新增行被覆盖），"
         f"阈值 {args.fail_under:g}%"
     )
+
+    if args.by_layer:
+        print_by_layer(result)
 
     errors = enforce(result, args.fail_under)
     for line in errors:

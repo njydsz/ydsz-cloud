@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.redis.service.ops.RedisPubSubOps;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.redis.service.ops.RedisPubSubOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.workflow.server.config.FlowProperties;
 

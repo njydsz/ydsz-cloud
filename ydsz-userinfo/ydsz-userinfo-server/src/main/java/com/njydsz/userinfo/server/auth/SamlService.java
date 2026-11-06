@@ -25,12 +25,12 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.server.config.SamlProperties;
 import com.njydsz.userinfo.server.service.SamlIdpConfigService;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * SAML 2.0 Service Provider 服务（P2-1 多租户 IdP 路由）。

@@ -3,6 +3,7 @@ package com.njydsz.common.lock.aspect;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -139,7 +140,7 @@ public class DistributedScheduledAspect {
     } catch (RuntimeException | Error e) {
       return handleError(onError, e, joinPoint);
     } catch (Throwable t) {
-      return handleError(onError, new DistributedLockException("定时任务执行异常", t), joinPoint);
+      return handleError(onError, new DistributedLockException(I18n.message("common.lock.error.scheduled.exception"), t), joinPoint);
     }
   }
 

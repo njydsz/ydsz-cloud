@@ -40,6 +40,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
+        <!--common-json（IndexSyncService/PgSearchStrategy 直接使用 YdszJson）-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
         <!--common-exception-->
         <dependency>
             <groupId>com.njydsz</groupId>

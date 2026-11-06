@@ -5,6 +5,7 @@ import java.lang.reflect.Parameter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -186,7 +187,7 @@ public class IdempotentAspect {
    */
   private BusinessException wrapCheckedException(Throwable cause) {
     BusinessException wrapped = new BusinessException(CoreExceptionCode.FAIL, cause);
-    wrapped.setMessage("接口执行异常: " + cause.getMessage());
+    wrapped.setMessage(I18n.message("common.safe.error.api.exception") + cause.getMessage());
     return wrapped;
   }
 

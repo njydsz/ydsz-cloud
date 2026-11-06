@@ -1,9 +1,11 @@
 package com.njydsz.common.socket.handler;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.SmartInitializingSingleton;
@@ -183,12 +185,20 @@ public class WebSocketMessageDispatcher implements SmartInitializingSingleton {
    * @param sessionAttributes Session 属性
    */
   private void invokeHandler(
-      HandlerMethod handler, String payloadJson, Map<String, Object> sessionAttributes) throws Exception {
+      HandlerMethod handler, String payloadJson, Map<String, Object> sessionAttributes) {
     Object payload = messageSerializer.deserialize(payloadJson, handler.payloadType);
-    if (handler.isHasSessionAttributesParam) {
-      handler.method.invoke(handler.bean, payload, WebSocketSessionAttributes.of(sessionAttributes));
-    } else {
-      handler.method.invoke(handler.bean, payload);
+    try {
+      if (handler.isHasSessionAttributesParam) {
+        handler.method.invoke(handler.bean, payload, WebSocketSessionAttributes.of(sessionAttributes));
+      } else {
+        handler.method.invoke(handler.bean, payload);
+      }
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      Throwable cause = e instanceof InvocationTargetException ? e.getCause() : e;
+      throw new IllegalStateException(
+          I18n.message("common.socket.handler.invoke_failed",
+              new Object[] {handler.method.getDeclaringClass().getName() + "." + handler.method.getName()}),
+          cause);
     }
   }
 

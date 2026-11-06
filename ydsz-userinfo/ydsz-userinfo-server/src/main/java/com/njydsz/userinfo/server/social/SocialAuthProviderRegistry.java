@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.userinfo.domain.social.SocialAuthProvider;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.userinfo.domain.social.SocialAuthProvider;
 
 /**
  * 社交认证提供者注册表（P3-4：运行时动态注册预留）。

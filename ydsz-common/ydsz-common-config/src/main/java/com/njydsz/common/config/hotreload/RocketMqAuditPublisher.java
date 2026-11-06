@@ -4,13 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 基于 RocketMQ 的配置审计发布器（P2-B2 储备实现）。

@@ -1,7 +1,7 @@
 package com.njydsz.message.server.listener;
 
 
-import com.njydsz.common.locales.util.I18n;import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -11,6 +11,7 @@ import com.njydsz.common.event.consumer.OutboxIdempotentConsumer;
 import com.njydsz.common.event.consumer.OutboxSubscriber;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.notify.helper.NotifyHelper;
 

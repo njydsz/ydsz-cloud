@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.validation.annotation.Validated;
@@ -17,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.validation.Valid;
-
+import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -76,6 +77,7 @@ public class RuleVariableAdminController {
    * @return 变量定义列表
    */
   @Operation(summary = "列出全部已启用变量")
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_VARIABLE_VIEW)
   @GetMapping
   public YdszResponse<List<VariableDefinitionVO>> list(
       @RequestParam(required = false) String category) {
@@ -97,6 +99,7 @@ public class RuleVariableAdminController {
    * @return 变量定义
    */
   @Operation(summary = "查询单个变量定义")
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_VARIABLE_VIEW)
   @GetMapping("/{varName}")
   public YdszResponse<VariableDefinitionVO> get(@PathVariable String varName) {
     VariableDefinition def = variableRegistry.lookup(varName);
@@ -120,6 +123,7 @@ public class RuleVariableAdminController {
       content = "'save'")
   @RateLimit(resource = "literule.rule_variable_admin.save", threshold = 50)
   @Operation(summary = "新增或更新变量定义")
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_VARIABLE_EDIT)
   @PostMapping
   public YdszResponse<VariableDefinitionVO> save(@Valid @RequestBody VariableDefinition definition) {
     if (definition == null || definition.getName() == null || definition.getName().isBlank()) {
@@ -143,6 +147,7 @@ public class RuleVariableAdminController {
       content = "'delete'")
   @RateLimit(resource = "literule.rule_variable_admin.delete", threshold = 50)
   @Operation(summary = "删除变量定义")
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_VARIABLE_EDIT)
   @DeleteMapping("/{varName}")
   public YdszResponse<Void> delete(@PathVariable String varName) {
     variableRegistry.unregister(varName);
@@ -162,6 +167,7 @@ public class RuleVariableAdminController {
       content = "'refresh'")
   @RateLimit(resource = "literule.rule_variable_admin.refresh", threshold = 50)
   @Operation(summary = "手动刷新变量缓存")
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_VARIABLE_EDIT)
   @PostMapping("/refresh")
   public YdszResponse<Void> refresh() {
     variableRegistry.refresh();
@@ -177,6 +183,7 @@ public class RuleVariableAdminController {
    * @return 可用变量定义列表
    */
   @Operation(summary = "列出表达式校验服务可用变量")
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_VARIABLE_VIEW)
   @GetMapping("/available")
   public YdszResponse<List<VariableDefinitionVO>> listAvailable() {
     return YdszResponse.success(

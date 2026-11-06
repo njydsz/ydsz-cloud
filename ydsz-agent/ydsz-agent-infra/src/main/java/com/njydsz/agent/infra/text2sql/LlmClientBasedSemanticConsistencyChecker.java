@@ -2,6 +2,7 @@ package com.njydsz.agent.infra.text2sql;
 
 import java.util.List;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -86,13 +87,13 @@ public class LlmClientBasedSemanticConsistencyChecker implements SemanticConsist
       String content = response.getContent();
       if (content == null || content.isBlank()) {
         log.warn("[SemanticConsistency] LLM 返回空响应，默认一致性为 1.0");
-        return new ConsistencyCheckResult(1.0, "LLM 返回空响应，默认通过");
+        return new ConsistencyCheckResult(1.0, I18n.message("agent.error.consistency.llm.empty.response"));
       }
       // 解析 JSON 响应
       return parseCheckResult(content, userQuery, generatedSql);
     } catch (Exception e) {
       log.warn("[SemanticConsistency] LLM 调用失败，默认一致性为 1.0: {}", e.getMessage());
-      return new ConsistencyCheckResult(1.0, "LLM 调用失败，默认通过: " + e.getMessage());
+      return new ConsistencyCheckResult(1.0, I18n.message("agent.error.consistency.llm.failed", new Object[]{e.getMessage()}));
     }
   }
 

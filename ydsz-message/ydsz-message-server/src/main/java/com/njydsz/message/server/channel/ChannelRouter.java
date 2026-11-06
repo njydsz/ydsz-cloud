@@ -1,7 +1,7 @@
 package com.njydsz.message.server.channel;
 
 
-import com.njydsz.common.locales.util.I18n;import java.time.Duration;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,9 +20,10 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelScoreCalculator.ChannelScore;
 import com.njydsz.message.server.channel.ChannelScoreCalculator.ScoreConfig;
@@ -146,7 +147,7 @@ public class ChannelRouter {
     if (breaker != null && breaker.getState() == CircuitBreaker.State.OPEN) {
       log.warn(I18n.message("message.log.other.ChannelRouter_channel_{}_state_{}.174249"), channel, breaker.getState());
       messageMetrics.recordChannelError(channel, "CIRCUIT_BREAKER");
-      return MessageSendResultVO.fail(channel, null, "通道熔断中，请稍后重试", "通道熔断中，请稍后重试", null);
+      return MessageSendResultVO.fail(channel, null, I18n.message("message.error.channel.circuit.broken"), I18n.message("message.error.channel.circuit.broken"), null);
     }
     long start = System.currentTimeMillis();
     try {
@@ -236,7 +237,7 @@ public class ChannelRouter {
 
     if (enabledChannels.isEmpty()) {
       log.warn(I18n.message("message.log.other.ChannelRouter_dispatchWithScore.8596a5"));
-      return MessageSendResultVO.fail(null, null, "无可用启用通道", "无可用启用通道", null);
+      return MessageSendResultVO.fail(null, null, I18n.message("message.error.no.enabled.channel"), I18n.message("message.error.no.enabled.channel"), null);
     }
 
     // 2. 按评分降序排序

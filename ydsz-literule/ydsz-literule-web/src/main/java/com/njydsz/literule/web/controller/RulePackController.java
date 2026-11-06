@@ -404,6 +404,7 @@ public class RulePackController {
     try {
       return Integer.parseInt(v.toString());
     } catch (NumberFormatException e) {
+      // 预期行为：数值解析失败时降级返回默认值，非异常场景
       return defaultValue;
     }
   }

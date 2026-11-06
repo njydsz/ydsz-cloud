@@ -1,9 +1,9 @@
 package com.njydsz.system.domain.vo;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * 配置版本对比 VO（Nacos / Apollo 标配的「配置 diff」功能）。

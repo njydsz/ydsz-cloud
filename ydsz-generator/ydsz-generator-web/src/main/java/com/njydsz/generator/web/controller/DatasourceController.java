@@ -1,9 +1,11 @@
 package com.njydsz.generator.web.controller;
 
+
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,9 +22,9 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.entity.GenDatasource;
-import com.njydsz.generator.web.security.PermissionCodes;
 import com.njydsz.generator.service.DatasourceService;
 import com.njydsz.generator.vo.GenDatasourceRespVO;
+import com.njydsz.generator.web.security.PermissionCodes;
 
 /**
  * 数据源管理 REST 控制器。
@@ -83,7 +85,7 @@ public class DatasourceController {
   @Operation(summary = "测试数据库连接")
   @Audit(module = "数据源管理", action = AuditAction.OTHER, content = "'测试数据库连接'", recordRequest = false)
   @PostMapping("/test")
-  public YdszResponse<Boolean> testConnection(@RequestBody GenDatasource datasource) {
+  public YdszResponse<Boolean> testConnection(@Valid @RequestBody GenDatasource datasource) {
     return YdszResponse.success(datasourceService.testConnection(datasource));
   }
 
@@ -101,7 +103,7 @@ public class DatasourceController {
   @Operation(summary = "创建数据源")
   @Audit(module = "数据源管理", action = AuditAction.CREATE, excludeParams = {"password", "url"}, recordRequest = false)
   @PostMapping
-  public YdszResponse<GenDatasourceRespVO> create(@RequestBody GenDatasource datasource) {
+  public YdszResponse<GenDatasourceRespVO> create(@Valid @RequestBody GenDatasource datasource) {
     return YdszResponse.success(datasourceService.createAndReturnVO(datasource));
   }
 
@@ -116,7 +118,7 @@ public class DatasourceController {
   @Operation(summary = "更新数据源")
   @Audit(module = "数据源管理", action = AuditAction.UPDATE, excludeParams = {"password", "url"}, recordRequest = false)
   @PostMapping("/update")
-  public YdszResponse<GenDatasourceRespVO> update(@RequestBody GenDatasource datasource) {
+  public YdszResponse<GenDatasourceRespVO> update(@Valid @RequestBody GenDatasource datasource) {
     return YdszResponse.success(datasourceService.updateAndReturnVO(datasource));
   }
 

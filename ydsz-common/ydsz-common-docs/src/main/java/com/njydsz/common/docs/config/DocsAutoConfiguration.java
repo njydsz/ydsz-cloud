@@ -11,13 +11,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
-import com.njydsz.common.thread.util.ExecutorUtils;
-import com.njydsz.common.thread.util.ExecutorUtils.BlockingQueueType;
-
 import com.njydsz.common.docs.health.DocsHealthIndicator;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
 import com.njydsz.common.docs.security.pii.PiiDetector;
 import com.njydsz.common.docs.service.internal.AsyncDocumentParser;
+import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.thread.util.ExecutorUtils.BlockingQueueType;
 
 /**
  * 文档处理模块自动配置类

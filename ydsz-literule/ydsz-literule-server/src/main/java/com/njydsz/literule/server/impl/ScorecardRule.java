@@ -9,14 +9,14 @@ import lombok.Data;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.literule.domain.Rule;
 import com.njydsz.literule.domain.dto.ScorecardDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 评分卡规则：基于多维度评分因子加权计算总分，按阈值区间或自定义评级映射决定严重度

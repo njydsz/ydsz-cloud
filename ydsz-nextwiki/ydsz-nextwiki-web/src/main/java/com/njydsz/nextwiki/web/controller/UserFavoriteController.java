@@ -2,6 +2,7 @@ package com.njydsz.nextwiki.web.controller;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import io.swagger.v3.oas.annotations.Operation;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.nextwiki.domain.vo.UserFavoriteVO;

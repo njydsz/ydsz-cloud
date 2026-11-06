@@ -1,13 +1,5 @@
 package com.njydsz.literule.infra.repository.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +25,14 @@ import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 import com.njydsz.literule.infra.mapper.RuleVersionHistoryMapper;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link RuleVersionRepositoryImpl} 单元测试（版本快照与回滚）。

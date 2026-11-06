@@ -9,13 +9,14 @@ import java.util.Set;
 
 import lombok.Getter;
 import lombok.Setter;
-import com.njydsz.common.locales.spi.I18nBasenameProvider;
-import com.njydsz.common.locales.util.KnownLocaleTags;
-import com.njydsz.common.locales.util.RuntimeStrictness;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+
+import com.njydsz.common.locales.spi.I18nBasenameProvider;
+import com.njydsz.common.locales.util.KnownLocaleTags;
+import com.njydsz.common.locales.util.RuntimeStrictness;
 
 /**
  * 国际化配置属性

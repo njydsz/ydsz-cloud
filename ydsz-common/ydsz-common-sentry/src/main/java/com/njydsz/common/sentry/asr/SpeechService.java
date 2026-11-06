@@ -20,7 +20,7 @@ public interface SpeechService {
    * @param sampleRate 采样率（16000）
    * @return 识别文本
    */
-  String recognize(byte[] audioBytes, String format, int sampleRate) throws Exception;
+  String recognize(byte[] audioBytes, String format, int sampleRate);
 
   /**
    * TTS — 文本转语音。
@@ -31,7 +31,7 @@ public interface SpeechService {
    * @param volume 音量（0-100）
    * @return 音频字节（mp3）
    */
-  byte[] synthesize(String text, String voice, int speed, int volume) throws Exception;
+  byte[] synthesize(String text, String voice, int speed, int volume);
 
   /**
    * 是否可用（后端 Provider 已装配）。

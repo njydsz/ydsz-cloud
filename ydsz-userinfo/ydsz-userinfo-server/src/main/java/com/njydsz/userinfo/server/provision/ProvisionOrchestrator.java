@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.password.PwdUtils;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
@@ -19,7 +20,6 @@ import com.njydsz.userinfo.domain.provision.ProvisionRecordPage;
 import com.njydsz.userinfo.domain.provision.ProvisionResult;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 身份供给编排器（P0-1 Identity Provisioning 管道）。

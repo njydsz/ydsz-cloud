@@ -2,13 +2,14 @@ package com.njydsz.nextwiki.server.service;
 
 import java.io.InputStream;
 
-import com.njydsz.common.file.virus.VirusScanner;
+import com.njydsz.common.locales.util.I18n;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.file.virus.VirusScanner;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**
@@ -61,11 +62,11 @@ public class VirusScanApplicationService {
       return switch (result) {
         case CLEAN -> ScanResult.clean();
         case INFECTED -> ScanResult.infected("unknown");
-        case ERROR -> ScanResult.error("扫描过程发生错误");
+        case ERROR -> ScanResult.error(I18n.message("nextwiki.error.virus.scan.error"));
       };
     } catch (Exception e) {
       log.error("[VirusScanApplicationService] 病毒扫描异常", e);
-      return ScanResult.error("扫描异常: " + e.getMessage());
+      return ScanResult.error(I18n.message("nextwiki.error.virus.scan.exception") + e.getMessage());
     }
   }
 

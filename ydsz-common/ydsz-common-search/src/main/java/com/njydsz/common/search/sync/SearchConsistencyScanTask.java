@@ -1,14 +1,13 @@
 package com.njydsz.common.search.sync;
 
-import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.common.search.config.SearchConsistencyProperties;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
+
+import com.njydsz.common.lock.annotation.DistributedScheduled;
+import com.njydsz.common.search.config.SearchConsistencyProperties;
 
 /**
  * 搜索索引一致性巡检任务（P1-4 调度层）。

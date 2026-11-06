@@ -14,9 +14,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PreDestroy;
-
-import com.njydsz.common.thread.util.ExecutorUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEvent;
@@ -28,6 +25,7 @@ import org.springframework.core.env.PropertySource;
 
 import com.njydsz.common.config.ConfigProperties;
 import com.njydsz.common.config.hotreload.ConfigChangeEvent.ChangeType;
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 配置变更桥接器

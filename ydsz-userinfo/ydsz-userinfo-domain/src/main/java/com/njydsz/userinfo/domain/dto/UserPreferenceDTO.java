@@ -1,7 +1,8 @@
 package com.njydsz.userinfo.domain.dto;
 
-import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Data;
+
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * 用户偏好保存 DTO

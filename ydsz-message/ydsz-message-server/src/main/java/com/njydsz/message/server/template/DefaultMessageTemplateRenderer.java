@@ -8,9 +8,9 @@ import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.server.template.util.TemplateFilterUtil;
 
 /**

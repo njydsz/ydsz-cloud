@@ -2,11 +2,10 @@ package com.njydsz.agent.domain.config.properties;
 
 import java.time.Duration;
 
-import org.springframework.stereotype.Component;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * A2A（Agent-to-Agent）协议配置。

@@ -1,13 +1,5 @@
 package com.njydsz.literule.server.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +30,14 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.server.config.LiteRuleProperties;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RuleLifecycleServiceTest {

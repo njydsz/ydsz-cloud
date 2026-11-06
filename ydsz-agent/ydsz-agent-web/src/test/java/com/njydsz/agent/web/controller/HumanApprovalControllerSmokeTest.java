@@ -1,10 +1,5 @@
 package com.njydsz.agent.web.controller;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +11,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.njydsz.agent.server.agent.AgentFacade;
 import com.njydsz.agent.server.agent.HumanApprovalService;
 import com.njydsz.common.test.BaseControllerMockTest;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * {@link HumanApprovalController} Smoke Test.

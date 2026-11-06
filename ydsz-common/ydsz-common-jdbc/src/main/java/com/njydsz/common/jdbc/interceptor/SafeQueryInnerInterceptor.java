@@ -1,27 +1,19 @@
 package com.njydsz.common.jdbc.interceptor;
 
 import java.sql.Connection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.regex.Matcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.domain.config.DomainProperties;
 import com.njydsz.common.domain.query.DeepPaginationRisk;

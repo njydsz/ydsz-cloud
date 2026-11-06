@@ -8,14 +8,17 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.generator.engine.GeneratorTypeMapper;
 import com.njydsz.generator.entity.GenColumnMeta;
@@ -24,9 +27,6 @@ import com.njydsz.generator.entity.GenTableMeta;
 import com.njydsz.generator.enums.DbDialectEnum;
 import com.njydsz.generator.repository.GenColumnMetaRepository;
 import com.njydsz.generator.repository.GenTableMetaRepository;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * 表&列元数据领域服务。

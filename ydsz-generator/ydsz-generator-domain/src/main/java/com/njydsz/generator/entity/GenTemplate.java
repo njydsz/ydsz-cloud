@@ -2,11 +2,14 @@ package com.njydsz.generator.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 
 /**
@@ -25,12 +28,17 @@ import lombok.experimental.SuperBuilder;
 public class GenTemplate extends MpBaseEntity<String> {
 
   /** 所属模板分组 ID。 */
+  @NotBlank(message = "{generator.template.groupId.notblank}")
   private String groupId;
   /** 文件名（如 entity.vm、vue/api.vm）。 */
+  @NotBlank(message = "{generator.template.fileName.notblank}")
+  @Size(max = 255, message = "{generator.template.fileName.size}")
   private String fileName;
   /** 模板用途描述。 */
+  @Size(max = 255, message = "{generator.template.description.size}")
   private String description;
   /** 模板内容（Velocity 语法）。 */
+  @Size(max = 1048576, message = "{generator.template.content.size}")
   private String content;
   /** 是否为虚拟文件夹标记。 */
   private Boolean isFolder;

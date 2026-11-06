@@ -1,13 +1,14 @@
 package com.njydsz.message.server.service.batch;
 
 
-import com.njydsz.common.locales.util.I18n;import java.util.HashMap;
+import java.util.HashMap;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.server.realtime.RealtimePushService;
 

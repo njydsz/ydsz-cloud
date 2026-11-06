@@ -26,15 +26,16 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
-import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.domain.query.PageQuery;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.RuleEngine;
@@ -50,12 +51,12 @@ import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.RuleVersionDiffVO;
-import com.njydsz.literule.server.version.RuleVersionDiff;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.server.config.ABTestService;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
+import com.njydsz.literule.server.version.RuleVersionDiff;
 import com.njydsz.literule.server.version.RuleVersionDiffService;
 
 /**
@@ -127,6 +128,7 @@ public class RuleAdminController {
    */
   @Operation(summary = "分页查询规则定义", description = "分页查询规则引擎中所有规则定义，支持按页码、页大小、排序字段进行分页")
   @ApiResponse(responseCode = "200", description = "分页规则定义列表")
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_VIEW)
   @GetMapping
   public YdszResponse<PageResponse<List<RuleDefinitionVO>>> list(
       PageQuery pageQuery) {
@@ -147,6 +149,7 @@ public class RuleAdminController {
   @Operation(summary = "查询单条规则定义", description = "根据规则编码查询单条规则定义的详细信息")
   @Parameter(name = "ruleCode", description = "规则编码", required = true)
   @ApiResponse(responseCode = "200", description = "规则定义详情")
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_VIEW)
   @GetMapping("/{ruleCode}")
   public YdszResponse<RuleDefinitionVO> get(@PathVariable String ruleCode) {
     return YdszResponse.success(
@@ -225,6 +228,7 @@ public class RuleAdminController {
   @Parameter(name = "pageNum", description = "页码（默认 1）", required = false)
   @Parameter(name = "pageSize", description = "每页条数（默认 20，最大 100）", required = false)
   @ApiResponse(responseCode = "200", description = "分页版本历史")
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_VIEW)
   @GetMapping("/{ruleCode}/versions")
   public YdszResponse<PageResponse<List<RuleVersionVO>>> listVersions(
       @PathVariable String ruleCode, @Valid PageQuery pageQuery) {
@@ -242,6 +246,7 @@ public class RuleAdminController {
    * @return 结构化 Diff 结果
    * @since 26.10.01
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_VIEW)
   @GetMapping("/{ruleCode}/version-diff")
   public YdszResponse<RuleVersionDiffVO> versionDiff(
       @PathVariable String ruleCode, @RequestParam int oldVersion, @RequestParam int newVersion) {
@@ -281,6 +286,7 @@ public class RuleAdminController {
       action = AuditAction.CREATE,
       content = "'规则回滚: ' + #ruleCode + ', 目标版本: ' + #version + ', 操作人: ' + #operator")
   @RateLimit(resource = "literule.rule_admin.rollback", threshold = 50)
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @PostMapping("/{ruleCode}/rollback")
   public YdszResponse<RuleDefinitionVO> rollback(
       @PathVariable String ruleCode,
@@ -310,6 +316,7 @@ public class RuleAdminController {
       action = AuditAction.CREATE,
       content = "'规则仿真运行: ' + (#ruleCode != null ? #ruleCode : 'ALL') + ', 操作人: SYSTEM")
   @RateLimit(resource = "literule.rule_admin.dryRun", threshold = 50)
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @PostMapping("/dry-run")
   public YdszResponse<List<RuleResultVO>> dryRun(
       @RequestParam(required = false) String ruleCode, @RequestBody Map<String, Object> facts) {
@@ -325,6 +332,7 @@ public class RuleAdminController {
    * @param expression 表达式
    * @return true=合法
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_VIEW)
   @GetMapping("/validate")
   public YdszResponse<Boolean> validate(@RequestParam String expression) {
     return YdszResponse.success(ruleAdminService.validateExpression(expression));
@@ -356,6 +364,7 @@ public class RuleAdminController {
   @Operation(summary = "规则评估（正式模式）", description = "记录统计、发布触发事件并触发动作分发的正式规则评估")
   @ApiResponse(responseCode = "200", description = "触发的规则结果列表")
   @RateLimit(resource = "literule.rule_admin.evaluate", threshold = 50)
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @PostMapping("/evaluate")
   public YdszResponse<List<RuleResultVO>> evaluate(
       @RequestParam(required = false) String ruleCode,
@@ -402,6 +411,7 @@ public class RuleAdminController {
       action = AuditAction.CREATE,
       content = "'表达式追踪: ' + #request['expression']")
   @RateLimit(resource = "literule.rule_admin.traceExpression", threshold = 50)
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @PostMapping("/expr-trace")
   public YdszResponse<ExpressionEngine.TraceResult> traceExpression(
       @RequestBody Map<String, Object> request) {
@@ -429,6 +439,7 @@ public class RuleAdminController {
       action = AuditAction.CREATE,
       content = "'表达式校验: ' + #dto.expression + ', 类型: ' + #dto.type")
   @RateLimit(resource = "literule.rule_admin.validateExpression", threshold = 50)
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_VIEW)
   @PostMapping("/validate-expression")
   public YdszResponse<ExpressionValidationResultVO> validateExpression(
       @Valid @RequestBody ExpressionValidateDTO dto) {
@@ -463,6 +474,7 @@ public class RuleAdminController {
       action = AuditAction.CREATE,
       content = "'批量表达式校验: 共 ' + #request.size() + ' 条'")
   @RateLimit(resource = "literule.rule_admin.validateBatch", threshold = 50)
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_VIEW)
   @PostMapping("/validate-batch")
   public YdszResponse<Map<String, ExpressionValidationResult>> validateBatch(
       @RequestBody Map<String, String> request) {
@@ -484,6 +496,7 @@ public class RuleAdminController {
       action = AuditAction.CREATE,
       content = "'规则AB测试: ' + #ruleCode + ', 操作人: SYSTEM")
   @RateLimit(resource = "literule.rule_admin.abTest", threshold = 50)
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_EDIT)
   @PostMapping("/{ruleCode}/ab-test")
   public YdszResponse<ABTestService.ABTestReport> abTest(
       @PathVariable String ruleCode, @Valid @RequestBody RuleABTestDTO dto) {
@@ -504,6 +517,7 @@ public class RuleAdminController {
    *
    * @return 统计快照
    */
+    @AuthApiPermission(apiCodes = PermissionCodes.LITERULE_RULE_VIEW)
   @GetMapping("/stats")
   public YdszResponse<RuleEngineStatsVO> stats() {
     return YdszResponse.success(literuleWebConverter.entityToVO(ruleEngine.getStats()));
