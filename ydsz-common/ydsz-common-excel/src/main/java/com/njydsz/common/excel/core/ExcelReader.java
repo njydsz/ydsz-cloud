@@ -103,8 +103,8 @@ public class ExcelReader {
   /** 批量读取大小 */
   private int batchSize = 0;
 
-  /** 批量数据缓冲区 */
-  private List<Object> batchBuffer;
+  /** 批量数据缓冲区（仅在 batchSize > 0 时启用） */
+  private List<Object> batchBuffer = new ArrayList<>(64);
 
   /**
    * 构造函数。
@@ -426,6 +426,7 @@ public class ExcelReader {
 
       // 委托 SuperFastExcelReader 完成全部读取
       SuperFastExcelReader superFastReader = createSuperFastReader(config);
+      installBatchListenerIfEnabled(superFastReader);
       executeRead(superFastReader);
 
       notifyEnd();
@@ -487,6 +488,53 @@ public class ExcelReader {
   }
 
   // ==================== 私有方法 ====================
+
+  /**
+   * 批量模式装配：仅当显式调用 {@link #batchSize(int)} 且只有一个监听器时生效。
+   *
+   * <p>读取过程中按行累积到 {@code batchBuffer}，达到 batchSize 即快照并触发一次
+   * {@link ReadListener#onBatchData} 后清空缓冲，避免「全量 List 常驻内存」； 尾部不足一批的数据由
+   * {@link #notifyEnd()} 统一冲刷。未开启批量模式时保持原有单行 {@code onData} 回调语义不变。
+   *
+   * @param superFastReader 已配置的读取器实例
+   */
+  @SuppressWarnings("unchecked")
+  private void installBatchListenerIfEnabled(SuperFastExcelReader superFastReader) {
+    if (batchSize <= 0 || listeners.size() != 1) {
+      return;
+    }
+    ReadListener<?> single = listeners.get(0);
+    listeners.clear();
+    batchBuffer = new ArrayList<>(Math.min(batchSize, 1024));
+    superFastReader.setListeners(
+        List.of(
+            new ReadListener<Object>() {
+              @Override
+              public void onStart(AnalysisContext ctx) {
+                single.onStart(ctx);
+              }
+
+              @Override
+              public void onData(AnalysisContext ctx, Object data) {
+                batchBuffer.add(data);
+                if (batchBuffer.size() >= batchSize) {
+                  List<Object> snapshot = new ArrayList<>(batchBuffer);
+                  batchBuffer.clear();
+                  ((ReadListener<Object>) single).onBatchData(ctx, snapshot);
+                }
+              }
+
+              @Override
+              public void onEnd(AnalysisContext ctx) {
+                single.onEnd(ctx);
+              }
+
+              @Override
+              public void onError(AnalysisContext ctx, Exception e) {
+                single.onError(ctx, e);
+              }
+            }));
+  }
 
   /**
    * 检测输入源是否为 xlsx 格式。

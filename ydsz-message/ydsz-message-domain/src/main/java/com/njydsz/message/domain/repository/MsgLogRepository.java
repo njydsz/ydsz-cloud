@@ -1,6 +1,8 @@
 package com.njydsz.message.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
@@ -149,4 +151,60 @@ public interface MsgLogRepository {
    * @return 下一页日志 VO 列表（按 id 升序）
    */
   List<MsgLogVO> pageByIdCursor(String lastId, int pageSize);
+
+  /**
+   * 按业务类型 + 单据 ID 批量标记消息日志为已撤回。
+   *
+   * <p>单条 UPDATE 完成，仅更新 {@code recallStatus=NONE} 的记录（幂等）， 替代逐条 {@code update} 循环（N 次 DB 往返）。
+   *
+   * @param bizType 业务类型
+   * @param bizId 业务单据 ID
+   * @param recallStatus 目标撤回状态
+   * @param recallAt 撤回时间
+   * @return 实际影响行数
+   */
+  int markRecalledByBiz(String bizType, String bizId, String recallStatus, LocalDateTime recallAt);
+
+  // ===== 聚合统计查询 =====
+
+  /**
+   * 按通道 + 发送状态分组聚合计数。
+   *
+   * @param startTime 起始时间（含，可为 null）
+   * @param endTime 结束时间（含，可为 null）
+   * @return 每行含 {@code channel} / {@code status} / {@code cnt}
+   */
+  List<Map<String, Object>> countGroupByChannelAndStatus(
+      LocalDateTime startTime, LocalDateTime endTime);
+
+  /**
+   * 按发送状态分组聚合计数。
+   *
+   * @param startTime 起始时间（含，可为 null）
+   * @param endTime 结束时间（含，可为 null）
+   * @return 每行含 {@code status} / {@code cnt}
+   */
+  List<Map<String, Object>> countGroupByStatus(LocalDateTime startTime, LocalDateTime endTime);
+
+  /**
+   * 按回执状态分组聚合计数。
+   *
+   * @param startTime 起始时间（含，可为 null）
+   * @param endTime 结束时间（含，可为 null）
+   * @return 每行含 {@code receiptStatus} / {@code cnt}
+   */
+  List<Map<String, Object>> countGroupByReceiptStatus(
+      LocalDateTime startTime, LocalDateTime endTime);
+
+  /**
+   * 按回执状态分组聚合计数（带通道 / 关键词维度）。
+   *
+   * @param channel 通道（可为 null）
+   * @param keyword 关键词（可为 null）
+   * @param startTime 起始时间（含，可为 null）
+   * @param endTime 结束时间（含，可为 null）
+   * @return 每行含 {@code receiptStatus} / {@code cnt}
+   */
+  List<Map<String, Object>> countGroupByReceiptStatusFiltered(
+      String channel, String keyword, LocalDateTime startTime, LocalDateTime endTime);
 }

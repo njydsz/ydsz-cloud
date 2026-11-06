@@ -269,7 +269,9 @@ public final class MergeCellHelper {
     while (c >= 0) {
       sb.insert(0, (char) ('A' + c % 26));
       c = c / 26 - 1;
-      if (c < 0) break;
+      if(c < 0) {
+          break;
+      }
     }
     return sb.toString();
   }

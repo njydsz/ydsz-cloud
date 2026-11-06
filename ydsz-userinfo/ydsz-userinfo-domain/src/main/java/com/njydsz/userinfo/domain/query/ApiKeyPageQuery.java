@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.domain.query;
 
 import lombok.Data;
+import jakarta.validation.constraints.Max;
 
 /**
  * API Key 分页查询。
@@ -18,6 +19,7 @@ public class ApiKeyPageQuery {
   private Integer pageNum = 1;
 
   /** 每页大小 */
+  @Max(value = 500, message = "pageSize最大值为500")
   private Integer pageSize = DEFAULT_PAGE_SIZE;
 
   /** Key 名称模糊搜索 */

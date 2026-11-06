@@ -460,7 +460,9 @@ public final class ReactiveExcelWriter implements Flow.Publisher<byte[]> {
     while (c >= 0) {
       colRef.insert(0, (char) ('A' + c % 26));
       c = c / 26 - 1;
-      if (c < 0) break;
+      if(c < 0) {
+          break;
+      }
     }
     return colRef.toString() + (row + 1);
   }

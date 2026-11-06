@@ -3,7 +3,6 @@ package com.njydsz.message.server.service.impl.receipt;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
@@ -17,7 +16,6 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MsgNotificationDTO;
-import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.core.MsgTraceNodeEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
@@ -267,34 +265,13 @@ public class RecallServiceImpl implements RecallService {
           .message(I18n.message("message.recall.biz.required"))
           .build();
     }
-    // 通知批量撤回
-    NotificationQueryDTO notifQuery = new NotificationQueryDTO();
-    notifQuery.setBizType(bizType);
-    notifQuery.setBizId(bizId);
-    notifQuery.setRecallStatus(RecallStatusEnum.NONE.name());
-    List<MsgNotificationVO> notifications = msgNotificationRepository.findList(notifQuery);
-    int notifCount = 0;
-    for (MsgNotificationVO n : notifications) {
-      n.setRecallStatus(RecallStatusEnum.RECALLED.name());
-      n.setRecallAt(LocalDateTime.now());
-      if (msgNotificationRepository.update(convertToNotificationDTO(n))) {
-        notifCount++;
-      }
-    }
-    // 消息日志批量撤回（仅更新非终态）
-    MessageLogQueryDTO logQuery = new MessageLogQueryDTO();
-    logQuery.setBizType(bizType);
-    logQuery.setBizId(bizId);
-    logQuery.setRecallStatus(RecallStatusEnum.NONE.name());
-    List<MsgLogVO> logs = msgLogRepository.findList(logQuery);
-    int logCount = 0;
-    for (MsgLogVO log : logs) {
-      log.setRecallStatus(RecallStatusEnum.RECALLED.name());
-      log.setRecallAt(LocalDateTime.now());
-      if (msgLogRepository.update(log)) {
-        logCount++;
-      }
-    }
+    // 通知批量撤回：单条 UPDATE（仅命中 recall_status=NONE，幂等）
+    LocalDateTime recallAt = LocalDateTime.now();
+    String recallStatus = RecallStatusEnum.RECALLED.name();
+    int notifCount =
+        msgNotificationRepository.markRecalledByBiz(bizType, bizId, recallStatus, recallAt);
+    // 消息日志批量撤回：单条 UPDATE（仅更新非终态）
+    int logCount = msgLogRepository.markRecalledByBiz(bizType, bizId, recallStatus, recallAt);
     log.info(
         "[Recall] 批量撤回: bizType={} bizId={} notif={} log={}", bizType, bizId, notifCount, logCount);
     return notifCount + logCount;

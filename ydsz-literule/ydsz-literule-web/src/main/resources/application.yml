@@ -11,7 +11,6 @@ ydsz:
     naming-strategy: LOWER_CAMEL_CASE
     write-nulls: false
     monitoring-enabled: true
-    use-big-decimal: true
     safe-mode: true
     warmup-classes:
       - com.njydsz.literule.domain.api.RuleDefinition

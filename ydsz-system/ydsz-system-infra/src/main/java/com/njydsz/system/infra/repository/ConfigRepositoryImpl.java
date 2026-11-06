@@ -1,6 +1,8 @@
 package com.njydsz.system.infra.repository;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -96,6 +98,22 @@ public class ConfigRepositoryImpl implements ConfigRepository {
                 .eq(Config::getConfigGroup, configGroup)
                 .eq(Config::getConfigKey, configKey));
     return count != null && count > 0;
+  }
+
+  @Override
+  public Set<String> loadGroupKeySet(Set<String> configGroups) {
+    if (configGroups == null || configGroups.isEmpty()) {
+      return Set.of();
+    }
+    return configMapper
+        .selectList(
+            new LambdaQueryWrapper<Config>()
+                .select(Config::getConfigGroup, Config::getConfigKey)
+                .in(Config::getConfigGroup, configGroups)
+                .eq(Config::getIsDeleted, NOT_DELETED))
+        .stream()
+        .map(item -> item.getConfigGroup() + "/" + item.getConfigKey())
+        .collect(Collectors.toSet());
   }
 
   @Override

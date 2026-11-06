@@ -25,6 +25,10 @@ import com.njydsz.common.notify.core.NotifySendResult;
  * }
  * }</pre>
  *
+ * <p><b>当前状态（26.11.06）</b>：<b>未启用</b>——全仓无实现类，且
+ * {@code EmailNotifySender} 直接使用 {@code JavaMailSender}，与本 Provider 抽象脱节。
+ * 新增邮件渠道请直接实现本接口并移除 Sender 中的直连逻辑，否则本接口应删除。
+ *
  * @author ydsz-team
  * @since 26.10.01
  */

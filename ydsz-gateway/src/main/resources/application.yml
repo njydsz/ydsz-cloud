@@ -52,7 +52,7 @@ spring:
               uri: http://localhost:9001
               order: -4
               predicates:
-                - Path=/api/auth/secondary-auth/**
+                - Path=/api/auth/2fa/**
               filters:
                 - StripPrefix=1
             - id: ydsz-system-internal

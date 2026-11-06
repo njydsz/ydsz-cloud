@@ -51,13 +51,18 @@ import com.njydsz.system.domain.vo.FeatureFlagVO;
  *
  * <p><b>存储：</b>当前基于内存 ConcurrentHashMap，后续可平滑替换为数据库持久化。
  *
+ * <p><b>路径说明（26.11.06 统一）</b>：本 Controller 原映射 {@code /feature-flag}（单数），
+ * 与 {@link FeatureFlagController} 的 {@code /feature-flags}（复数）同资源双前缀并存，
+ * 增加网关与前端维护成本。现统一为复数 {@code /feature-flags}，并通过类级 {@code @RequestMapping}
+ * 的多值声明保留单数路径作为兼容期别名（存量前端调用不受影响）。
+ *
  * @author ydsz-team
  * @since 26.10.09
  */
 @Slf4j
 @ApiVersion("26.10.09")
 @RestController
-@RequestMapping("/feature-flag")
+@RequestMapping({"/feature-flags", "/feature-flag"})
 @Validated
 @Tag(name = "特性开关管理", description = "特性开关 CRUD 管理")
 public class FeatureFlagAdminController {

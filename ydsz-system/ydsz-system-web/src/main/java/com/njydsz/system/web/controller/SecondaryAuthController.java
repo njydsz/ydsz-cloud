@@ -37,10 +37,10 @@ import com.njydsz.system.server.service.SecondaryAuthService;
  * @since 26.09.08
  */
 @ApiVersion("26.09.08")
-@Tag(name = "二次身份验证", description = "敏感操作前的密码确认与令牌颁发")
+@Tag(name = "二次身份验证（2FA）", description = "敏感操作前的密码确认与令牌颁发")
 @Slf4j
 @RestController
-@RequestMapping("/auth/secondary-auth")
+@RequestMapping("/auth/2fa")
 @RequiredArgsConstructor
 public class SecondaryAuthController {
 

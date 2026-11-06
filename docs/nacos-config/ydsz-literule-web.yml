@@ -35,7 +35,6 @@ ydsz:
       - ydsz_language
 
   json:
-    use-big-decimal: true
     safe-mode: true
     warmup-classes:
       - com.njydsz.literule.domain.api.RuleDefinition

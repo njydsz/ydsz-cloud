@@ -1,7 +1,10 @@
 package com.njydsz.system.server.service.impl;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -11,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.context.AnalysisContext;
+import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.locales.util.I18n;
@@ -52,6 +57,9 @@ import com.njydsz.system.server.vo.ImportResultVO;
 @RequiredArgsConstructor
 public class ConfigExcelServiceImpl implements ConfigExcelService {
 
+  /** Excel 导入分批大小（每批处理行数，避免全量常驻内存） */
+  private static final int IMPORT_BATCH_SIZE = 500;
+
   /** 配置仓储 */
   private final ConfigRepository configRepository;
 
@@ -80,9 +88,10 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public ImportResultVO importConfigs(InputStream inputStream) {
-    // 1. 读取 Excel 文件
-    List<ConfigExcelVO> excelRows = readExcel(inputStream);
-    if (excelRows.isEmpty()) {
+    // 流式分批读取 Excel（每 IMPORT_BATCH_SIZE 行回调一次，校验通过即按批落库）
+    ImportAccumulator accumulator = new ImportAccumulator();
+    readExcelInBatches(inputStream, accumulator);
+    if (accumulator.totalCount == 0) {
       return ImportResultVO.builder()
           .totalCount(0)
           .successCount(0)
@@ -92,50 +101,75 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
           .build();
     }
 
-    // 2. 逐条校验并转换（必填 / 值类型 / DB 唯一性）
-    List<String> errors = new ArrayList<>(excelRows.size());
-    List<ConfigVO> validItems = new ArrayList<>(excelRows.size());
-    int skipCount = 0;
-    for (int i = 0; i < excelRows.size(); i++) {
-      String error = validateExcelRow(excelRows.get(i), i + 2);
-      if (error != null) {
-        errors.add(error);
-        skipCount++;
-      } else {
-        validItems.add(toConfigVO(excelRows.get(i)));
-      }
-    }
-
-    // 3. 批量保存有效数据（使用 insertBatch 消除 N+1）
-    int successCount = saveValidItemsBatch(validItems, errors);
-
-    // 4. 构建导入结果
+    int total = accumulator.totalCount;
+    int successCount = accumulator.savedCount;
+    int skipCount = accumulator.skipCount;
     return ImportResultVO.builder()
-        .totalCount(excelRows.size())
+        .totalCount(total)
         .successCount(successCount)
-        .failCount(excelRows.size() - successCount - skipCount)
+        .failCount(total - successCount - skipCount)
         .skipCount(skipCount)
-        .errors(errors)
+        .errors(accumulator.errors)
         .message(
             String.format(
                 "导入完成: 成功 %d 条, 跳过 %d 条, 失败 %d 条",
-                successCount, skipCount, excelRows.size() - successCount - skipCount))
+                successCount, skipCount, total - successCount - skipCount))
         .build();
   }
 
   // ============================== 私有方法 ==============================
 
   /**
-   * 读取 Excel 配置数据。
+   * 流式分批读取 Excel 配置数据（私有）。
+   *
+   * <p>每 {@link #IMPORT_BATCH_SIZE} 行触发一次回调，回调内完成「批量预加载 DB 唯一键 + 逐行校验 + 按批落库」。
    *
    * @param inputStream Excel 输入流
-   * @return 配置 Excel 行列表
+   * @param accumulator 导入过程累加器
    */
-  private List<ConfigExcelVO> readExcel(InputStream inputStream) {
+  private void readExcelInBatches(InputStream inputStream, ImportAccumulator accumulator) {
     try {
-      List<ConfigExcelVO> rows =
-          ExcelFacade.read(inputStream, ConfigExcelVO.class).sheet(0).doReadAll();
-      return rows != null ? rows : List.of();
+      ExcelFacade.read(inputStream, ConfigExcelVO.class)
+          .sheet(0)
+          .batchSize(IMPORT_BATCH_SIZE)
+          .doRead(
+              new ReadListener<ConfigExcelVO>() {
+                @Override
+                public void onStart(AnalysisContext context) {}
+
+                @Override
+                public void onData(AnalysisContext context, ConfigExcelVO data) {
+                  // 批量模式下不会被调用（由 onBatchData 承担）
+                }
+
+                @Override
+                public void onBatchData(AnalysisContext context, List<ConfigExcelVO> batch) {
+                  if (batch == null || batch.isEmpty()) {
+                    return;
+                  }
+                  int baseRow = accumulator.totalCount;
+                  Set<String> existingKeys = loadExistingGroupKeys(batch);
+                  List<ConfigVO> batchValid = new ArrayList<>(batch.size());
+                  for (int i = 0; i < batch.size(); i++) {
+                    int rowNum = baseRow + i + 2;
+                    accumulator.totalCount++;
+                    String error =
+                        validateExcelRow(batch.get(i), rowNum, existingKeys, accumulator.seenKeys);
+                    if (error != null) {
+                      accumulator.errors.add(error);
+                      accumulator.skipCount++;
+                    } else {
+                      batchValid.add(toConfigVO(batch.get(i)));
+                    }
+                  }
+                  if (!batchValid.isEmpty()) {
+                    accumulator.merge(saveValidItemsBatch(batchValid, accumulator.errors));
+                  }
+                }
+
+                @Override
+                public void onEnd(AnalysisContext context) {}
+              });
     } catch (Exception e) {
       log.warn("[ConfigExcelService] Excel 读取失败: {}", e.getMessage(), e);
       throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
@@ -144,15 +178,51 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
   }
 
   /**
+   * 导入过程累加器（私有内部类）。
+   */
+  private static final class ImportAccumulator {
+    private int totalCount;
+    private int skipCount;
+    private int savedCount;
+    private final List<String> errors = new ArrayList<>(64);
+    private final Set<String> seenKeys = new HashSet<>(IMPORT_BATCH_SIZE);
+
+    private void merge(int saved) {
+      this.savedCount += saved;
+    }
+  }
+
+  /**
+   * 批量预加载本批次涉及的配置唯一键（私有）。
+   *
+   * @param excelRows Excel 行列表
+   * @return 已存在的 {@code configGroup/configKey} 集合
+   */
+  private Set<String> loadExistingGroupKeys(List<ConfigExcelVO> excelRows) {
+    Set<String> groups =
+        excelRows.stream()
+            .map(ConfigExcelVO::getConfigGroup)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+    return configRepository.loadGroupKeySet(groups);
+  }
+
+  /**
    * 校验单条 Excel 行。
    *
-   * <p>校验必填字段、值类型、DB 唯一性；通过返回 null，否则返回错误描述。
+   * <p>校验必填字段、值类型、DB 唯一性（内存比对，含文件内重复检测）；通过返回 null，否则返回错误描述。
    *
    * @param excelRow Excel 行数据
    * @param rowNum Excel 行号（从 2 开始，第 1 行为表头）
+   * @param existingKeys 已存在的 {@code configGroup/configKey} 集合
+   * @param seenKeys 本批次已处理的 key 集合（用于文件内重复检测）
    * @return 错误描述；校验通过返回 null
    */
-  private String validateExcelRow(ConfigExcelVO excelRow, int rowNum) {
+  private String validateExcelRow(
+      ConfigExcelVO excelRow,
+      int rowNum,
+      Set<String> existingKeys,
+      Set<String> seenKeys) {
     String requiredError = validateRequiredFields(excelRow, rowNum);
     if (requiredError != null) {
       return requiredError;
@@ -161,9 +231,10 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
     if (typeError != null) {
       return typeError;
     }
-    if (configRepository.existsByGroupAndKey(excelRow.getConfigGroup(), excelRow.getConfigKey())) {
+    String key = excelRow.getConfigGroup() + "/" + excelRow.getConfigKey();
+    if (existingKeys.contains(key) || !seenKeys.add(key)) {
       String rowPrefix = I18n.message("system.excel.rowPrefix", new Object[] {rowNum});
-      return rowPrefix + I18n.message("system.excel.configKey.exists", new Object[] {excelRow.getConfigGroup() + "/" + excelRow.getConfigKey()});
+      return rowPrefix + I18n.message("system.excel.configKey.exists", new Object[] {key});
     }
     return null;
   }

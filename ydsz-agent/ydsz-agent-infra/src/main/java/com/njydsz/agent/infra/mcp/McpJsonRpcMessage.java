@@ -1,5 +1,7 @@
 package com.njydsz.agent.infra.mcp;
 
+import java.util.Map;
+
 /**
  * MCP JSON-RPC 2.0 消息模型（已废弃，兼容性别名）。
  *
@@ -19,9 +21,9 @@ public record McpJsonRpcMessage(
     String jsonrpc,
     Object id,
     String method,
-    java.util.Map<String, Object> params,
+    Map<String, Object> params,
     Object result,
-    java.util.Map<String, Object> error) {
+    Map<String, Object> error) {
 
   /** JSON-RPC 规范版本常量 */
   public static final String JSONRPC_VERSION =
@@ -79,7 +81,7 @@ public record McpJsonRpcMessage(
    * @param params 通知参数
    * @return 通知消息实例
    */
-  public static McpJsonRpcMessage notification(String method, java.util.Map<String, Object> params) {
+  public static McpJsonRpcMessage notification(String method, Map<String, Object> params) {
     return new McpJsonRpcMessage(JSONRPC_VERSION, null, method, params, null, null);
   }
 

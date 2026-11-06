@@ -1,6 +1,7 @@
 package com.njydsz.system.domain.approval;
 
 import lombok.Data;
+import jakarta.validation.constraints.Max;
 
 /**
  * 配置变更审批单据查询参数。
@@ -20,6 +21,7 @@ public class ConfigApprovalQuery {
   private Integer pageNum = 1;
 
   /** 每页大小 */
+  @Max(value = 500, message = "pageSize最大值为500")
   private Integer pageSize = DEFAULT_PAGE_SIZE;
 
   /** 审批状态筛选（PENDING / APPROVED / REJECTED / WITHDRAWN，为空表示全部） */

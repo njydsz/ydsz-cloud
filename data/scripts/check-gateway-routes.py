@@ -45,17 +45,10 @@ ROUTE_ALLOWLIST = {
 # 网关只能把前缀给一个服务，被抢的一侧经网关必然不可达 —— 改路由解决不了，
 # 必须有一侧改名。棘轮规则：新出现的抢注一律判红；已登记条目降级为告警。
 KNOWN_ROUTE_SHADOWING = {
-    "ydsz-system-secondary-auth": (
-        "ydsz-system 的 SecondaryAuthController(@RequestMapping \"/auth/secondary-auth\") 与 "
-        "ydsz-userinfo 的 AuthController(@PostMapping \"/secondary-auth\" 等 3 个端点) 同名；"
-        "路由现归 ydsz-system，userinfo 侧 secondary-auth / secondary-auth/webauthn[/challenge] "
-        "经网关不可达。两侧契约不兼容（system 返回 {token,expiresIn,expiresAt} 令牌；"
-        "userinfo 返回 {scene,level,ttlSeconds} Redis 标记），且**两个前端均在调用**："
-        "apps/system-web/src/api/secondary-auth.ts 调 system 侧、"
-        "apps/userinfo-web/src/api/auth.ts 调 userinfo 侧 —— 单侧改名会造成跨仓库破坏性变更，"
-        "必须与前端协同改造。待决策：确定唯一权威实现后另一侧改名（如 /auth/2fa/**）并同步前端，"
-        "然后删除本条 —— 见报告 B0-9 未决项 / coding-standards-deep-audit-2026-11-06.md F3"
-    ),
+    # F3 已解决（2026-11-06）：system 侧 SecondaryAuthController 由 /auth/secondary-auth
+    # 改名为 /auth/2fa，网关路由同步改为 /api/auth/2fa/**，前端 apps/system-web 同步调用
+    # /auth/2fa。userinfo 侧保持 /auth/secondary-auth（实现更完善：审计/限流/WebAuthn/场景化 TTL）。
+    # 两侧契约与路径已不再冲突，本条目保留为空以固化决策记录。
 }
 
 # 后端存在、但网关有意不路由的路径（历史别名/内部专用）。同样只减不增。
@@ -1096,26 +1089,27 @@ def self_test() -> int:
     checks.append(("方法注解行号定位到源码行", bool(parsed_methods) and parsed_methods[0][1] == 13))
     checks.append(("非 Controller 不产出端点", parse_controller("public class Plain { void run() {} }") == ([], [])))
 
-    shadow_route = build("ydsz-system-secondary-auth", "ydsz-system", "/api/auth/secondary-auth/**", -4, strip_filters)
+    # F3 已解决（2026-11-06）：system 侧改名为 /auth/2fa，不再与 userinfo 抢注；
+    # 此处 fixture 改用新路径，验证“已消除抢注”后不再判红。
+    renamed_route = build("ydsz-system-secondary-auth", "ydsz-system", "/api/auth/2fa/**", -4, strip_filters)
     userinfo_auth = build("ydsz-userinfo", "ydsz-userinfo", "/api/auth/**", 0, strip_filters, index=1)
-    shadowed_endpoint = Endpoint("ydsz-userinfo", "/auth/secondary-auth", "U.java:1")
+    userinfo_endpoint = Endpoint("ydsz-userinfo", "/auth/secondary-auth", "U.java:1")
     checks.append(
         (
-            "R2 登记在册的抢注只告警",
-            not rule_endpoints_routed([shadow_route, userinfo_auth], [shadowed_endpoint]),
+            "R2 改名后不再抢注（原 F3 场景）",
+            not rule_endpoints_routed([renamed_route, userinfo_auth], [userinfo_endpoint]),
         )
     )
-    unregistered = build("ydsz-system-other", "ydsz-system", "/api/auth/secondary-auth/**", -4, strip_filters)
     checks.append(
-        ("R2 未登记的抢注判红", bool(rule_endpoints_routed([unregistered, userinfo_auth], [shadowed_endpoint])))
+        ("R2 未登记的抢注判红", bool(rule_endpoints_routed([renamed_route], [Endpoint("ydsz-agent", "/auth/2fa", "A.java:1")])))
     )
     checks.append(
         (
             "R2 能判红：抢注路由还要求剥前缀",
             bool(
                 rule_endpoints_routed(
-                    [build("ydsz-system-secondary-auth", "ydsz-system", "/api/auth/secondary-auth/**", -4), userinfo_auth],
-                    [Endpoint("ydsz-system", "/auth/secondary-auth", "S.java:1")],
+                    [build("ydsz-system-secondary-auth", "ydsz-system", "/api/auth/2fa/**", -4), userinfo_auth],
+                    [Endpoint("ydsz-system", "/auth/2fa", "S.java:1")],
                 )
             ),
         )

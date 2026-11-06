@@ -7,6 +7,9 @@ import java.io.OutputStream;
  *
  * <p>定义将 Markdown 内容渲染为各种文档格式的操作。</p>
  *
+ * <p><b>当前状态（26.11.06）</b>：<b>未启用</b>——实现类 {@code DocumentRenderServiceImpl}
+ * 无任何调用点，接口与实现构成自引用闭环。新接入方请勿在未排期的前提下依赖本接口。
+ *
  * @author ydsz-agent
  * @since 26.10.01
  */

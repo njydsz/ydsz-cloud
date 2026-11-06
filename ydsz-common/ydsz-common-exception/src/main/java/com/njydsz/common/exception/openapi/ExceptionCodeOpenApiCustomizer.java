@@ -157,10 +157,20 @@ public class ExceptionCodeOpenApiCustomizer implements OpenApiCustomizer {
   }
 
   /**
-   * 构建状态码对应的响应示例 body
+   * 构建状态码对应的响应示例 body。
+   *
+   * <p><b>字段来源（26.11.06 对齐真实响应）</b>：示例字段与
+   * {@code ExceptionResponseBuilder.buildProblemDetail} 实际输出保持一致，
+   * 包含 RFC 7807 基础字段（status/title/detail/instance/type）与平台扩展字段
+   * （errorCode/traceId/requestId/timestamp/level）。
+   *
+   * <p>历史缺陷：本示例曾手写为 {@code {status,title,detail,instance,code}}，
+   * 缺少 {@code traceId}/{@code requestId}/{@code timestamp}/{@code level}，
+   * 且把业务错误码字段写成 {@code code}（实际为 {@code errorCode}），
+   * 导致接入方按文档解析失败。
    *
    * @param status HTTP 状态码
-   * @return 示例 body
+   * @return 示例 body（JSON 字符串）
    */
   private String buildExampleBody(Integer status) {
     return errorCodeTable.allCodes().values().stream()
@@ -169,8 +179,25 @@ public class ExceptionCodeOpenApiCustomizer implements OpenApiCustomizer {
         .map(
             code ->
                 String.format(
-                    "{\"status\":%d,\"title\":\"错误\",\"detail\":\"%s\",\"instance\":\"/api/example\",\"code\":\"%s\"}",
-                    status, code.getKey().replace(".", " "), code.getCode()))
-        .orElse("{\"error\":\"unknown\"}");
+                    "{"
+                        + "\"status\":%d,"
+                        + "\"title\":\"%s\","
+                        + "\"detail\":\"%s\","
+                        + "\"instance\":\"/api/example\","
+                        + "\"type\":\"https://api.njydsz.com/errors/business\","
+                        + "\"errorCode\":\"%s\","
+                        + "\"traceId\":\"0000000000000000\","
+                        + "\"requestId\":\"req-0000000000000000\","
+                        + "\"timestamp\":\"2026-11-06T00:00:00Z\","
+                        + "\"level\":\"ERROR\""
+                        + "}",
+                    status,
+                    code.getCategory() != null ? code.getCategory().name() : "Business Error",
+                    code.getKey().replace(".", " "),
+                    code.getCode()))
+        .orElse(
+            "{\"status\":500,\"title\":\"Internal Server Error\","
+                + "\"detail\":\"系统内部错误\",\"errorCode\":\"C0500\","
+                + "\"traceId\":\"0000000000000000\",\"requestId\":\"req-0000000000000000\"}");
   }
 }

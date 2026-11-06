@@ -20,6 +20,8 @@ import com.njydsz.common.cache.spring.YdszCacheable;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.context.AnalysisContext;
+import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
@@ -122,6 +124,9 @@ import com.njydsz.system.server.vo.ImportResultVO;
 @Service
 @RequiredArgsConstructor
 public class DictItemServiceImpl implements DictItemService {
+
+  /** Excel 导入分批大小（每批处理行数，避免全量常驻内存） */
+  private static final int IMPORT_BATCH_SIZE = 500;
 
   /** 字典项仓储（继承 {@code ydsz_sys_dict_item} 表 CRUD） */
   private final DictRepository dictRepository;
@@ -499,9 +504,10 @@ public class DictItemServiceImpl implements DictItemService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public ImportResultVO importDictItems(InputStream inputStream) {
-    // 1. 读取 Excel 文件
-    List<DictItemExcelVO> excelRows = readExcel(inputStream);
-    if (excelRows.isEmpty()) {
+    // 流式分批读取 Excel（每 IMPORT_BATCH_SIZE 行回调一次，校验通过即按批落库，避免 10 万行全量 OOM）
+    ImportAccumulator accumulator = new ImportAccumulator();
+    readExcelInBatches(inputStream, accumulator);
+    if (accumulator.totalCount == 0) {
       return ImportResultVO.builder()
           .totalCount(0)
           .successCount(0)
@@ -511,57 +517,87 @@ public class DictItemServiceImpl implements DictItemService {
           .build();
     }
 
-    // 2. 逐条校验并转换（必填 / DB 唯一性）
-    List<String> errors = new ArrayList<>(excelRows.size());
-    List<ImportResultVO.ImportErrorItem> errorItems = new ArrayList<>(excelRows.size());
-    List<DictItemVO> validItems = new ArrayList<>(excelRows.size());
-    int skipCount = 0;
-    for (int i = 0; i < excelRows.size(); i++) {
-      int rowNum = i + 2;
-      ValidationError validationError = validateExcelRowStructured(excelRows.get(i), rowNum);
-      if (validationError != null) {
-        errors.add(validationError.message);
-        ImportResultVO.ImportErrorItem errorItem = new ImportResultVO.ImportErrorItem();
-        errorItem.setRow(rowNum);
-        errorItem.setField(validationError.field);
-        errorItem.setCode(validationError.code);
-        errorItem.setMessage(validationError.message);
-        errorItems.add(errorItem);
-        skipCount++;
-      } else {
-        validItems.add(toDictItemVO(excelRows.get(i)));
-      }
-    }
-
-    // 3. 批量保存有效数据
-    int successCount = saveValidItemsBatch(validItems, errors, errorItems);
-
-    // 4. 构建导入结果（旧 errors 列表 + 新 errorItems 结构化列表双写）
+    int total = accumulator.totalCount;
+    int successCount = accumulator.savedCount;
+    int skipCount = accumulator.skipCount;
     return ImportResultVO.builder()
-        .totalCount(excelRows.size())
+        .totalCount(total)
         .successCount(successCount)
-        .failCount(excelRows.size() - successCount - skipCount)
+        .failCount(total - successCount - skipCount)
         .skipCount(skipCount)
-        .errors(errors)
-        .errorItems(errorItems)
+        .errors(accumulator.errors)
+        .errorItems(accumulator.errorItems)
         .message(
             String.format(
                 "导入完成: 成功 %d 条, 跳过 %d 条, 失败 %d 条",
-                successCount, skipCount, excelRows.size() - successCount - skipCount))
+                successCount, skipCount, total - successCount - skipCount))
         .build();
   }
 
   /**
-   * 读取 Excel 字典项数据（私有）。
+   * 流式分批读取 Excel 字典项数据（私有）。
+   *
+   * <p>每 {@link #IMPORT_BATCH_SIZE} 行触发一次回调，回调内完成「批量预加载 DB 唯一键 + 逐行校验」， 校验通过的记录按批落库，避免全量行对象常驻内存。
    *
    * @param inputStream Excel 输入流
-   * @return 字典项 Excel 行列表
+   * @param accumulator 导入过程累加器（统计 / 错误 / 待保存数据）
    */
-  private List<DictItemExcelVO> readExcel(InputStream inputStream) {
+  private void readExcelInBatches(InputStream inputStream, ImportAccumulator accumulator) {
     try {
-      List<DictItemExcelVO> rows =
-          ExcelFacade.read(inputStream, DictItemExcelVO.class).sheet(0).doReadAll();
-      return rows != null ? rows : List.of();
+      ExcelFacade.read(inputStream, DictItemExcelVO.class)
+          .sheet(0)
+          .batchSize(IMPORT_BATCH_SIZE)
+          .doRead(
+              new ReadListener<DictItemExcelVO>() {
+                @Override
+                public void onStart(AnalysisContext context) {}
+
+                @Override
+                public void onData(AnalysisContext context, DictItemExcelVO data) {
+                  // 批量模式下不会被调用（由 onBatchData 承担）
+                }
+
+                @Override
+                public void onBatchData(
+                    AnalysisContext context, List<DictItemExcelVO> batch) {
+                  if (batch == null || batch.isEmpty()) {
+                    return;
+                  }
+                  int baseRow = accumulator.totalCount;
+                  // 每批一次 SQL 预加载该批涉及 typeCode 的唯一键
+                  Set<String> existingKeys = loadExistingItemKeys(batch);
+                  List<DictItemVO> batchValid = new ArrayList<>(batch.size());
+                  for (int i = 0; i < batch.size(); i++) {
+                    int rowNum = baseRow + i + 2;
+                    accumulator.totalCount++;
+                    ValidationError validationError =
+                        validateExcelRowStructured(
+                            batch.get(i), rowNum, existingKeys, accumulator.seenKeys);
+                    if (validationError != null) {
+                      accumulator.errors.add(validationError.message);
+                      ImportResultVO.ImportErrorItem errorItem =
+                          new ImportResultVO.ImportErrorItem();
+                      errorItem.setRow(rowNum);
+                      errorItem.setField(validationError.field);
+                      errorItem.setCode(validationError.code);
+                      errorItem.setMessage(validationError.message);
+                      accumulator.errorItems.add(errorItem);
+                      accumulator.skipCount++;
+                    } else {
+                      batchValid.add(toDictItemVO(batch.get(i)));
+                    }
+                  }
+                  // 按批落库，控制单批事务体积
+                  if (!batchValid.isEmpty()) {
+                    accumulator.merge(
+                        saveValidItemsBatch(
+                            batchValid, accumulator.errors, accumulator.errorItems));
+                  }
+                }
+
+                @Override
+                public void onEnd(AnalysisContext context) {}
+              });
     } catch (Exception e) {
       log.warn("[DictItemService] Excel 读取失败: {}", e.getMessage(), e);
       throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
@@ -570,15 +606,62 @@ public class DictItemServiceImpl implements DictItemService {
   }
 
   /**
+   * 批量预加载指定批次的字典项唯一键（私有）。
+   *
+   * <p>一次 SQL 取出涉及 typeCode 下的全部 {@code typeCode/itemCode}，在内存中判重， 替代逐行
+   * {@code existsItemByTypeAndCode}（N+1 查询）。
+   *
+   * @param excelRows Excel 行列表
+   * @return 已存在的 {@code typeCode/itemCode} 集合
+   */
+  private Set<String> loadExistingItemKeys(List<DictItemExcelVO> excelRows) {
+    Set<String> typeCodes =
+        excelRows.stream()
+            .map(DictItemExcelVO::getTypeCode)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+    if (typeCodes.isEmpty()) {
+      return Set.of();
+    }
+    return dictRepository.findItemsByTypeCodes(typeCodes).stream()
+        .map(item -> item.getTypeCode() + "/" + item.getItemCode())
+        .collect(Collectors.toSet());
+  }
+
+  /**
+   * 导入过程累加器（私有内部类）。
+   *
+   * <p>聚合流式读取过程中的总行数 / 跳过数 / 错误集合 / 文件内去重键， 供 {@link #importDictItems} 汇总返回。
+   */
+  private static final class ImportAccumulator {
+    private int totalCount;
+    private int skipCount;
+    private int savedCount;
+    private final List<String> errors = new ArrayList<>(64);
+    private final List<ImportResultVO.ImportErrorItem> errorItems = new ArrayList<>(64);
+    private final Set<String> seenKeys = new HashSet<>(IMPORT_BATCH_SIZE);
+
+    private void merge(int saved) {
+      this.savedCount += saved;
+    }
+  }
+
+  /**
    * 校验单条 Excel 行（私有）。
    *
-   * <p>校验必填字段、DB 唯一性；通过返回 {@code null}，否则返回结构化错误信息。
+   * <p>校验必填字段、DB 唯一性（内存比对，含文件内重复检测）；通过返回 {@code null}，否则返回结构化错误信息。
    *
    * @param excelRow Excel 行数据
    * @param rowNum Excel 行号（从 2 开始，第 1 行为表头）
+   * @param existingKeys 已存在的 {@code typeCode/itemCode} 集合
+   * @param seenKeys 本批次已处理的 key 集合（用于文件内重复检测）
    * @return 结构化错误；校验通过返回 {@code null}
    */
-  private ValidationError validateExcelRowStructured(DictItemExcelVO excelRow, int rowNum) {
+  private ValidationError validateExcelRowStructured(
+      DictItemExcelVO excelRow,
+      int rowNum,
+      Set<String> existingKeys,
+      Set<String> seenKeys) {
     if (excelRow.getTypeCode() == null || excelRow.getTypeCode().isBlank()) {
       return ValidationError.of("typeCode", "REQUIRED",
           I18n.message("system.dict.type_code_required"));
@@ -591,8 +674,9 @@ public class DictItemServiceImpl implements DictItemService {
       return ValidationError.of("itemValue", "REQUIRED",
           I18n.message("system.dict.item_label_required"));
     }
-    // DB 唯一性校验
-    if (dictRepository.existsItemByTypeAndCode(excelRow.getTypeCode(), excelRow.getItemCode())) {
+    // 内存唯一性校验（DB 预加载 + 文件内去重）
+    String key = excelRow.getTypeCode() + "/" + excelRow.getItemCode();
+    if (existingKeys.contains(key) || !seenKeys.add(key)) {
       return ValidationError.of("itemCode", "DUPLICATE",
           I18n.message("system.excel.dictItem.duplicate", new Object[] {excelRow.getTypeCode()}));
     }

@@ -1,8 +1,10 @@
 package com.njydsz.message.infra.repository;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -109,6 +111,13 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
   public List<MsgLogVO> findList(MessageLogQueryDTO query) {
     QueryWrapper<MsgLog> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
+    // 调用方（如健康探针）可通过 pageNum/pageSize 限制返回量；未设置时不改变既有行为。
+    if (query != null && query.getPageNum() != null && query.getPageSize() != null
+        && query.getPageNum() > 0 && query.getPageSize() > 0) {
+      int pageNum = query.getPageNum();
+      int pageSize = query.getPageSize();
+      wrapper.last("LIMIT " + pageSize + " OFFSET " + (long) (pageNum - 1) * pageSize);
+    }
     return converter.logListToVO(msgLogMapper.selectList(wrapper));
   }
 
@@ -146,6 +155,44 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
   public List<MsgLogVO> pageByIdCursor(String lastId, int pageSize) {
     List<MsgLog> list = msgLogMapper.selectByIdGreaterThan(lastId, pageSize);
     return list == null ? Collections.emptyList() : converter.logListToVO(list);
+  }
+
+  @Override
+  public int markRecalledByBiz(
+      String bizType, String bizId, String recallStatus, LocalDateTime recallAt) {
+    return msgLogMapper.markRecalledByBiz(bizType, bizId, recallStatus, recallAt);
+  }
+
+  // ===== 聚合统计查询 =====
+
+  @Override
+  public List<Map<String, Object>> countGroupByChannelAndStatus(
+      LocalDateTime startTime, LocalDateTime endTime) {
+    return safeGroupRows(msgLogMapper.countGroupByChannelAndStatus(startTime, endTime));
+  }
+
+  @Override
+  public List<Map<String, Object>> countGroupByStatus(
+      LocalDateTime startTime, LocalDateTime endTime) {
+    return safeGroupRows(msgLogMapper.countGroupByStatus(startTime, endTime));
+  }
+
+  @Override
+  public List<Map<String, Object>> countGroupByReceiptStatus(
+      LocalDateTime startTime, LocalDateTime endTime) {
+    return safeGroupRows(msgLogMapper.countGroupByReceiptStatus(startTime, endTime));
+  }
+
+  @Override
+  public List<Map<String, Object>> countGroupByReceiptStatusFiltered(
+      String channel, String keyword, LocalDateTime startTime, LocalDateTime endTime) {
+    return safeGroupRows(
+        msgLogMapper.countGroupByReceiptStatusFiltered(channel, keyword, startTime, endTime));
+  }
+
+  /** 聚合查询结果空值防护。 */
+  private List<Map<String, Object>> safeGroupRows(List<Map<String, Object>> rows) {
+    return rows != null ? rows : Collections.emptyList();
   }
 
   // ===== 私有辅助方法 =====

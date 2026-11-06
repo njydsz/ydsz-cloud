@@ -1,6 +1,8 @@
 package com.njydsz.system.infra.repository;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -64,6 +66,22 @@ public class VariableRepositoryImpl implements VariableRepository {
                 .eq(Variable::getIsDeleted, 0)
                 .last("LIMIT 1")))
         .map(converter::entityToVO);
+  }
+
+  @Override
+  public Set<String> loadKeySet(Set<String> variableKeys) {
+    if (variableKeys == null || variableKeys.isEmpty()) {
+      return Set.of();
+    }
+    return variableMapper
+        .selectList(
+            new LambdaQueryWrapper<Variable>()
+                .select(Variable::getVariableKey)
+                .in(Variable::getVariableKey, variableKeys)
+                .eq(Variable::getIsDeleted, 0))
+        .stream()
+        .map(Variable::getVariableKey)
+        .collect(Collectors.toSet());
   }
 
   @Override

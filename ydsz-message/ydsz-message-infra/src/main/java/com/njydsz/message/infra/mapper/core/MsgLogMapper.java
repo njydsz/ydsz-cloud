@@ -1,6 +1,8 @@
 package com.njydsz.message.infra.mapper.core;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
@@ -60,4 +62,71 @@ public interface MsgLogMapper extends BaseMapper<MsgLog> {
    */
   List<MsgLog> selectByIdGreaterThan(
       @Param("lastId") String lastId, @Param("limit") int limit);
+
+  /**
+   * 按业务类型 + 单据 ID 批量标记消息日志为已撤回。
+   *
+   * <p>仅更新 {@code recall_status = 'NONE'} 的非终态记录（幂等）；单条 UPDATE 完成， 替代逐条
+   * {@code updateById} 循环（N 次 DB 往返 + 行锁堆积）。
+   *
+   * @param bizType 业务类型
+   * @param bizId 业务单据 ID
+   * @param recallStatus 目标撤回状态（通常为 RECALLED）
+   * @param recallAt 撤回时间
+   * @return 影响行数
+   */
+  int markRecalledByBiz(
+      @Param("bizType") String bizType,
+      @Param("bizId") String bizId,
+      @Param("recallStatus") String recallStatus,
+      @Param("recallAt") LocalDateTime recallAt);
+
+  /**
+   * 按通道 + 发送状态分组聚合计数（单条 GROUP BY 查询）。
+   *
+   * <p>返回每行 Map：{@code channel}(String) / {@code status}(String) / {@code cnt}(Long)， 用于替代表统计场景中「每通道 × 每状态」的多次 COUNT(*)。
+   *
+   * @param startTime 起始时间（含，可为 null）
+   * @param endTime 结束时间（含，可为 null）
+   * @return 分组聚合行列表
+   */
+  List<Map<String, Object>> countGroupByChannelAndStatus(
+      @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
+
+  /**
+   * 按发送状态分组聚合计数（单条 GROUP BY 查询）。
+   *
+   * @param startTime 起始时间（含，可为 null）
+   * @param endTime 结束时间（含，可为 null）
+   * @return 每行 Map：{@code status}(String) / {@code cnt}(Long)
+   */
+  List<Map<String, Object>> countGroupByStatus(
+      @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
+
+  /**
+   * 按回执状态分组聚合计数（单条 GROUP BY 查询）。
+   *
+   * @param startTime 起始时间（含，可为 null）
+   * @param endTime 结束时间（含，可为 null）
+   * @return 每行 Map：{@code receiptStatus}(String) / {@code cnt}(Long)
+   */
+  List<Map<String, Object>> countGroupByReceiptStatus(
+      @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
+
+  /**
+   * 按回执状态分组聚合计数（带通道 / 关键词维度）。
+   *
+   * <p>供漏斗统计复用：{@code channel} 与 {@code keyword} 任一为空则不参与过滤。
+   *
+   * @param channel 通道（可为 null）
+   * @param keyword 关键词（模糊匹配 content/receiver/template_code，可为 null）
+   * @param startTime 起始时间（含，可为 null）
+   * @param endTime 结束时间（含，可为 null）
+   * @return 每行 Map：{@code receiptStatus}(String) / {@code cnt}(Long)
+   */
+  List<Map<String, Object>> countGroupByReceiptStatusFiltered(
+      @Param("channel") String channel,
+      @Param("keyword") String keyword,
+      @Param("startTime") LocalDateTime startTime,
+      @Param("endTime") LocalDateTime endTime);
 }

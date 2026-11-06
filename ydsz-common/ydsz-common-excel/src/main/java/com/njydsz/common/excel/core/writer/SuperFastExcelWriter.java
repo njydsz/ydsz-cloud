@@ -810,7 +810,9 @@ public class SuperFastExcelWriter {
       while (temp >= 0) {
         sb.append((char) ('A' + (temp % 26)));
         temp = temp / 26 - 1;
-        if (temp < 0) break;
+        if(temp < 0) {
+            break;
+        }
       }
       sb.reverse();
     }
@@ -1520,7 +1522,9 @@ public class SuperFastExcelWriter {
     while (c >= 0) {
       colRef.insert(0, (char) ('A' + c % 26));
       c = c / 26 - 1;
-      if (c < 0) break;
+      if(c < 0) {
+          break;
+      }
     }
     return colRef.toString() + (row + 1);
   }

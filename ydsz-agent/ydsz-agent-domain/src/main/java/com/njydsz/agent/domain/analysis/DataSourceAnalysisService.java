@@ -12,6 +12,9 @@ import com.njydsz.common.exception.custom.BusinessException;
  * 调用链路 —— "sql" 走 {@code Text2SQLService}，"python" 走 {@code CodeExecutionService}，
  * "mixed" 先 SQL 查询再 Python 分析。
  *
+ * <p><b>当前状态（26.11.06）</b>：<b>未启用</b>——全仓无实现类与调用点，
+ * 仅为数据源分析能力预留的 SPI 契约。新接入方请勿在未排期的前提下依赖本接口。
+ *
  * @author ydsz-team
  * @since 26.09.07
  */

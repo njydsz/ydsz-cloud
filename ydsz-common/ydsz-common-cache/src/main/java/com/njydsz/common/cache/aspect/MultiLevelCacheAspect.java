@@ -419,8 +419,12 @@ public class MultiLevelCacheAspect {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (!(o instanceof CacheIdentity that)) return false;
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof CacheIdentity that)) {
+        return false;
+      }
       return localTTL == that.localTTL
           && localMaxSize == that.localMaxSize
           && remoteTTL == that.remoteTTL

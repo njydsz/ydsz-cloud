@@ -193,15 +193,17 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    * @throws BusinessException 当某条数据已存在时抛出
    */
   private void validateDbUniqueness(List<ConfigVO> items) {
+    Set<String> groups =
+        items.stream().map(ConfigVO::getConfigGroup).collect(Collectors.toSet());
+    Set<String> existingKeys = configRepository.loadGroupKeySet(groups);
     for (int i = 0; i < items.size(); i++) {
       ConfigVO item = items.get(i);
-      if (configRepository.existsByGroupAndKey(item.getConfigGroup(), item.getConfigKey())) {
+      String key = item.getConfigGroup() + "/" + item.getConfigKey();
+      if (existingKeys.contains(key)) {
         throw BusinessException.of(SystemExceptionCode.CONFIG_KEY_DUPLICATE)
             .data(
                 "reason",
-                String.format(
-                    "第 %d 条插入失败: %s/%s 已存在",
-                    i + 1, item.getConfigGroup(), item.getConfigKey()));
+                String.format("第 %d 条插入失败: %s 已存在", i + 1, key));
       }
     }
   }

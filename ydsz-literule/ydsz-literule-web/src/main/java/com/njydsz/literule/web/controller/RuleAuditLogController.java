@@ -56,6 +56,7 @@ import com.njydsz.literule.server.audit.RuleAuditLogService;
 public class RuleAuditLogController {
     /** 集合初始容量 */
     private static final int COLLECTION_CAPACITY = 16;
+    private static final int CHANGE_MAP_INITIAL_CAPACITY = 4;
 
 
     /** 审计日志查询默认条数 */
@@ -205,7 +206,7 @@ public class RuleAuditLogController {
     if (e.getDiffReport() != null && e.getDiffReport().hasChanges()) {
       Map<String, Object> diffs = new LinkedHashMap<>(COLLECTION_CAPACITY);
       for (FieldDiff fd : e.getDiffReport().getDiffs()) {
-        Map<String, String> change = new LinkedHashMap<>(4);
+        Map<String, String> change = new LinkedHashMap<>(CHANGE_MAP_INITIAL_CAPACITY);
         change.put("old", fd.getOldValue());
         change.put("new", fd.getNewValue());
         diffs.put(fd.getFieldLabel(), change);

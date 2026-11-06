@@ -2,6 +2,7 @@ package com.njydsz.system.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.VariableDTO;
@@ -47,6 +48,14 @@ public interface VariableRepository {
    * @return 变量 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<VariableVO> findByKeyIgnoreStatus(String variableKey);
+
+  /**
+   * 批量预加载变量键集合（用于导入前的内存判重，消除 N+1 查询）。
+   *
+   * @param variableKeys 变量键集合（为空时返回空集合）
+   * @return 已存在的变量键集合
+   */
+  Set<String> loadKeySet(Set<String> variableKeys);
 
   /**
    * 根据主键查询变量。

@@ -1,8 +1,10 @@
 package com.njydsz.system.server.service.impl;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,8 @@ import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.context.AnalysisContext;
+import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
@@ -121,6 +125,9 @@ import com.njydsz.system.server.vo.VariableExcelVO;
 @Service
 @RequiredArgsConstructor
 public class VariableServiceImpl implements VariableService {
+
+  /** Excel 导入分批大小（每批处理行数，避免全量常驻内存） */
+  private static final int IMPORT_BATCH_SIZE = 500;
 
   /** 变量仓储 */
   private final VariableRepository variableRepository;
@@ -414,9 +421,10 @@ public class VariableServiceImpl implements VariableService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public ImportResultVO importVariables(InputStream inputStream) {
-    // 1. 读取 Excel 文件
-    List<VariableExcelVO> excelRows = readExcel(inputStream);
-    if (excelRows.isEmpty()) {
+    // 流式分批读取 Excel（每 IMPORT_BATCH_SIZE 行回调一次，校验通过即按批落库）
+    ImportAccumulator accumulator = new ImportAccumulator();
+    readExcelInBatches(inputStream, accumulator);
+    if (accumulator.totalCount == 0) {
       return ImportResultVO.builder()
           .totalCount(0)
           .successCount(0)
@@ -426,48 +434,74 @@ public class VariableServiceImpl implements VariableService {
           .build();
     }
 
-    // 2. 逐条校验并转换（必填 / 值类型 / DB 唯一性）
-    List<String> errors = new ArrayList<>(excelRows.size());
-    List<VariableVO> validItems = new ArrayList<>(excelRows.size());
-    int skipCount = 0;
-    for (int i = 0; i < excelRows.size(); i++) {
-      String error = validateExcelRow(excelRows.get(i), i + 2);
-      if (error != null) {
-        errors.add(error);
-        skipCount++;
-      } else {
-        validItems.add(toVariableVO(excelRows.get(i)));
-      }
-    }
-
-    // 3. 批量保存有效数据
-    int successCount = saveValidItemsBatch(validItems, errors);
-
-    // 4. 构建导入结果
+    int total = accumulator.totalCount;
+    int successCount = accumulator.savedCount;
+    int skipCount = accumulator.skipCount;
     return ImportResultVO.builder()
-        .totalCount(excelRows.size())
+        .totalCount(total)
         .successCount(successCount)
-        .failCount(excelRows.size() - successCount - skipCount)
+        .failCount(total - successCount - skipCount)
         .skipCount(skipCount)
-        .errors(errors)
+        .errors(accumulator.errors)
         .message(
             String.format(
                 "导入完成: 成功 %d 条, 跳过 %d 条, 失败 %d 条",
-                successCount, skipCount, excelRows.size() - successCount - skipCount))
+                successCount, skipCount, total - successCount - skipCount))
         .build();
   }
 
   /**
-   * 读取 Excel 变量数据（私有）。
+   * 流式分批读取 Excel 变量数据（私有）。
+   *
+   * <p>每 {@link #IMPORT_BATCH_SIZE} 行触发一次回调，回调内完成「批量预加载已存在变量键 + 逐行校验 + 按批落库」。
    *
    * @param inputStream Excel 输入流
-   * @return 变量 Excel 行列表
+   * @param accumulator 导入过程累加器
    */
-  private List<VariableExcelVO> readExcel(InputStream inputStream) {
+  private void readExcelInBatches(InputStream inputStream, ImportAccumulator accumulator) {
     try {
-      List<VariableExcelVO> rows =
-          ExcelFacade.read(inputStream, VariableExcelVO.class).sheet(0).doReadAll();
-      return rows != null ? rows : List.of();
+      ExcelFacade.read(inputStream, VariableExcelVO.class)
+          .sheet(0)
+          .batchSize(IMPORT_BATCH_SIZE)
+          .doRead(
+              new ReadListener<VariableExcelVO>() {
+                @Override
+                public void onStart(AnalysisContext context) {}
+
+                @Override
+                public void onData(AnalysisContext context, VariableExcelVO data) {
+                  // 批量模式下不会被调用（由 onBatchData 承担）
+                }
+
+                @Override
+                public void onBatchData(
+                    AnalysisContext context, List<VariableExcelVO> batch) {
+                  if (batch == null || batch.isEmpty()) {
+                    return;
+                  }
+                  int baseRow = accumulator.totalCount;
+                  Set<String> existingKeys = loadExistingVariableKeys(batch);
+                  List<VariableVO> batchValid = new ArrayList<>(batch.size());
+                  for (int i = 0; i < batch.size(); i++) {
+                    int rowNum = baseRow + i + 2;
+                    accumulator.totalCount++;
+                    String error =
+                        validateExcelRow(batch.get(i), rowNum, existingKeys, accumulator.seenKeys);
+                    if (error != null) {
+                      accumulator.errors.add(error);
+                      accumulator.skipCount++;
+                    } else {
+                      batchValid.add(toVariableVO(batch.get(i)));
+                    }
+                  }
+                  if (!batchValid.isEmpty()) {
+                    accumulator.merge(saveValidItemsBatch(batchValid, accumulator.errors));
+                  }
+                }
+
+                @Override
+                public void onEnd(AnalysisContext context) {}
+              });
     } catch (Exception e) {
       log.warn(I18n.message("system.variable.import.excel.fail", new Object[]{e.getMessage()}), e);
       throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
@@ -476,15 +510,51 @@ public class VariableServiceImpl implements VariableService {
   }
 
   /**
+   * 导入过程累加器（私有内部类）。
+   */
+  private static final class ImportAccumulator {
+    private int totalCount;
+    private int skipCount;
+    private int savedCount;
+    private final List<String> errors = new ArrayList<>(64);
+    private final Set<String> seenKeys = new HashSet<>(IMPORT_BATCH_SIZE);
+
+    private void merge(int saved) {
+      this.savedCount += saved;
+    }
+  }
+
+  /**
+   * 批量预加载本批次涉及的变量键（私有）。
+   *
+   * @param excelRows Excel 行列表
+   * @return 已存在的变量键集合
+   */
+  private Set<String> loadExistingVariableKeys(List<VariableExcelVO> excelRows) {
+    Set<String> keys =
+        excelRows.stream()
+            .map(VariableExcelVO::getVariableKey)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+    return variableRepository.loadKeySet(keys);
+  }
+
+  /**
    * 校验单条 Excel 行（私有）。
    *
-   * <p>校验必填字段、值类型、DB 唯一性；通过返回 null，否则返回错误描述。
+   * <p>校验必填字段、值类型、DB 唯一性（内存比对，含文件内重复检测）；通过返回 null，否则返回错误描述。
    *
    * @param excelRow Excel 行数据
    * @param rowNum Excel 行号（从 2 开始，第 1 行为表头）
+   * @param existingKeys 已存在的变量键集合
+   * @param seenKeys 本批次已处理的变量键集合（用于文件内重复检测）
    * @return 错误描述；校验通过返回 null
    */
-  private String validateExcelRow(VariableExcelVO excelRow, int rowNum) {
+  private String validateExcelRow(
+      VariableExcelVO excelRow,
+      int rowNum,
+      Set<String> existingKeys,
+      Set<String> seenKeys) {
     String rowPrefix = I18n.message("system.excel.rowPrefix", new Object[] {rowNum});
     if (excelRow.getVariableKey() == null || excelRow.getVariableKey().isBlank()) {
       return rowPrefix + I18n.message("system.variable.key_required");
@@ -500,9 +570,8 @@ public class VariableServiceImpl implements VariableService {
         return rowPrefix + I18n.message("system.excel.valueType.invalid", new Object[] {excelRow.getValueType()});
       }
     }
-    // DB 唯一性校验
-    VariableVO existing = variableRepository.findByKeyIgnoreStatus(excelRow.getVariableKey()).orElse(null);
-    if (existing != null) {
+    // 内存唯一性校验（DB 预加载 + 文件内去重）
+    if (existingKeys.contains(excelRow.getVariableKey()) || !seenKeys.add(excelRow.getVariableKey())) {
       return rowPrefix + I18n.message("system.excel.variable.duplicate", new Object[]{excelRow.getVariableKey()});
     }
     return null;
@@ -558,7 +627,12 @@ public class VariableServiceImpl implements VariableService {
       // 精准失效缓存：按涉及 variableKey 逐一失效
       validItems.forEach(vo -> evictVariable(vo.getVariableKey()));
       // 发布变更事件
-      validItems.forEach(vo -> publishVariableChangedEvent(vo.getVariableKey(), I18n.message("system.variable.event.import", new Object[]{vo.getVariableKey()})));
+      validItems.forEach(
+          vo ->
+              publishVariableChangedEvent(
+                  vo.getVariableKey(),
+                  I18n.message(
+                      "system.variable.event.import", new Object[] {vo.getVariableKey()})));
       return validItems.size();
     } catch (Exception e) {
       errors.add(I18n.message("system.variable.import.batch.fail", new Object[]{e.getMessage()}));

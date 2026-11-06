@@ -48,7 +48,6 @@ ydsz:
     tcc-log-store: memory
 
   json:
-    use-big-decimal: true
     streaming-enabled: true
     warmup-classes:
       - com.njydsz.workflow.infra.entity.FlowDefinition

@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,7 +20,6 @@ import com.njydsz.message.domain.dto.FunnelStatsDTO;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageStatsDTO;
 import com.njydsz.message.domain.dto.ReceiptStatsDTO;
-import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
@@ -58,11 +59,13 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     LocalDateTime actualStart = range[0];
     LocalDateTime actualEnd = range[1];
 
-    long success = countByStatus(MessageStatusEnum.SUCCESS, actualStart, actualEnd);
-    long failed = countByStatus(MessageStatusEnum.FAILED, actualStart, actualEnd);
-    long retry = countByStatus(MessageStatusEnum.RETRY, actualStart, actualEnd);
-    long dead = countByStatus(MessageStatusEnum.DEAD, actualStart, actualEnd);
-    long recalled = countByStatus(MessageStatusEnum.RECALLED, actualStart, actualEnd);
+    // 单条 GROUP BY 拉取各状态计数，内存内取数，替代 5 次 COUNT
+    Map<String, Long> statusCount = loadStatusCountMap(actualStart, actualEnd);
+    long success = statusCount.getOrDefault(MessageStatusEnum.SUCCESS.name(), 0L);
+    long failed = statusCount.getOrDefault(MessageStatusEnum.FAILED.name(), 0L);
+    long retry = statusCount.getOrDefault(MessageStatusEnum.RETRY.name(), 0L);
+    long dead = statusCount.getOrDefault(MessageStatusEnum.DEAD.name(), 0L);
+    long recalled = statusCount.getOrDefault(MessageStatusEnum.RECALLED.name(), 0L);
     long total = success + failed + retry + dead + recalled;
 
     MessageStatsDTO vo = new MessageStatsDTO();
@@ -85,19 +88,31 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     LocalDateTime actualStart = range[0];
     LocalDateTime actualEnd = range[1];
 
-    List<ChannelStatsDTO> result = new ArrayList<>(COLLECTION_CAPACITY);
-    for (MessageChannelEnum ch : MessageChannelEnum.values()) {
-      String channel = ch.name();
-      long success =
-          countByStatusAndChannel(MessageStatusEnum.SUCCESS, channel, actualStart, actualEnd);
-      long failed =
-          countByStatusAndChannel(MessageStatusEnum.FAILED, channel, actualStart, actualEnd);
-      long retry =
-          countByStatusAndChannel(MessageStatusEnum.RETRY, channel, actualStart, actualEnd);
-      long dead = countByStatusAndChannel(MessageStatusEnum.DEAD, channel, actualStart, actualEnd);
+    // 单条 GROUP BY 拉取全部 (channel, status) 计数，内存内聚合，替代 12 通道 × 4 状态 = 48 次 COUNT
+    Map<String, Map<String, Long>> byChannel = new LinkedHashMap<>(COLLECTION_CAPACITY);
+    for (Map<String, Object> row :
+        msgLogRepository.countGroupByChannelAndStatus(actualStart, actualEnd)) {
+      String channel = asString(row.get("channel"));
+      String status = asString(row.get("status"));
+      if (channel == null || status == null) {
+        continue;
+      }
+      byChannel
+          .computeIfAbsent(channel, k -> new HashMap<>(COLLECTION_CAPACITY))
+          .merge(status, asLong(row.get("cnt")), Long::sum);
+    }
+
+    List<ChannelStatsDTO> result = new ArrayList<>(byChannel.size());
+    for (Map.Entry<String, Map<String, Long>> entry : byChannel.entrySet()) {
+      String channel = entry.getKey();
+      Map<String, Long> statusMap = entry.getValue();
+      long success = statusMap.getOrDefault(MessageStatusEnum.SUCCESS.name(), 0L);
+      long failed = statusMap.getOrDefault(MessageStatusEnum.FAILED.name(), 0L);
+      long retry = statusMap.getOrDefault(MessageStatusEnum.RETRY.name(), 0L);
+      long dead = statusMap.getOrDefault(MessageStatusEnum.DEAD.name(), 0L);
       long total = success + failed + retry + dead;
 
-      // 只输出有数据的通道
+      // 只输出有数据的通道（保持原有过滤语义）
       if (total == 0) {
         continue;
       }
@@ -122,14 +137,17 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     LocalDateTime actualStart = range[0];
     LocalDateTime actualEnd = range[1];
 
-    // 回执分母 = 成功发送数
-    long total = countByStatus(MessageStatusEnum.SUCCESS, actualStart, actualEnd);
-    long delivered = countByReceiptStatus(ReceiptStatusEnum.DELIVERED, actualStart, actualEnd);
-    long read = countByReceiptStatus(ReceiptStatusEnum.READ, actualStart, actualEnd);
-    long clicked = countByReceiptStatus(ReceiptStatusEnum.CLICKED, actualStart, actualEnd);
-    long failed = countByReceiptStatus(ReceiptStatusEnum.FAILED, actualStart, actualEnd);
-    long timeout = countByReceiptStatus(ReceiptStatusEnum.TIMEOUT, actualStart, actualEnd);
-    long none = countByReceiptStatus(ReceiptStatusEnum.NONE, actualStart, actualEnd);
+    // 单条 GROUP BY 拉取回执状态计数，内存内取数，替代 6 次 COUNT
+    Map<String, Long> receiptCount = loadReceiptCountMap(actualStart, actualEnd);
+    // 回执分母 = 成功发送数（与回执状态同一张表，复用同一次扫描的状态维度聚合）
+    Map<String, Long> statusCount = loadStatusCountMap(actualStart, actualEnd);
+    long total = statusCount.getOrDefault(MessageStatusEnum.SUCCESS.name(), 0L);
+    long delivered = receiptCount.getOrDefault(ReceiptStatusEnum.DELIVERED.name(), 0L);
+    long read = receiptCount.getOrDefault(ReceiptStatusEnum.READ.name(), 0L);
+    long clicked = receiptCount.getOrDefault(ReceiptStatusEnum.CLICKED.name(), 0L);
+    long failed = receiptCount.getOrDefault(ReceiptStatusEnum.FAILED.name(), 0L);
+    long timeout = receiptCount.getOrDefault(ReceiptStatusEnum.TIMEOUT.name(), 0L);
+    long none = receiptCount.getOrDefault(ReceiptStatusEnum.NONE.name(), 0L);
 
     ReceiptStatsDTO vo = new ReceiptStatsDTO();
     vo.setTotal(total);
@@ -142,58 +160,6 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     vo.setDeliveryRate(total > 0 ? round2((delivered + read + clicked) * 100.0 / total) : 0.0);
     vo.setReadRate(total > 0 ? round2((read + clicked) * 100.0 / total) : 0.0);
     return vo;
-  }
-
-  /**
-   * 按状态统计数量（带时间范围）。
-   *
-   * @param status 消息发送状态（如 SUCCESS、FAILED 等）
-   * @param start 统计起始时间
-   * @param end 统计结束时间
-   * @return 符合状态的消息数量
-   */
-  private long countByStatus(MessageStatusEnum status, LocalDateTime start, LocalDateTime end) {
-    MessageLogQueryDTO query = new MessageLogQueryDTO();
-    query.setStatus(status.name());
-    query.setStartTime(start.toString());
-    query.setEndTime(end.toString());
-    return msgLogRepository.count(query);
-  }
-
-  /**
-   * 按状态 + 通道统计数量（带时间范围）。
-   *
-   * @param status 消息发送状态
-   * @param channel 消息通道标识（如 SMS、EMAIL）
-   * @param start 统计起始时间
-   * @param end 统计结束时间
-   * @return 符合状态+通道的消息数量
-   */
-  private long countByStatusAndChannel(
-      MessageStatusEnum status, String channel, LocalDateTime start, LocalDateTime end) {
-    MessageLogQueryDTO query = new MessageLogQueryDTO();
-    query.setStatus(status.name());
-    query.setChannel(channel);
-    query.setStartTime(start.toString());
-    query.setEndTime(end.toString());
-    return msgLogRepository.count(query);
-  }
-
-  /**
-   * 按回执状态统计数量（带时间范围）。
-   *
-   * @param status 回执状态（如 DELIVERED、READ、CLICKED 等）
-   * @param start 统计起始时间
-   * @param end 统计结束时间
-   * @return 符合回执状态的消息数量
-   */
-  private long countByReceiptStatus(
-      ReceiptStatusEnum status, LocalDateTime start, LocalDateTime end) {
-    MessageLogQueryDTO query = new MessageLogQueryDTO();
-    query.setReceiptStatus(status.name());
-    query.setStartTime(start.toString());
-    query.setEndTime(end.toString());
-    return msgLogRepository.count(query);
   }
 
   @Override
@@ -271,16 +237,12 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     List<CostStatsDTO.ChannelCost> channelCosts = new ArrayList<>(COLLECTION_CAPACITY);
     BigDecimal totalCost = BigDecimal.ZERO;
 
+    // 单条 GROUP BY 拉取各通道 SUCCESS 计数，替代逐通道 COUNT（最多 12 次）
+    Map<String, Long> successByChannel = loadSuccessCountByChannel(actualStart, actualEnd);
     for (Map.Entry<String, BigDecimal> entry : unitPrices.entrySet()) {
       String channel = entry.getKey();
       BigDecimal unitPrice = entry.getValue();
-      // 统计该通道 SUCCESS 消息数
-      MessageLogQueryDTO query = new MessageLogQueryDTO();
-      query.setChannel(channel);
-      query.setStatus(MessageStatusEnum.SUCCESS.name());
-      query.setStartTime(actualStart.toString());
-      query.setEndTime(actualEnd.toString());
-      long msgCount = msgLogRepository.count(query);
+      long msgCount = successByChannel.getOrDefault(channel, 0L);
 
       BigDecimal channelCost = unitPrice.multiply(BigDecimal.valueOf(msgCount));
 
@@ -337,25 +299,100 @@ public class MessageStatsServiceImpl implements MessageStatsService {
       query.setEndTime(end.toString());
       return msgLogRepository.count(query);
     }
-    // receiptStatusList 需要逐项查询后累加（因为 DTO 只支持单值）
+    // receiptStatusList：单条 GROUP BY receipt_status 后内存内累加（原 N 次 COUNT 降为 1 次）
     if (receiptStatusList != null && !receiptStatusList.isEmpty()) {
-      long total = 0;
+      String keyword = (templateCode != null && !templateCode.isBlank()) ? templateCode : null;
+      Map<String, Long> receiptCount =
+          loadReceiptCountMapFiltered(channel, keyword, start, end);
+      long total = 0L;
       for (String rs : receiptStatusList) {
-        MessageLogQueryDTO query = new MessageLogQueryDTO();
-        query.setReceiptStatus(rs);
-        if (channel != null && !channel.isBlank()) {
-          query.setChannel(channel);
-        }
-        if (templateCode != null && !templateCode.isBlank()) {
-          query.setKeyword(templateCode);
-        }
-        query.setStartTime(start.toString());
-        query.setEndTime(end.toString());
-        total += msgLogRepository.count(query);
+        total += receiptCount.getOrDefault(rs, 0L);
       }
       return total;
     }
     return 0;
+  }
+
+  /**
+   * 加载按发送状态分组的计数 Map（私有）。
+   *
+   * @param start 起始时间
+   * @param end 结束时间
+   * @return status → count
+   */
+  private Map<String, Long> loadStatusCountMap(LocalDateTime start, LocalDateTime end) {
+    Map<String, Long> result = new HashMap<>(COLLECTION_CAPACITY);
+    for (Map<String, Object> row : msgLogRepository.countGroupByStatus(start, end)) {
+      String status = asString(row.get("status"));
+      if (status != null) {
+        result.merge(status, asLong(row.get("cnt")), Long::sum);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * 加载按回执状态分组的计数 Map（私有）。
+   *
+   * @param start 起始时间
+   * @param end 结束时间
+   * @return receiptStatus → count
+   */
+  private Map<String, Long> loadReceiptCountMap(LocalDateTime start, LocalDateTime end) {
+    Map<String, Long> result = new HashMap<>(COLLECTION_CAPACITY);
+    for (Map<String, Object> row : msgLogRepository.countGroupByReceiptStatus(start, end)) {
+      String receiptStatus = asString(row.get("receiptStatus"));
+      if (receiptStatus != null) {
+        result.merge(receiptStatus, asLong(row.get("cnt")), Long::sum);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * 加载带通道 / 关键词过滤的回执状态分组计数 Map（私有）。
+   */
+  private Map<String, Long> loadReceiptCountMapFiltered(
+      String channel, String keyword, LocalDateTime start, LocalDateTime end) {
+    Map<String, Long> result = new HashMap<>(COLLECTION_CAPACITY);
+    for (Map<String, Object> row :
+        msgLogRepository.countGroupByReceiptStatusFiltered(channel, keyword, start, end)) {
+      String receiptStatus = asString(row.get("receiptStatus"));
+      if (receiptStatus != null) {
+        result.merge(receiptStatus, asLong(row.get("cnt")), Long::sum);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * 加载各通道 SUCCESS 计数 Map（私有）。
+   */
+  private Map<String, Long> loadSuccessCountByChannel(
+      LocalDateTime start, LocalDateTime end) {
+    Map<String, Long> result = new HashMap<>(COLLECTION_CAPACITY);
+    for (Map<String, Object> row :
+        msgLogRepository.countGroupByChannelAndStatus(start, end)) {
+      String channel = asString(row.get("channel"));
+      String status = asString(row.get("status"));
+      if (channel != null && MessageStatusEnum.SUCCESS.name().equals(status)) {
+        result.merge(channel, asLong(row.get("cnt")), Long::sum);
+      }
+    }
+    return result;
+  }
+
+  /** Map取值转 String（私有）。 */
+  private String asString(Object value) {
+    return value != null ? value.toString() : null;
+  }
+
+  /** Map取值转 long（私有，兼容 Long/Integer/BigDecimal 等聚合返回类型）。 */
+  private long asLong(Object value) {
+    if (value instanceof Number number) {
+      return number.longValue();
+    }
+    return value != null ? Long.parseLong(value.toString()) : 0L;
   }
 
   /**

@@ -9,6 +9,12 @@ import java.util.Map;
  *
  * <p>抽象短信发送能力，支持阿里云、腾讯云、华为云等多厂商快速接入。 各厂商通过实现此接口并配合 {@code @ConditionalOnProperty} 条件注册。
  *
+ * <p><b>双轨说明（26.11.06）</b>：本接口与 {@code ydsz-message-server} 的
+ * {@code com.njydsz.message.server.channel.sms.SmsProvider} 并存，两者职责重叠但契约不同
+ * （接口签名、结果模型、装配方式均不同）。新接入方请优先使用 <b>message 模块</b>的版本
+ * （与消息渠道主链路一致）；本接口保留给 common-notify 内置的 REST 直发场景
+ * （{@code SmsNotifySender}），待后续统一收敛。
+ *
  * @author ydsz-team
  * @since 26.10.01
  */

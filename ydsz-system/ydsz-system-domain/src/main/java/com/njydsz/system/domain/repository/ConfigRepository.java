@@ -2,6 +2,7 @@ package com.njydsz.system.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.ConfigDTO;
@@ -66,6 +67,17 @@ public interface ConfigRepository {
    * @return 已存在返回 {@code true}
    */
   boolean existsByGroupAndKey(String configGroup, String configKey);
+
+  /**
+   * 批量预加载配置唯一键集合（用于导入 / 批量新增前的内存判重，消除 N+1 查询）。
+   *
+   * <p>一次 SQL 加载全部未删除记录的 {@code configGroup/configKey} 组合， 调用方在内存中构建 {@code Set<String>} 比对，替代逐条
+   * {@link #existsByGroupAndKey}。
+   *
+   * @param configGroups 配置分组集合（为空时返回空集合）
+   * @return {@code configGroup/configKey} 组合集合
+   */
+  Set<String> loadGroupKeySet(Set<String> configGroups);
 
   /**
    * 分页查询配置。

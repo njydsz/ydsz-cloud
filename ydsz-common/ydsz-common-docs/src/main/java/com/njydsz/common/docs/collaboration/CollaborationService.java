@@ -8,8 +8,13 @@ import java.util.List;
  * <p>提供实时协同编辑的锁、版本、操作转换（OT）基础接口。
  * 后续对接 OnlyOffice / Yjs / OT.js 具体实现。
  *
+ * <p><b>当前状态（26.11.06）</b>：<b>未启用</b>——全仓无任何实现类与调用点，
+ * 仅为协同编辑能力预留的 SPI 契约。新接入方请勿在未排期的前提下依赖本接口；
+ * 若协同编辑进入正式路线图，请同步补充首个实现并在 Javadoc 中移除此声明。
+ *
  * @author ydsz-team
  * @since 26.10.14
+ * @see com.njydsz.common.docs.collaboration 协同编辑 SPI
  */
 public interface CollaborationService {
 

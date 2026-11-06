@@ -126,8 +126,18 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
    *   <li>统计成功数并返回
    * </ol>
    *
-   * <p><b>事务边界：</b>开启 {@code @Transactional(rollbackFor = Exception.class)}， 整个方法作为一个事务。单条转交失败仅记录
-   * warn 日志<b>不回滚整体事务</b>。
+   * <p><b>事务粒度（26.11.06 优化）</b>：本方法<b>不再</b>标注 {@code @Transactional}。
+   * 历史实现外层开大事务 + 循环内逐条 {@code transfer}，而 {@code transfer} 自身已带
+   * {@code @Transactional} + {@code @YdszDistributedLock}，导致：
+   *
+   * <ul>
+   *   <li>嵌套事务：外层事务包内层，单条失败时内层回滚但外层可能回滚更多；</li>
+   *   <li>持锁放大：N 个待办 = 持锁 N 次 + 单事务写 N 条，高待办量时易超时；</li>
+   *   <li>长事务：万级待办时事务持有时间可达数十秒，阻塞连接池。</li>
+   * </ul>
+   *
+   * <p>现在每条 {@code transfer} 独立事务（其自身保证原子性），单条转交失败仅记录 warn
+   * 日志、<b>不影响其余任务</b>，与既有 catch-and-continue 语义一致。
    *
    * @param userId 离职 / 调岗人 ID
    * @param leaveType 离职类型（{@code RESIGN} / {@code TRANSFER}，可空默认 {@code RESIGN}）
@@ -136,7 +146,6 @@ public class FlowAssigneeLeaveHandlerImpl implements FlowAssigneeLeaveHandler {
    * @return 成功转交的任务数（失败的任务不计入）
    */
   @Override
-  @Transactional(rollbackFor = Exception.class)
   public int handleLeave(
       String userId, String leaveType, String replacementUserId, String operatorId) {
     if (!StringUtils.hasText(userId)) {

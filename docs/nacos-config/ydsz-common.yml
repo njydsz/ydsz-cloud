@@ -72,7 +72,10 @@ spring:
       connection-test-query: SELECT 1
       validation-timeout: 5000
       leak-detection-threshold: 30000
-      initialSize: 10
+      # initialSize 已移除（26.11.06）：这是 Druid 连接池属性，HikariCP 不识别
+      # （Spring Boot 的 spring.datasource.hikari.* 前缀下无效），属遗留误配。
+      # HikariCP 用 minimum-idle 控制最小空闲连接数。
+      minimum-idle: 5
       data-source-properties:
         stringtype: unspecified
         reWriteBatchedInserts: true
@@ -237,7 +240,10 @@ ydsz:
     monitoring-enabled: true
     safe-mode: true
     streaming-enabled: false
-    use-big-decimal: false
+    # 金额序列化精度（26.11.06 统一）：金融字段必须精确，全局启用 BigDecimal。
+    # 历史分裂：公共配置 false 而 workflow/literule 覆盖 true，导致同一金额字段在不同模块
+    # 出现字符串/数字或精度差异。统一后各模块无需再覆盖。
+    use-big-decimal: true
     # ASM 预热由各模块专属配置声明 warmup-classes
 
   # ============================================================

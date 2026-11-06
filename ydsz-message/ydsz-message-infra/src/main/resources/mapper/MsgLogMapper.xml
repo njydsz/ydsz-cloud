@@ -76,6 +76,87 @@
         </foreach>
     </insert>
 
+    <!-- 统计聚合：按通道 + 发送状态分组（单条 GROUP BY 替代每通道×每状态 COUNT） -->
+    <select id="countGroupByChannelAndStatus" resultType="java.util.Map">
+        SELECT channel AS "channel",
+               status AS "status",
+               COUNT(*) AS "cnt"
+        FROM ydsz_msg_log
+        WHERE is_deleted = 0
+        <if test="startTime != null">
+            AND created_at &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND created_at &lt;= #{endTime}
+        </if>
+        GROUP BY channel, status
+    </select>
+
+    <!-- 统计聚合：按发送状态分组 -->
+    <select id="countGroupByStatus" resultType="java.util.Map">
+        SELECT status AS "status",
+               COUNT(*) AS "cnt"
+        FROM ydsz_msg_log
+        WHERE is_deleted = 0
+        <if test="startTime != null">
+            AND created_at &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND created_at &lt;= #{endTime}
+        </if>
+        GROUP BY status
+    </select>
+
+    <!-- 统计聚合：按回执状态分组 -->
+    <select id="countGroupByReceiptStatus" resultType="java.util.Map">
+        SELECT receipt_status AS "receiptStatus",
+               COUNT(*) AS "cnt"
+        FROM ydsz_msg_log
+        WHERE is_deleted = 0
+        <if test="startTime != null">
+            AND created_at &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND created_at &lt;= #{endTime}
+        </if>
+        GROUP BY receipt_status
+    </select>
+
+    <!-- 统计聚合：按回执状态分组（带通道 / 关键词维度，供漏斗复用） -->
+    <select id="countGroupByReceiptStatusFiltered" resultType="java.util.Map">
+        SELECT receipt_status AS "receiptStatus",
+               COUNT(*) AS "cnt"
+        FROM ydsz_msg_log
+        WHERE is_deleted = 0
+        <if test="channel != null and channel != ''">
+            AND channel = #{channel}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (content LIKE '%' || #{keyword} || '%'
+                 OR receiver LIKE '%' || #{keyword} || '%'
+                 OR template_code LIKE '%' || #{keyword} || '%')
+        </if>
+        <if test="startTime != null">
+            AND created_at &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND created_at &lt;= #{endTime}
+        </if>
+        GROUP BY receipt_status
+    </select>
+
+    <!-- 按业务类型+单据 ID 批量撤回：单条 UPDATE 替代逐条 updateById 循环 -->
+    <update id="markRecalledByBiz">
+        UPDATE ydsz_msg_log
+        SET recall_status = #{recallStatus},
+            recall_at = #{recallAt},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE biz_type = #{bizType}
+          AND biz_id = #{bizId}
+          AND recall_status = 'NONE'
+          AND is_deleted = 0
+    </update>
+
     <!-- P3-1: 基于主键 ID 的简单游标分页（Keyset by id）— 消息日志大数据量深度分页 -->
     <select id="selectByIdGreaterThan" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>

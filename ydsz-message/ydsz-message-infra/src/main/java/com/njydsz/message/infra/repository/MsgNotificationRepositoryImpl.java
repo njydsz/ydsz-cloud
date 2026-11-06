@@ -79,6 +79,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
   public List<MsgNotificationVO> findList(NotificationQueryDTO query) {
     QueryWrapper<MsgNotification> wrapper = buildWrapper(query);
     wrapper.orderByDesc("created_at");
+    applyPagination(wrapper, query.getPageNum(), query.getPageSize());
     return converter.notificationListToVO(msgNotificationMapper.selectList(wrapper));
   }
 
@@ -135,6 +136,12 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     return msgNotificationMapper.update(entity, wrapper);
   }
 
+  @Override
+  public int markRecalledByBiz(
+      String bizType, String bizId, String recallStatus, LocalDateTime recallAt) {
+    return msgNotificationMapper.markRecalledByBiz(bizType, bizId, recallStatus, recallAt);
+  }
+
   private QueryWrapper<MsgNotification> buildWrapper(NotificationQueryDTO query) {
     QueryWrapper<MsgNotification> wrapper = new QueryWrapper<>();
     if (query.getReceiverId() != null && !query.getReceiverId().isBlank()) {
@@ -160,6 +167,27 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     }
     wrapper.eq("is_deleted", 0);
     return wrapper;
+  }
+
+
+  /**
+   * 当查询 DTO 携带分页参数时，为 wrapper 追加 LIMIT/OFFSET。
+   *
+   * <p>调用方（如健康探针、批量对账）可通过 {@code PageQuery.pageNum/pageSize}
+   * 限制返回量；未设置分页时不改变既有行为（向后兼容）。
+   *
+   * @param wrapper MyBatis-Plus 查询条件构造器
+   * @param pageNum 页码（从 1 开始），null 或 &lt;=0 表示不分页
+   * @param pageSize 每页条数，null 或 &lt;=0 表示不分页
+   */
+  protected void applyPagination(
+      com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<?> wrapper,
+      Integer pageNum,
+      Integer pageSize) {
+    if (pageNum == null || pageSize == null || pageNum <= 0 || pageSize <= 0) {
+      return;
+    }
+    wrapper.last("LIMIT " + pageSize + " OFFSET " + (long) (pageNum - 1) * pageSize);
   }
 
 }

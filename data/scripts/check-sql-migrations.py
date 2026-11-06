@@ -31,7 +31,16 @@ DEFAULT_ROOT = REPO_ROOT / "data" / "sqls"
 BASELINE_VERSION = "V26.10.01"
 BOOTSTRAP_DIR = "bootstrap"
 INCREMENTAL_DIR = "flyway"
-VERSION_RE = re.compile(r"^V(\d{2}\.\d{2}\.\d{2})(?:[_. -].*)?\.sql$", re.IGNORECASE)
+# 版本解析：
+#   V26.11.06.sql                    → V26.11.06
+#   V26.11.06_分区注释.sql            → V26.11.06（README 约定：单下划线 + 描述）
+#   V26.11.06__index-optimization.sql → V26.11.06__index-optimization
+#     （双下划线形式：同一版本号下的多个独立脚本。README 约定描述用单下划线，
+#      故双下划线视为「同版本的不同脚本」，迁移工具以完整文件名为去重键，不算重复。）
+VERSION_RE = re.compile(
+    r"^V(\d{2}\.\d{2}\.\d{2})(__[A-Za-z0-9_.-]+)?(?:[_. -][A-Za-z0-9_一-龥.-]*)?\.sql$",
+    re.IGNORECASE,
+)
 STATEMENT_SPLIT_RE = re.compile(r";(?=(?:[^']*'[^']*')*[^\n]*$|$)")
 FORBIDDEN_INCREMENTAL_DDL = (
     r"\bDROP\s+TABLE\b",
@@ -70,8 +79,12 @@ def strip_sql_comments(sql: str) -> str:
 
 
 def parse_version(path: Path) -> str | None:
+    """解析版本键：V26.11.06 或 V26.11.06__index-optimization（双下划线后缀独立计）。"""
     match = VERSION_RE.match(path.name)
-    return f"V{match.group(1)}" if match else None
+    if not match:
+        return None
+    base = f"V{match.group(1)}"
+    return f"{base}{match.group(2)}" if match.group(2) else base
 
 
 def is_baseline(version: str) -> bool:

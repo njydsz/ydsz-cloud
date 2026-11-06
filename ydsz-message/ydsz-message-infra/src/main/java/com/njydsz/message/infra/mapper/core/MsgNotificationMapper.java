@@ -1,5 +1,6 @@
 package com.njydsz.message.infra.mapper.core;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -74,4 +75,21 @@ public interface MsgNotificationMapper extends BaseMapper<MsgNotification> {
    * @return 未读数量
    */
   Long countUnread(@Param("userId") String userId);
+
+  /**
+   * 按业务类型 + 单据 ID 批量标记站内通知为已撤回。
+   *
+   * <p>仅更新 {@code recall_status = 'NONE'} 的记录（幂等）；单条 UPDATE 完成，替代逐条 {@code updateById} 循环。
+   *
+   * @param bizType 业务类型
+   * @param bizId 业务单据 ID
+   * @param recallStatus 目标撤回状态（通常为 RECALLED）
+   * @param recallAt 撤回时间
+   * @return 影响行数
+   */
+  int markRecalledByBiz(
+      @Param("bizType") String bizType,
+      @Param("bizId") String bizId,
+      @Param("recallStatus") String recallStatus,
+      @Param("recallAt") LocalDateTime recallAt);
 }

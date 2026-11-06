@@ -92,6 +92,18 @@
         WHERE n.id = t.id
     </update>
 
+    <!-- 按业务类型+单据 ID 批量撤回：单条 UPDATE 替代逐条 updateById 循环 -->
+    <update id="markRecalledByBiz">
+        UPDATE ydsz_msg_notification
+        SET recall_status = #{recallStatus},
+            recall_at = #{recallAt},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE biz_type = #{bizType}
+          AND biz_id = #{bizId}
+          AND recall_status = 'NONE'
+          AND is_deleted = 0
+    </update>
+
     <select id="countUnread" resultType="java.lang.Long">
         SELECT COUNT(*)
         FROM ydsz_msg_notification

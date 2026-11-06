@@ -138,4 +138,18 @@ public interface MsgNotificationRepository {
    * @return 实际更新的通知条数
    */
   int markExpired(LocalDateTime now);
+
+  /**
+   * 按业务类型 + 单据 ID 批量标记站内通知为已撤回。
+   *
+   * <p>单条 UPDATE 完成，仅更新 {@code recallStatus=NONE} 的记录（幂等）， 替代逐条 {@code update} 循环。
+   *
+   * @param bizType 业务类型
+   * @param bizId 业务单据 ID
+   * @param recallStatus 目标撤回状态
+   * @param recallAt 撤回时间
+   * @return 实际影响行数
+   */
+  int markRecalledByBiz(
+      String bizType, String bizId, String recallStatus, LocalDateTime recallAt);
 }

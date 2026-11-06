@@ -13,6 +13,10 @@ package com.njydsz.agent.domain.channel;
  *
  * <p>借鉴 MateClaw 的多渠道设计，实现错误隔离和独立恢复。</p>
  *
+ * <p><b>当前状态（26.11.06）</b>：<b>未启用</b>——全仓无 {@code implements ChannelAdapter}
+ * 的实现类，注册表与分发器构成无实现的插件机制。若多渠道消息路线取消，
+ * 请连同 {@code ChannelAdapterRegistry} / {@code DispatchService} 一并移除。
+ *
  * @author ydsz-agent
  * @since 26.10.01
  */

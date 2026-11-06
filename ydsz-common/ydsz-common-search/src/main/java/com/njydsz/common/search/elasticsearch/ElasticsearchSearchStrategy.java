@@ -428,7 +428,9 @@ public class ElasticsearchSearchStrategy implements SearchStrategy, IndexStrateg
     if (source.get("tags") instanceof List<?> rawTags) {
       List<String> tagList = new ArrayList<>(rawTags.size());
       for (Object tag : rawTags) {
-        if (tag instanceof String s) tagList.add(s);
+        if(tag instanceof String s) {
+            tagList.add(s);
+        }
       }
       builder.tags(tagList);
     }
@@ -542,9 +544,15 @@ public class ElasticsearchSearchStrategy implements SearchStrategy, IndexStrateg
   /** 构建可搜索文本。 */
   private String buildSearchableText(IndexDocument doc) {
     StringBuilder sb = new StringBuilder();
-    if (doc.getTitle() != null) sb.append(doc.getTitle());
-    if (doc.getSubtitle() != null) sb.append(' ').append(doc.getSubtitle());
-    if (doc.getContent() != null) sb.append(' ').append(doc.getContent());
+    if (doc.getTitle() != null) {
+      sb.append(doc.getTitle());
+    }
+    if (doc.getSubtitle() != null) {
+      sb.append(' ').append(doc.getSubtitle());
+    }
+    if (doc.getContent() != null) {
+      sb.append(' ').append(doc.getContent());
+    }
     if (doc.getTags() != null) {
       for (String tag : doc.getTags()) {
         sb.append(' ').append(tag);
