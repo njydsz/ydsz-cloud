@@ -1,10 +1,10 @@
 package com.njydsz.system.domain.query;
 
+import jakarta.validation.constraints.Max;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.validation.constraints.Max;
 
 /**
  * 实体版本分页查询条件（P2-3 分页优化）。

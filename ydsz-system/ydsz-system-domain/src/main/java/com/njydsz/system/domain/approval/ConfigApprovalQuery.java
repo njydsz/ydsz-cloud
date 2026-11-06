@@ -1,7 +1,7 @@
 package com.njydsz.system.domain.approval;
 
-import lombok.Data;
 import jakarta.validation.constraints.Max;
+import lombok.Data;
 
 /**
  * 配置变更审批单据查询参数。

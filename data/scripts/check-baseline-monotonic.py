@@ -174,25 +174,32 @@ def compare(old: dict, new: dict) -> tuple[list[str], list[str]]:
 
 
 def self_test() -> int:
-    """自测：构造基线对比场景。"""
+    """自测：构造基线对比场景（不依赖真实 checkstyle 报告）。"""
     base = {"total_errors": 100, "modules": {"a": {"errors": 10}, "b": {"errors": 5}}}
-    cases = [
-        ("基线上涨判红", base, {"total_errors": 120, "modules": {"a": {"errors": 10}}}, True),
-        ("模块上涨判红", base, {"total_errors": 100, "modules": {"a": {"errors": 15}}}, True),
-        ("基线下降通过", base, {"total_errors": 90, "modules": {"a": {"errors": 10}}}, False),
-        ("持平通过", base, {"total_errors": 100, "modules": {"a": {"errors": 10}}}, False),
-    ]
-    failed = 0
-    for name, old, new, expect_error in cases:
-        errs, _ = compare(old, new)
-        got_error = bool(errs)
-        ok = got_error == expect_error
-        print(f"  {'✓' if ok else '✗'} {name}: 期望 {'红' if expect_error else '绿'}，"
-              f"实际 {'红' if got_error else '绿'}")
-        if not ok:
-            failed += 1
-    print(f"\n自测结果：{'全部通过' if failed == 0 else f'{failed} 个用例失败'}")
-    return 0 if failed == 0 else 1
+    # 注入空报告统计，强制走「基线 JSON 对比」分支，使自测可独立运行
+    original = globals().get("count_current_errors")
+    globals()["count_current_errors"] = lambda: {}
+    try:
+        cases = [
+            ("基线上涨判红", base, {"total_errors": 120, "modules": {"a": {"errors": 10}}}, True),
+            ("模块上涨判红", base, {"total_errors": 100, "modules": {"a": {"errors": 15}}}, True),
+            ("基线下降通过", base, {"total_errors": 90, "modules": {"a": {"errors": 10}}}, False),
+            ("持平通过", base, {"total_errors": 100, "modules": {"a": {"errors": 10}}}, False),
+        ]
+        failed = 0
+        for name, old, new, expect_error in cases:
+            errs, _ = compare(old, new)
+            got_error = bool(errs)
+            ok = got_error == expect_error
+            print(f"  {'✓' if ok else '✗'} {name}: 期望 {'红' if expect_error else '绿'}，"
+                  f"实际 {'红' if got_error else '绿'}")
+            if not ok:
+                failed += 1
+        print(f"\n自测结果：{'全部通过' if failed == 0 else f'{failed} 个用例失败'}")
+        return 0 if failed == 0 else 1
+    finally:
+        if original is not None:
+            globals()["count_current_errors"] = original
 
 
 def main() -> int:

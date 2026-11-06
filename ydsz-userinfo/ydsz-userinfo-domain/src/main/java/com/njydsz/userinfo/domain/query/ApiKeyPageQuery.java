@@ -1,7 +1,7 @@
 package com.njydsz.userinfo.domain.query;
 
-import lombok.Data;
 import jakarta.validation.constraints.Max;
+import lombok.Data;
 
 /**
  * API Key 分页查询。
