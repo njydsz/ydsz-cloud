@@ -76,6 +76,8 @@ class RuleStatusTest {
       "DRAFT,REVIEW_L1,true",
       "DRAFT,PUBLISHED,true",
       "DRAFT,ARCHIVED,true",
+      // 26.11.06：同状态迁移视为幂等，一律允许
+      "DRAFT,DISABLED,true",
       "DRAFT,REVIEW_L2,false",
       // REVIEW_L1
       "REVIEW_L1,REVIEW_L2,true",
@@ -101,10 +103,12 @@ class RuleStatusTest {
       // PUBLISHED / DISABLED
       "PUBLISHED,DISABLED,true",
       "PUBLISHED,ARCHIVED,true",
-      "PUBLISHED,DRAFT,false",
+      // 26.11.06：PUBLISHED 允许回退草稿重新编辑（此前为 false）
+      "PUBLISHED,DRAFT,true",
       "DISABLED,PUBLISHED,true",
       "DISABLED,ARCHIVED,true",
-      "DISABLED,DRAFT,false",
+      // 26.11.06：DISABLED 允许回退草稿重新编辑（此前为 false）
+      "DISABLED,DRAFT,true",
       // ARCHIVED 终态
       "ARCHIVED,PUBLISHED,false",
       "ARCHIVED,DRAFT,false"

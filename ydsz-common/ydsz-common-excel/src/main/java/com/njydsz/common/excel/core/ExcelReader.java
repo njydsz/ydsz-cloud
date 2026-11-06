@@ -107,6 +107,15 @@ public class ExcelReader {
   private List<Object> batchBuffer = new ArrayList<>(64);
 
   /**
+   * 批量模式下的原始监听器引用（26.11.06 新增）。
+   *
+   * <p>批量模式会把 {@code listeners} 替换为内部包装监听器，原始监听器需单独持有，
+   * 供 {@link #notifyEnd()} 冲刷尾部数据时使用——否则尾部不足一批的数据会静默丢失。
+   * 未开启批量模式时为 {@code null}。
+   */
+  private ReadListener<?> batchDelegate;
+
+  /**
    * 构造函数。
    *
    * @param metadata 读取配置元数据
@@ -505,6 +514,7 @@ public class ExcelReader {
     }
     ReadListener<?> single = listeners.get(0);
     listeners.clear();
+    batchDelegate = single;
     batchBuffer = new ArrayList<>(Math.min(batchSize, 1024));
     superFastReader.setListeners(
         List.of(
@@ -526,7 +536,8 @@ public class ExcelReader {
 
               @Override
               public void onEnd(AnalysisContext ctx) {
-                single.onEnd(ctx);
+                // 不在此处转发 onEnd：由 notifyEnd() 统一冲刷尾部批次后回调，
+                // 避免尾部数据未落库就触发「读取完成」信号。
               }
 
               @Override
@@ -650,18 +661,35 @@ public class ExcelReader {
   /**
    * 通知所有监听器读取结束。
    *
-   * <p>刷新剩余批次数据并触发 onEnd 回调。
+  /**
+   * 读取结束收尾：先冲刷批量缓冲，再回调各监听器的 onEnd。
+   *
+   * <p><b>历史缺陷（26.11.06 修复）</b>：批量模式下 {@code installBatchListenerIfEnabled}
+   * 会 {@code listeners.clear()} 并替换为内部包装监听器，导致这里遍历 {@code listeners}
+   * 时拿不到原始监听器，尾部不足一批的数据<b>静默丢失</b>（既不调 onBatchData 也不报错）。
+   * 现改为优先回调 {@link #batchDelegate}（即被包装的原始监听器），
+   * 未开启批量模式时回退到 {@code listeners}，保证两条路径语义一致。
    */
   @SuppressWarnings("unchecked")
   private void notifyEnd() {
     if (batchBuffer != null && !batchBuffer.isEmpty()) {
-      for (ReadListener<?> listener : listeners) {
-        ((ReadListener<Object>) listener).onBatchData(context, batchBuffer);
+      if (batchDelegate != null) {
+        ((ReadListener<Object>) batchDelegate).onBatchData(context, batchBuffer);
+      } else {
+        for (ReadListener<?> listener : listeners) {
+          ((ReadListener<Object>) listener).onBatchData(context, batchBuffer);
+        }
       }
       batchBuffer.clear();
     }
-    for (ReadListener<?> listener : listeners) {
-      listener.onEnd(context);
+    // 批量模式下 listeners 里是内部包装器（onEnd 为空实现），须回调原始监听器
+    ReadListener<?> endTarget = batchDelegate != null ? batchDelegate : null;
+    if (endTarget != null) {
+      endTarget.onEnd(context);
+    } else {
+      for (ReadListener<?> listener : listeners) {
+        listener.onEnd(context);
+      }
     }
   }
 }

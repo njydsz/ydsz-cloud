@@ -132,6 +132,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- 测试依赖（26.11.06：补充 OpenAPI 错误契约示例的测试） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

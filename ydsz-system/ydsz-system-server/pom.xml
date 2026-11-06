@@ -226,5 +226,12 @@
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- POI：仅用于单元测试生成标准 xlsx 测试数据（DictItemBatchImportTest 等） -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
