@@ -26,6 +26,8 @@ class FlowInstanceStatusTest {
   @DisplayName("isFinished / isTerminal 终态判定")
   class Terminal {
 
+    // 26.11.06：isFinished()（流程已结束，含 COMPLETED）与 isTerminal()（不可再流转，
+    // 不含 COMPLETED）语义已拆分——canTransitTo 允许 COMPLETED → ROLLED_BACK。
     @ParameterizedTest
     @CsvSource({
         "COMPLETED, true",
@@ -37,17 +39,41 @@ class FlowInstanceStatusTest {
         "ERROR, false",
         "DRAFT, false"
     })
-    @DisplayName("终态判定正确")
-    void terminalStatus(FlowInstanceStatus status, boolean expected) {
+    @DisplayName("isFinished：流程已结束判定")
+    void finishedStatus(FlowInstanceStatus status, boolean expected) {
       assertThat(status.isFinished()).isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "COMPLETED, false",
+        "TERMINATED, true",
+        "REJECTED, true",
+        "ROLLED_BACK, true",
+        "RUNNING, false",
+        "SUSPENDED, false",
+        "ERROR, false",
+        "DRAFT, false"
+    })
+    @DisplayName("isTerminal：不可再流转判定（COMPLETED 可撤销，非终态）")
+    void terminalStatus(FlowInstanceStatus status, boolean expected) {
       assertThat(status.isTerminal()).isEqualTo(expected);
     }
 
     @Test
-    @DisplayName("isFinished 与 isTerminal 语义一致")
-    void consistent() {
+    @DisplayName("isTerminal 与 canTransitTo 不冲突")
+    void terminalConsistentWithCanTransitTo() {
       for (FlowInstanceStatus status : FlowInstanceStatus.values()) {
-        assertThat(status.isFinished()).isEqualTo(status.isTerminal());
+        for (FlowInstanceStatus target : FlowInstanceStatus.values()) {
+          if (target == status) {
+            continue;
+          }
+          if (status.canTransitTo(target)) {
+            assertThat(status.isTerminal())
+                .as("%s 可流转到 %s，不应为终态", status, target)
+                .isFalse();
+          }
+        }
       }
     }
   }

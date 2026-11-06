@@ -377,8 +377,10 @@ class FlowInstanceStateMachineTest {
   @DisplayName("isTerminal — 终态判定")
   class IsTerminal {
 
+    // 26.11.06：COMPLETED 不再是终态（canTransitTo 允许 COMPLETED → ROLLED_BACK，
+    // 即「撤销已完成实例」），终态仅含 TERMINATED / REJECTED / ROLLED_BACK。
     @ParameterizedTest(name = "isTerminal({0}) = true")
-    @CsvSource({"COMPLETED", "TERMINATED", "REJECTED", "ROLLED_BACK"})
+    @CsvSource({"TERMINATED", "REJECTED", "ROLLED_BACK"})
     @DisplayName("终态状态应返回 true")
     void isTerminal_terminalStates_returnsTrue(FlowInstanceStatus status) {
       assertThat(stateMachine.isTerminal(status))
@@ -485,12 +487,12 @@ class FlowInstanceStateMachineTest {
     }
 
     @Test
-    @DisplayName("getTerminalStatuses 返回 {COMPLETED, TERMINATED, REJECTED, ROLLED_BACK}")
+    @DisplayName("getTerminalStatuses 返回 {TERMINATED, REJECTED, ROLLED_BACK}（不含 COMPLETED）")
     void getTerminalStatuses_returnsCorrectSet() {
       Set<FlowInstanceStatus> terminal = stateMachine.getTerminalStatuses();
       assertThat(terminal)
+          .as("COMPLETED 可撤销，不属于终态")
           .containsExactlyInAnyOrder(
-              FlowInstanceStatus.COMPLETED,
               FlowInstanceStatus.TERMINATED,
               FlowInstanceStatus.REJECTED,
               FlowInstanceStatus.ROLLED_BACK);
@@ -603,7 +605,8 @@ class FlowInstanceStateMachineTest {
         "RUNNING, false",
         "SUSPENDED, false",
         "ERROR, false",
-        "COMPLETED, true",
+        // 26.11.06：COMPLETED 不再视为终态（与 canTransitTo 保持一致）
+        "COMPLETED, false",
         "TERMINATED, true",
         "REJECTED, true",
         "ROLLED_BACK, true",

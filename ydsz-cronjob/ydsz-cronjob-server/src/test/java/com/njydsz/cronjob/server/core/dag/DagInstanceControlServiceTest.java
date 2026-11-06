@@ -21,10 +21,12 @@ import com.njydsz.cronjob.domain.repository.JobDagRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
+import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -163,7 +165,7 @@ class DagInstanceControlServiceTest {
 
       assertThat(result).isFalse();
       verify(dagInstanceRepository).findById(INSTANCE_ID);
-      verify(dagInstanceRepository, never()).markCanceled(anyString(), any(LocalDateTime.class), any());
+      verify(dagInstanceRepository, never()).markCanceled(anyString(), any(LocalDateTime.class), anyLong());
     }
 
     @Test
@@ -197,7 +199,16 @@ class DagInstanceControlServiceTest {
       when(dagInstanceRepository.findById(INSTANCE_ID)).thenReturn(Optional.of(instance));
       when(dagNodeInstanceRepository.findByDagInstanceId(INSTANCE_ID))
           .thenReturn(List.of(failedNode));
-      when(dagDefinitionCodec.fromJson(anyString())).thenReturn(DagDefinition.empty());
+      // retryNode 在插入新节点后会加载 DAG 定义并派发，需补齐这两个依赖的 stub
+      JobDagVO dag = new JobDagVO();
+      dag.setDagDefinition("{\"nodes\":[]}");
+      when(jobDagRepository.findById(any())).thenReturn(Optional.of(dag));
+      // retryNode 会调用 definition.findNode(jobKey)，需构造含目标节点的定义
+      when(dagDefinitionCodec.fromJson(anyString()))
+          .thenReturn(
+              DagDefinition.of(
+                  List.of(DagNode.of("extract-job", "extract-job", "提取任务")),
+                  List.of()));
 
       boolean result = dagInstanceControlService.retryNode(INSTANCE_ID, "extract-job");
 
@@ -266,6 +277,7 @@ class DagInstanceControlServiceTest {
     JobDagInstanceVO vo = new JobDagInstanceVO();
     vo.setId(id);
     vo.setInstanceStatus(status);
+    vo.setDagId("dag-1");
     vo.setStartedAt(null);
     return vo;
   }
