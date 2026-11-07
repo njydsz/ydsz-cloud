@@ -256,6 +256,13 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
+        </dependency>
+        <!-- spring-test 提供 MockServerWebExchange / MockServerHttpRequest，
+             用于在真实 Reactor 链路上驱动网关过滤器（无需启动完整 Spring Context） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <scope>test</scope>
         </dependency></dependencies>
 
     <build>

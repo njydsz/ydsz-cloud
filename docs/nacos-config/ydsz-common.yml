@@ -75,7 +75,6 @@ spring:
       # initialSize 已移除（26.11.06）：这是 Druid 连接池属性，HikariCP 不识别
       # （Spring Boot 的 spring.datasource.hikari.* 前缀下无效），属遗留误配。
       # HikariCP 用 minimum-idle 控制最小空闲连接数。
-      minimum-idle: 5
       data-source-properties:
         stringtype: unspecified
         reWriteBatchedInserts: true

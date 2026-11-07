@@ -4,6 +4,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -32,6 +33,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAudit
 @EnableYdszSafe
 @EnableYdszFeign
+@EnableFeignClients(basePackages = "com.njydsz.system.api.client")
 @EnableYdszI18n
 @ConditionalOnPlatform(PlatformMode.WEB)
 @MapperScan("com.njydsz.system.infra.mapper")

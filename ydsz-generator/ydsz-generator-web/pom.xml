@@ -20,6 +20,12 @@
       <artifactId>ydsz-generator-server</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- P1-2: infra 层由 web 引入，通过 Spring 自动装配注入 Repository 实现到 server 层 -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-generator-infra</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-core</artifactId>

@@ -113,6 +113,39 @@ public class BytecodeInterpreter {
     Object[] stack = acquireStack(constants);
     int sp = 0; // 栈指针
 
+    try {
+      return executeBytecode(program, code, constants, stack, variables, deadlineNanos);
+    } finally {
+      // ThreadLocal 必须清理：规则引擎运行在线程池中，线程复用会导致栈数组常驻内存
+      STACK_HOLDER.remove();
+    }
+  }
+
+  /**
+   * 执行字节码主循环。
+   *
+   * <p>从 {@link #execute} 中抽出，使栈帧的获取与释放（ThreadLocal 清理）形成明确的作用域，
+   * 避免异常路径绕过 {@code STACK_HOLDER.remove()}。
+   *
+   * @param program 编译后的字节码程序
+   * @param code 字节码指令序列
+   * @param constants 常量池
+   * @param stack 操作数栈
+   * @param variables 变量表
+   * @param deadlineNanos 墙上时钟截止时间（0 表示不限时）
+   * @return 表达式求值结果
+   */
+  private Object executeBytecode(
+      CompiledProgram program,
+      byte[] code,
+      List<Object> constants,
+      Object[] stack,
+      Map<String, Object> variables,
+      long deadlineNanos) {
+    int ip = 0; // 指令指针
+    int stepCount = 0;
+    int sp = 0; // 栈指针
+
     while (ip < code.length) {
       // 安全检查：节点访问预算
       if (++stepCount > maxSteps) {
@@ -290,10 +323,22 @@ public class BytecodeInterpreter {
   // ===== 栈操作辅助方法 =====
 
   private void push(Object[] stack, int sp, Object value) {
+    // 栈溢出防护：栈容量按常量池大小估算，深度嵌套的表达式可能超出，
+    // 缺少防护会抛出 ArrayIndexOutOfBoundsException 而非业务异常。
+    if (sp < 0 || sp >= stack.length) {
+      throw new LiteExprException(
+          "字节码操作数栈溢出（表达式嵌套过深或编译产物异常）", 0, 0);
+    }
     stack[sp] = value;
   }
 
   private Object pop(Object[] stack, int sp) {
+    // 栈下溢防护：表达式由租户自定义，字节码可能来自损坏的编译产物，
+    // 缺少防护会抛出 ArrayIndexOutOfBoundsException 而非业务异常。
+    if (sp < 0 || sp >= stack.length) {
+      throw new LiteExprException(
+          "字节码栈下溢（操作码与栈状态不匹配，疑似损坏的编译产物）", 0, 0);
+    }
     Object value = stack[sp];
     stack[sp] = null; // 帮助 GC
     return value;

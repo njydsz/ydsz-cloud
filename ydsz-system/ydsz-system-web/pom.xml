@@ -69,6 +69,18 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-system-infra</artifactId>
         </dependency>
+        <!-- server 层 AppPermissionScanRunner 使用 api 模块的 Feign Client（provided scope 不打包），
+             web 作为组合根需显式引入 api 以便运行时类加载 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-system-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- Feign Client 负载均衡支持 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-file</artifactId>
